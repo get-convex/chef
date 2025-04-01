@@ -54,7 +54,7 @@ const SliderButton = memo(
             : 'text-bolt-elements-item-contentDefault hover:text-bolt-elements-item-contentActive',
         )}
       >
-        <span className="relative z-10">{children}</span>
+        <span className="relative z-10 flex items-center gap-2">{children}</span>
         {selected && (
           <motion.span
             layoutId="pill-tab"
