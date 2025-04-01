@@ -332,7 +332,19 @@ export const Workbench = memo(({ chatStarted, isStreaming, actionRunner }: Works
           value: 'preview',
           text: 'Preview',
         },
-        ...(showDashboard ? [{ value: 'dashboard' as const, text: 'Database' }] : []),
+        ...(showDashboard
+          ? [
+              {
+                value: 'dashboard' as const,
+                text: (
+                  <>
+                    <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+                    Database
+                  </>
+                ),
+              },
+            ]
+          : []),
       ],
     }),
     [showDashboard],
