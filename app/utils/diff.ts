@@ -93,7 +93,7 @@ export function extractRelativePath(filePath: string) {
  * <bolt_file_modifications>
  * <diff path="/home/project/index.js">
  * - console.log('Hello, World!');
- * + console.log('Hello, Bolt!');
+ * + console.log('Hello, Flex!');
  * </diff>
  * </bolt_file_modifications>
  * ```

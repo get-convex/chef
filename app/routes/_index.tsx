@@ -6,7 +6,10 @@ import { Header } from '~/components/header/Header';
 import { SafariWarning } from '~/components/SafariWarning';
 
 export const meta: MetaFunction = () => {
-  return [{ title: 'Bolt' }, { name: 'description', content: 'Talk with Bolt, an AI assistant from StackBlitz' }];
+  return [
+    { title: 'Flex' },
+    { name: 'description', content: 'Talk with Flex, an AI assistant from Convex (powered by Bolt)' },
+  ];
 };
 
 export const loader = () => json({});
