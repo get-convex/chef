@@ -22,13 +22,13 @@ body {
 }
 
 .input-field {
-  @apply w-full px-4 py-3 rounded-xl bg-transparent border-2 border-slate-200 focus:outline-none focus:border-indigo-500 transition-colors;
+  @apply w-full px-3 py-2 rounded-md bg-transparent border-2 border-slate-200 focus:outline-none focus:border-blue-500 transition-colors;
 }
 
 .auth-button {
-  @apply w-full py-3 rounded-xl text-white font-medium button hover:opacity-90 transition-opacity;
+  @apply w-full py-2 rounded-md text-white font-medium button hover:opacity-90 transition-opacity;
 }
 
 .link-text {
-  @apply text-indigo-600 hover:underline cursor-pointer font-medium;
+  @apply text-blue-500 hover:underline cursor-pointer font-medium;
 }

@@ -85,7 +85,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
     throw new Error(`Missing CONVEX_URL: ${CONVEX_URL}`);
   }
 
-  const [convex] = useState(() => new ConvexReactClient(CONVEX_URL));
+  const [convex] = useState(
+    () =>
+      new ConvexReactClient(
+        CONVEX_URL,
+        // TODO: There's a potential issue in the convex client where the warning triggers
+        // even though in flight requests have completed
+        { unsavedChangesWarning: false },
+      ),
+  );
 
   useEffect(() => {
     document.querySelector('html')?.setAttribute('data-theme', theme);

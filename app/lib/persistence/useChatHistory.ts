@@ -249,7 +249,7 @@ export const useChatHistoryConvex = () => {
           id: mixedId || listItemId,
           sessionId,
         });
-        navigate(`/chat/${newId}`);
+        navigate(`/chat/${newId.id}`);
         toast.success('Chat duplicated successfully');
       } catch (error) {
         toast.error('Failed to duplicate chat');
