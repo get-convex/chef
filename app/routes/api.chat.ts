@@ -2,11 +2,8 @@ import { type ActionFunctionArgs } from '@remix-run/cloudflare';
 import type { Messages } from '~/lib/.server/llm/stream-text';
 import { createScopedLogger } from '~/utils/logger';
 import { convexAgent, getEnv } from '~/lib/.server/llm/convex-agent';
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
-import {
-  BatchSpanProcessor,
-  WebTracerProvider,
-} from '@opentelemetry/sdk-trace-web';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 
 const logger = createScopedLogger('api.chat');
 
@@ -23,7 +20,7 @@ async function chatAction({ request }: ActionFunctionArgs, env: Env) {
       url: AXIOM_API_URL,
       headers: {
         Authorization: `Bearer ${AXIOM_API_TOKEN}`,
-        "X-Axiom-Dataset": AXIOM_DATASET_NAME,
+        'X-Axiom-Dataset': AXIOM_DATASET_NAME,
       },
     });
     const provider = new WebTracerProvider({
@@ -37,16 +34,16 @@ async function chatAction({ request }: ActionFunctionArgs, env: Env) {
           scheduledDelayMillis: 500,
           // How long the export can run before it is cancelled
           exportTimeoutMillis: 30000,
-        })
+        }),
       ],
     });
     provider.register();
-    logger.info("✅ Axiom instrumentation registered!")
+    logger.info('✅ Axiom instrumentation registered!');
   } else {
-    logger.warn("⚠️ AXIOM_API_TOKEN, AXIOM_API_URL, and AXIOM_DATASET_NAME not set, skipping Axiom instrumentation.")
+    logger.warn('⚠️ AXIOM_API_TOKEN, AXIOM_API_URL, and AXIOM_DATASET_NAME not set, skipping Axiom instrumentation.');
   }
 
-  const body = await request.json<{ messages: Messages, firstUserMessage: boolean }>();
+  const body = await request.json<{ messages: Messages; firstUserMessage: boolean }>();
   const { messages, firstUserMessage } = body;
   try {
     const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
@@ -55,13 +52,15 @@ async function chatAction({ request }: ActionFunctionArgs, env: Env) {
     const dataStream = await convexAgent(env, firstUserMessage, messages);
     // Cloudflare expects binary data in its streams.
     const encoder = new TextEncoder();
-    const binaryStream = dataStream.pipeThrough(new TransformStream({
-      transform(chunk, controller) {
-        const toSerialize = typeof chunk === 'string' ? chunk : JSON.stringify(chunk);
-        const binary = encoder.encode(toSerialize);
-        controller.enqueue(binary);
-      },
-    }));
+    const binaryStream = dataStream.pipeThrough(
+      new TransformStream({
+        transform(chunk, controller) {
+          const toSerialize = typeof chunk === 'string' ? chunk : JSON.stringify(chunk);
+          const binary = encoder.encode(toSerialize);
+          controller.enqueue(binary);
+        },
+      }),
+    );
     return new Response(binaryStream, {
       status: 200,
       headers: {

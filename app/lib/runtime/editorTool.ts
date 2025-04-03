@@ -2,17 +2,16 @@ import { z } from 'zod';
 import { readPath } from '~/utils/fileUtils';
 import { renderFile } from '~/utils/fileUtils';
 import { renderDirectory } from '~/utils/fileUtils';
-import { webcontainer } from '../webcontainer';
 import { workDirRelative } from '~/utils/fileUtils';
 import type { WebContainer } from '@webcontainer/api';
 
 export const editorToolParameters = z.object({
   command: z.union([
-    z.literal("view"),
-    z.literal("create"),
-    z.literal("str_replace"),
-    z.literal("insert"),
-    z.literal("undo_edit"),
+    z.literal('view'),
+    z.literal('create'),
+    z.literal('str_replace'),
+    z.literal('insert'),
+    z.literal('undo_edit'),
   ]),
   path: z.string(),
   file_text: z.string().optional(),
@@ -32,52 +31,48 @@ export async function editor(
     // The view command allows Claude to examine the contents of a file or list
     // the contents of a directory. It can read the entire file or a specific
     // range of lines.
-    case "view": {
+    case 'view': {
       const result = await readPath(container, relPath);
-      if (result.type === "directory") {
+      if (result.type === 'directory') {
         return renderDirectory(result.children);
       }
       return renderFile(result.content, args.view_range);
     }
-    case "str_replace": {
-      const oldContent = await container.fs.readFile(relPath, "utf-8");
+    case 'str_replace': {
+      const oldContent = await container.fs.readFile(relPath, 'utf-8');
       let newContent: string;
       if (args.old_str) {
         const matchPos = oldContent.indexOf(args.old_str);
         if (matchPos === -1) {
-          throw new Error(
-            "No match found for replacement. Please check your text and try again."
-          );
+          throw new Error('No match found for replacement. Please check your text and try again.');
         }
         if (oldContent.slice(matchPos + 1).indexOf(args.old_str) !== -1) {
-          throw new Error(
-            "Multiple matches found for replacement. Please specify a more specific search term."
-          );
+          throw new Error('Multiple matches found for replacement. Please specify a more specific search term.');
         }
-        newContent = oldContent.replace(args.old_str, args.new_str ?? "");
+        newContent = oldContent.replace(args.old_str, args.new_str ?? '');
       } else {
-        newContent = args.new_str ?? "";
+        newContent = args.new_str ?? '';
       }
       backupStack.pushBackup(args.path, oldContent);
       await container.fs.writeFile(relPath, newContent);
       return `Successfully replaced text at exactly one location.`;
     }
-    case "create": {
+    case 'create': {
       const relPath = workDirRelative(args.path);
-      if (relPath.includes("/")) {
-        const dir = relPath.slice(0, relPath.lastIndexOf("/"));
+      if (relPath.includes('/')) {
+        const dir = relPath.slice(0, relPath.lastIndexOf('/'));
         await container.fs.mkdir(dir, { recursive: true });
       }
-      await container.fs.writeFile(relPath, args.file_text ?? "");
+      await container.fs.writeFile(relPath, args.file_text ?? '');
       return `Successfully created file ${args.path}`;
     }
-    case "insert": {
+    case 'insert': {
       const relPath = workDirRelative(args.path);
-      const oldContent = await container.fs.readFile(relPath, "utf-8");
-      const lines = oldContent.split("\n");
+      const oldContent = await container.fs.readFile(relPath, 'utf-8');
+      const lines = oldContent.split('\n');
 
       if (!args.insert_line || !args.new_str) {
-        throw new Error("Insert line and new string are required");
+        throw new Error('Insert line and new string are required');
       }
 
       // NB: `insert_line` is the 1-indexed line number after which to insert the
@@ -85,13 +80,13 @@ export async function editor(
       // the line *before* zero-indexed line `i`. So, we can just pass
       // `args.insert_line` directly.
       lines.splice(args.insert_line, 0, args.new_str);
-      const newContent = lines.join("\n");
+      const newContent = lines.join('\n');
       await container.fs.writeFile(relPath, newContent);
 
       backupStack.pushBackup(args.path, oldContent);
       return `Successfully inserted text at line ${args.insert_line}.`;
     }
-    case "undo_edit": {
+    case 'undo_edit': {
       const relPath = workDirRelative(args.path);
       const oldContent = backupStack.popBackup(args.path);
       if (!oldContent) {

@@ -7,7 +7,8 @@ export function getConvexUrlInLoader(context: AppLoadContext): string {
 }
 
 export function getConvexOAuthClientIdInLoader(context: AppLoadContext): string {
-  const convexUrl = (context.cloudflare.env as Record<string, any>).CONVEX_OAUTH_CLIENT_ID || process.env.CONVEX_OAUTH_CLIENT_ID;
+  const convexUrl =
+    (context.cloudflare.env as Record<string, any>).CONVEX_OAUTH_CLIENT_ID || process.env.CONVEX_OAUTH_CLIENT_ID;
   return convexUrl;
 }
 

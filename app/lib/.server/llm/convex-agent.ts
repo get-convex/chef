@@ -1,12 +1,20 @@
-import { convertToCoreMessages, createDataStream, streamText, type DataStreamWriter, type LanguageModelV1, type StepResult, type TextStreamPart, type ToolSet } from "ai";
-import type { Messages } from "./stream-text";
-import { createScopedLogger } from "~/utils/logger";
-import type { ProgressAnnotation } from "~/types/context";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { flexSystemPrompt } from "~/lib/common/prompts/flexPrompts";
-import { makeFlexGuidelinesPrompt } from "~/lib/common/prompts/flexPrompts";
-import { convexGuidelines } from "~/lib/common/prompts/convex";
-import { getSystemPrompt } from "~/lib/common/prompts/prompts";
+import {
+  convertToCoreMessages,
+  createDataStream,
+  streamText,
+  type DataStreamWriter,
+  type LanguageModelV1,
+  type StepResult,
+  type TextStreamPart,
+  type ToolSet,
+} from 'ai';
+import type { Messages } from './stream-text';
+import type { ProgressAnnotation } from '~/types/context';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { flexSystemPrompt } from '~/lib/common/prompts/flexPrompts';
+import { makeFlexGuidelinesPrompt } from '~/lib/common/prompts/flexPrompts';
+import { convexGuidelines } from '~/lib/common/prompts/convex';
+import { getSystemPrompt } from '~/lib/common/prompts/prompts';
 
 export type AITextDataStream = ReturnType<typeof createDataStream>;
 
@@ -14,8 +22,8 @@ export type Provider = {
   maxTokens: number;
   model: LanguageModelV1;
   includeSystemPrompt: boolean;
-  tools: ToolSet,
-}
+  tools: ToolSet;
+};
 
 export type RequestProgress = {
   counter: number;
@@ -45,16 +53,16 @@ export async function convexAgent(env: Env, firstUserMessage: boolean, messages:
         message: 'Analyzing Messages',
       } satisfies ProgressAnnotation);
       if (firstUserMessage) {
-        console.log("Using XML-based coding agent");
+        console.log('Using XML-based coding agent');
         systemPrompt = getSystemPrompt();
         tools = {};
       } else {
-        console.log("Using tool-based coding agent");
+        console.log('Using tool-based coding agent');
         systemPrompt = makeFlexGuidelinesPrompt(convexGuidelines);
         tools = {
           str_replace_editor: genericAnthropic.tools.textEditor_20241022(),
           bash: genericAnthropic.tools.bash_20241022(),
-        }
+        };
       }
       const anthropic = createAnthropic({
         apiKey: getEnv(env, 'ANTHROPIC_API_KEY'),
@@ -62,7 +70,7 @@ export async function convexAgent(env: Env, firstUserMessage: boolean, messages:
           return fetch(url, anthropicInjectCacheControl(systemPrompt, options));
         },
       });
-      const model = anthropic("claude-3-5-sonnet-20241022");
+      const model = anthropic('claude-3-5-sonnet-20241022');
 
       dataStream.writeData({
         type: 'progress',
@@ -85,11 +93,11 @@ export async function convexAgent(env: Env, firstUserMessage: boolean, messages:
           metadata: {
             firstUserMessage,
           },
-        }
+        },
       });
       void logErrors(result.fullStream);
       result.mergeIntoDataStream(dataStream);
-    }
+    },
   });
 
   return dataStream;
@@ -106,41 +114,38 @@ function anthropicInjectCacheControl(guidelinesPrompt: string, options?: Request
   if (!options) {
     return options;
   }
-  if (options.method !== "POST") {
+  if (options.method !== 'POST') {
     return options;
   }
   const headers = options.headers;
   if (!headers) {
     return options;
   }
-  const contentType = new Headers(headers).get("content-type");
-  if (contentType !== "application/json") {
+  const contentType = new Headers(headers).get('content-type');
+  if (contentType !== 'application/json') {
     return options;
   }
-  if (typeof options.body !== "string") {
-    throw new Error("Body must be a string");
+  if (typeof options.body !== 'string') {
+    throw new Error('Body must be a string');
   }
   const startChars = options.body.length;
   const body = JSON.parse(options.body);
   body.system = [
     {
-      type: "text",
+      type: 'text',
       text: flexSystemPrompt,
     },
     {
-      type: "text",
+      type: 'text',
       text: guidelinesPrompt,
-      cache_control: { type: "ephemeral" },
+      cache_control: { type: 'ephemeral' },
     },
     // NB: The client dynamically manages files injected as context
     // past this point, and we don't want them to pollute the cache.
     ...(body.system ?? []),
   ];
   const newBody = JSON.stringify(body);
-  console.log(
-    `Injected system messages in ${Date.now() - start}ms (${startChars} -> ${newBody.length
-    } chars)`
-  );
+  console.log(`Injected system messages in ${Date.now() - start}ms (${startChars} -> ${newBody.length} chars)`);
   return { ...options, body: newBody };
 }
 
@@ -158,9 +163,13 @@ function cleanupAssistantMessages(messages: Messages) {
   return convertToCoreMessages(processedMessages);
 }
 
-async function onFinishHandler(dataStream: DataStreamWriter, progress: RequestProgress, result: Omit<StepResult<any>, 'stepType' | 'isContinued'>) {
+async function onFinishHandler(
+  dataStream: DataStreamWriter,
+  progress: RequestProgress,
+  result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
+) {
   const { usage } = result;
-  console.log("Finished streaming", {
+  console.log('Finished streaming', {
     finishReason: result.finishReason,
     usage,
     providerMetadata: result.providerMetadata,

@@ -6,7 +6,7 @@ import { convexStore, useConvexSessionId, useFlexAuthMode } from '~/lib/stores/c
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useChatId } from '~/lib/stores/chat';
-import type {loader} from '~/root';
+import type { loader } from '~/root';
 
 export function ConvexConnectButton() {
   const flexAuthMode = useFlexAuthMode();
@@ -85,7 +85,9 @@ export function ConvexConnectButtonViaOauth() {
   const convexClient = useConvex();
   const sessionId = useConvexSessionId();
   const chatId = useChatId();
-  const { ENV: { CONVEX_OAUTH_CLIENT_ID } } = useRouteLoaderData<typeof loader>('root')!;
+  const {
+    ENV: { CONVEX_OAUTH_CLIENT_ID },
+  } = useRouteLoaderData<typeof loader>('root')!;
 
   useEffect(() => {
     return () => {

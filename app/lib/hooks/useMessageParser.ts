@@ -1,4 +1,4 @@
-import type { Message, ToolInvocation } from 'ai';
+import type { Message } from 'ai';
 import { useCallback, useState } from 'react';
 import { StreamingMessageParser } from '~/lib/runtime/message-parser';
 import { workbenchStore } from '~/lib/stores/workbench';
@@ -33,7 +33,6 @@ const messageParser = new StreamingMessageParser({
   },
 });
 
-
 function processMessage(message: Message): string {
   if (!message.parts) {
     return message.content;
@@ -54,21 +53,21 @@ function processMessage(message: Message): string {
             id: artifactId,
             messageId: message.id,
             title: 'Agentic Coding',
-          })
+          });
           createdArtifact = true;
         }
         const data = {
-          "artifactId": artifactId,
-          "messageId": message.id,
-          "actionId": toolInvocation.toolCallId,
-          "action": {
-            "type": "toolUse" as const,
-            "toolName": toolInvocation.toolName,
-            "content": JSON.stringify(toolInvocation),
-          }
+          artifactId,
+          messageId: message.id,
+          actionId: toolInvocation.toolCallId,
+          action: {
+            type: 'toolUse' as const,
+            toolName: toolInvocation.toolName,
+            content: JSON.stringify(toolInvocation),
+          },
         };
         workbenchStore.addAction(data);
-        if (toolInvocation.state === "call" || toolInvocation.state === "result") {
+        if (toolInvocation.state === 'call' || toolInvocation.state === 'result') {
           workbenchStore.runAction(data);
         }
         break;
@@ -86,7 +85,9 @@ function processMessage(message: Message): string {
 }
 
 export function useMessageParser() {
-  const [parsedMessages, setParsedMessages] = useState<{ [key: number]: { content: string, parts: Message["parts"] } }>({});
+  const [parsedMessages, setParsedMessages] = useState<{ [key: number]: { content: string; parts: Message['parts'] } }>(
+    {},
+  );
 
   const parseMessages = useCallback((messages: Message[], isLoading: boolean) => {
     let reset = false;
@@ -103,7 +104,7 @@ export function useMessageParser() {
         setParsedMessages((prevParsed) => {
           const newContent = reset ? newParsedContent : (prevParsed[index]?.content || '') + newParsedContent;
           return { ...prevParsed, [index]: { content: newContent, parts: message.parts } };
-        })
+        });
       }
     }
   }, []);

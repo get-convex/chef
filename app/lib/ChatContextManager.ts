@@ -80,7 +80,7 @@ export class ChatContextManager {
     }
 
     for (const [path, lastUsedTime] of workbenchStore.userWrites.entries()) {
-      let existing = lastUsed.get(path) ?? 0;
+      const existing = lastUsed.get(path) ?? 0;
       lastUsed.set(path, Math.max(existing, lastUsedTime));
     }
 
@@ -124,7 +124,7 @@ export class ChatContextManager {
     }
 
     if (currentDocument) {
-      let message = `The user currently has an editor open at ${currentDocument.filePath}. Here are the contents:\n`
+      let message = `The user currently has an editor open at ${currentDocument.filePath}. Here are the contents:\n`;
       message += renderFile(currentDocument.value);
       relevantFiles.push(makeSystemMessage(message));
     }
@@ -138,7 +138,10 @@ export class ChatContextManager {
   }
 
   private collapseMessages(messages: UIMessage[]): UIMessage[] {
-    const before = messages.flatMap((m) => m.parts).map((p) => this.partSize(p)).reduce((a, b) => a + b, 0);
+    const before = messages
+      .flatMap((m) => m.parts)
+      .map((p) => this.partSize(p))
+      .reduce((a, b) => a + b, 0);
     const [iCutoff, jCutoff] = this.messagePartCutoff(messages);
     const summaryLines = [];
     const fullMessages = [];
@@ -153,14 +156,14 @@ export class ChatContextManager {
         }
       } else if (i === iCutoff) {
         const filteredParts = message.parts.filter((p, j) => {
-          if (p.type !== "tool-invocation" || p.toolInvocation.state !== "result") {
+          if (p.type !== 'tool-invocation' || p.toolInvocation.state !== 'result') {
             return true;
           }
           return j > jCutoff;
         });
         for (let j = 0; j < filteredParts.length; j++) {
           const part = filteredParts[j];
-          if (part.type === "tool-invocation" && part.toolInvocation.state === "result" && j <= jCutoff) {
+          if (part.type === 'tool-invocation' && part.toolInvocation.state === 'result' && j <= jCutoff) {
             const summary = summarizePart(message, part);
             if (summary) {
               summaryLines.push(summary);
@@ -182,7 +185,10 @@ export class ChatContextManager {
       result.push(makeSystemMessage(`Conversation summary:\n${summaryLines.join('\n')}`));
     }
     result.push(...fullMessages);
-    const after = result.flatMap((m) => m.parts).map((p) => this.partSize(p)).reduce((a, b) => a + b, 0);
+    const after = result
+      .flatMap((m) => m.parts)
+      .map((p) => this.partSize(p))
+      .reduce((a, b) => a + b, 0);
     console.log(`Collapsed ${before} -> ${after} bytes in message history`, messages, result);
     return result;
   }
@@ -193,7 +199,7 @@ export class ChatContextManager {
       const message = messages[i];
       for (let j = message.parts.length - 1; j >= 0; j--) {
         const part = message.parts[j];
-        if (part.type === 'tool-invocation' && part.toolInvocation.state !== "result") {
+        if (part.type === 'tool-invocation' && part.toolInvocation.state !== 'result') {
           continue;
         }
         const size = this.partSize(part);
@@ -221,15 +227,17 @@ export class ChatContextManager {
     }
     for (let j = 0; j < message.parts.length; j++) {
       const part = message.parts[j];
-      if (part.type === "text") {
+      if (part.type === 'text') {
         const files = extractFileArtifacts(message.id, part.text);
         for (const file of files) {
           filesTouched.set(file, j);
         }
       }
-      if (part.type == "tool-invocation"
-        && part.toolInvocation.toolName == "str_replace_editor"
-        && part.toolInvocation.state !== "partial-call") {
+      if (
+        part.type == 'tool-invocation' &&
+        part.toolInvocation.toolName == 'str_replace_editor' &&
+        part.toolInvocation.state !== 'partial-call'
+      ) {
         const args = editorToolParameters.parse(part.toolInvocation.args);
         filesTouched.set(args.path, j);
       }
@@ -279,10 +287,10 @@ export class ChatContextManager {
 }
 
 function summarizePart(message: UIMessage, part: UIMessagePart): string | null {
-  if (part.type === "text") {
+  if (part.type === 'text') {
     return `${message.role}: ${StreamingMessageParser.stripArtifacts(part.text)}`;
   }
-  if (part.type === "tool-invocation" && part.toolInvocation.state === "result") {
+  if (part.type === 'tool-invocation' && part.toolInvocation.state === 'result') {
     return abbreviateToolInvocation(part.toolInvocation);
   }
   return null;
@@ -311,26 +319,26 @@ function estimateSize(entry: Dirent): number {
 }
 
 function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
-  if (toolInvocation.state !== "result") {
+  if (toolInvocation.state !== 'result') {
     throw new Error(`Invalid tool invocation state: ${toolInvocation.state}`);
   }
-  const wasError = toolInvocation.result.startsWith("Error:");
+  const wasError = toolInvocation.result.startsWith('Error:');
   let toolCall: string;
   switch (toolInvocation.toolName) {
-    case "str_replace_editor": {
+    case 'str_replace_editor': {
       const args = editorToolParameters.parse(toolInvocation.args);
       switch (args.command) {
-        case "create":
+        case 'create':
           toolCall = `created ${args.path}`;
           break;
-        case "view":
+        case 'view':
           toolCall = `viewed ${args.path}`;
           break;
-        case "str_replace":
-        case "insert":
+        case 'str_replace':
+        case 'insert':
           toolCall = `edited ${args.path}`;
           break;
-        case "undo_edit":
+        case 'undo_edit':
           toolCall = `undid an edit to ${args.path}`;
           break;
         default:
@@ -338,7 +346,7 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       }
       break;
     }
-    case "bash": {
+    case 'bash': {
       const args = bashToolParameters.parse(toolInvocation.args);
       toolCall = `ran the command ${args.command}`;
       break;
@@ -346,7 +354,7 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
     default:
       throw new Error(`Unknown tool name: ${toolInvocation.toolName}`);
   }
-  return `Tool call: The assistant ${toolCall} ${wasError ? "and got an error" : "successfully"}.`;
+  return `Tool call: The assistant ${toolCall} ${wasError ? 'and got an error' : 'successfully'}.`;
 }
 
 function extractFileArtifacts(id: string, content: string) {

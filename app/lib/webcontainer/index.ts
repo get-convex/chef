@@ -33,7 +33,10 @@ export enum ContainerBootState {
   READY = 5,
 }
 
-const containerBootStore = atom<{ state: ContainerBootState, startTime: number, error?: Error }>({ state: ContainerBootState.STARTING, startTime: Date.now() });
+const containerBootStore = atom<{ state: ContainerBootState; startTime: number; error?: Error }>({
+  state: ContainerBootState.STARTING,
+  startTime: Date.now(),
+});
 
 function setContainerBootState(state: ContainerBootState, error?: Error) {
   const existing = containerBootStore.get();

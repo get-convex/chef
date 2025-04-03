@@ -15,13 +15,15 @@ export async function loadSnapshot(webcontainer: WebContainer, workbenchStore: W
 
   // Mark all binaries as executable. Only log on failures binaries may be missing in
   // a subsequent snapshot.
-  Promise.all(EXECUTABLES.map(async (absPath) => {
-    const chmodProc = await webcontainer.spawn('chmod', ['+x', absPath]);
-    if ((await chmodProc.exit) !== 0) {
-      const output = await chmodProc.output.getReader().read();
-      console.log(`Failed to chmod ${absPath}: ${output.value}`);
-    }
-  }))
+  Promise.all(
+    EXECUTABLES.map(async (absPath) => {
+      const chmodProc = await webcontainer.spawn('chmod', ['+x', absPath]);
+      if ((await chmodProc.exit) !== 0) {
+        const output = await chmodProc.output.getReader().read();
+        console.log(`Failed to chmod ${absPath}: ${output.value}`);
+      }
+    }),
+  );
   console.timeLog('loadSnapshot', 'Marked binaries as executable');
 
   // After loading the snapshot, we need to load the files into the FilesStore since

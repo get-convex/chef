@@ -20,10 +20,12 @@ import 'virtual:uno.css';
 
 export async function loader({ context }: LoaderFunctionArgs) {
   const convexUrl = getConvexUrlInLoader(context);
-  const convexOauthClientId = getConvexOAuthClientIdInLoader(context)
+  const convexOauthClientId = getConvexOAuthClientIdInLoader(context);
   const authMode = getFlexAuthModeInLoader(context);
   // These environment variables are available in the client (they aren't secret).
-  return json({ ENV: { CONVEX_URL: convexUrl, FLEX_AUTH_MODE: authMode, CONVEX_OAUTH_CLIENT_ID: convexOauthClientId } });
+  return json({
+    ENV: { CONVEX_URL: convexUrl, FLEX_AUTH_MODE: authMode, CONVEX_OAUTH_CLIENT_ID: convexOauthClientId },
+  });
 }
 
 export const links: LinksFunction = () => [
@@ -116,7 +118,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 import { logStore } from './lib/stores/logs';
 import { ConvexReactClient } from 'convex/react';
-import { getFlexAuthModeInLoader, getConvexUrlInLoader, getConvexOAuthClientIdInLoader } from './lib/persistence/convex';
+import {
+  getFlexAuthModeInLoader,
+  getConvexUrlInLoader,
+  getConvexOAuthClientIdInLoader,
+} from './lib/persistence/convex';
 
 export default function App() {
   const theme = useStore(themeStore);

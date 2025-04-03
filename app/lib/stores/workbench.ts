@@ -25,7 +25,7 @@ import type { Id } from '@convex/_generated/dataModel';
 import { buildSnapshot, compressSnapshot } from '~/lib/snapshot';
 import { sessionIdStore } from './convex';
 import { withResolvers } from '~/utils/promises';
-import { BackupStack } from '../runtime/editorTool';
+import { BackupStack } from '~/lib/runtime/editorTool';
 
 const BACKUP_DEBOUNCE_MS = 1000 * 5;
 

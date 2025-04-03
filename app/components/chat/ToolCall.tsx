@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import type { ToolInvocation } from 'ai';
 import { AnimatePresence } from 'framer-motion';
 import { motion } from 'framer-motion';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 import type { ActionState } from '~/lib/runtime/action-runner';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { cubicEasingFn } from '~/utils/easings';
@@ -30,7 +30,7 @@ export const ToolCall = memo((props: { messageId: string; toolCallId: string }) 
   };
 
   const parsed: ToolInvocation = useMemo(() => JSON.parse(action?.content ?? '{}'), [action?.content]);
-  const title = action && toolTitle(parsed, action.status);
+  const title = action && toolTitle(parsed);
   const icon = action && statusIcon(action.status, parsed);
 
   if (!action) {
@@ -48,7 +48,7 @@ export const ToolCall = memo((props: { messageId: string; toolCallId: string }) 
         >
           <div className="px-5 p-3.5 w-full text-left">
             <div className="flex items-center gap-1.5">
-            <div className="w-full text-bolt-elements-textPrimary font-medium leading-5 text-sm">{title}</div>
+              <div className="w-full text-bolt-elements-textPrimary font-medium leading-5 text-sm">{title}</div>
               {icon}
             </div>
           </div>
@@ -62,7 +62,7 @@ export const ToolCall = memo((props: { messageId: string; toolCallId: string }) 
               exit={{ width: 0 }}
               transition={{ duration: 0.15, ease: cubicEasingFn }}
               className="bg-bolt-elements-artifacts-background hover:bg-bolt-elements-artifacts-backgroundHover"
-              disabled={parsed.state === "partial-call" || parsed.state === "call"}
+              disabled={parsed.state === 'partial-call' || parsed.state === 'call'}
               onClick={toggleAction}
             >
               <div className="p-4">
@@ -102,7 +102,7 @@ export const ToolCall = memo((props: { messageId: string; toolCallId: string }) 
 });
 
 export const ToolUseContents = memo(({ invocation }: { invocation: ToolInvocation }) => {
-  if (invocation.state !== "result") {
+  if (invocation.state !== 'result') {
     return null;
   }
 
@@ -115,7 +115,12 @@ export const ToolUseContents = memo(({ invocation }: { invocation: ToolInvocatio
   }
 
   if (invocation.toolName === 'str_replace_editor') {
-    const args = editorToolParameters.parse(invocation.args) as { command: 'create', path: string, file_text: string } | { command: 'view', path: string } | { command: 'str_replace', path: string, old_str: string, new_str: string } | { command: 'insert', path: string, insert_line: number, new_str: string } | { command: 'undo_edit', path: string };
+    const args = editorToolParameters.parse(invocation.args) as
+      | { command: 'create'; path: string; file_text: string }
+      | { command: 'view'; path: string }
+      | { command: 'str_replace'; path: string; old_str: string; new_str: string }
+      | { command: 'insert'; path: string; insert_line: number; new_str: string }
+      | { command: 'undo_edit'; path: string };
 
     if (args.command === 'view') {
       // Directory listing
@@ -127,7 +132,13 @@ export const ToolUseContents = memo(({ invocation }: { invocation: ToolInvocatio
               const isDir = item.includes('(dir)');
               return (
                 <div key={i} className="flex items-center gap-2">
-                  <div className={isDir ? "i-ph:folder-duotone text-bolt-elements-icon-folder" : "i-ph:file-text-duotone text-bolt-elements-icon-file"} />
+                  <div
+                    className={
+                      isDir
+                        ? 'i-ph:folder-duotone text-bolt-elements-icon-folder'
+                        : 'i-ph:file-text-duotone text-bolt-elements-icon-file'
+                    }
+                  />
                   {item}
                 </div>
               );
@@ -146,16 +157,16 @@ export const ToolUseContents = memo(({ invocation }: { invocation: ToolInvocatio
     }
 
     if (args.command === 'create') {
-      const { file_text } = args;
+      const { file_text: fileText } = args;
       return (
         <div className="space-y-2">
-          <LineNumberViewer lines={file_text.split('\n')} />
+          <LineNumberViewer lines={fileText.split('\n')} />
         </div>
       );
     }
 
     if (args.command === 'insert') {
-      const { insert_line, new_str } = args;
+      const { insert_line: insertLine, new_str: newStr } = args;
       return (
         <div className="space-y-2">
           <div className="font-mono text-sm bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor overflow-hidden text-bolt-elements-textPrimary">
@@ -164,10 +175,10 @@ export const ToolUseContents = memo(({ invocation }: { invocation: ToolInvocatio
                 <tbody>
                   <tr>
                     <td className="px-4 py-1 text-right select-none border-r border-bolt-elements-borderColor text-bolt-elements-textTertiary w-12 bg-bolt-elements-background-depth-1">
-                      {insert_line}
+                      {insertLine}
                     </td>
                     <td className="py-1 whitespace-pre group-hover:bg-bolt-elements-background-depth-2 bg-green-500/10 dark:bg-green-500/20 border-l-4 border-green-500">
-                      {new_str}
+                      {newStr}
                     </td>
                   </tr>
                 </tbody>
@@ -179,14 +190,14 @@ export const ToolUseContents = memo(({ invocation }: { invocation: ToolInvocatio
     }
 
     if (args.command === 'str_replace') {
-      const { old_str, new_str } = args;
+      const { old_str: oldStr, new_str: newStr } = args;
       return (
         <div className="space-y-2">
           <div className="font-mono text-sm bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor overflow-hidden text-bolt-elements-textPrimary">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <tbody>
-                  {old_str.split('\n').map((line: string, i: number) => (
+                  {oldStr.split('\n').map((line: string, i: number) => (
                     <tr key={`old-${i}`} className="group">
                       <td className="px-4 py-1 text-right select-none border-r border-bolt-elements-borderColor text-bolt-elements-textTertiary w-12 bg-bolt-elements-background-depth-1">
                         {i + 1}
@@ -197,11 +208,14 @@ export const ToolUseContents = memo(({ invocation }: { invocation: ToolInvocatio
                     </tr>
                   ))}
                   <tr>
-                    <td colSpan={2} className="px-4 py-1 text-center text-bolt-elements-textTertiary border-y border-bolt-elements-borderColor">
+                    <td
+                      colSpan={2}
+                      className="px-4 py-1 text-center text-bolt-elements-textTertiary border-y border-bolt-elements-borderColor"
+                    >
                       ↓
                     </td>
                   </tr>
-                  {new_str.split('\n').map((line: string, i: number) => (
+                  {newStr.split('\n').map((line: string, i: number) => (
                     <tr key={`new-${i}`} className="group">
                       <td className="px-4 py-1 text-right select-none border-r border-bolt-elements-borderColor text-bolt-elements-textTertiary w-12 bg-bolt-elements-background-depth-1">
                         {i + 1}
@@ -230,17 +244,13 @@ export const ToolUseContents = memo(({ invocation }: { invocation: ToolInvocatio
   }
 
   // Fallback for other tool types
-  return (
-    <pre className="whitespace-pre-wrap overflow-x-auto">
-      {JSON.stringify(invocation, null, 2)}
-    </pre>
-  );
+  return <pre className="whitespace-pre-wrap overflow-x-auto">{JSON.stringify(invocation, null, 2)}</pre>;
 });
 
 function statusIcon(status: ActionState['status'], invocation: ToolInvocation) {
   let inner: React.ReactNode;
   let color: string;
-  if (invocation.state === "result" && invocation.result.startsWith("Error:")) {
+  if (invocation.state === 'result' && invocation.result.startsWith('Error:')) {
     inner = <div className="i-ph:x" />;
     color = 'text-bolt-elements-icon-error';
   } else {
@@ -269,10 +279,10 @@ function statusIcon(status: ActionState['status'], invocation: ToolInvocation) {
         return null;
     }
   }
-  return <div className={classNames('text-lg', color)}>{inner}</div>
+  return <div className={classNames('text-lg', color)}>{inner}</div>;
 }
 
-function toolTitle(invocation: ToolInvocation, status: ActionState['status']): React.ReactNode {
+function toolTitle(invocation: ToolInvocation): React.ReactNode {
   switch (invocation.toolName) {
     case 'str_replace_editor': {
       if (invocation.state === 'partial-call') {
@@ -293,7 +303,9 @@ function toolTitle(invocation: ToolInvocation, status: ActionState['status']): R
             return (
               <div className="flex items-center gap-2">
                 <div className="i-ph:pencil-simple text-bolt-elements-textSecondary" />
-                <span>Insert into {p} at line {args.insert_line}</span>
+                <span>
+                  Insert into {p} at line {args.insert_line}
+                </span>
               </div>
             );
           }
@@ -306,9 +318,9 @@ function toolTitle(invocation: ToolInvocation, status: ActionState['status']): R
             );
           }
           case 'view': {
-            let verb = "Read";
-            if (invocation.state === "result" && invocation.result.startsWith("Directory:")) {
-              verb = "List";
+            let verb = 'Read';
+            if (invocation.state === 'result' && invocation.result.startsWith('Directory:')) {
+              verb = 'List';
             }
             let extra = '';
             if (args.view_range) {
@@ -318,11 +330,14 @@ function toolTitle(invocation: ToolInvocation, status: ActionState['status']): R
             return (
               <div className="flex items-center gap-2">
                 <div className="i-ph:file-text text-bolt-elements-textSecondary" />
-                <span>{verb} {p || "/home/project"}{extra}</span>
+                <span>
+                  {verb} {p || '/home/project'}
+                  {extra}
+                </span>
               </div>
             );
           }
-          case "undo_edit": {
+          case 'undo_edit': {
             return (
               <div className="flex items-center gap-2">
                 <div className="i-ph:arrow-counter-clockwise text-bolt-elements-textSecondary" />
@@ -342,7 +357,7 @@ function toolTitle(invocation: ToolInvocation, status: ActionState['status']): R
             {args.command}
           </code>
         </div>
-      )
+      );
     }
     default: {
       return invocation.toolName;
@@ -366,9 +381,7 @@ const LineNumberViewer = memo(({ lines, startLineNumber = 1 }: LineNumberViewerP
                 <td className="px-4 py-1 text-right select-none border-r border-bolt-elements-borderColor text-bolt-elements-textTertiary w-12 bg-bolt-elements-background-depth-1">
                   {i + startLineNumber}
                 </td>
-                <td className="py-1 whitespace-pre group-hover:bg-bolt-elements-background-depth-2">
-                  {line}
-                </td>
+                <td className="py-1 whitespace-pre group-hover:bg-bolt-elements-background-depth-2">{line}</td>
               </tr>
             ))}
           </tbody>

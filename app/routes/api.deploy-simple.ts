@@ -30,14 +30,14 @@ export async function action({ request, context }: ActionFunctionArgs) {
     const response = await fetch(`${PROVISION_HOST}/api/hosting/deploy?deploymentName=${deploymentName}`, {
       method: 'POST',
       headers: {
-        Authorization
+        Authorization,
       },
-      body: file
+      body: file,
     });
 
     if (!response.ok) {
       const error = await response.json();
-      console.log(error)
+      console.log(error);
       return json(error, { status: response.status });
     }
 
