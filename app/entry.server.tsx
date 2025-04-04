@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/remix';
 import type { AppLoadContext } from '@remix-run/cloudflare';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
@@ -5,6 +6,10 @@ import { renderToReadableStream } from 'react-dom/server';
 import { renderHeadToString } from 'remix-island';
 import { Head } from './root';
 import { themeStore } from '~/lib/stores/theme';
+
+export const handleError = Sentry.wrapHandleErrorWithSentry((_error, {}) => {
+  // Custom handleError implementation
+});
 
 export default async function handleRequest(
   request: Request,
