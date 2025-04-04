@@ -47,3 +47,6 @@ docs/instructions/Roadmap.md
 
 package-lock.json
 template/pnpm-lock.yaml
+
+# Sentry Config File
+.env.sentry-build-plugin
