@@ -7,7 +7,7 @@ import { renderHeadToString } from 'remix-island';
 import { Head } from './root';
 import { themeStore } from '~/lib/stores/theme';
 
-export const handleError = Sentry.wrapHandleErrorWithSentry((error, { request }) => {
+export const handleError = Sentry.wrapHandleErrorWithSentry((_error, {}) => {
   // Custom handleError implementation
 });
 
