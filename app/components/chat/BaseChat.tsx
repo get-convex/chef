@@ -314,9 +314,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         />
                       )}
                     </ClientOnly>
-                    <div className="flex justify-between items-center text-sm p-4 pt-2">
-                      <div></div>
-                      {input.length > 3 ? (
+                    {input.length > 3 ? (
+                      <div className="flex justify-between items-center text-sm p-4 pt-2">
+                        <div></div>
+
                         <div className="text-xs text-bolt-elements-textTertiary">
                           <KeyboardShortcut
                             value={['Shift', 'Return']}
@@ -324,9 +325,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           />{' '}
                           for new line
                         </div>
-                      ) : null}
-                      <ConvexConnection size={flexAuthMode === 'InviteCode' ? 'hidden' : 'small'} />
-                    </div>
+                        <ConvexConnection size={flexAuthMode === 'InviteCode' ? 'hidden' : 'small'} />
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
