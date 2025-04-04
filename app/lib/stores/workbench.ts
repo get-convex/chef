@@ -81,10 +81,10 @@ export class WorkbenchStore {
   }
 
   async snapshotUrl(id?: string) {
-    const R2_SNAPSHOT_URL = 'https://pub-2a55ba970a5b4cd6a9b18adbf8df6fe8.r2.dev/snapshot.bin';
+    const SNAPSHOT_URL = 'https://static.convex.dev/flow/snapshot.bin';
     if (!id) {
-      console.log('No chat id yet, downloading from R2');
-      return R2_SNAPSHOT_URL;
+      console.log('No chat id yet, downloading from Convex');
+      return SNAPSHOT_URL;
     }
     const sessionId = sessionIdStore.get();
     if (!sessionId) {
@@ -92,8 +92,8 @@ export class WorkbenchStore {
     }
     const maybeSnapshotUrl = await this.#convexClient.query(api.snapshot.getSnapshotUrl, { chatId: id, sessionId });
     if (!maybeSnapshotUrl) {
-      console.log('No snapshot URL found, downloading from R2');
-      return R2_SNAPSHOT_URL;
+      console.log('No snapshot URL found, downloading from Convex');
+      return SNAPSHOT_URL;
     }
     console.log('Snapshot URL found, downloading from Convex');
     return maybeSnapshotUrl;
