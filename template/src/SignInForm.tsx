@@ -35,12 +35,13 @@ export function SignInForm() {
         </button>
         <div className="text-center text-sm text-slate-600">
           <span>{flow === "signIn" ? "Don't have an account? " : "Already have an account? "}</span>
-          <span
+          <button
+            type="button"
             className="text-blue-500 cursor-pointer"
             onClick={() => setFlow(flow === "signIn" ? "signUp" : "signIn")}
           >
             {flow === "signIn" ? "Sign up instead" : "Sign in instead"}
-          </span>
+          </button>
         </div>
       </form>
       <div className="flex items-center justify-center my-3">
