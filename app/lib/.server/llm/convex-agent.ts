@@ -16,6 +16,7 @@ import { viewTool } from '~/lib/runtime/viewTool';
 import type { ConvexToolSet } from '~/lib/common/types';
 import { npmInstallTool } from '~/lib/runtime/npmInstallTool';
 import { openai } from '@ai-sdk/openai';
+import { captureException } from '@sentry/remix';
 
 export type AITextDataStream = ReturnType<typeof createDataStream>;
 
@@ -63,11 +64,48 @@ export async function convexAgent(env: Env, firstUserMessage: boolean, messages:
           systemPrompt: [roleSystemPrompt, constantPrompt].join('\n'),
         };
       } else {
+        // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
+        const createRateLimitAwareFetch = () => {
+          return async (input: RequestInfo | URL, init?: RequestInit) => {
+            const enrichedOptions = anthropicInjectCacheControl(constantPrompt, init);
+            try {
+              const response = await fetch(input, enrichedOptions);
+
+              if (response.status == 429) {
+                captureException('Rate limited by Anthropic, switching to low QoS API key', {
+                  level: 'warning',
+                  extra: {
+                    response,
+                  },
+                });
+                const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
+
+                if (!lowQosKey) {
+                  return response;
+                }
+
+                if (enrichedOptions && enrichedOptions.headers) {
+                  const headers = new Headers(enrichedOptions.headers);
+                  headers.set('x-api-key', lowQosKey);
+                  enrichedOptions.headers = headers;
+                }
+
+                return fetch(input, enrichedOptions);
+              }
+
+              return response;
+            } catch (error) {
+              console.error('Error with Anthropic API call:', error);
+              throw error;
+            }
+          };
+        };
+
+        const primaryApiKey = getEnv(env, 'ANTHROPIC_API_KEY');
+
         const anthropic = createAnthropic({
-          apiKey: getEnv(env, 'ANTHROPIC_API_KEY'),
-          fetch: async (url, options) => {
-            return fetch(url, anthropicInjectCacheControl(constantPrompt, options));
-          },
+          apiKey: primaryApiKey,
+          fetch: createRateLimitAwareFetch(),
         });
         const model = getEnv(env, 'ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
         provider = {
