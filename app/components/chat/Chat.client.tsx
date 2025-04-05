@@ -27,6 +27,7 @@ import { api } from '@convex/_generated/api';
 import { toast, Toaster } from 'sonner';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import type { PartId } from '~/lib/stores/Artifacts';
+import { captureException } from '@sentry/remix';
 
 const logger = createScopedLogger('Chat');
 
@@ -152,6 +153,12 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       return result;
     },
     onError: (e) => {
+      captureException('Failed to process chat request: ' + e.message, {
+        level: 'error',
+        extra: {
+          error: e,
+        },
+      });
       console.log('Error', e);
       logger.error('Request failed\n\n', e, error);
       logStore.logError('Chat request failed', e, {
