@@ -1,5 +1,6 @@
 import { json } from '@remix-run/cloudflare';
 import type { ActionFunctionArgs } from '@remix-run/cloudflare';
+import Cloudflare from 'cloudflare';
 
 const PROVISION_HOST = 'https://provision.convex.dev';
 //const PROVISION_HOST = "http://127.0.0.1:8000";
@@ -44,6 +45,25 @@ export async function action({ request, context }: ActionFunctionArgs) {
     }
 
     const result = await response.json();
+
+    // Try to purge Cloudflare cache
+    const cfApiToken =
+      (context.cloudflare.env as Record<string, any>).CLOUDFLARE_API_KEY || process.env.CLOUDFLARE_API_KEY;
+    const zoneId = (context.cloudflare.env as Record<string, any>).CLOUDFLARE_ZONE_ID || process.env.CLOUDFLARE_ZONE_ID;
+
+    if (cfApiToken && zoneId) {
+      try {
+        const client = new Cloudflare({ apiToken: cfApiToken });
+        await client.cache.purge({
+          zone_id: zoneId,
+          hosts: [`${deploymentName}.convex.app`],
+        });
+      } catch (err) {
+        // Log failure but continue with deployment response
+        console.error('Failed to purge cache:', err instanceof Error ? err.message : 'Unknown error');
+      }
+    }
+
     return json(result);
   } catch (error) {
     console.error('Deploy error:', error);
