@@ -58,6 +58,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
           zone_id: zoneId,
           hosts: [`${deploymentName}.convex.app`],
         });
+        console.log(`Purged cache for ${deploymentName}.convex.app`);
       } catch (err) {
         // Log failure but continue with deployment response
         console.error('Failed to purge cache:', err instanceof Error ? err.message : 'Unknown error');
