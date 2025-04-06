@@ -17,7 +17,7 @@ import type { ConvexToolSet } from '~/lib/common/types';
 import { npmInstallTool } from '~/lib/runtime/npmInstallTool';
 import { openai } from '@ai-sdk/openai';
 import type { Tracer } from '~/routes/api.chat';
-import type { Span } from '@opentelemetry/api';
+import { editTool } from '~/lib/runtime/editTool';
 
 type AITextDataStream = ReturnType<typeof createDataStream>;
 
@@ -35,6 +35,7 @@ const tools: ConvexToolSet = {
   deploy: deployTool,
   view: viewTool,
   npmInstall: npmInstallTool,
+  edit: editTool,
 };
 
 export async function convexAgent(chatId: string, env: Env, firstUserMessage: boolean, messages: Messages, tracer: Tracer | null): Promise<AITextDataStream> {
