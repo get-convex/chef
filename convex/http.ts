@@ -3,6 +3,7 @@ import { httpAction, type ActionCtx } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import { ConvexError } from 'convex/values';
+import { openaiProxy } from './openaiProxy';
 
 const http = httpRouter();
 
@@ -74,6 +75,12 @@ http.route({
       },
     });
   }),
+});
+
+http.route({
+  pathPrefix: '/openai-proxy/',
+  method: 'POST',
+  handler: openaiProxy,
 });
 
 export default http;
