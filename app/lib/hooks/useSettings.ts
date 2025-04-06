@@ -20,7 +20,7 @@ import type { TabWindowConfig, TabVisibilityConfig } from '~/components/@setting
 import { logStore } from '~/lib/stores/logs';
 import { getLocalStorage, setLocalStorage } from '~/lib/persistence';
 
-export interface Settings {
+interface Settings {
   theme: 'light' | 'dark' | 'system';
   language: string;
   notifications: boolean;
@@ -29,7 +29,7 @@ export interface Settings {
   tabConfiguration: TabWindowConfig;
 }
 
-export interface UseSettingsReturn {
+interface UseSettingsReturn {
   // Theme and UI settings
   setTheme: (theme: Settings['theme']) => void;
   setLanguage: (language: string) => void;

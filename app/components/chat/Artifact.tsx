@@ -15,7 +15,7 @@ const highlighterOptions = {
   themes: ['light-plus', 'dark-plus'],
 };
 
-export const shellHighlighter: HighlighterGeneric<BundledLanguage, BundledTheme> =
+const shellHighlighter: HighlighterGeneric<BundledLanguage, BundledTheme> =
   import.meta.hot?.data.shellHighlighter ?? (await createHighlighter(highlighterOptions));
 
 if (import.meta.hot) {
@@ -125,30 +125,11 @@ export const Artifact = memo(({ partId }: ArtifactProps) => {
   );
 });
 
-interface ShellCodeBlockProps {
-  className?: string;
-  code: string;
-}
-
-export function ShellCodeBlock({ className, code }: ShellCodeBlockProps) {
-  return (
-    <div
-      className={classNames('text-xs', className)}
-      dangerouslySetInnerHTML={{
-        __html: shellHighlighter.codeToHtml(code, {
-          lang: 'shell',
-          theme: 'dark-plus',
-        }),
-      }}
-    ></div>
-  );
-}
-
 interface ActionListProps {
   actions: ActionState[];
 }
 
-export const actionVariants = {
+const actionVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
 };
@@ -213,7 +194,7 @@ const ActionList = memo(({ actions }: ActionListProps) => {
   );
 });
 
-export function getIconColor(status: ActionState['status']) {
+function getIconColor(status: ActionState['status']) {
   switch (status) {
     case 'pending': {
       return 'text-bolt-elements-textTertiary';

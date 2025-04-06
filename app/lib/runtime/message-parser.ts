@@ -25,7 +25,7 @@ export interface ActionCallbackData {
 export type ArtifactCallback = (data: ArtifactCallbackData) => void;
 export type ActionCallback = (data: ActionCallbackData) => void;
 
-export interface ParserCallbacks {
+interface ParserCallbacks {
   onArtifactOpen?: ArtifactCallback;
   onArtifactClose?: ArtifactCallback;
   onActionOpen?: ActionCallback;
@@ -39,7 +39,7 @@ interface ElementFactoryProps {
 
 type ElementFactory = (props: ElementFactoryProps) => string;
 
-export interface StreamingMessageParserOptions {
+interface StreamingMessageParserOptions {
   callbacks?: ParserCallbacks;
   artifactElement?: ElementFactory;
 }

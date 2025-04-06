@@ -13,13 +13,13 @@ const logger = createScopedLogger('FilesStore');
 
 const utf8TextDecoder = new TextDecoder('utf8', { fatal: true });
 
-export interface File {
+interface File {
   type: 'file';
   content: string;
   isBinary: boolean;
 }
 
-export interface Folder {
+interface Folder {
   type: 'folder';
 }
 

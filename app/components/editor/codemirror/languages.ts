@@ -1,6 +1,6 @@
 import { LanguageDescription } from '@codemirror/language';
 
-export const supportedLanguages = [
+const supportedLanguages = [
   LanguageDescription.of({
     name: 'VUE',
     extensions: ['vue'],

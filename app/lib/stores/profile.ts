@@ -17,12 +17,3 @@ const initialProfile: Profile = storedProfile
     };
 
 export const profileStore = atom<Profile>(initialProfile);
-
-export const updateProfile = (updates: Partial<Profile>) => {
-  profileStore.set({ ...profileStore.get(), ...updates });
-
-  // Persist to localStorage
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('bolt_profile', JSON.stringify(profileStore.get()));
-  }
-};

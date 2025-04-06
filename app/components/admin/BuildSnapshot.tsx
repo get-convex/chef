@@ -268,7 +268,7 @@ interface TreeNodeProps {
   level: number;
 }
 
-export function SnapshotTree({ tree }: { tree: Record<string, FileTreeItemType> }) {
+function SnapshotTree({ tree }: { tree: Record<string, FileTreeItemType> }) {
   // Sort entries: directories first (largest to smallest), then files (largest to smallest)
   const sortedEntries = Object.entries(tree).sort((a, b) => {
     const aIsDir = a[1].type === 'directory';

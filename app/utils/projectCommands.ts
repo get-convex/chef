@@ -1,7 +1,7 @@
 import type { Message } from 'ai';
 import { generateId } from './fileUtils';
 
-export interface ProjectCommands {
+interface ProjectCommands {
   type: string;
   setupCommand?: string;
   startCommand?: string;
@@ -92,7 +92,7 @@ ${commandString}
   };
 }
 
-export function escapeBoltArtifactTags(input: string) {
+function escapeBoltArtifactTags(input: string) {
   // Regular expression to match boltArtifact tags and their content
   const regex = /(<boltArtifact[^>]*>)([\s\S]*?)(<\/boltArtifact>)/g;
 
@@ -108,7 +108,7 @@ export function escapeBoltArtifactTags(input: string) {
   });
 }
 
-export function escapeBoltAActionTags(input: string) {
+function escapeBoltAActionTags(input: string) {
   // Regular expression to match boltArtifact tags and their content
   const regex = /(<boltAction[^>]*>)([\s\S]*?)(<\/boltAction>)/g;
 

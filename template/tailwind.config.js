@@ -1,4 +1,4 @@
-const { fontFamily } = require('tailwindcss/defaultTheme');
+const { } = require('tailwindcss/defaultTheme');
 
 module.exports = {
   mode: 'jit',

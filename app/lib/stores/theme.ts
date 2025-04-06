@@ -3,13 +3,9 @@ import { logStore } from './logs';
 
 export type Theme = 'dark' | 'light';
 
-export const kTheme = 'bolt_theme';
+const kTheme = 'bolt_theme';
 
-export function themeIsDark() {
-  return themeStore.get() === 'dark';
-}
-
-export const DEFAULT_THEME = 'light';
+const DEFAULT_THEME = 'light';
 
 export const themeStore = atom<Theme>(initStore());
 

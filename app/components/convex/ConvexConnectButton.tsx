@@ -16,7 +16,7 @@ export function ConvexConnectButton() {
   return <ConvexConnectButtonViaOauth />;
 }
 
-export function ConvexConnectButtonForInviteCode() {
+function ConvexConnectButtonForInviteCode() {
   const convexClient = useConvex();
   const sessionId = useConvexSessionId();
   const chatId = useChatId();
@@ -79,7 +79,7 @@ export function ConvexConnectButtonForInviteCode() {
   );
 }
 
-export function ConvexConnectButtonViaOauth() {
+function ConvexConnectButtonViaOauth() {
   const [isLoading, setIsLoading] = useState(false);
   const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
   const convexClient = useConvex();

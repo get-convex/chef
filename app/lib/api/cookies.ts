@@ -1,4 +1,4 @@
-export function parseCookies(cookieHeader: string | null) {
+function parseCookies(cookieHeader: string | null) {
   const cookies: Record<string, string> = {};
 
   if (!cookieHeader) {

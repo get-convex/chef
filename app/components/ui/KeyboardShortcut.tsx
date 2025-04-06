@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { classNames } from '~/utils/classNames';
 
-export type Key =
+type Key =
   | 'CtrlOrCmd' // depending on platform
   | 'Ctrl'
   | 'Alt'

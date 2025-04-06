@@ -59,7 +59,7 @@ const transition = {
   ease: cubicEasingFn,
 };
 
-export const dialogBackdropVariants = {
+const dialogBackdropVariants = {
   closed: {
     opacity: 0,
     transition,
@@ -70,7 +70,7 @@ export const dialogBackdropVariants = {
   },
 } satisfies Variants;
 
-export const dialogVariants = {
+const dialogVariants = {
   closed: {
     x: '-50%',
     y: '-40%',

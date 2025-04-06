@@ -6,7 +6,7 @@ import { classNames } from '~/utils/classNames';
 import { WORK_DIR } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { renderLogger } from '~/utils/logger';
-import FileTree from './FileTree';
+import { FileTree } from './FileTree';
 
 const WORK_DIR_REGEX = new RegExp(`^${WORK_DIR.split('/').slice(0, -1).join('/').replaceAll('/', '\\/')}/`);
 

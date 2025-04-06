@@ -2,7 +2,7 @@ import type { Change } from 'diff';
 
 export type ActionType = 'file' | 'shell' | 'convex';
 
-export interface BaseAction {
+interface BaseAction {
   content: string;
 }
 
@@ -16,19 +16,19 @@ export interface ShellAction extends BaseAction {
   type: 'shell';
 }
 
-export interface NpmInstallAction extends BaseAction {
+interface NpmInstallAction extends BaseAction {
   type: 'npmInstall';
 }
 
-export interface NpmExecAction extends BaseAction {
+interface NpmExecAction extends BaseAction {
   type: 'npmExec';
 }
 
-export interface StartAction extends BaseAction {
+interface StartAction extends BaseAction {
   type: 'start';
 }
 
-export interface BuildAction extends BaseAction {
+interface BuildAction extends BaseAction {
   type: 'build';
 }
 
@@ -37,7 +37,7 @@ export interface ConvexAction extends BaseAction {
   output?: string;
 }
 
-export interface ToolUseAction extends BaseAction {
+interface ToolUseAction extends BaseAction {
   type: 'toolUse';
   toolName: string;
 }

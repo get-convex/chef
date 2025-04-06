@@ -10,7 +10,7 @@ interface WebContainerContext {
   loaded: boolean;
 }
 
-export const webcontainerContext: WebContainerContext = import.meta.hot?.data.webcontainerContext ?? {
+const webcontainerContext: WebContainerContext = import.meta.hot?.data.webcontainerContext ?? {
   loaded: false,
 };
 

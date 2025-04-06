@@ -1,7 +1,7 @@
 import type { Tool } from 'ai';
 import { z } from 'zod';
 
-export const deployToolDescription = `
+const deployToolDescription = `
 Deploy the app to Convex and start the Vite development server (if not already running).
 
 Execute this tool call after you've used an artifact to write files to the filesystem

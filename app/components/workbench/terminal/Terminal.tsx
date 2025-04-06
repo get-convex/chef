@@ -12,7 +12,7 @@ export interface TerminalRef {
   reloadStyles: () => void;
 }
 
-export interface TerminalProps {
+interface TerminalProps {
   className?: string;
   theme: Theme;
   readonly?: boolean;

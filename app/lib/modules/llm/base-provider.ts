@@ -1,7 +1,6 @@
 import type { LanguageModelV1 } from 'ai';
 import type { ProviderInfo, ProviderConfig, ModelInfo } from './types';
 import type { IProviderSetting } from '~/types/model';
-import { createOpenAI } from '@ai-sdk/openai';
 import { LLMManager } from './manager';
 
 export abstract class BaseProvider implements ProviderInfo {
@@ -115,15 +114,4 @@ export abstract class BaseProvider implements ProviderInfo {
     apiKeys?: Record<string, string>;
     providerSettings?: Record<string, IProviderSetting>;
   }): LanguageModelV1;
-}
-
-type OptionalApiKey = string | undefined;
-
-export function getOpenAILikeModel(baseURL: string, apiKey: OptionalApiKey, model: string) {
-  const openai = createOpenAI({
-    baseURL,
-    apiKey,
-  });
-
-  return openai(model);
 }

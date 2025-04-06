@@ -64,7 +64,7 @@ export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => 
       }
 
       return parsedContent;
-    } catch (_error) {
+    } catch {
       return {} as ConvexToolInvocation;
     }
   }, [action?.content, action?.status, artifact, toolCallId]);
@@ -140,7 +140,7 @@ export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => 
   );
 });
 
-export const ToolUseContents = memo(
+const ToolUseContents = memo(
   ({ artifact, invocation }: { artifact: ArtifactState; invocation: ConvexToolInvocation }) => {
     switch (invocation.toolName) {
       case 'deploy': {
@@ -328,22 +328,22 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
       if (invocation.state === 'result' && invocation.result.startsWith('Directory:')) {
         verb = 'List';
         icon = 'i-ph:folder';
-        let extra = '';
-        if (args.view_range) {
-          const [start, end] = args.view_range;
-          const endName = end === -1 ? 'end' : end.toString();
-          extra = ` (lines ${start} - ${endName})`;
-        }
-        return (
-          <div className="flex items-center gap-2">
-            <div className={`${icon} text-bolt-elements-textSecondary`} />
-            <span>
-              {verb} {args.path || '/home/project'}
-              {extra}
-            </span>
-          </div>
-        );
       }
+      let extra = '';
+      if (args.view_range) {
+        const [start, end] = args.view_range;
+        const endName = end === -1 ? 'end' : end.toString();
+        extra = ` (lines ${start} - ${endName})`;
+      }
+      return (
+        <div className="flex items-center gap-2">
+          <div className={`${icon} text-bolt-elements-textSecondary`} />
+          <span>
+            {verb} {args.path || '/home/project'}
+            {extra}
+          </span>
+        </div>
+      );
     }
     case 'npmInstall': {
       if (invocation.state === 'partial-call' || invocation.state === 'call') {

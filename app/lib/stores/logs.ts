@@ -4,7 +4,7 @@ import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('LogStore');
 
-export interface LogEntry {
+interface LogEntry {
   id: string;
   timestamp: string;
   level: 'info' | 'warning' | 'error' | 'debug';

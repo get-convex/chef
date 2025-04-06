@@ -139,8 +139,6 @@ export const FileTree = memo(
 );
 FileTree.displayName = 'FileTree';
 
-export default FileTree;
-
 interface FileOrFolderProps {
   fileOrFolder: FileNode | FolderNode;
   rootFolder?: string;

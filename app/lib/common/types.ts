@@ -11,9 +11,9 @@ export type ConvexToolSet = {
   npmInstall: Tool<typeof npmInstallToolParameters, string>;
 };
 
-export type ConvexToolCall = ToolCallUnion<ConvexToolSet>;
+type ConvexToolCall = ToolCallUnion<ConvexToolSet>;
 
-export type ConvexToolResult =
+type ConvexToolResult =
   | {
       toolName: 'deploy';
       args?: EmptyArgs;

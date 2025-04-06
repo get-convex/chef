@@ -56,7 +56,7 @@ export async function newShellProcess(webcontainer: WebContainer, terminal: ITer
   return process;
 }
 
-export type ExecutionResult = { output: string; exitCode: number } | undefined;
+type ExecutionResult = { output: string; exitCode: number } | undefined;
 
 export class BoltShell {
   #initialized: (() => void) | undefined;

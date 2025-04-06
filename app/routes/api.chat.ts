@@ -11,10 +11,13 @@ export async function action(args: ActionFunctionArgs) {
   return chatAction(args, args.context.cloudflare.env);
 }
 
+export type Tracer = ReturnType<typeof WebTracerProvider.prototype.getTracer>;
+
 async function chatAction({ request }: ActionFunctionArgs, env: Env) {
   const AXIOM_API_TOKEN = getEnv(env, 'AXIOM_API_TOKEN');
   const AXIOM_API_URL = getEnv(env, 'AXIOM_API_URL');
   const AXIOM_DATASET_NAME = getEnv(env, 'AXIOM_DATASET_NAME');
+  let tracer: Tracer | null = null;
   if (AXIOM_API_TOKEN && AXIOM_API_URL && AXIOM_DATASET_NAME) {
     const exporter = new OTLPTraceExporter({
       url: AXIOM_API_URL,
@@ -38,18 +41,19 @@ async function chatAction({ request }: ActionFunctionArgs, env: Env) {
       ],
     });
     provider.register();
+    tracer = provider.getTracer('ai');
     logger.info('✅ Axiom instrumentation registered!');
   } else {
     logger.warn('⚠️ AXIOM_API_TOKEN, AXIOM_API_URL, and AXIOM_DATASET_NAME not set, skipping Axiom instrumentation.');
   }
 
-  const body = await request.json<{ messages: Messages; firstUserMessage: boolean }>();
-  const { messages, firstUserMessage } = body;
+  const body = await request.json<{ messages: Messages; firstUserMessage: boolean; chatId: string }>();
+  const { messages, firstUserMessage, chatId } = body;
   try {
     const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
 
-    const dataStream = await convexAgent(env, firstUserMessage, messages);
+    const dataStream = await convexAgent(chatId, env, firstUserMessage, messages, tracer);
     // Cloudflare expects binary data in its streams.
     const encoder = new TextEncoder();
     const binaryStream = dataStream.pipeThrough(

@@ -39,7 +39,7 @@ export interface ArtifactState {
   runner: ActionRunner;
 }
 
-export type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
+type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard';
 

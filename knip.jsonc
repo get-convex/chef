@@ -1,0 +1,27 @@
+{
+  "entry": [
+    "{index,cli,main}.{js,cjs,mjs,jsx,ts,cts,mts,tsx}",
+    "src/{index,cli,main}.{js,cjs,mjs,jsx,ts,cts,mts,tsx}",
+    "convex/auth.config.ts",
+    "convex/crons.ts",
+    "convex/http.ts",
+    // generated code containing possibly-unused exports
+    "convex/_generated/**",
+    "functions/**",
+    "load-context.ts"
+  ],
+  "project": ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}!"],
+  "ignore": ["template/**"],
+
+  "ignoreDependencies": [
+    // UnoCSS Icon Dependencies
+    // These packages are needed by UnoCSS's presetIcons for the i-* icon classes
+    // even though they're not directly imported in our code
+    "@iconify-json/ph",        // For Phosphor icons (i-ph:*) used in components like TabManagement.tsx
+    "@iconify-json/svg-spinners" // For spinner icons (i-svg-spinners:*)
+  ],
+  "ignoreBinaries": [
+    "version", // from `pnpm version`, needed until https://github.com/webpro-nl/knip/pull/1020 lands
+    "open" // yeah this only works on macs, sorry
+  ]
+}

@@ -1,16 +1,6 @@
-import { captureRemixErrorBoundaryError } from '@sentry/remix';
 import { useStore } from '@nanostores/react';
 import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/cloudflare';
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  json,
-  useRouteLoaderData,
-  useRouteError,
-} from '@remix-run/react';
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, json, useRouteLoaderData } from '@remix-run/react';
 import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
 import { themeStore } from './lib/stores/theme';
 import { stripIndents } from './utils/stripIndent';
@@ -139,12 +129,6 @@ import {
   getConvexUrlInLoader,
   getConvexOAuthClientIdInLoader,
 } from './lib/persistence/convex';
-
-export const ErrorBoundary = () => {
-  const error = useRouteError();
-  captureRemixErrorBoundaryError(error);
-  return <div>Something went wrong</div>;
-};
 
 export default function App() {
   const theme = useStore(themeStore);

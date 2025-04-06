@@ -10,9 +10,8 @@ import type {
 import { DEFAULT_TAB_CONFIG } from '~/components/@settings/core/constants';
 import Cookies from 'js-cookie';
 import { toggleTheme } from './theme';
-import { create } from 'zustand';
 
-export interface Shortcut {
+interface Shortcut {
   key: string;
   ctrlKey?: boolean;
   shiftKey?: boolean;
@@ -28,11 +27,9 @@ export interface Shortcuts {
   toggleTheme: Shortcut;
   toggleTerminal: Shortcut;
 }
+const LOCAL_PROVIDERS = ['OpenAILike', 'LMStudio', 'Ollama'];
 
-export const URL_CONFIGURABLE_PROVIDERS = ['Ollama', 'LMStudio', 'OpenAILike'];
-export const LOCAL_PROVIDERS = ['OpenAILike', 'LMStudio', 'Ollama'];
-
-export type ProviderSetting = Record<string, IProviderConfig>;
+type ProviderSetting = Record<string, IProviderConfig>;
 
 // Simplified shortcuts store with only theme toggle
 export const shortcutsStore = map<Shortcuts>({
@@ -265,46 +262,3 @@ export const resetTabConfiguration = () => {
   tabConfigurationStore.set(defaultConfig);
   localStorage.setItem('bolt_tab_configuration', JSON.stringify(defaultConfig));
 };
-
-// Developer mode store with persistence
-export const developerModeStore = atom<boolean>(initialSettings.developerMode);
-
-export const setDeveloperMode = (value: boolean) => {
-  developerModeStore.set(value);
-
-  if (isBrowser) {
-    localStorage.setItem(SETTINGS_KEYS.DEVELOPER_MODE, JSON.stringify(value));
-  }
-};
-
-// First, let's define the SettingsStore interface
-interface SettingsStore {
-  isOpen: boolean;
-  selectedTab: string;
-  openSettings: () => void;
-  closeSettings: () => void;
-  setSelectedTab: (tab: string) => void;
-}
-
-export const useSettingsStore = create<SettingsStore>((set) => ({
-  isOpen: false,
-  selectedTab: 'user', // Default tab
-
-  openSettings: () => {
-    set({
-      isOpen: true,
-      selectedTab: 'user', // Always open to user tab
-    });
-  },
-
-  closeSettings: () => {
-    set({
-      isOpen: false,
-      selectedTab: 'user', // Reset to user tab when closing
-    });
-  },
-
-  setSelectedTab: (tab: string) => {
-    set({ selectedTab: tab });
-  },
-}));

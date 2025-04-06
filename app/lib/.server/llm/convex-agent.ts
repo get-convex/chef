@@ -16,17 +16,17 @@ import { viewTool } from '~/lib/runtime/viewTool';
 import type { ConvexToolSet } from '~/lib/common/types';
 import { npmInstallTool } from '~/lib/runtime/npmInstallTool';
 import { openai } from '@ai-sdk/openai';
-import { captureException } from '@sentry/remix';
+import type { Tracer } from '~/routes/api.chat';
+import type { Span } from '@opentelemetry/api';
 
-export type AITextDataStream = ReturnType<typeof createDataStream>;
+type AITextDataStream = ReturnType<typeof createDataStream>;
 
-export type Provider = {
+type Provider = {
   maxTokens: number;
   model: LanguageModelV1;
-  systemPrompt?: string;
 };
 
-export type RequestProgress = {
+type RequestProgress = {
   counter: number;
   cumulativeUsage: { completionTokens: number; promptTokens: number; totalTokens: number };
 };
@@ -37,7 +37,7 @@ const tools: ConvexToolSet = {
   npmInstall: npmInstallTool,
 };
 
-export async function convexAgent(env: Env, firstUserMessage: boolean, messages: Messages): Promise<AITextDataStream> {
+export async function convexAgent(chatId: string, env: Env, firstUserMessage: boolean, messages: Messages, tracer: Tracer | null): Promise<AITextDataStream> {
   const progress: RequestProgress = {
     counter: 1,
     cumulativeUsage: {
@@ -61,51 +61,13 @@ export async function convexAgent(env: Env, firstUserMessage: boolean, messages:
         provider = {
           model: openai(model),
           maxTokens: 8192,
-          systemPrompt: [roleSystemPrompt, constantPrompt].join('\n'),
         };
       } else {
-        // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
-        const createRateLimitAwareFetch = () => {
-          return async (input: RequestInfo | URL, init?: RequestInit) => {
-            const enrichedOptions = anthropicInjectCacheControl(constantPrompt, init);
-            try {
-              const response = await fetch(input, enrichedOptions);
-
-              if (response.status == 429) {
-                captureException('Rate limited by Anthropic, switching to low QoS API key', {
-                  level: 'warning',
-                  extra: {
-                    response,
-                  },
-                });
-                const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
-
-                if (!lowQosKey) {
-                  return response;
-                }
-
-                if (enrichedOptions && enrichedOptions.headers) {
-                  const headers = new Headers(enrichedOptions.headers);
-                  headers.set('x-api-key', lowQosKey);
-                  enrichedOptions.headers = headers;
-                }
-
-                return fetch(input, enrichedOptions);
-              }
-
-              return response;
-            } catch (error) {
-              console.error('Error with Anthropic API call:', error);
-              throw error;
-            }
-          };
-        };
-
-        const primaryApiKey = getEnv(env, 'ANTHROPIC_API_KEY');
-
         const anthropic = createAnthropic({
-          apiKey: primaryApiKey,
-          fetch: createRateLimitAwareFetch(),
+          apiKey: getEnv(env, 'ANTHROPIC_API_KEY'),
+          fetch: async (url, options) => {
+            return fetch(url, anthropicInjectCacheControl(constantPrompt, options));
+          },
         });
         const model = getEnv(env, 'ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
         provider = {
@@ -123,18 +85,25 @@ export async function convexAgent(env: Env, firstUserMessage: boolean, messages:
       const result = streamText({
         model: provider.model,
         maxTokens: provider.maxTokens,
-        system: provider.systemPrompt,
-
-        // NB: We will prepend system messages (with the appropriate cache control headers)
-        // in our custom fetch implementation hooked in above.
-        messages: cleanupAssistantMessages(messages),
+        messages: [
+          {
+            role: 'system',
+            content: roleSystemPrompt,
+          },
+          {
+            role: 'system',
+            content: constantPrompt,
+          },
+          ...cleanupAssistantMessages(messages),
+        ],
         tools,
-        onFinish: (result) => onFinishHandler(dataStream, progress, result),
+        onFinish: (result) => onFinishHandler(dataStream, progress, result, tracer, chatId),
 
         experimental_telemetry: {
           isEnabled: true,
           metadata: {
             firstUserMessage,
+            chatId,
           },
         },
       });
@@ -171,24 +140,25 @@ function anthropicInjectCacheControl(guidelinesPrompt: string, options?: Request
   if (typeof options.body !== 'string') {
     throw new Error('Body must be a string');
   }
-  const startChars = options.body.length;
+
   const body = JSON.parse(options.body);
-  body.system = [
-    {
-      type: 'text',
-      text: roleSystemPrompt,
-    },
-    {
-      type: 'text',
-      text: guidelinesPrompt,
-      cache_control: { type: 'ephemeral' },
-    },
-    // NB: The client dynamically manages files injected as context
-    // past this point, and we don't want them to pollute the cache.
-    ...(body.system ?? []),
-  ];
+
+  if (body.system.length < 2) {
+    throw new Error('Body must contain at least two system messages');
+  }
+  if (body.system[0].text !== roleSystemPrompt) {
+    throw new Error('First system message must be the roleSystemPrompt');
+  }
+  if (body.system[1].text !== constantPrompt) {
+    throw new Error('Second system message must be the constantPrompt');
+  }
+
+  // Inject the cache control header after the constant prompt, but leave
+  // the dynamic system prompts uncached.
+  body.system[1].cache_control = { type: 'ephemeral' };
+
   const newBody = JSON.stringify(body);
-  console.log(`Injected system messages in ${Date.now() - start}ms (${startChars} -> ${newBody.length} chars)`);
+  console.log(`Injected system messages in ${Date.now() - start}ms`);
   return { ...options, body: newBody };
 }
 
@@ -210,6 +180,8 @@ async function onFinishHandler(
   dataStream: DataStreamWriter,
   progress: RequestProgress,
   result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
+  tracer: Tracer | null,
+  chatId: string,
 ) {
   const { usage } = result;
   console.log('Finished streaming', {
@@ -221,6 +193,22 @@ async function onFinishHandler(
     progress.cumulativeUsage.completionTokens += usage.completionTokens || 0;
     progress.cumulativeUsage.promptTokens += usage.promptTokens || 0;
     progress.cumulativeUsage.totalTokens += usage.totalTokens || 0;
+  }
+  if (tracer) {
+    const span = tracer.startSpan('on-finish-handler');
+    span.setAttribute('chatId', chatId);
+    span.setAttribute('finishReason', result.finishReason);
+    span.setAttribute('usage.completionTokens', usage?.completionTokens || 0);
+    span.setAttribute('usage.promptTokens', usage?.promptTokens || 0);
+    span.setAttribute('usage.totalTokens', usage?.totalTokens || 0);
+    if (result.providerMetadata) {
+      const anthropic: any = result.providerMetadata.anthropic;
+      if (anthropic) {
+        span.setAttribute('providerMetadata.anthropic.cacheCreationInputTokens', anthropic.cacheCreationInputTokens);
+        span.setAttribute('providerMetadata.anthropic.cacheReadInputTokens', anthropic.cacheReadInputTokens);
+      }
+    }
+    span.end();
   }
   dataStream.writeMessageAnnotation({
     type: 'usage',

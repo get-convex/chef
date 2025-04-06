@@ -35,17 +35,41 @@ http.route({
 });
 \`\`\`
 
-- HTTP endpoints are always registered at the exact path you specify in the \`path\` field. For example, if you specify \`/api/someRoute\`, the endpoint will be registered at \`/api/someRoute\`.
+- HTTP endpoints are always registered at the exact path you specify in the \`path\` field. For example,
+if you specify \`/api/someRoute\`, the endpoint will be registered at \`/api/someRoute\`.
 
 ### Validators
 
-- The full list of Convex validators is v.id("tablename"), v.null(), v.number(), v.int64(), v.boolean(), v.string(), v.bytes(), v.array(), v.object(), and v.record(). DO NOT use any other validators. (\`v.map()\` is not supported)
+- Here are the valid Convex types along with their respective validators:
+ Convex Type  | TS/JS type  |  Example Usage         | Validator for argument validation and schemas  | Notes
+                                                                              |
+| ----------- | ------------| -----------------------| -----------------------------------------------| ------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------|
+| Id          | string      | \`doc._id\`              | \`v.id(tableName)\`                              |
+                                                                              |
+| Null        | null        | \`null\`                 | \`v.null()\`                                     | JavaScript's \`undefined\` is not a valid Convex value. Functions the return \`undefined\` or do not return will return \`null\` when called from a client. Use \`null\` instead.                             |
+| Int64       | bigint      | \`3n\`                   | \`v.int64()\`                                    | Int64s only support BigInts between -2^63 and 2^63-1. Convex supports \`bigint\`s in most modern browsers.
+                                                                              |
+| Float64     | number      | \`3.1\`                  | \`v.number()\`                                   | Convex supports all IEEE-754 double-precision floating point numbers (such as NaNs). Inf and NaN are JSON serialized as
+strings.                                                                      |
+| Boolean     | boolean     | \`true\`                 | \`v.boolean()\`                                  |
+| String      | string      | \`"abc"\`                | \`v.string()\`                                   | Strings are stored as UTF-8 and must be valid Unicode sequences. Strings must be smaller than the 1MB total size limit w
+hen encoded as UTF-8.                                                         |
+| Bytes       | ArrayBuffer | \`new ArrayBuffer(8)\`   | \`v.bytes()\`                                    | Convex supports first class bytestrings, passed in as \`ArrayBuffer\`s. Bytestrings must be smaller than the 1MB total siz
+e limit for Convex types.                                                     |
+| Array       | Array]      | \`[1, 3.2, "abc"]\`      | \`v.array(values)\`                              | Arrays can have at most 8192 values.
+                                                                              |
+| Object      | Object      | \`{a: "abc"}\`           | \`v.object({property: value})\`                  | Convex only supports "plain old JavaScript objects" (objects that do not have a custom prototype). Objects can have at m
+ost 1024 entries. Field names must be nonempty and not start with "$" or "_". |
+| Record      | Record      | \`{"a": "1", "b": "2"}\` | \`v.record(keys, values)\`                       | Records are objects at runtime, but can have dynamic keys. Keys must be only ASCII characters, nonempty, and not start w
+ith "$" or "_".
 
-- v.object(), v.array, v.boolean, v.number, v.string, v.id, and v.null are the most common validators you'll need.
+- \`v.object()\`, \`v.array()\`, \`v.boolean()\`, \`v.number()\`, \`v.string()\`, \`v.id()\`, and \`v.null()\` are the most common
+  validators you'll need. Do NOT use any other validators. In particular, \`v.map()\` and \`v.set()\` are not supported.
 
 - Below is an example of an array validator:
 
-\`\`\`
+\`\`\`ts
 import { mutation } from "./\_generated/server";
 import { v } from "convex/values";
 
@@ -56,6 +80,27 @@ export default mutation({
   handler: async (ctx, args) => {
       //...
   },
+});
+\`\`\`
+
+- Below is an example of a schema with validators that codify a discriminated union type:
+\`\`\`typescript
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+    results: defineTable(
+        v.union(
+            v.object({
+                kind: v.literal("error"),
+                errorMessage: v.string(),
+            }),
+            v.object({
+                kind: v.literal("success"),
+                value: v.number(),
+            }),
+        ),
+    )
 });
 \`\`\`
 
@@ -75,7 +120,7 @@ export default mutation({
 });
 \`\`\`
 
-- NEVER use return validators (\`returns: someValidator\`). For example:
+- NEVER use return validators when getting started writing an app. For example:
 
 \`\`\`typescript
 import { mutation } from "./\_generated/server";
@@ -85,10 +130,11 @@ export default mutation({
   args: {
     simpleArray: v.array(v.union(v.string(), v.number())),
   },
-  returns: v.null(),
+  // Do NOT include a return validator with the \`returns\` field.
+  // returns: v.number(),
   handler: async (ctx, args) => {
     //...
-    return null;
+    return 100;
   },
 });
 \`\`\`
@@ -143,12 +189,39 @@ export const g = query({
 - Use \`query\`, \`mutation\`, and \`action\` to define public functions.
 - Use \`internalQuery\`, \`internalMutation\`, and \`internalAction\` to define private, internal functions.
 
+### Limits
+
+To keep performance fast, Convex puts limits on function calls and database records:
+
+- Queries, mutations, and actions can take in at most 8 MiB of data as arguments.
+- Queries, mutations, and actions can return at most 8 MiB of data as their return value.
+
+- Arrays in arguments, database records, and return values can have at most 8192 elements.
+- Objects and arrays can only be nested up to depth 16.
+- Database records must be smaller than 1MiB.
+
+- Queries and mutations can read up to 8MiB of data from the database.
+- Queries and mutations can read up to 16384 documents from the database.
+- Mutations can write up to 8MiB of data to the database.
+- Mutations can write up to 8192 documents to the database.
+
+- Queries and mutations can execute for at most 1 second.
+- Actions and HTTP actions can execute for at most 10 minutes.
+
+- HTTP actions have no limit on request body size but can stream out at most 20MiB of data.
+
+IMPORTANT: Hitting any of these limits will cause a function call to fail with an error. You
+MUST design your application to avoid hitting these limits. For example, if you are building
+a stock ticker app, you can't store a database record for each stock ticker's price at a
+point in time. Instead, download the data as JSON, save it to file storage, and have the app
+download the JSON file into the browser and render it client-side.
+
 ### Pagination
 
 - Paginated queries are queries that return a list of results in incremental pages.
 - You can define pagination using the following syntax:
 
-\`\`\`
+\`\`\`ts
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { paginationOptsValidator } from "convex/server";
@@ -158,7 +231,7 @@ export const listWithExtraArg = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("messages")
-      .filter((q) => q.eq(q.field("author"), args.author))
+      .withIndex("by_author", (q) => q.eq("author", args.author))
       .order("desc")
       .paginate(args.paginationOpts);
   },
@@ -171,42 +244,69 @@ Note: \`paginationOpts\` is an object with the following properties:
 
 - A query that ends in \`.paginate()\` returns an object that has the following properties: - page (contains an array of documents that you fetches) - isDone (a boolean that represents whether or not this is the last page of documents) - continueCursor (a string that represents the cursor to use to fetch the next page of documents)
 
-## Validator guidelines
-
-- \`v.bigint()\` is deprecated for representing signed 64-bit integers. Use \`v.int64()\` instead.
-- Use \`v.record()\` for defining a record type. \`v.map()\` and \`v.set()\` are not supported.
-
 ## Schema guidelines
 
 - Always define your schema in \`convex/schema.ts\`.
 - Always import the schema definition functions from \`convex/server\`:
-- System fields are automatically added to all documents and are prefixed with an underscore. The two system fields that are automatically added to all documents are \`_creationTime\` which has the validator \`v.number()\` and \`_id\` which has the validator \`v.id(tableName)\`.
-- Always include all index fields in the index name. For example, if an index is defined as \`["field1", "field2"]\`, the index name should be "by_field1_and_field2".
-- Index fields must be queried in the same order they are defined. If you want to be able to query by "field1" then "field2" and by "field2" then "field1", you must create separate indexes.
-- Convex tables have two built-in indexes: "by_id" and "by_creation_time." Never add these to the schema definition of a table! They're automatic and adding them to will be an error.
+- System fields are automatically added to all documents and are prefixed with an underscore. The
+  two system fields that are automatically added to all documents are \`_creationTime\` which has
+  the validator \`v.number()\` and \`_id\` which has the validator \`v.id(tableName)\`.
 
-This code:
+### Index definitions
 
+- Index names must be unique within a table.
+- The system provides two built-in indexes: "by_id" and "by_creation_time." Never add these to the
+  schema definition of a table! They're automatic and adding them to will be an error. You cannot
+  use either of these names for your own indexes. \`.index("by_creation_time", ["_creationTime"])\`
+  is ALWAYS wrong.
+- Convex automatically includes \`_creationTime\` as the final column in all indexes. Do NOT include
+  \`_creationTime\` as the last column in any index you define.
+  \`.index("by_author_and_creation_time", ["author", "_creationTime"])\` is ALWAYS wrong.
+- Always include all index fields in the index name. For example, if an index is defined as
+  \`["field1", "field2"]\`, the index name should be "by_field1_and_field2".
+- Index fields must be queried in the same order they are defined. If you want to be able to
+  query by "field1" then "field2" and by "field2" then "field1", you must create separate indexes.
+- Index definitions MUST be nonempty. \`.index("by_creation_time", [])\` is ALWAYS wrong.
+
+Here's an example of correctly using the built-in \`by_creation_time\` index:
+Path: \`convex/schema.ts\`
+\`\`\`ts
+import { defineSchema } from "convex/server";
+
+export default defineSchema({
+  // IMPORTANT: No explicit \`.index("by_creation_time", ["_creationTime"]) \` is needed.
+  messages: defineTable({
+    name: v.string(),
+    body: v.string(),
+  })
+    // IMPORTANT: This index sorts by \`(name, _creationTime)\`.
+    .index("by_name", ["name"]),
+});
 \`\`\`
-.index("by_creation_time", ["createdAt"]),
-\`\`\`
+Path: \`convex/messages.ts\`
+\`\`\`ts
+import { query } from "./_generated/server";
 
-is ALWAYS wrong. If you need to create in index by different field,
-call it something else.
+export const exampleQuery = query({
+  args: {},
+  handler: async (ctx) => {
+    // This is automatically in ascending \`_creationTime\` order.
+    const recentMessages = await ctx.db.query("messages")
+      .withIndex("by_creation_time", (q) => q.gt("_creationTime", Date.now() - 60 * 60 * 1000))
+      .collect();
 
-- Convex automatically includes \`_creationTime\` as the final column in all indexes. Do NOT include \`_creationTime\` as the last column in any index you define.
+    // This is automatically in \`_creationTime\` order.
+    const allMessages = await ctx.db.query("messages").order("desc").collect();
 
-This code:
-
+    // This query uses the index to filter by the name field and then implicitly
+    // orders by \`_creationTime\`.
+    const byName = await ctx.db.query("messages")
+      .withIndex("by_name", (q) => q.eq("name", "Alice"))
+      .order("asc")
+      .collect();
+  },
+});
 \`\`\`
-.index("by_author_and_creation_time", ["author", "_creationTime"]),
-\`\`\`
-
-is ALWAYS wrong. Just define the index with "author" instead:
-\`\`\`
-.index("by_author", ["author"]),
-\`\`\`
-You can then query by "author" and then "_creationTime" with using the index.
 
 ## Typescript guidelines
 
@@ -351,8 +451,10 @@ export const exampleQuery = query({
 
 - Convex storage stores items as \`Blob\` objects. You must convert all items to/from a \`Blob\` when using Convex storage.
 
-Below is an example of using convex storage to upload a file within a chat app:
-convex/messages.ts
+# Examples
+## Example of using Convex storage within a chat app
+
+Path: \`convex/messages.ts\`
 \`\`\`
 import { v } from "convex/values";
 import { query } from "./_generated/server";
@@ -401,7 +503,7 @@ export const sendMessage = mutation({
 });
 \`\`\`
 
-src/App.tsx
+Path: \`src/App.tsx\`
 \`\`\`
 import { FormEvent, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
@@ -500,5 +602,194 @@ export default function App() {
 function Image({ message }: { message: { url: string } }) {
   return <img src={message.url} height="300px" width="auto" />;
 }
+\`\`\`
+
+## Example of a real-time chat application with AI responses
+
+Path: \`convex/functions.ts\`
+\`\`\`ts
+import {
+  query,
+  mutation,
+  internalQuery,
+  internalMutation,
+  internalAction,
+} from "./_generated/server";
+import { v } from "convex/values";
+import OpenAI from "openai";
+import { internal } from "./_generated/api";
+import { getAuthUserId } from "@convex-dev/auth/server";
+
+async function getLoggedInUser(ctx: QueryCtx) {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) {
+    throw new Error("User not found");
+  }
+  const user = await ctx.db.get(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user;
+}
+
+/**
+ * Create a channel with a given name.
+ */
+export const createChannel = mutation({
+  args: {
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await getLoggedInUser(ctx);
+    return await ctx.db.insert("channels", { name: args.name });
+  },
+});
+
+/**
+ * List the 10 most recent messages from a channel in descending creation order.
+ */
+export const listMessages = query({
+  args: {
+    channelId: v.id("channels"),
+  },
+  handler: async (ctx, args) => {
+    await getLoggedInUser(ctx);
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
+      .order("desc")
+      .take(10);
+    return messages;
+  },
+});
+
+/**
+ * Send a message to a channel and schedule a response from the AI.
+ */
+export const sendMessage = mutation({
+  args: {
+    channelId: v.id("channels"),
+    authorId: v.id("users"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await getLoggedInUser(ctx);
+    const channel = await ctx.db.get(args.channelId);
+    if (!channel) {
+      throw new Error("Channel not found");
+    }
+    const user = await ctx.db.get(args.authorId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    await ctx.db.insert("messages", {
+      channelId: args.channelId,
+      authorId: args.authorId,
+      content: args.content,
+    });
+    await ctx.scheduler.runAfter(0, internal.functions.generateResponse, {
+      channelId: args.channelId,
+    });
+    return null;
+  },
+});
+
+const openai = new OpenAI();
+
+export const generateResponse = internalAction({
+  args: {
+    channelId: v.id("channels"),
+  },
+  handler: async (ctx, args) => {
+    const context = await ctx.runQuery(internal.functions.loadContext, {
+      channelId: args.channelId,
+    });
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: context,
+    });
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No content in response");
+    }
+    await ctx.runMutation(internal.functions.writeAgentResponse, {
+      channelId: args.channelId,
+      content,
+    });
+    return null;
+  },
+});
+
+export const loadContext = internalQuery({
+  args: {
+    channelId: v.id("channels"),
+  },
+  handler: async (ctx, args) => {
+    const channel = await ctx.db.get(args.channelId);
+    if (!channel) {
+      throw new Error("Channel not found");
+    }
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
+      .order("desc")
+      .take(10);
+
+    const result = [];
+    for (const message of messages) {
+      if (message.authorId) {
+        const user = await ctx.db.get(message.authorId);
+        if (!user) {
+          throw new Error("User not found");
+        }
+        result.push({
+          role: "user" as const,
+          content: \`\${user.name}: \${message.content}\`,
+        });
+      } else {
+        result.push({ role: "assistant" as const, content: message.content });
+      }
+    }
+    return result;
+  },
+});
+
+export const writeAgentResponse = internalMutation({
+  args: {
+    channelId: v.id("channels"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("messages", {
+      channelId: args.channelId,
+      content: args.content,
+    });
+    return null;
+  },
+});
+\`\`\`
+
+Path: \`convex/schema.ts\`
+\`\`\`ts
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
+
+const applicationTables = {
+  channels: defineTable({
+    name: v.string(),
+  }),
+
+  messages: defineTable({
+    channelId: v.id("channels"),
+    authorId: v.optional(v.id("users")),
+    content: v.string(),
+  }).index("by_channel", ["channelId"]),
+};
+
+export default defineSchema({
+  ...authTables,
+  ...applicationTables,
+});
 \`\`\`
 `;

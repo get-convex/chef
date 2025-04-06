@@ -12,7 +12,7 @@ import { webcontainer } from '~/lib/webcontainer';
 import { loadSnapshot } from '~/lib/snapshot';
 import { makePartId, type PartId } from '~/lib/stores/Artifacts';
 
-export interface IChatMetadata {
+interface IChatMetadata {
   gitUrl: string;
   gitBranch?: string;
   netlifySiteId?: string;
@@ -45,7 +45,7 @@ export interface ChatHistoryItem {
  */
 export const chatIdStore = atom<string | undefined>(undefined);
 export const description = atom<string | undefined>(undefined);
-export const chatMetadata = atom<IChatMetadata | undefined>(undefined);
+const chatMetadata = atom<IChatMetadata | undefined>(undefined);
 
 export const useChatHistoryConvex = () => {
   const navigate = useNavigate();
