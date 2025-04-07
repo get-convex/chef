@@ -20,6 +20,7 @@ import { Preview } from './Preview';
 import useViewport from '~/lib/hooks';
 import { Dashboard } from './Dashboard';
 import { convexStore } from '~/lib/stores/convex';
+import { WORK_DIR } from '~/utils/constants';
 
 interface WorkspaceProps {
   chatStarted?: boolean;
@@ -79,7 +80,8 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
     // This is called debounced, so it's not fair to use it to update
     // the current doc: we don't actually know which files it's for!
 
-    if (currentDocument?.filePath !== update.filePath) {
+    const updateAbsPath = update.filePath.startsWith('/') ? update.filePath : `${WORK_DIR}/${update.filePath}`;
+    if (currentDocument?.filePath !== updateAbsPath) {
       console.log('onEditorChange fired for what is no longer the current document');
       return;
     }

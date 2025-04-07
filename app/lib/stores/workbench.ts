@@ -26,6 +26,7 @@ import { buildSnapshot, compressSnapshot } from '~/lib/snapshot';
 import { sessionIdStore } from './convex';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './Artifacts';
+import { WORK_DIR } from '~/utils/constants';
 
 const BACKUP_DEBOUNCE_MS = 1000 * 5;
 
@@ -384,7 +385,8 @@ export class WorkbenchStore {
 
   setSelectedFile(filePath: string | undefined) {
     this.setLastChangedFile();
-    this.#editorStore.setSelectedFile(filePath);
+    const absPath = filePath?.startsWith('/') ? filePath : `${WORK_DIR}/${filePath}`;
+    this.#editorStore.setSelectedFile(absPath);
   }
 
   async saveFile(filePath: string) {
