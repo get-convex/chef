@@ -95,8 +95,12 @@ export const startProvisionConvexProject = mutation({
   args: {
     sessionId: v.id('sessions'),
     chatId: v.string(),
-    accessToken: v.optional(v.string()),
-    teamSlug: v.optional(v.string()),
+    projectInitParams: v.optional(
+      v.object({
+        teamSlug: v.string(),
+        auth0AccessToken: v.string(),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
@@ -109,22 +113,21 @@ export const startProvisionConvexProject = mutation({
       throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
     }
     if (session.memberId !== undefined) {
-      if (args.accessToken === undefined) {
-        console.error(`Must provide an access token for oauth: ${args.sessionId}`);
-        throw new ConvexError({ code: 'NotAuthorized', message: 'Invalid flow for connecting a project' });
-      }
-      if (args.teamSlug === undefined) {
-        console.error(`Must provide a team slug for oauth: ${args.sessionId}`);
+      // OAuth flow
+      if (args.projectInitParams === undefined) {
+        console.error(`Must provide projectInitParams for oauth: ${args.sessionId}`);
         throw new ConvexError({ code: 'NotAuthorized', message: 'Invalid flow for connecting a project' });
       }
       await ctx.scheduler.runAfter(0, internal.convexProjects.connectConvexProjectForOauth, {
         sessionId: args.sessionId,
         chatId: args.chatId,
-        accessToken: args.accessToken,
-        teamSlug: args.teamSlug,
+        accessToken: args.projectInitParams.auth0AccessToken,
+        teamSlug: args.projectInitParams.teamSlug,
       });
       return;
     }
+
+    // Invite code flow
 
     await ctx.db.patch(chat._id, { convexProject: { kind: 'connecting' } });
     const inviteCode = await getInviteCode(ctx, { sessionId: args.sessionId });
@@ -244,6 +247,7 @@ export const connectConvexProjectForOauth = internalAction({
     let projectName: string | null = null;
     let attempts = 0;
     while (attempts < 10) {
+      console.log('Waiting!');
       projectName = await ctx.runQuery(internal.convexProjects.getProjectName, {
         sessionId: args.sessionId,
         chatId: args.chatId,
@@ -251,10 +255,10 @@ export const connectConvexProjectForOauth = internalAction({
       if (projectName) {
         break;
       }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       attempts++;
     }
-    projectName = projectName ?? 'demo-project';
+    projectName = projectName ?? 'My Project (Chef)';
     const response = await fetch(`${bigBrainHost}/api/create_project`, {
       method: 'POST',
       headers: {
@@ -298,7 +302,6 @@ export const connectConvexProjectForOauth = internalAction({
       throw new Error(`Failed to create project deploy key: ${projectDeployKeyResponse.statusText} ${text}`);
     }
     const projectDeployKeyData: { accessToken: string } = await projectDeployKeyResponse.json();
-    console.log('projectDeployKeyData', projectDeployKeyData);
     const projectDeployKey = projectDeployKeyData.accessToken;
 
     await ctx.runMutation(internal.convexProjects.recordProvisionedConvexProjectCredentials, {
