@@ -7,6 +7,7 @@ import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useChatId } from '~/lib/stores/chat';
 import type { loader } from '~/root';
+import { useAuth0 } from '@auth0/auth0-react';
 
 export function ConvexConnectButton() {
   const flexAuthMode = useFlexAuthMode();
@@ -79,77 +80,66 @@ function ConvexConnectButtonForInviteCode() {
   );
 }
 
+// These match what we use for the Convex dashboard and what Big Brain expects
+const authParams = {
+  audience: 'https://console.convex.dev/api/',
+  scope: 'openid profile email list:instances manage:instances offline_access',
+};
+
 function ConvexConnectButtonViaOauth() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
   const convexClient = useConvex();
   const sessionId = useConvexSessionId();
   const chatId = useChatId();
-  const {
-    ENV: { CONVEX_OAUTH_CLIENT_ID },
-  } = useRouteLoaderData<typeof loader>('root')!;
+  const credentials = useQuery(api.convexProjects.loadConnectedConvexProjectCredentials, {
+    sessionId,
+    chatId,
+  });
+  const { getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
-    return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
-    };
-  }, [pollInterval]);
+    if (credentials?.kind === 'connected') {
+      convexStore.set({
+        token: credentials.adminKey,
+        deploymentName: credentials.projectSlug,
+        deploymentUrl: credentials.teamSlug,
+      });
+    }
+  }, [credentials]);
 
-  const handleOAuthClick = async () => {
-    setIsLoading(true);
-
-    const state = JSON.stringify({
-      random: Math.random().toString(36).substring(2),
-      extraState: 1,
-    });
-    localStorage.setItem('convexOAuthState', state);
-
-    const params = new URLSearchParams({
-      client_id: CONVEX_OAUTH_CLIENT_ID,
-      redirect_uri: window.location.origin + '/convex/callback',
-      response_type: 'code',
-      state,
-    });
-
-    // Open our loading page first, which will then redirect to Convex
-    const connectUrl = `/convex/connect?${params.toString()}`;
-    window.open(connectUrl, 'ConvexAuth', 'width=600,height=600,top=200,left=200');
-
-    // Poll for token in local storage because COOP + COEP headers make postMessage more involved.
-    const interval = setInterval(() => {
-      const token = localStorage.getItem('convexProjectToken');
-      const deploymentName = localStorage.getItem('convexProjectDeploymentName');
-      const deploymentUrl = localStorage.getItem('convexProjectDeploymentUrl');
-
-      if (token && deploymentName && deploymentUrl) {
-        clearInterval(interval);
-        setPollInterval(null);
-        setIsLoading(false);
-
-        void convexClient.mutation(api.convexProjects.registerConvexProjectViaOauth, {
-          sessionId,
-          chatId,
-          token,
-          deploymentName,
-          deploymentUrl,
-        });
-
-        localStorage.removeItem('convexProjectToken');
-        localStorage.removeItem('convexProjectDeploymentName');
-        localStorage.removeItem('convexProjectDeploymentUrl');
-      }
-    }, 500);
-
-    setPollInterval(interval);
+  const handleClick = async () => {
+    if (credentials?.kind === 'connected') {
+      const accessToken = await getAccessTokenSilently({
+        authorizationParams: authParams,
+      });
+      await convexClient.mutation(api.convexProjects.disconnectConvexProject, {
+        sessionId,
+        chatId,
+      });
+      await convexClient.mutation(api.convexProjects.startProvisionConvexProject, {
+        sessionId,
+        chatId,
+        accessToken,
+        teamSlug: 'sshader-test', // TODO: Hook this up to team picker
+      });
+    } else {
+      const accessToken = await getAccessTokenSilently({
+        authorizationParams: authParams,
+      });
+      await convexClient.mutation(api.convexProjects.startProvisionConvexProject, {
+        sessionId,
+        chatId,
+        accessToken,
+        teamSlug: 'sshader-test',
+      });
+    }
   };
 
   const isConnected = useStore(convexStore) !== null;
+  const isLoading = credentials === undefined || credentials?.kind === 'connecting';
 
   return (
     <button
-      onClick={handleOAuthClick}
+      onClick={handleClick}
       disabled={isLoading}
       className={classNames(
         'px-4 py-2 rounded-lg text-sm flex items-center gap-2',

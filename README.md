@@ -34,6 +34,9 @@ There are two forms of auth, dictated by the `FLEX_AUTH_MODE` environment variab
   - `CONVEX_OAUTH_CLIENT_ID`
   - `CONVEX_OAUTH_CLIENT_SECRET`
 
+Additionally make sure `CHEF_OAUTH_APP_NAME` is set to the same value as `CONVEX_OAUTH_CLIENT_ID` on your Convex deployment
+(it'll also be in the default Convex project env vars, so you can sync via dashboard).
+
 #### `FLEX_AUTH_MODE=InviteCode`
 
 - Convex projects are provisioned automatically against one of our teams
