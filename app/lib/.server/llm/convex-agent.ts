@@ -46,18 +46,14 @@ export async function convexAgentWithRetries(
     try {
       return await convexAgent(chatId, env, firstUserMessage, messages, tracer, provider);
     } catch (error) {
-      if (i == maxRetries - 1) {
-        throw error;
-      } else {
-        error = error as Error;
-        captureException('Error with provider', {
-          level: 'warning',
-          extra: {
-            provider,
-            error,
-          },
-        });
-      }
+      error = error as Error;
+      captureException('Error with provider', {
+        level: 'warning',
+        extra: {
+          provider,
+          error,
+        },
+      });
     }
   }
 
