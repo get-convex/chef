@@ -5,7 +5,7 @@ This is fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-
 ### One-time setup
 
 - clone the repo, e.g. git clone git@github.com:get-convex/flex-diy.git
-- use node 18 or 20, e.g. `nvm use 18`
+- grab the nvm version from the environment (`nvm use`)
 - install pnpm somehow, e.g. `npm install -g pnpm
 - run `pnpm i`
 - set up the .env.local file (do this BEFORE running the next command). Copy from 1Password (flex .env.local)
