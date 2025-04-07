@@ -225,10 +225,23 @@ export class WorkbenchStore {
       );
     })();
 
+    // Add beforeunload event listener to prevent navigation while uploading
+    const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
+      if (isUploading) {
+        // Some browsers require both preventDefault and setting returnValue
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+      return undefined;
+    };
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+
     return () => {
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
       }
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
     };
   }
 
