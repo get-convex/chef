@@ -143,7 +143,6 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
   return (
     chatStarted && (
       <>
-        <SaveStatusIndicator />
         <motion.div
           initial="closed"
           animate={showWorkbench ? 'open' : 'closed'}
