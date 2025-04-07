@@ -50,7 +50,7 @@ export class WorkbenchStore {
   #convexClient: ConvexHttpClient;
   #toolCalls: Map<string, PromiseWithResolvers<string> & { done: boolean }> = new Map();
 
-  #reloadedParts = new Set<string>();
+  #reloadedParts = import.meta.hot?.data.reloadedParts ?? new Set<string>();
 
   artifacts: Artifacts = import.meta.hot?.data.artifacts ?? map({});
 
@@ -74,6 +74,7 @@ export class WorkbenchStore {
       import.meta.hot.data.currentView = this.currentView;
       import.meta.hot.data.actionAlert = this.actionAlert;
       import.meta.hot.data.saveState = this.saveState;
+      import.meta.hot.data.reloadedParts = this.#reloadedParts;
     }
 
     this.#convexClient = new ConvexHttpClient(import.meta.env.VITE_CONVEX_URL!);

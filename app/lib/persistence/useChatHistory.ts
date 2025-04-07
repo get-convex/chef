@@ -113,8 +113,10 @@ export const useChatHistoryConvex = () => {
 
             const partIds: PartId[] = [];
             for (const message of rawMessages.messages) {
-              for (let i = 0; i < Math.min(1, message.parts?.length ?? 0); i++) {
-                partIds.push(makePartId(message.id, i));
+              if (message.parts) {
+                for (let i = 0; i < message.parts.length; i++) {
+                  partIds.push(makePartId(message.id, i));
+                }
               }
             }
             workbenchStore.setReloadedParts(partIds);
