@@ -25,9 +25,8 @@ import { buildSnapshot, compressSnapshot } from '~/lib/snapshot';
 import { sessionIdStore } from './convex';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './Artifacts';
-import { WORK_DIR } from '~/utils/constants';
 
-const BACKUP_DEBOUNCE_MS = 1000 * 5;
+const BACKUP_DEBOUNCE_MS = 100;
 
 const { saveAs } = fileSaver;
 
@@ -62,6 +61,7 @@ export class WorkbenchStore {
   unsavedFiles: WritableAtom<Set<AbsolutePath>> = import.meta.hot?.data.unsavedFiles ?? atom(new Set<AbsolutePath>());
   actionAlert: WritableAtom<ActionAlert | undefined> =
     import.meta.hot?.data.unsavedFiles ?? atom<ActionAlert | undefined>(undefined);
+  saveState: WritableAtom<'saved' | 'saving' | 'error'> = import.meta.hot?.data.saveState ?? atom('saved');
   modifiedFiles = new Set<string>();
   partIdList: PartId[] = [];
   #globalExecutionQueue = Promise.resolve();
@@ -73,6 +73,7 @@ export class WorkbenchStore {
       import.meta.hot.data.showWorkbench = this.showWorkbench;
       import.meta.hot.data.currentView = this.currentView;
       import.meta.hot.data.actionAlert = this.actionAlert;
+      import.meta.hot.data.saveState = this.saveState;
     }
 
     this.#convexClient = new ConvexHttpClient(import.meta.env.VITE_CONVEX_URL!);
@@ -141,6 +142,7 @@ export class WorkbenchStore {
 
       try {
         isUploading = true;
+        this.saveState.set('saving');
 
         const id = chatIdStore.get();
 
@@ -185,8 +187,11 @@ export class WorkbenchStore {
           chatId: id,
           sessionId,
         });
+
+        this.saveState.set('saved');
       } catch (error) {
         console.error('Failed to upload snapshot:', error);
+        this.saveState.set('error');
       } finally {
         isUploading = false;
 
@@ -201,6 +206,7 @@ export class WorkbenchStore {
 
     let debounceTimeout: NodeJS.Timeout | undefined;
     const debouncedUploadSnapshot = () => {
+      this.saveState.set('saving');
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
       }
