@@ -1,6 +1,6 @@
 import { type ActionFunctionArgs } from '@remix-run/cloudflare';
 import { createScopedLogger } from '~/utils/logger';
-import { convexAgent, getEnv } from '~/lib/.server/llm/convex-agent';
+import { convexAgentWithRetries, getEnv } from '~/lib/.server/llm/convex-agent';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import type { Message } from 'ai';
@@ -54,7 +54,7 @@ async function chatAction({ request }: ActionFunctionArgs, env: Env) {
   try {
     const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
-    const dataStream = await convexAgent(chatId, env, firstUserMessage, messages, tracer);
+    const dataStream = await convexAgentWithRetries(chatId, env, firstUserMessage, messages, tracer);
     return new Response(dataStream, {
       status: 200,
       headers: {

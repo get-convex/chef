@@ -1,4 +1,5 @@
 import { convertToCoreMessages, streamText, type LanguageModelV1, type Message, type StepResult } from 'ai';
+import { bedrock, createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { constantPrompt, roleSystemPrompt } from '~/lib/common/prompts/system';
 import { deployTool } from '~/lib/runtime/deployTool';
@@ -23,18 +24,57 @@ const tools: ConvexToolSet = {
   edit: editTool,
 };
 
-export async function convexAgent(
+type ModelProvider = 'Anthropic' | 'Bedrock' | 'OpenAI';
+
+export async function convexAgentWithRetries(
   chatId: string,
   env: Env,
   firstUserMessage: boolean,
   messages: Messages,
   tracer: Tracer | null,
+  maxRetries: number = 3,
+) {
+  let randomizedProviders: ModelProvider[] = ['Anthropic', 'Bedrock'];
+  randomizedProviders.sort(() => Math.random() - 0.5);
+  if (getEnv(env, 'USE_OPENAI')) {
+    randomizedProviders = ['OpenAI'];
+  }
+  for (let i = 0; i < maxRetries; i++) {
+    const provider = randomizedProviders[i % randomizedProviders.length];
+    try {
+      return await convexAgent(chatId, env, firstUserMessage, messages, tracer, provider);
+    } catch (error) {
+      console.error('Error with provider', provider, error);
+    }
+  }
+}
+
+async function convexAgent(
+  chatId: string,
+  env: Env,
+  firstUserMessage: boolean,
+  messages: Messages,
+  tracer: Tracer | null,
+  modelProvider: ModelProvider,
 ) {
   let provider: Provider;
-  if (getEnv(env, 'USE_OPENAI')) {
+  if (modelProvider == 'OpenAI') {
     const model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4o-2024-11-20';
     provider = {
       model: openai(model),
+      maxTokens: 8192,
+    };
+  } else if (modelProvider == 'Bedrock') {
+    const model = getEnv(env, 'AMAZON_BEDROCK_MODEL') || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
+
+    const bedrock = createAmazonBedrock({
+      region: 'us-east-1',
+      accessKeyId: getEnv(env, 'AWS_ACCESS_KEY_ID'),
+      secretAccessKey: getEnv(env, 'AWS_SECRET_ACCESS_KEY'),
+      sessionToken: getEnv(env, 'AWS_SESSION_TOKEN'),
+    });
+    provider = {
+      model: bedrock(model),
       maxTokens: 8192,
     };
   } else {
@@ -63,7 +103,6 @@ export async function convexAgent(
 
           return response;
         } catch (error) {
-          console.error('Error with Anthropic API call:', error);
           throw error;
         }
       };
@@ -86,10 +125,24 @@ export async function convexAgent(
       {
         role: 'system',
         content: roleSystemPrompt,
+        /*
+        providerOptions: {
+          bedrock: {
+            cachePoint: { type: 'default' },
+          },
+        },
+        */
       },
       {
         role: 'system',
         content: constantPrompt,
+        /*
+        providerOptions: {
+          bedrock: {
+            cachePoint: { type: 'default' },
+          },
+        },
+        */
       },
       ...cleanupAssistantMessages(messages),
     ],

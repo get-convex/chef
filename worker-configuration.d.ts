@@ -25,6 +25,13 @@ interface Env {
 
   ANTHROPIC_MODEL: string;
 
+  USE_AMAZON_BEDROCK: string;
+  AMAZON_BEDROCK_MODEL: string;
+  AWS_ACCESS_KEY_ID: string;
+  AWS_SECRET_ACCESS_KEY: string;
+  AWS_SESSION_TOKEN: string;
+  AWS_REGION: string;
+  
   AXIOM_API_TOKEN: string;
   AXIOM_API_URL: string;
   AXIOM_DATASET_NAME: string;
