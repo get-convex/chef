@@ -1,5 +1,5 @@
 import { convertToCoreMessages, streamText, type LanguageModelV1, type Message, type StepResult } from 'ai';
-import { bedrock, createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { constantPrompt, roleSystemPrompt } from '~/lib/common/prompts/system';
 import { deployTool } from '~/lib/runtime/deployTool';
@@ -40,6 +40,7 @@ export async function convexAgentWithRetries(
   if (getEnv(env, 'USE_OPENAI')) {
     randomizedProviders = ['OpenAI'];
   }
+  let error: Error | null = null;
   for (let i = 0; i < maxRetries; i++) {
     const provider = randomizedProviders[i % randomizedProviders.length];
     try {
@@ -48,6 +49,7 @@ export async function convexAgentWithRetries(
       if (i == maxRetries - 1) {
         throw error;
       } else {
+        error = error as Error;
         captureException('Error with provider', {
           level: 'warning',
           extra: {
@@ -58,6 +60,8 @@ export async function convexAgentWithRetries(
       }
     }
   }
+
+  throw error;
 }
 
 async function convexAgent(
