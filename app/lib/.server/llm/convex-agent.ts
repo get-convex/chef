@@ -82,12 +82,15 @@ async function convexAgent(
   } else if (modelProvider == 'Bedrock') {
     const model = getEnv(env, 'AMAZON_BEDROCK_MODEL') || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
     const region = getEnv(env, 'AWS_REGION') || 'us-west-2';
+    const accessKeyId = getEnv(env, 'AWS_ACCESS_KEY_ID');
+    const secretAccessKey = getEnv(env, 'AWS_SECRET_ACCESS_KEY');
+    const sessionToken = getEnv(env, 'AWS_SESSION_TOKEN');
 
     const bedrock = createAmazonBedrock({
       region,
-      accessKeyId: getEnv(env, 'AWS_ACCESS_KEY_ID'),
-      secretAccessKey: getEnv(env, 'AWS_SECRET_ACCESS_KEY'),
-      sessionToken: getEnv(env, 'AWS_SESSION_TOKEN'),
+      accessKeyId,
+      secretAccessKey,
+      sessionToken,
     });
     provider = {
       model: bedrock(model),
