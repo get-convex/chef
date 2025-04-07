@@ -127,7 +127,11 @@ function ConvexSignInForm() {
       <button
         className="px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
         onClick={() => {
-          loginWithRedirect();
+          loginWithRedirect({
+            authorizationParams: {
+              scope: 'openid profile email list:instances manage:instances offline_access',
+            },
+          });
         }}
       >
         <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
