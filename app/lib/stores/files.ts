@@ -26,7 +26,25 @@ interface Folder {
 
 export type Dirent = File | Folder;
 
-export type FileMap = Record<string, Dirent | undefined>;
+// Relative to `WORK_DIR`
+export type RelativePath = string & { __brand: 'RelativePath' };
+export type AbsolutePath = string & { __brand: 'AbsolutePath' };
+
+export const getAbsolutePath = (pathString: string): AbsolutePath => {
+  if (pathString.startsWith(WORK_DIR)) {
+    return pathString as AbsolutePath;
+  }
+  return path.join(WORK_DIR, pathString) as AbsolutePath;
+};
+
+export const getRelativePath = (pathString: string): RelativePath => {
+  if (pathString.startsWith(WORK_DIR)) {
+    return path.relative(WORK_DIR, pathString) as RelativePath;
+  }
+  return pathString as RelativePath;
+};
+
+export type FileMap = Record<AbsolutePath, Dirent | undefined>;
 
 export class FilesStore {
   #webcontainer: Promise<WebContainer>;
@@ -41,13 +59,13 @@ export class FilesStore {
    * Needs to be reset when the user sends another message and all changes have to be submitted
    * for the model to be aware of the changes.
    */
-  #modifiedFiles: Map<string, string> = import.meta.hot?.data.modifiedFiles ?? new Map();
+  #modifiedFiles: Map<AbsolutePath, string> = import.meta.hot?.data.modifiedFiles ?? new Map();
 
   /**
    * Map of files that matches the state of WebContainer.
    */
   files: MapStore<FileMap> = import.meta.hot?.data.files ?? map({});
-  userWrites: Map<string, number> = import.meta.hot?.data.userWrites ?? new Map();
+  userWrites: Map<AbsolutePath, number> = import.meta.hot?.data.userWrites ?? new Map();
 
   get filesCount() {
     return this.#size;
@@ -65,7 +83,7 @@ export class FilesStore {
     this.#init();
   }
 
-  getFile(filePath: string) {
+  getFile(filePath: AbsolutePath) {
     const dirent = this.files.get()[filePath];
 
     if (dirent?.type !== 'file') {
@@ -106,7 +124,7 @@ export class FilesStore {
     this.#modifiedFiles.clear();
   }
 
-  async saveFile(filePath: string, content: string) {
+  async saveFile(filePath: AbsolutePath, content: string) {
     const webcontainer = await this.#webcontainer;
 
     try {
@@ -164,7 +182,7 @@ export class FilesStore {
     }
     for (const dir of Array.from(dirs).sort()) {
       const sanitizedPath = dir.replace(/\/+$/g, '');
-      this.files.setKey(sanitizedPath, { type: 'folder' });
+      this.files.setKey(getAbsolutePath(sanitizedPath), { type: 'folder' });
     }
 
     const loadFile = async (absPath: string) => {
@@ -178,7 +196,7 @@ export class FilesStore {
       if (!isBinary) {
         content = this.#decodeFileContent(buffer);
       }
-      this.files.setKey(absPath, { type: 'file', content, isBinary });
+      this.files.setKey(getAbsolutePath(absPath), { type: 'file', content, isBinary });
     };
     await Promise.all(absFilePaths.map(loadFile));
   }
@@ -194,15 +212,15 @@ export class FilesStore {
       switch (type) {
         case 'add_dir': {
           // we intentionally add a trailing slash so we can distinguish files from folders in the file tree
-          this.files.setKey(sanitizedPath, { type: 'folder' });
+          this.files.setKey(getAbsolutePath(sanitizedPath), { type: 'folder' });
           break;
         }
         case 'remove_dir': {
-          this.files.setKey(sanitizedPath, undefined);
+          this.files.setKey(getAbsolutePath(sanitizedPath), undefined);
 
           for (const [direntPath] of Object.entries(this.files)) {
             if (direntPath.startsWith(sanitizedPath)) {
-              this.files.setKey(direntPath, undefined);
+              this.files.setKey(getAbsolutePath(direntPath), undefined);
             }
           }
           break;
@@ -227,13 +245,13 @@ export class FilesStore {
             content = this.#decodeFileContent(buffer);
           }
 
-          this.files.setKey(sanitizedPath, { type: 'file', content, isBinary });
+          this.files.setKey(getAbsolutePath(sanitizedPath), { type: 'file', content, isBinary });
 
           break;
         }
         case 'remove_file': {
           this.#size--;
-          this.files.setKey(sanitizedPath, undefined);
+          this.files.setKey(getAbsolutePath(sanitizedPath), undefined);
           break;
         }
         case 'update_directory': {

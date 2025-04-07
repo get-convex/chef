@@ -1,6 +1,6 @@
 import { atom, computed, map, type MapStore, type WritableAtom } from 'nanostores';
 import type { EditorDocument, ScrollPosition } from '~/components/editor/codemirror/CodeMirrorEditor';
-import type { FileMap, FilesStore } from './files';
+import type { AbsolutePath, FileMap, FilesStore } from './files';
 
 type EditorDocuments = Record<string, EditorDocument>;
 
@@ -9,7 +9,7 @@ type SelectedFile = WritableAtom<string | undefined>;
 export class EditorStore {
   #filesStore: FilesStore;
 
-  selectedFile: SelectedFile = import.meta.hot?.data.selectedFile ?? atom<string | undefined>();
+  selectedFile: SelectedFile = import.meta.hot?.data.selectedFile ?? atom<AbsolutePath | undefined>();
   documents: MapStore<EditorDocuments> = import.meta.hot?.data.documents ?? map({});
   followingStreamedCode = atom<boolean>(true);
 

@@ -25,13 +25,13 @@ import { BinaryContent } from './BinaryContent';
 import { getTheme, reconfigureTheme } from './cm-theme';
 import { indentKeyBinding } from './indent';
 import { getLanguage } from './languages';
-
+import type { AbsolutePath } from '~/lib/stores/files';
 const logger = createScopedLogger('CodeMirrorEditor');
 
 export interface EditorDocument {
   value: string;
   isBinary: boolean;
-  filePath: string;
+  filePath: AbsolutePath;
   scroll?: ScrollPosition;
 }
 

@@ -1,6 +1,6 @@
 import { generateId, type ToolInvocation, type UIMessage } from 'ai';
 import { renderFile } from '~/utils/fileUtils';
-import type { Dirent } from './stores/files';
+import { getAbsolutePath, type AbsolutePath, type Dirent } from './stores/files';
 import { PREWARM_PATHS, WORK_DIR } from '~/utils/constants';
 import { workbenchStore } from './stores/workbench';
 import { makePartId, type PartId } from './stores/Artifacts';
@@ -21,7 +21,7 @@ const MAX_COLLAPSED_MESSAGES_SIZE = 16384;
 type UIMessagePart = UIMessage['parts'][number];
 
 type ParsedAssistantMessage = {
-  filesTouched: Map<string, number>;
+  filesTouched: Map<AbsolutePath, number>;
 };
 
 export class ChatContextManager {
@@ -52,14 +52,16 @@ export class ChatContextManager {
     const cache = workbenchStore.files.get();
     const allPaths = Object.keys(cache).toSorted();
 
-    const lastUsed: Map<string, number> = new Map();
+    const lastUsed: Map<AbsolutePath, number> = new Map();
     for (const path of PREWARM_PATHS) {
-      const entry = cache[path];
+      // These constants are absolute paths, so we can cast them to AbsolutePath.
+      const absPath = path as AbsolutePath;
+      const entry = cache[absPath];
       if (!entry) {
         console.log('Missing prewarm entry', path);
         continue;
       }
-      lastUsed.set(path, 0);
+      lastUsed.set(absPath, 0);
     }
 
     // Iterate over the messages and update the last used time for each path.
@@ -223,16 +225,16 @@ export class ChatContextManager {
       return cached;
     }
 
-    const filesTouched = new Map<string, number>();
+    const filesTouched = new Map<AbsolutePath, number>();
     for (const file of extractFileArtifacts(makePartId(message.id, 0), message.content)) {
-      filesTouched.set(file, 0);
+      filesTouched.set(getAbsolutePath(file), 0);
     }
     for (let j = 0; j < message.parts.length; j++) {
       const part = message.parts[j];
       if (part.type === 'text') {
         const files = extractFileArtifacts(makePartId(message.id, j), part.text);
         for (const file of files) {
-          filesTouched.set(file, j);
+          filesTouched.set(getAbsolutePath(file), j);
         }
       }
       if (
@@ -242,7 +244,7 @@ export class ChatContextManager {
       ) {
         const args = loggingSafeParse(viewParameters, part.toolInvocation.args);
         if (args.success) {
-          filesTouched.set(args.data.path, j);
+          filesTouched.set(getAbsolutePath(args.data.path), j);
         }
       }
       if (
@@ -252,7 +254,7 @@ export class ChatContextManager {
       ) {
         const args = loggingSafeParse(editToolParameters, part.toolInvocation.args);
         if (args.success) {
-          filesTouched.set(args.data.path, j);
+          filesTouched.set(getAbsolutePath(args.data.path), j);
         }
       }
     }

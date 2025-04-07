@@ -16,6 +16,7 @@ import { workbenchStore } from '~/lib/stores/workbench';
 import { WORK_DIR } from '~/utils/constants';
 import { z } from 'zod';
 import { editToolParameters } from './editTool';
+import { getAbsolutePath } from '../stores/files';
 const logger = createScopedLogger('ActionRunner');
 
 export type ActionStatus = 'pending' | 'running' | 'complete' | 'aborted' | 'failed';
@@ -111,7 +112,7 @@ export class ActionRunner {
 
     if (data.action.type === 'file') {
       const files = workbenchStore.files.get();
-      const absPath = path.join(WORK_DIR, data.action.filePath);
+      const absPath = getAbsolutePath(data.action.filePath);
       const existing = !!files[absPath];
       data.action.isEdit = existing;
     }

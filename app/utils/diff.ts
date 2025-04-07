@@ -1,5 +1,5 @@
 import { createTwoFilesPatch } from 'diff';
-import type { FileMap } from '~/lib/stores/files';
+import type { AbsolutePath, FileMap } from '~/lib/stores/files';
 import { WORK_DIR } from './constants';
 
 interface ModifiedFile {
@@ -7,9 +7,9 @@ interface ModifiedFile {
   content: string;
 }
 
-type FileModifications = Record<string, ModifiedFile>;
+type FileModifications = Record<AbsolutePath, ModifiedFile>;
 
-export function computeFileModifications(files: FileMap, modifiedFiles: Map<string, string>) {
+export function computeFileModifications(files: FileMap, modifiedFiles: Map<AbsolutePath, string>) {
   const modifications: FileModifications = {};
 
   let hasModifiedFiles = false;
@@ -68,13 +68,4 @@ function diffFiles(fileName: string, oldFileContent: string, newFileContent: str
   }
 
   return unifiedDiff;
-}
-
-const regex = new RegExp(`^${WORK_DIR}\/`);
-
-/**
- * Strips out the work directory from the file path.
- */
-export function extractRelativePath(filePath: string) {
-  return filePath.replace(regex, '');
 }
