@@ -1,6 +1,8 @@
 import { type LoaderFunctionArgs } from '@remix-run/cloudflare';
-import { default as IndexRoute } from './_index';
+import { default as IndexRoute, meta as IndexMeta } from './_index';
 import { getFlexAuthModeInLoader } from '~/lib/persistence/convex';
+
+export const meta = IndexMeta;
 
 export async function loader(args: LoaderFunctionArgs) {
   const flexAuthMode = getFlexAuthModeInLoader(args.context);
