@@ -101,6 +101,17 @@ export const startProvisionConvexProject = mutation({
     if (!chat) {
       throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
     }
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) {
+      console.error(`Session not found: ${args.sessionId}`);
+      throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
+    }
+    if (session.memberId !== undefined) {
+      console.error(
+        `This flow is only available with invite codes but is being used for the oauth flow: ${args.sessionId}`,
+      );
+      throw new ConvexError({ code: 'NotAuthorized', message: 'Invalid flow for connecting a project' });
+    }
 
     await ctx.db.patch(chat._id, { convexProject: { kind: 'connecting' } });
     const inviteCode = await getInviteCode(ctx, { sessionId: args.sessionId });

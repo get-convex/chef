@@ -314,7 +314,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           for new line
                         </div>
                       ) : null}
-                      <ConvexConnection size={flexAuthMode === 'InviteCode' ? 'hidden' : 'small'} />
+                      {chatStarted && flexAuthMode === 'ConvexOAuth' && <ConvexConnection size="small" />}
                     </div>
                   </div>
                 </div>

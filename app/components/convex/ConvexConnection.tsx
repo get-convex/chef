@@ -8,14 +8,10 @@ import { useQuery, useConvex } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useStore } from '@nanostores/react';
 
-export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' | 'hidden' }) {
+export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' }) {
   const [isDesiredOpen, setIsOpen] = useState(false);
 
   const chatStarted = useStore(chatStore).started;
-  const connected = !useStore(convexStore);
-  const forceOpen = useStore(flexAuthModeStore) === 'ConvexOAuth' && connected && chatStarted;
-  const isOpen = isDesiredOpen || forceOpen;
-  const forcedOpen = forceOpen && !isDesiredOpen;
 
   const convexClient = useConvex();
   const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -42,6 +38,10 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' |
 
   const isConnected = projectInfo !== null;
 
+  const forceOpen = useStore(flexAuthModeStore) === 'ConvexOAuth' && !isConnected && chatStarted;
+  const isOpen = isDesiredOpen || forceOpen;
+  const forcedOpen = forceOpen && !isDesiredOpen;
+
   const handleDisconnect = async () => {
     convexStore.set(null);
     if (sessionId && chatId) {
@@ -53,11 +53,6 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' |
       console.error('No sessionId or chatId so cannot disconnect');
     }
   };
-
-  if (size === 'hidden') {
-    // Render no UI, but still have the component so it can handle setting the `convexStore` state
-    return null;
-  }
 
   return (
     <div className="relative">
@@ -83,7 +78,7 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' |
 
       <DialogRoot open={isOpen} onOpenChange={setIsOpen}>
         {isOpen && (
-          <Dialog className="max-w-[520px] p-6">
+          <Dialog className="max-w-[520px] p-6" showCloseButton={!forcedOpen}>
             <div className="space-y-4">
               <DialogTitle>
                 <div className="flex items-center gap-2 px-3">
@@ -124,11 +119,15 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' |
                   </div>
                 )}
               </div>
-              <div className="flex justify-end gap-2 mt-6 px-3">
-                <DialogClose asChild>
-                  <DialogButton type="secondary">Close</DialogButton>
-                </DialogClose>
-              </div>
+              {!forcedOpen && (
+                <div className="flex justify-end gap-2 mt-6 px-3">
+                  <DialogClose asChild>
+                    <DialogButton type="secondary" onClick={() => setIsOpen(false)}>
+                      Close
+                    </DialogButton>
+                  </DialogClose>
+                </div>
+              )}
             </div>
           </Dialog>
         )}

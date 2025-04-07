@@ -30,16 +30,28 @@ export const getSession = mutation({
 
 export const verifySession = query({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.string(),
     flexAuthMode: v.optional(v.union(v.literal('InviteCode'), v.literal('ConvexOAuth'))),
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
-    if (args.flexAuthMode === 'InviteCode') {
-      return isValidSessionForInviteCode(ctx, args);
-    } else {
-      return isValidSession(ctx, args);
+    const sessionId = await ctx.db.normalizeId('sessions', args.sessionId);
+    if (!sessionId) {
+      return false;
     }
+    if (args.flexAuthMode === 'InviteCode') {
+      return isValidSessionForInviteCode(ctx, { sessionId });
+    } else if (args.flexAuthMode === 'ConvexOAuth') {
+      const session = await ctx.db.get(sessionId);
+      if (!session) {
+        return false;
+      }
+      if (!session.memberId) {
+        return false;
+      }
+      return isValidSessionForConvexOAuth(ctx, { sessionId, memberId: session.memberId });
+    }
+    return isValidSession(ctx, { sessionId });
   },
 });
 

@@ -35,6 +35,7 @@ There are two forms of auth, dictated by the `FLEX_AUTH_MODE` environment variab
 
 - Users sign in with their Github account to Convex (as of writing, actually a test Convex Auth0 app)
 - Users go through an OAuth flow to link projects in their account to Flex
+- You'll need `CONVEX_OAUTH_CLIENT_ID` + `CONVEX_OAUTH_CLIENT_SECRET` set in your `.env.local` (values are in 1Password under `flex .env.local`)
 
 # Working on the template
 
