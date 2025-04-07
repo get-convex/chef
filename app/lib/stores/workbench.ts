@@ -233,7 +233,7 @@ export class WorkbenchStore {
 
     // Add beforeunload event listener to prevent navigation while uploading
     const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-      if (isUploading) {
+      if (this.saveState.get() === 'saving') {
         // Some browsers require both preventDefault and setting returnValue
         e.preventDefault();
         e.returnValue = '';
