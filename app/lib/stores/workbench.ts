@@ -25,7 +25,6 @@ import { buildSnapshot, compressSnapshot } from '~/lib/snapshot';
 import { sessionIdStore } from './convex';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './Artifacts';
-import { WORK_DIR } from '~/utils/constants';
 
 const BACKUP_DEBOUNCE_MS = 1000 * 5;
 

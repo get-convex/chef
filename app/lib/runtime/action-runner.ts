@@ -1,5 +1,5 @@
 import type { WebContainer } from '@webcontainer/api';
-import { path as nodePath, path } from '~/utils/path';
+import { path as nodePath } from '~/utils/path';
 import { atom, map, type MapStore, type WritableAtom } from 'nanostores';
 import type { ActionAlert, BoltAction, FileHistory } from '~/types/actions';
 import { createScopedLogger } from '~/utils/logger';
@@ -13,10 +13,10 @@ import { readPath, renderDirectory, renderFile, workDirRelative } from '~/utils/
 import { ContainerBootState, waitForContainerBootState } from '~/lib/webcontainer';
 import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
 import { workbenchStore } from '~/lib/stores/workbench';
-import { WORK_DIR } from '~/utils/constants';
 import { z } from 'zod';
 import { editToolParameters } from './editTool';
-import { getAbsolutePath } from '../stores/files';
+import { getAbsolutePath } from '~/lib/stores/files';
+
 const logger = createScopedLogger('ActionRunner');
 
 export type ActionStatus = 'pending' | 'running' | 'complete' | 'aborted' | 'failed';

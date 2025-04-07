@@ -2,9 +2,6 @@ import { json } from '@remix-run/cloudflare';
 import type { ActionFunctionArgs } from '@remix-run/cloudflare';
 import Cloudflare from 'cloudflare';
 
-const PROVISION_HOST = 'https://provision.convex.dev';
-//const PROVISION_HOST = "http://127.0.0.1:8000";
-
 export async function action({ request, context }: ActionFunctionArgs) {
   try {
     const formData = await request.formData();
@@ -27,8 +24,11 @@ export async function action({ request, context }: ActionFunctionArgs) {
       return json({ error: 'Missing authentication or deployment info' }, { status: 400 });
     }
 
+    const PROVISION_HOST =
+      (context.cloudflare.env as Record<string, any>).PROVISION_HOST ||
+      process.env.PROVISION_HOST ||
+      'https://api.convex.dev';
     const Authorization = `Bearer ${token}`;
-
     const response = await fetch(`${PROVISION_HOST}/api/hosting/deploy?deploymentName=${deploymentName}`, {
       method: 'POST',
       headers: {

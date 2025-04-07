@@ -9,6 +9,7 @@ import { npmInstallTool } from '~/lib/runtime/npmInstallTool';
 import { openai } from '@ai-sdk/openai';
 import type { Tracer } from '~/routes/api.chat';
 import { editTool } from '~/lib/runtime/editTool';
+import { captureException } from '@sentry/remix';
 
 type Messages = Message[];
 
@@ -86,6 +87,13 @@ async function convexAgent(
           const response = await fetch(input, enrichedOptions);
 
           if (response.status == 429) {
+            captureException('Rate limited by Anthropic, switching to low QoS API key', {
+              level: 'warning',
+              extra: {
+                response,
+              },
+            });
+
             const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
 
             if (!lowQosKey) {

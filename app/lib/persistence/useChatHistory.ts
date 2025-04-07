@@ -193,7 +193,7 @@ export const useChatHistoryConvex = () => {
         setUrlId(result.id);
         navigateChat(result.id);
       }
-    }, [convex, sessionId]),
+    }, [convex, urlId, sessionId]),
     storeMessageHistory: useCallback(
       async (messages: Message[]) => {
         if (messages.length === 0) {
@@ -252,7 +252,7 @@ export const useChatHistoryConvex = () => {
           navigateChat(result.id);
         }
       },
-      [convex, sessionId],
+      [convex, urlId, sessionId],
     ),
     duplicateCurrentChat: useCallback(
       async (listItemId: string) => {
@@ -331,7 +331,7 @@ export const useChatHistoryConvex = () => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       },
-      [convex, sessionId],
+      [convex, urlId, sessionId],
     ),
   };
 };
