@@ -208,6 +208,7 @@ export class WorkbenchStore {
     let debounceTimeout: NodeJS.Timeout | undefined;
     const debouncedUploadSnapshot = () => {
       this.saveState.set('saving');
+      console.log('debouncedUploadSnapshot hasTimeout', debounceTimeout);
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
       }
@@ -226,7 +227,10 @@ export class WorkbenchStore {
           recursive: true,
           persistent: true,
         },
-        () => {
+        (_event, filename) => {
+          if (typeof filename === 'string' && filename.startsWith('node_modules/')) {
+            return;
+          }
           debouncedUploadSnapshot();
         },
       );
