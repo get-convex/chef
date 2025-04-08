@@ -5,6 +5,7 @@ import { ClientOnly } from 'remix-utils/client-only';
 import { Header } from '~/components/header/Header';
 import { SafariWarning } from '~/components/SafariWarning';
 import { ExistingChat } from '~/components/ExistingChat.client';
+import { redirect, useLoaderData } from '@remix-run/react';
 
 export const meta = IndexMeta;
 
@@ -23,13 +24,17 @@ export async function loader(args: LoaderFunctionArgs) {
 // So, this route is less latency critical the the homepage, and we're
 // more comfortable showing spinners to rehydrate the app state.
 export default function ChatRoute() {
+  const loaderData = useLoaderData<{ id: string }>();
+  if (!loaderData.id) {
+    redirect('/');
+  }
   return (
     <div className="flex flex-col h-full w-full bg-bolt-elements-background-depth-1">
       <Header />
       <ClientOnly>
         {() => (
           <>
-            <ExistingChat />
+            <ExistingChat chatId={loaderData.id} />
             <SafariWarning />
           </>
         )}

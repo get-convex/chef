@@ -2,18 +2,29 @@ import { api } from '@convex/_generated/api';
 import { convexStore } from '~/lib/stores/convex';
 import { useQuery } from 'convex/react';
 import { useEffect } from 'react';
-import { useChatHistoryConvex } from '~/lib/persistence';
-import { useChatIdOrNull } from '~/lib/stores/chat';
+import { chatIdStore, useChatHistoryConvex } from '~/lib/persistence';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { Chat } from './chat/Chat';
 import { Toaster } from 'sonner';
 import { FlexAuthWrapper } from './chat/FlexAuthWrapper';
 import { SentryUserProvider } from './chat/Chat';
+import { useStore } from '@nanostores/react';
 
-export function ExistingChat() {
+export function ExistingChat({ chatId }: { chatId: string }) {
+  // Fill in the chatID store from props early in app initialization.
+  const storedChatId = useStore(chatIdStore);
+  useEffect(() => {
+    if (storedChatId === undefined) {
+      chatIdStore.set(chatId);
+      return;
+    }
+    if (storedChatId !== chatId) {
+      throw new Error(`Chat ID mismatch: ${storedChatId} !== ${chatId}`);
+    }
+  }, [chatId, storedChatId]);
+
   const { ready, initialMessages, storeMessageHistory, initializeChat } = useChatHistoryConvex();
   const sessionId = useConvexSessionIdOrNullOrLoading();
-  const chatId = useChatIdOrNull();
   const projectInfo = useQuery(
     api.convexProjects.loadConnectedConvexProjectCredentials,
     sessionId && chatId

@@ -61,7 +61,6 @@ export const useChatHistoryConvex = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const convex = useConvex();
   useEffect(() => {
-    console.log('useChatHistory', sessionId, mixedId, chatIdStore.get());
     if (sessionId === undefined || sessionId === null) {
       return;
     }
