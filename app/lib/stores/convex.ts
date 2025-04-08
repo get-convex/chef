@@ -154,6 +154,26 @@ export function getSelectedTeamSlug(): string | null {
   return stored;
 }
 
+export function initializeSelectedTeamSlug(teams: ConvexTeam[]) {
+  const teamSlugFromLocalStorage = getLocalStorage(SELECTED_TEAM_SLUG_KEY);
+  if (teamSlugFromLocalStorage) {
+    const team = teams.find((team) => team.slug === teamSlugFromLocalStorage);
+    if (team) {
+      selectedTeamSlugStore.set(teamSlugFromLocalStorage);
+      setLocalStorage(SELECTED_TEAM_SLUG_KEY, teamSlugFromLocalStorage);
+      return;
+    }
+  }
+  if (teams.length > 0) {
+    selectedTeamSlugStore.set(teams[0].slug);
+    setLocalStorage(SELECTED_TEAM_SLUG_KEY, teams[0].slug);
+    return;
+  }
+  console.error('Unexpected state -- no teams found');
+  selectedTeamSlugStore.set(null);
+  setLocalStorage(SELECTED_TEAM_SLUG_KEY, null);
+}
+
 export function setSelectedTeamSlug(teamSlug: string | null) {
   setLocalStorage(SELECTED_TEAM_SLUG_KEY, teamSlug);
   selectedTeamSlugStore.set(teamSlug);

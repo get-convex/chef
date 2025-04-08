@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import * as Select from '@radix-ui/react-select';
 import { classNames } from '~/utils/classNames';
-import { setSelectedTeamSlug, teamsStore, useSelectedTeamSlug, type ConvexTeam } from '~/lib/stores/convex';
+import {
+  initializeSelectedTeamSlug,
+  setSelectedTeamSlug,
+  teamsStore,
+  useSelectedTeamSlug,
+  type ConvexTeam,
+} from '~/lib/stores/convex';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useStore } from '@nanostores/react';
 
@@ -28,9 +34,7 @@ export function TeamSelector() {
         }
         const teamsData = await response.json();
         teamsStore.set(teamsData as ConvexTeam[]);
-        if (teamsData && (teamsData as ConvexTeam[]).length > 0) {
-          setSelectedTeamSlug((teamsData as ConvexTeam[])[0].slug);
-        }
+        initializeSelectedTeamSlug(teamsData as ConvexTeam[]);
       } catch (error) {
         console.error('Error fetching teams:', error);
       }
