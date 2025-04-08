@@ -3,6 +3,7 @@ import { webcontainer } from './webcontainer';
 import { formatSize } from '~/utils/formatSize';
 import type { WorkbenchStore } from './stores/workbench';
 import { streamOutput } from '~/utils/process';
+import { cleanTerminalOutput } from '~/utils/shell';
 
 export async function loadSnapshot(webcontainer: WebContainer, workbenchStore: WorkbenchStore, chatId?: string) {
   console.log('Loading snapshot');
@@ -15,12 +16,9 @@ export async function loadSnapshot(webcontainer: WebContainer, workbenchStore: W
 
   // Install NPM dependencies.
   const npm = await webcontainer.spawn('npm', ['install']);
-  const { output, exitCode } = await streamOutput(npm, {
-    onOutput: (output) => {
-      console.log('npm output', output);
-    },
-    debounceMs: 1000,
-  });
+  const { output, exitCode } = await streamOutput(npm);
+  console.log("NPM output", cleanTerminalOutput(output));
+
   if (exitCode !== 0) {
     throw new Error(`Npm install failed with exit code ${exitCode}: ${output}`);
   }
