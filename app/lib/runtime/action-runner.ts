@@ -361,7 +361,7 @@ export class ActionRunner {
             result = renderDirectory(file.children);
           } else {
             if (args.view_range && args.view_range.length !== 2) {
-              throw new Error('When provided, read_range must be an array of two numbers');
+              throw new Error('When provided, view_range must be an array of two numbers');
             }
             result = renderFile(file.content, args.view_range as [number, number]);
           }
