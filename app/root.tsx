@@ -12,7 +12,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Auth0Provider } from '@auth0/auth0-react';
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
-import { logStore } from './lib/stores/logs';
 import { ConvexReactClient } from 'convex/react';
 import { ErrorDisplay } from './components/ErrorComponent';
 
@@ -123,15 +122,6 @@ export default function App() {
         { unsavedChangesWarning: false },
       ),
   );
-
-  useEffect(() => {
-    logStore.logSystem('Application initialized', {
-      theme,
-      platform: navigator.platform,
-      userAgent: navigator.userAgent,
-      timestamp: new Date().toISOString(),
-    });
-  }, []);
 
   return (
     <ClientOnly>
