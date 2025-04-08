@@ -341,7 +341,6 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
       message.role === 'assistant' &&
       message.parts?.some((part) => part.type === 'tool-invocation' && part.toolInvocation.toolName === 'deploy'),
   );
-  console.log('shouldDeployConvexFunctions', shouldDeployConvexFunctions);
 
   return (
     <BaseChat

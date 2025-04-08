@@ -22,10 +22,12 @@ import { convexStore } from '~/lib/stores/convex';
 import { WORK_DIR } from '~/utils/constants';
 import { SaveStatusIndicator } from '~/components/SaveStatusIndicator';
 import { Allotment } from 'allotment';
+import type { TerminalInitializationOptions } from '~/types/terminal';
 
 interface WorkspaceProps {
   chatStarted?: boolean;
   isStreaming?: boolean;
+  terminalInitializationOptions?: TerminalInitializationOptions;
 }
 
 const viewTransition = { ease: cubicEasingFn };
