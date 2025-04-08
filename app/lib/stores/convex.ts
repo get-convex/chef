@@ -161,12 +161,13 @@ export function initializeSelectedTeamSlug(teams: ConvexTeam[]) {
       return;
     }
   }
-  if (teams.length === 1) {
+  if (teams.length > 0) {
     selectedTeamSlugStore.set(teams[0].slug);
     setLocalStorage(SELECTED_TEAM_SLUG_KEY, teams[0].slug);
     return;
   }
-  setSelectedTeamSlug(null);
+  console.error('Unexpected state -- no teams found');
+  selectedTeamSlugStore.set(null);
   setLocalStorage(SELECTED_TEAM_SLUG_KEY, null);
 }
 
