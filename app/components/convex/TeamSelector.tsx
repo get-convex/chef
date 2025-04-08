@@ -19,12 +19,14 @@ export function TeamSelector({ selectedTeamSlug, onTeamSelect }: TeamSelectorPro
   useEffect(() => {
     async function fetchTeams() {
       try {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         const accessToken = await getAccessTokenSilently({
           authorizationParams: authParams,
+          detailedResponse: true,
         });
         const response = await fetch('https://api.convex.dev/api/dashboard/teams', {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken.id_token}`,
           },
         });
         if (!response.ok) {
@@ -47,7 +49,7 @@ export function TeamSelector({ selectedTeamSlug, onTeamSelect }: TeamSelectorPro
       <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
         <div className="flex items-center gap-2 p-1.5 w-full">
           <div className="i-ph:spinner-gap animate-spin" />
-          Loading teams...
+          Loading teams…
         </div>
       </div>
     );

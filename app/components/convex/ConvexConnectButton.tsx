@@ -80,8 +80,8 @@ function ConvexConnectButtonForInviteCode() {
 
 // These match what we use for the Convex dashboard and what Big Brain expects
 export const authParams = {
-  audience: 'https://console.convex.dev/api/',
-  scope: 'openid profile email list:instances manage:instances offline_access',
+  // audience: 'https://console.convex.dev/api/',
+  // scope: 'openid profile email list:instances manage:instances offline_access',
 };
 
 function ConvexConnectButtonViaOauth() {
