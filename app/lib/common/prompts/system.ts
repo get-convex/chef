@@ -21,8 +21,7 @@ export const SYSTEM_PROMPT_PRELUDE = 'Here are some general guidelines for worki
 // This system prompt explains how to work within the WebContainer environment and Chef. It
 // doesn't contain any details specific to the current session.
 export function systemPrompt(options: SystemPromptOptions) {
-  const result = stripIndents`
-  ${SYSTEM_PROMPT_PRELUDE}
+  const result = stripIndents`${SYSTEM_PROMPT_PRELUDE}
   ${systemConstraints(options)}
   ${solutionConstraints(options)}
   ${formattingInstructions(options)}

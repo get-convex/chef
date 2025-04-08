@@ -87,7 +87,7 @@ export async function convexAgent(
   }
   const opts: SystemPromptOptions = {
     enableBulkEdits: true,
-    enablePreciseEdits: true,
+    enablePreciseEdits: false,
     includeTemplate: true,
   };
   const result = streamText({
