@@ -85,7 +85,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
     const [selectedTeamSlug, setSelectedTeamSlug] = useState<string | null>(() => {
       const stored = getSelectedTeamSlug();
-      return stored || 'atrakh'; // Default to first team
+      return stored; // Default to first team
     });
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
