@@ -1,13 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as Select from '@radix-ui/react-select';
 import { classNames } from '~/utils/classNames';
-import { setSelectedTeamSlug } from '~/lib/stores/convex';
-
-const EXAMPLE_TEAMS = [
-  { id: '1', name: "Ari's Team", slug: 'atrakh' },
-  { id: '2', name: 'Work Team', slug: 'work' },
-  { id: '3', name: 'Open Source Team Blah Blah Blah', slug: 'opensource' },
-] as const;
+import { setSelectedTeamSlug, teamsStore, type ConvexTeam } from '~/lib/stores/convex';
+import { useAuth0 } from '@auth0/auth0-react';
+import { useStore } from '@nanostores/react';
+import { authParams } from './ConvexConnectButton';
 
 interface TeamSelectorProps {
   selectedTeamSlug: string | null;
@@ -16,7 +13,47 @@ interface TeamSelectorProps {
 
 export function TeamSelector({ selectedTeamSlug, onTeamSelect }: TeamSelectorProps) {
   const [open, setOpen] = useState(false);
-  const selectedTeam = EXAMPLE_TEAMS.find((t) => t.slug === selectedTeamSlug) || EXAMPLE_TEAMS[0];
+  const { getAccessTokenSilently } = useAuth0();
+  const teams = useStore(teamsStore);
+
+  useEffect(() => {
+    async function fetchTeams() {
+      try {
+        const accessToken = await getAccessTokenSilently({
+          authorizationParams: authParams,
+        });
+        const response = await fetch('https://api.convex.dev/api/dashboard/teams', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch teams');
+        }
+        const teamsData = await response.json();
+        teamsStore.set(teamsData as ConvexTeam[]);
+      } catch (error) {
+        console.error('Error fetching teams:', error);
+      }
+    }
+
+    if (!teams) {
+      fetchTeams();
+    }
+  }, [getAccessTokenSilently, teams]);
+
+  if (!teams) {
+    return (
+      <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
+        <div className="flex items-center gap-2 p-1.5 w-full">
+          <div className="i-ph:spinner-gap animate-spin" />
+          Loading teams...
+        </div>
+      </div>
+    );
+  }
+
+  const selectedTeam = teams.find((t) => t.slug === selectedTeamSlug) || teams[0];
 
   return (
     <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
@@ -30,7 +67,11 @@ export function TeamSelector({ selectedTeamSlug, onTeamSelect }: TeamSelectorPro
         onOpenChange={setOpen}
       >
         <Select.Trigger
-          className="flex items-center gap-2 p-1.5 w-full rounded-md text-left text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundHover bg-bolt-elements-button-secondary-background/50"
+          className={classNames(
+            'flex items-center gap-2 p-1.5 w-full rounded-md text-left text-bolt-elements-textPrimary bg-bolt-elements-button-secondary-background',
+            'hover:bg-bolt-elements-item-backgroundAccent/90',
+            open && 'bg-bolt-elements-item-backgroundAccent/90',
+          )}
           aria-label="Select team"
         >
           <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
@@ -46,13 +87,13 @@ export function TeamSelector({ selectedTeamSlug, onTeamSelect }: TeamSelectorPro
             sideOffset={5}
           >
             <Select.Viewport>
-              <div className="border-b p-2 sticky top-0 bg-bolt-elements-button-secondary-background">
+              <div className="border-b p-2 sticky top-0 bg-bolt-elements-button-secondary-background z-10">
                 <h3 className="text-sm font-medium">Select Team</h3>
                 <p className="mt-1 text-xs text-bolt-elements-textSecondary">
                   Your project will be created in this Convex team
                 </p>
               </div>
-              {EXAMPLE_TEAMS.map((team) => (
+              {teams.map((team) => (
                 <Select.Item
                   key={team.id}
                   value={team.slug}
