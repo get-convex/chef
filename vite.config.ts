@@ -97,6 +97,7 @@ export default defineConfig((config) => {
     },
     build: {
       target: 'esnext',
+      sourcemap: true,
       rollupOptions: {
         output: {
           format: 'esm',
