@@ -1,5 +1,7 @@
 import type { WebContainer } from '@webcontainer/api';
 import { atom } from 'nanostores';
+import { createScopedLogger } from '~/utils/logger';
+import { withResolvers } from '~/utils/promises';
 
 export interface PreviewInfo {
   port: number;
@@ -7,11 +9,49 @@ export interface PreviewInfo {
   baseUrl: string;
 }
 
+const PROXY_PORT_RANGE_START = 0xc4ef;
+
+const PROXY_SERVER_SOURCE = `
+const http = require('http');
+
+const sourcePort = Number(process.argv[1]);
+const targetPort = Number(process.argv[2]);
+
+console.log(\`Starting proxy server: proxying \${targetPort} → \${sourcePort}\`);
+
+http.createServer((req, res) => {
+  console.log(\`[\${new Date().toISOString()}] \${req.method} \${req.url}\`);
+  
+  const proxyReq = http.request({
+    hostname: 'localhost',
+    port: sourcePort,
+    path: req.url,
+    method: req.method,
+    headers: req.headers
+  }, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
+    proxyRes.pipe(res);
+  });
+  
+  proxyReq.on('error', (error) => {
+    console.error('Proxy error:', error);
+    res.writeHead(502);
+    res.end('Bad Gateway');
+  });
+  
+  req.pipe(proxyReq);
+}).listen(targetPort);
+`;
+
+type ProxyState = { sourcePort: number; start: () => void; stop: () => void };
+
 export class PreviewsStore {
   #availablePreviews = new Map<number, PreviewInfo>();
   #webcontainer: Promise<WebContainer>;
 
   previews = atom<PreviewInfo[]>([]);
+
+  #proxies = new Map<number, ProxyState>();
 
   constructor(webcontainerPromise: Promise<WebContainer>) {
     this.#webcontainer = webcontainerPromise;
@@ -28,6 +68,13 @@ export class PreviewsStore {
 
     // Listen for port events
     webcontainer.on('port', (port, type, url) => {
+      if (this.#proxies.has(port)) {
+        if (type === 'open') {
+          this.#proxies.get(port)?.start();
+        }
+        return;
+      }
+
       let previewInfo = this.#availablePreviews.get(port);
 
       if (type === 'close' && previewInfo) {
@@ -49,5 +96,54 @@ export class PreviewsStore {
 
       this.previews.set([...previews]);
     });
+  }
+
+  async startProxy(sourcePort: number): Promise<{ proxyPort: number }> {
+    const targetPort = PROXY_PORT_RANGE_START + this.#proxies.size;
+    const { promise: onStart, resolve: start } = withResolvers<void>();
+
+    const proxyLogger = createScopedLogger(`Proxy ${targetPort} → ${sourcePort}`);
+
+    const proxyState: ProxyState = {
+      sourcePort,
+      start,
+      stop() {
+        throw new Error('Proxy not started');
+      },
+    };
+    this.#proxies.set(targetPort, proxyState);
+
+    // Start the proxy
+    const webcontainer = await this.#webcontainer;
+    const proxyProcess = await webcontainer.spawn('node', [
+      '-e',
+      PROXY_SERVER_SOURCE,
+      sourcePort.toString(),
+      targetPort.toString(),
+    ]);
+
+    proxyState.stop = () => {
+      proxyProcess.kill();
+    };
+
+    proxyProcess.output.pipeTo(
+      new WritableStream({
+        write(data) {
+          proxyLogger.info(data);
+        },
+      }),
+    );
+
+    await onStart;
+    return { proxyPort: targetPort };
+  }
+
+  async stopProxy(proxyPort: number) {
+    const proxy = this.#proxies.get(proxyPort);
+    if (!proxy) {
+      throw new Error(`Proxy for port ${proxyPort} not found`);
+    }
+
+    proxy.stop();
   }
 }
