@@ -124,7 +124,7 @@ export async function convexAgent(
     ],
     tools,
     onFinish: (result) => onFinishHandler(result, tracer, chatId),
-    maxRetries: 1,
+    maxRetries: 0,
     experimental_telemetry: {
       isEnabled: true,
       metadata: {
