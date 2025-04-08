@@ -95,7 +95,9 @@ export class WorkbenchStore {
   }
 
   async snapshotUrl(id?: string) {
-    const SNAPSHOT_URL = 'https://static.convex.dev/chef/snapshot.bin';
+    const COMMIT_SHA = process.env.VERCEL_GIT_COMMIT_SHA ?? null;
+    const SNAPSHOT_URL =
+      'https://chef-static.convex.app/snapshot.bin' + (COMMIT_SHA ? `?v=${COMMIT_SHA.substring(0, 5)}` : '');
     if (!id) {
       console.log('No chat id yet, downloading from Convex');
       return SNAPSHOT_URL;
