@@ -1,6 +1,6 @@
 import { convertToCoreMessages, streamText, type LanguageModelV1, type Message, type StepResult } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
-import { ROLE_SYSTEM_PROMPT, GENERAL_SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from '~/lib/common/prompts/generalSystem';
+import { ROLE_SYSTEM_PROMPT, GENERAL_SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from '~/lib/common/prompts/system';
 import { deployTool } from '~/lib/runtime/deployTool';
 import { viewTool } from '~/lib/runtime/viewTool';
 import type { ConvexToolSet } from '~/lib/common/types';
