@@ -3,7 +3,7 @@ import { renderFile } from '~/utils/fileUtils';
 import { getAbsolutePath, type AbsolutePath, type Dirent } from './stores/files';
 import { PREWARM_PATHS, WORK_DIR } from '~/utils/constants';
 import { workbenchStore } from './stores/workbench';
-import { makePartId, type PartId } from './stores/Artifacts';
+import { makePartId, type PartId } from './stores/artifacts';
 import { StreamingMessageParser } from './runtime/message-parser';
 import { path } from '~/utils/path';
 import { loggingSafeParse } from '~/lib/zodUtil';

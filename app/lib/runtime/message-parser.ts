@@ -1,8 +1,8 @@
-import type { ActionType, BoltAction, BoltActionData, FileAction, ShellAction, ConvexAction } from '~/types/actions';
+import type { ActionType, BoltAction, BoltActionData, FileAction } from '~/types/actions';
 import type { BoltArtifactData } from '~/types/artifact';
 import { createScopedLogger } from '~/utils/logger';
 import { unreachable } from '~/utils/unreachable';
-import type { PartId } from '~/lib/stores/Artifacts';
+import type { PartId } from '~/lib/stores/artifacts';
 
 const ARTIFACT_TAG_OPEN = '<boltArtifact';
 const ARTIFACT_TAG_CLOSE = '</boltArtifact>';
@@ -322,11 +322,11 @@ export class StreamingMessageParser {
       }
 
       (actionAttributes as FileAction).filePath = filePath;
-    } else if (!['shell', 'start', 'convex', 'toolUse'].includes(actionType)) {
+    } else {
       logger.warn(`Unknown action type '${actionType}'`);
     }
 
-    return actionAttributes as FileAction | ShellAction | ConvexAction;
+    return actionAttributes as FileAction;
   }
 
   #extractAttribute(tag: string, attributeName: string): string | undefined {

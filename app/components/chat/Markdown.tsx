@@ -7,7 +7,7 @@ import { Artifact } from './Artifact';
 import { CodeBlock } from './CodeBlock';
 
 import styles from './Markdown.module.scss';
-import type { PartId } from '~/lib/stores/Artifacts';
+import type { PartId } from '~/lib/stores/artifacts';
 
 const logger = createScopedLogger('MarkdownComponent');
 

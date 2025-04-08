@@ -29,7 +29,7 @@ import { convexStore, useConvexSessionId, useConvexSessionIdOrNullOrLoading } fr
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { toast, Toaster } from 'sonner';
-import type { PartId } from '~/lib/stores/Artifacts';
+import type { PartId } from '~/lib/stores/artifacts';
 import { captureException } from '@sentry/remix';
 import { setExtra, setUser } from '@sentry/remix';
 import { useAuth0 } from '@auth0/auth0-react';

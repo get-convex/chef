@@ -1,6 +1,6 @@
 import type { Change } from 'diff';
 
-export type ActionType = 'file' | 'shell' | 'convex';
+export type ActionType = 'file' | 'toolUse';
 
 interface BaseAction {
   content: string;
@@ -12,45 +12,12 @@ export interface FileAction extends BaseAction {
   isEdit?: boolean;
 }
 
-export interface ShellAction extends BaseAction {
-  type: 'shell';
-}
-
-interface NpmInstallAction extends BaseAction {
-  type: 'npmInstall';
-}
-
-interface NpmExecAction extends BaseAction {
-  type: 'npmExec';
-}
-
-interface StartAction extends BaseAction {
-  type: 'start';
-}
-
-interface BuildAction extends BaseAction {
-  type: 'build';
-}
-
-export interface ConvexAction extends BaseAction {
-  type: 'convex';
-  output?: string;
-}
-
 interface ToolUseAction extends BaseAction {
   type: 'toolUse';
   toolName: string;
 }
 
-export type BoltAction =
-  | FileAction
-  | ShellAction
-  | StartAction
-  | BuildAction
-  | ConvexAction
-  | ToolUseAction
-  | NpmInstallAction
-  | NpmExecAction;
+export type BoltAction = FileAction | ToolUseAction;
 
 export type BoltActionData = BoltAction | BaseAction;
 

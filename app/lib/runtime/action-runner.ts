@@ -173,37 +173,16 @@ export class ActionRunner {
 
     try {
       switch (action.type) {
-        case 'shell': {
-          logger.error('Shell action is not supported anymore. Use tool calls instead.');
-          break;
-        }
-        case 'npmInstall': {
-          logger.error('Npm install action is not supported anymore. Use tool calls instead.');
-          break;
-        }
-        case 'npmExec': {
-          logger.error('Npm exec action is not supported anymore. Use tool calls instead.');
-          break;
-        }
         case 'file': {
           await this.#runFileAction(action);
-          break;
-        }
-        case 'build': {
-          logger.error('Build action is not supported anymore. Use tool calls instead.');
-          break;
-        }
-        case 'start': {
-          logger.error('Start action is not supported anymore. Use tool calls instead.');
-          break;
-        }
-        case 'convex': {
-          logger.error('Convex action is not supported anymore. Use tool calls instead.');
           break;
         }
         case 'toolUse': {
           await this.#runToolUseAction(actionId, action);
           break;
+        }
+        default: {
+          throw new Error(`Unknown action type: ${JSON.stringify(action)}`);
         }
       }
 

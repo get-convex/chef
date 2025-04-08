@@ -10,7 +10,7 @@ import type { SerializedMessage } from '@convex/messages';
 import { flexAuthModeStore, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { webcontainer } from '~/lib/webcontainer';
 import { loadSnapshot } from '~/lib/snapshot';
-import { makePartId, type PartId } from '~/lib/stores/Artifacts';
+import { makePartId, type PartId } from '~/lib/stores/artifacts';
 import { useAuth0 } from '@auth0/auth0-react';
 
 export interface ChatHistoryItem {
