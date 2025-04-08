@@ -36,7 +36,9 @@ export async function convexAgentWithRetries(
   maxRetries: number = 3,
 ) {
   let randomizedProviders: ModelProvider[] = ['Anthropic', 'Bedrock'];
-  randomizedProviders.sort(() => Math.random() - 0.5);
+  if (Math.random() < 0.5) {
+    randomizedProviders = ['Bedrock', 'Anthropic'];
+  }
   if (getEnv(env, 'USE_OPENAI')) {
     randomizedProviders = ['OpenAI'];
   }
