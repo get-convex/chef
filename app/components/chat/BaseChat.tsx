@@ -253,7 +253,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         minHeight: TEXTAREA_MIN_HEIGHT,
                         maxHeight: TEXTAREA_MAX_HEIGHT,
                       }}
-                      placeholder="What app do you want to serve?"
+                      placeholder={
+                        chatStarted ? 'Request changes by sending another message...' : 'What app do you want to serve?'
+                      }
                       translate="no"
                     />
                     <ClientOnly>

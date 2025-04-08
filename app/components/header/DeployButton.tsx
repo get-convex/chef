@@ -20,26 +20,44 @@ interface ButtonProps {
   onClick?: VoidFunction;
   className?: string;
   title?: string;
+  href?: string;
+  target?: string;
+  rel?: string;
 }
 
-function Button({ active = false, disabled = false, children, onClick, className, title }: ButtonProps) {
+function Button({
+  active = false,
+  disabled = false,
+  children,
+  onClick,
+  className,
+  title,
+  href,
+  target,
+  rel,
+}: ButtonProps) {
+  const sharedClassName = classNames(
+    'flex items-center gap-1 p-1 text-sm border border-bolt-elements-borderColor rounded-md',
+    {
+      'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textPrimary hover:text-bolt-elements-textPrimary':
+        !active,
+      'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent': active && !disabled,
+      'bg-bolt-elements-item-backgroundDefault text-alpha-gray-20 dark:text-alpha-white-20 cursor-not-allowed hover:bg-bolt-elements-item-backgroundDefault hover:text-bolt-elements-textTertiary':
+        disabled,
+    },
+    className,
+  );
+
+  if (href) {
+    return (
+      <a href={href} target={target} rel={rel} className={sharedClassName}>
+        {children}
+      </a>
+    );
+  }
+
   return (
-    <button
-      className={classNames(
-        'flex items-center gap-1 p-1 text-sm border border-bolt-elements-borderColor rounded-md',
-        {
-          'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary':
-            !active,
-          'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent': active && !disabled,
-          'bg-bolt-elements-item-backgroundDefault text-alpha-gray-20 dark:text-alpha-white-20 cursor-not-allowed hover:bg-bolt-elements-item-backgroundDefault hover:text-bolt-elements-textTertiary':
-            disabled,
-        },
-        className,
-      )}
-      disabled={disabled}
-      onClick={onClick}
-      title={title}
-    >
+    <button className={sharedClassName} disabled={disabled} onClick={onClick} title={title}>
       {children}
     </button>
   );
@@ -162,15 +180,15 @@ export function DeployButton() {
         <span>{buttonText}</span>
       </Button>
       {status.type === 'success' && convex && (
-        <a
+        <Button
           href={`https://${convex.deploymentName}.convex.app`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent hover:bg-bolt-elements-item-backgroundAccent/90 transition-colors"
+          className="flex items-center gap-1"
         >
           <div className="i-ph:arrow-square-out w-4 h-4" />
           <span>View site</span>
-        </a>
+        </Button>
       )}
     </div>
   );
