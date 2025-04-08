@@ -40,7 +40,7 @@ export async function convexAgentWithRetries(
   if (getEnv(env, 'USE_OPENAI')) {
     randomizedProviders = ['OpenAI'];
   }
-  let error: Error | null = null;
+  const error: Error | null = null;
   for (let i = 0; i < maxRetries; i++) {
     const provider = randomizedProviders[i % randomizedProviders.length];
     try {
