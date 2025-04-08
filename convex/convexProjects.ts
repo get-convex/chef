@@ -301,7 +301,7 @@ export const connectConvexProjectForOauth = internalAction({
       throw new Error(`Failed to create project deploy key: ${projectDeployKeyResponse.statusText} ${text}`);
     }
     const projectDeployKeyData: { accessToken: string } = await projectDeployKeyResponse.json();
-    const projectDeployKey = projectDeployKeyData.accessToken;
+    const projectDeployKey = `project:${args.teamSlug}:${data.projectSlug}|${projectDeployKeyData.accessToken}`;
 
     await ctx.runMutation(internal.convexProjects.recordProvisionedConvexProjectCredentials, {
       sessionId: args.sessionId,
