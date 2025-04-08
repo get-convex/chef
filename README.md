@@ -1,4 +1,4 @@
-# flex-diy
+# Chef
 
 This is fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-labs/bolt.diy).
 
@@ -10,6 +10,8 @@ This is fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-
 - run `pnpm i`
 - set up the .env.local file (do this BEFORE running the next command). Copy from 1Password (flex .env.local)
 - run `pnpx convex dev --configure existing --team convex --project chef --once`
+
+Coming soon: using vercel to get the local environment variables
 
 # each time
 
