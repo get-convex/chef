@@ -70,7 +70,7 @@ export function TeamSelector({ selectedTeamSlug, onTeamSelect }: TeamSelectorPro
           className={classNames(
             'flex items-center gap-2 p-1.5 w-full rounded-md text-left text-bolt-elements-textPrimary bg-bolt-elements-button-secondary-background',
             'hover:bg-bolt-elements-item-backgroundAccent/90',
-            open && 'bg-bolt-elements-item-backgroundAccent/90',
+            open ? 'bg-bolt-elements-item-backgroundAccent/90' : '',
           )}
           aria-label="Select team"
         >
