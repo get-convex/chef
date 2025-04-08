@@ -7,7 +7,7 @@ import {
   type StepResult,
 } from 'ai';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
-import { anthropic, createAnthropic } from '@ai-sdk/anthropic';
+import { createAnthropic } from '@ai-sdk/anthropic';
 import { ROLE_SYSTEM_PROMPT, GENERAL_SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from '~/lib/common/prompts/system';
 import { deployTool } from '~/lib/runtime/deployTool';
 import { viewTool } from '~/lib/runtime/viewTool';
