@@ -5,7 +5,7 @@ import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
 import { IconButton } from './IconButton';
 
-export { Close as DialogClose, Root as DialogRoot } from '@radix-ui/react-dialog';
+export { Root as DialogRoot } from '@radix-ui/react-dialog';
 
 interface DialogButtonProps {
   type: 'primary' | 'secondary' | 'danger';
