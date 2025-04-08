@@ -3,7 +3,6 @@ import { motion, type HTMLMotionProps, type Variants } from 'framer-motion';
 import { computed } from 'nanostores';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import type { ActionRunner } from '~/lib/runtime/action-runner';
 import {
   type OnChangeCallback as OnEditorChange,
   type OnScrollCallback as OnEditorScroll,
@@ -21,13 +20,11 @@ import useViewport from '~/lib/hooks';
 import { Dashboard } from './Dashboard';
 import { convexStore } from '~/lib/stores/convex';
 import { WORK_DIR } from '~/utils/constants';
-import { Allotment } from 'allotment';
 import { SaveStatusIndicator } from '~/components/SaveStatusIndicator';
 
 interface WorkspaceProps {
   chatStarted?: boolean;
   isStreaming?: boolean;
-  actionRunner: ActionRunner;
 }
 
 const viewTransition = { ease: cubicEasingFn };

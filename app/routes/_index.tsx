@@ -2,7 +2,6 @@ import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
 import type { MetaFunction } from '@vercel/remix';
 import { ClientOnly } from 'remix-utils/client-only';
-import { WrappedBaseChat } from '~/components/chat/BaseChat';
 import { Chat } from '~/components/chat/Chat.client';
 import { Header } from '~/components/header/Header';
 import { SafariWarning } from '~/components/SafariWarning';
@@ -21,12 +20,26 @@ export const loader = async (args: LoaderFunctionArgs) => {
   return json({ code, flexAuthMode });
 };
 
+// Home page that asks the user to login and provide an initial prompt. After
+// starting the chat, all of the globals' in-memory state is preserved as it
+// switches to the chat view (we do *not* do a full page reload and go to the
+// chat route). This route is optimized for making the initial experience
+// really seamless.
+//
+// It's critical that going back to the homepage or to other chats use a `<a>`
+// tag so all in-memory state is rebuilt from scratch.
 export default function Index() {
   return (
     <div className="flex flex-col h-full w-full bg-bolt-elements-background-depth-1">
       <Header />
-      <ClientOnly fallback={<WrappedBaseChat />}>{() => <Chat />}</ClientOnly>
-      <ClientOnly>{() => <SafariWarning />}</ClientOnly>
+      <ClientOnly>
+        {() => (
+          <>
+            <Chat />
+            <SafariWarning />
+          </>
+        )}
+      </ClientOnly>
     </div>
   );
 }
