@@ -78,7 +78,7 @@ export async function convexAgent(
       // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
       const rateLimitAwareFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {
-          const enrichedOptions = anthropicInjectCacheControl(constantPrompt, init);
+          const enrichedOptions = anthropicInjectCacheControl(init);
           try {
             const response = await fetch(input, enrichedOptions);
             if (response.status == 429) {
