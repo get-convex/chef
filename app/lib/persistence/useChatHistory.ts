@@ -13,12 +13,6 @@ import { loadSnapshot } from '~/lib/snapshot';
 import { makePartId, type PartId } from '~/lib/stores/Artifacts';
 import { useAuth0 } from '@auth0/auth0-react';
 
-interface IChatMetadata {
-  gitUrl: string;
-  gitBranch?: string;
-  netlifySiteId?: string;
-}
-
 export interface ChatHistoryItem {
   /*
    * ID should be the urlId (if it's set) or the initialId, and callers should be able
@@ -29,7 +23,6 @@ export interface ChatHistoryItem {
   urlId?: string;
   description?: string;
   timestamp: string;
-  metadata?: IChatMetadata;
 }
 
 /*
@@ -46,7 +39,6 @@ export interface ChatHistoryItem {
  */
 export const chatIdStore = atom<string | undefined>(undefined);
 export const description = atom<string | undefined>(undefined);
-const chatMetadata = atom<IChatMetadata | undefined>(undefined);
 
 export const useChatHistoryConvex = () => {
   const navigate = useNavigate();
@@ -85,7 +77,6 @@ export const useChatHistoryConvex = () => {
       // The chat has changed. Clear all state.
 
       description.set(undefined);
-      chatMetadata.set(undefined);
 
       setInitialMessages([]);
       setInitialDeserializedMessages([]);
@@ -107,7 +98,6 @@ export const useChatHistoryConvex = () => {
           setUrlId(rawMessages.urlId);
           description.set(rawMessages.description);
           chatIdStore.set(rawMessages.initialId);
-          chatMetadata.set(rawMessages.metadata);
           try {
             const container = await webcontainer;
             const { workbenchStore } = await import('~/lib/stores/workbench');
@@ -144,28 +134,6 @@ export const useChatHistoryConvex = () => {
   return {
     ready: mixedId === undefined || (ready && !isLoading),
     initialMessages: initialDeserializedMessages,
-    updateChatMetadata: useCallback(
-      async (metadata: IChatMetadata) => {
-        const id = chatIdStore.get();
-
-        if (!id || !sessionId) {
-          return;
-        }
-
-        try {
-          await convex.mutation(api.messages.setMetadata, {
-            id,
-            sessionId,
-            metadata,
-          });
-          chatMetadata.set(metadata);
-        } catch (error) {
-          toast.error('Failed to update chat metadata');
-          console.error(error);
-        }
-      },
-      [convex, sessionId],
-    ),
     initializeChat: useCallback(
       async (teamSlug: string) => {
         if (!sessionId) {
@@ -286,7 +254,7 @@ export const useChatHistoryConvex = () => {
       [convex, sessionId],
     ),
     importChat: useCallback(
-      async (description: string, messages: Message[], metadata?: IChatMetadata) => {
+      async (description: string, messages: Message[]) => {
         if (!sessionId) {
           return;
         }
@@ -295,7 +263,6 @@ export const useChatHistoryConvex = () => {
           const newId = await convex.mutation(api.messages.importChat, {
             description,
             messages: messages.map(serializeMessageForConvex),
-            metadata,
             sessionId,
           });
           window.location.href = `/chat/${newId}`;

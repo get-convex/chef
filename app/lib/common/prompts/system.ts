@@ -6,7 +6,6 @@ import { formattingInstructions } from './formattingInstructions';
 import { exampleDataInstructions } from './exampleDataInstructions';
 import { secretsInstructions } from './secretsInstructions';
 import { outputInstructions } from './outputInstructions';
-import { writeFileSync } from 'fs';
 
 // This is the very first part of the system prompt that tells the model what
 // role to play.
@@ -29,6 +28,5 @@ export function generalSystemPrompt(options: SystemPromptOptions) {
   ${secretsInstructions(options)}
   ${outputInstructions(options)}
   `;
-  writeFileSync('/tmp/system.txt', result);
   return result;
 }

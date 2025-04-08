@@ -1,21 +1,13 @@
 import { mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
 import type { Message as AIMessage } from 'ai';
 import { ConvexError, v } from 'convex/values';
-import type { VAny, Infer } from 'convex/values';
+import type { VAny } from 'convex/values';
 import { isValidSession } from './sessions';
 import { api } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
 export type SerializedMessage = Omit<AIMessage, 'createdAt'> & {
   createdAt: number | undefined;
 };
-
-export const IChatMetadataValidator = v.object({
-  gitUrl: v.string(),
-  gitBranch: v.optional(v.string()),
-  netlifySiteId: v.optional(v.string()),
-});
-
-type IChatMetadata = Infer<typeof IChatMetadataValidator>;
 
 export const initializeChat = mutation({
   args: {
@@ -101,27 +93,6 @@ export const setDescription = mutation({
   },
 });
 
-export const setMetadata = mutation({
-  args: {
-    sessionId: v.id('sessions'),
-    id: v.string(),
-    metadata: IChatMetadataValidator,
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const { id, metadata, sessionId } = args;
-    const existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
-
-    if (!existing) {
-      throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
-    }
-
-    await ctx.db.patch(existing._id, {
-      metadata,
-    });
-  },
-});
-
 export const duplicate = mutation({
   args: {
     sessionId: v.id('sessions'),
@@ -148,7 +119,6 @@ export const duplicate = mutation({
       id: crypto.randomUUID(),
       sessionId: args.sessionId,
       description: `${existing.description || 'Chat'} (copy)`,
-      metadata: existing.metadata,
       snapshotId: existing.snapshotId,
     });
     const chat = await ctx.db.get(chatId);
@@ -170,20 +140,18 @@ export const importChat = mutation({
     sessionId: v.id('sessions'),
     description: v.string(),
     messages: v.array(v.any() as VAny<SerializedMessage>),
-    metadata: v.optional(IChatMetadataValidator),
   },
   returns: v.object({
     id: v.string(),
     description: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const { description, messages, metadata, sessionId } = args;
+    const { description, messages, sessionId } = args;
 
     const chatId = await createNewChatFromMessages(ctx, {
       id: crypto.randomUUID(),
       sessionId,
       description,
-      metadata,
     });
     const chat = await ctx.db.get(chatId);
 
@@ -212,7 +180,6 @@ export async function getChat(ctx: QueryCtx, id: string, sessionId: Id<'sessions
     urlId: chat.urlId,
     description: chat.description,
     timestamp: chat.timestamp,
-    metadata: chat.metadata,
     snapshotId: chat.snapshotId,
   };
 }
@@ -229,7 +196,6 @@ export const get = query({
       urlId: v.optional(v.string()),
       description: v.optional(v.string()),
       timestamp: v.string(),
-      metadata: v.optional(IChatMetadataValidator),
       snapshotId: v.optional(v.id('_storage')),
     }),
   ),
@@ -252,7 +218,6 @@ export const getWithMessages = query({
       urlId: v.optional(v.string()),
       description: v.optional(v.string()),
       timestamp: v.string(),
-      metadata: v.optional(IChatMetadataValidator),
       messages: v.array(v.any() as VAny<SerializedMessage>),
     }),
   ),
@@ -276,7 +241,6 @@ export const getWithMessages = query({
       urlId: chat.urlId,
       description: chat.description,
       timestamp: chat.timestamp,
-      metadata: chat.metadata,
       messages: messages.map((m) => m.content),
     };
   },
@@ -296,7 +260,6 @@ export const getInitialMessages = mutation({
       urlId: v.optional(v.string()),
       description: v.optional(v.string()),
       timestamp: v.string(),
-      metadata: v.optional(IChatMetadataValidator),
       messages: v.array(v.any() as VAny<SerializedMessage>),
     }),
   ),
@@ -314,7 +277,6 @@ export const getInitialMessages = mutation({
       urlId: chat.urlId,
       description: chat.description,
       timestamp: chat.timestamp,
-      metadata: chat.metadata,
     };
 
     const messages = await ctx.db
@@ -361,7 +323,6 @@ export const getAll = query({
       urlId: v.optional(v.string()),
       description: v.optional(v.string()),
       timestamp: v.string(),
-      metadata: v.optional(IChatMetadataValidator),
     }),
   ),
   handler: async (ctx, args) => {
@@ -377,7 +338,6 @@ export const getAll = query({
       urlId: result.urlId,
       description: result.description,
       timestamp: result.timestamp,
-      metadata: result.metadata,
     }));
   },
 });
@@ -542,7 +502,6 @@ export async function createNewChatFromMessages(
     id: string;
     sessionId: Id<'sessions'>;
     description?: string;
-    metadata?: IChatMetadata;
     snapshotId?: Id<'_storage'>;
     projectInitParams?: {
       teamSlug: string;
@@ -550,7 +509,7 @@ export async function createNewChatFromMessages(
     };
   },
 ): Promise<Id<'chats'>> {
-  const { id, sessionId, description, metadata, snapshotId, projectInitParams } = args;
+  const { id, sessionId, description, snapshotId, projectInitParams } = args;
   const existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
 
   if (existing) {
@@ -567,7 +526,6 @@ export async function createNewChatFromMessages(
     initialId: id,
     description,
     timestamp: new Date().toISOString(),
-    metadata,
     snapshotId,
   });
 
