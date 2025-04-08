@@ -286,14 +286,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         </div>
                       ) : null}
                       {chatStarted && flexAuthMode === 'ConvexOAuth' && <ConvexConnection />}
-                      {!chatStarted && flexAuthMode === 'ConvexOAuth' && (
-                        <TeamSelector
-                          selectedTeamSlug={selectedTeamSlug}
-                          onTeamSelect={(teamSlug) => {
-                            selectedTeamSlugStore.set(teamSlug);
-                          }}
-                        />
-                      )}
+                      {!chatStarted && flexAuthMode === 'ConvexOAuth' && <TeamSelector />}
                     </div>
                   </div>
                 </div>
