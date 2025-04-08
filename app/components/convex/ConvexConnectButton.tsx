@@ -1,13 +1,12 @@
 import { classNames } from '~/utils/classNames';
 import { useEffect } from 'react';
 import { useStore } from '@nanostores/react';
-import { convexStore, useConvexSessionId, useFlexAuthMode, getSelectedTeamSlug } from '~/lib/stores/convex';
+import { convexStore, useConvexSessionId, useFlexAuthMode, useSelectedTeamSlug } from '~/lib/stores/convex';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useChatId } from '~/lib/stores/chat';
 import { useAuth0 } from '@auth0/auth0-react';
 import { TeamSelector } from './TeamSelector';
-import { useState } from 'react';
 
 export function ConvexConnectButton() {
   const flexAuthMode = useFlexAuthMode();
@@ -30,8 +29,10 @@ function ConvexConnectButtonForInviteCode() {
     if (credentials?.kind === 'connected') {
       convexStore.set({
         token: credentials.adminKey,
-        deploymentName: credentials.projectSlug,
-        deploymentUrl: credentials.teamSlug,
+        deploymentName: credentials.deploymentName,
+        deploymentUrl: credentials.deploymentUrl,
+        projectSlug: credentials.projectSlug,
+        teamSlug: credentials.teamSlug,
       });
     }
   }, [credentials]);
@@ -89,11 +90,7 @@ function ConvexConnectButtonViaOauth() {
     chatId,
   });
   const { getAccessTokenSilently } = useAuth0();
-  const [selectedTeamSlug, setSelectedTeamSlug] = useState<string | null>(getSelectedTeamSlug());
-  if (credentials?.kind === 'connected') {
-    console.error('Already connected to a project');
-    return null;
-  }
+  const selectedTeamSlug = useSelectedTeamSlug();
 
   const handleClick = async () => {
     if (selectedTeamSlug === null) {
