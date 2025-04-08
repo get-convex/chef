@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from '@vercel/remix';
+import { json } from '@vercel/remix';
 import { meta as IndexMeta } from './_index';
 import { getFlexAuthModeInLoader } from '~/lib/persistence/convex';
 import { ClientOnly } from 'remix-utils/client-only';
@@ -13,7 +14,7 @@ export async function loader(args: LoaderFunctionArgs) {
   const flexAuthMode = getFlexAuthModeInLoader();
   const url = new URL(args.request.url);
   const code = url.searchParams.get('code');
-  return Response.json({ id: args.params.id, flexAuthMode, code });
+  return json({ id: args.params.id, flexAuthMode, code });
 }
 
 // This route is *only* used when reloading an existing chat. The flow

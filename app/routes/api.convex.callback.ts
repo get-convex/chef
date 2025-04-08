@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from '@vercel/remix';
+import { json, type LoaderFunctionArgs } from '@vercel/remix';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -41,7 +41,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   if (!code) {
-    return Response.json({ error: 'No authorization code provided' }, { status: 400 });
+    return json({ error: 'No authorization code provided' }, { status: 400 });
   }
 
   if (!CLIENT_ID || !CLIENT_SECRET) {
@@ -71,7 +71,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       const errorData = await tokenResponse.text();
       console.error('Token exchange failed:', errorData);
 
-      return Response.json({ error: 'Failed to exchange code for token' }, { status: 500 });
+      return json({ error: 'Failed to exchange code for token' }, { status: 500 });
     }
 
     const tokenResponseJson = await tokenResponse.json();
@@ -81,9 +81,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const { deploymentName, url: deploymentUrl } = await fetchDeploymentCredentials(PROVISION_HOST, token, 'dev');
 
     // Return the token as JSON
-    return Response.json({ token, deploymentName, deploymentUrl });
+    return json({ token, deploymentName, deploymentUrl });
   } catch (error) {
     console.error('Error in Convex OAuth callback:', error);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return json({ error: 'Internal server error' }, { status: 500 });
   }
 }
