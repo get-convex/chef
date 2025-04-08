@@ -75,7 +75,6 @@ export function FlexAuthWrapper({ children }: { children: React.ReactNode }) {
   if (sessionId === null) {
     return <UnauthenticatedPrompt flexAuthMode={flexAuthMode} />;
   }
-  console.log('hasValidCode', hasValidCode);
   if (!hasValidCode && flexAuthMode !== 'InviteCode') {
     return <AccessGateForm setHasValidCode={setHasValidCode} />;
   }
