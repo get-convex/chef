@@ -6,6 +6,7 @@ import { WrappedBaseChat } from '~/components/chat/BaseChat';
 import { Chat } from '~/components/chat/Chat.client';
 import { Header } from '~/components/header/Header';
 import { SafariWarning } from '~/components/SafariWarning';
+import { getFlexAuthModeInLoader } from '~/lib/persistence/convex';
 
 export const meta: MetaFunction = () => {
   return [
@@ -17,7 +18,7 @@ export const meta: MetaFunction = () => {
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
   const code = url.searchParams.get('code');
-  const flexAuthMode = globalThis.process.env.FLEX_AUTH_MODE;
+  const flexAuthMode = getFlexAuthModeInLoader();
   return json({ code, flexAuthMode });
 };
 
