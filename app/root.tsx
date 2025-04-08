@@ -21,7 +21,12 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Auth0Provider } from '@auth0/auth0-react';
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
-
+import { ConvexReactClient } from 'convex/react';
+import {
+  getFlexAuthModeInLoader,
+  getConvexUrlInLoader,
+  getConvexOAuthClientIdInLoader,
+} from './lib/persistence/convex';
 import globalStyles from './styles/index.scss?url';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 
@@ -132,14 +137,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-import { logStore } from './lib/stores/logs';
-import { ConvexReactClient } from 'convex/react';
-import {
-  getFlexAuthModeInLoader,
-  getConvexUrlInLoader,
-  getConvexOAuthClientIdInLoader,
-} from './lib/persistence/convex';
-
 export const ErrorBoundary = () => {
   const error = useRouteError();
   captureRemixErrorBoundaryError(error);
@@ -147,17 +144,6 @@ export const ErrorBoundary = () => {
 };
 
 export default function App() {
-  const theme = useStore(themeStore);
-
-  useEffect(() => {
-    logStore.logSystem('Application initialized', {
-      theme,
-      platform: navigator.platform,
-      userAgent: navigator.userAgent,
-      timestamp: new Date().toISOString(),
-    });
-  }, []);
-
   return (
     <Layout>
       <Outlet />
