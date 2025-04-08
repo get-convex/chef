@@ -46,7 +46,7 @@ export function ChatDescription() {
         </form>
       ) : (
         <>
-          {currentDescription}
+          <span className="max-w-64 truncate">{currentDescription}</span>
           <TooltipProvider>
             <WithTooltip tooltip="Rename chat">
               <div className="flex justify-between items-center p-2 rounded-md bg-bolt-elements-item-backgroundAccent ml-2">

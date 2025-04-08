@@ -6,6 +6,7 @@ import { HeaderActionButtons } from './HeaderActionButtons.client';
 import { ChatDescription } from '~/lib/persistence/ChatDescription.client';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { DeployButton } from './DeployButton';
+import { FeedbackButton } from './FeedbackButton';
 
 export function Header() {
   const chat = useStore(chatStore);
@@ -41,14 +42,15 @@ export function Header() {
           </div>
         </a>
       </div>
-      {chat.started && ( // Display ChatDescription and HeaderActionButtons only when the chat has started.
+      {chat.started && (
         <>
           <span className="flex-1 px-4 truncate text-center text-bolt-elements-textPrimary">
             <ClientOnly>{() => <ChatDescription />}</ClientOnly>
           </span>
           <ClientOnly>
             {() => (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <FeedbackButton />
                 <DeployButton />
                 <div className="mr-1">
                   <HeaderActionButtons />

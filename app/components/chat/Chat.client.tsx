@@ -21,13 +21,15 @@ import { filesToArtifacts } from '~/utils/fileUtils';
 import { ChatContextManager } from '~/lib/ChatContextManager';
 import { ContainerBootState, waitForBootStepCompleted, webcontainer } from '~/lib/webcontainer';
 import { FlexAuthWrapper } from './FlexAuthWrapper';
-import { convexStore, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import { convexStore, useConvexSessionId, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { toast, Toaster } from 'sonner';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import type { PartId } from '~/lib/stores/Artifacts';
 import { captureException } from '@sentry/remix';
+import { setExtra, setUser } from '@sentry/remix';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const logger = createScopedLogger('Chat');
 
@@ -62,15 +64,17 @@ export function Chat() {
   return (
     <>
       <FlexAuthWrapper>
-        {ready && (
-          <ChatImpl
-            description={title}
-            initialMessages={initialMessages}
-            storeMessageHistory={storeMessageHistory}
-            importChat={importChat}
-            initializeChat={initializeChat}
-          />
-        )}
+        <SentryUserProvider>
+          {ready ? (
+            <ChatImpl
+              description={title}
+              initialMessages={initialMessages}
+              storeMessageHistory={storeMessageHistory}
+              importChat={importChat}
+              initializeChat={initializeChat}
+            />
+          ) : null}
+        </SentryUserProvider>
       </FlexAuthWrapper>
       <Toaster position="bottom-right" closeButton richColors />
     </>
@@ -460,4 +464,30 @@ function useCurrentToolStatus() {
     };
   }, []);
   return toolStatus;
+}
+
+function SentryUserProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth0();
+  const sessionId = useConvexSessionId();
+  const chatId = useChatIdOrNull();
+
+  useEffect(() => {
+    setExtra('sessionId', sessionId);
+  }, [sessionId]);
+
+  useEffect(() => {
+    setExtra('chatId', chatId);
+  }, [chatId]);
+
+  useEffect(() => {
+    if (user) {
+      setUser({
+        id: user.sub ?? undefined,
+        username: user.name ?? user.nickname ?? undefined,
+        email: user.email ?? undefined,
+      });
+    }
+  }, [user]);
+
+  return children;
 }

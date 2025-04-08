@@ -25,7 +25,7 @@ function Button({ active = false, disabled = false, children, onClick, className
   return (
     <button
       className={classNames(
-        'flex items-center gap-2 px-3 py-1.5 border border-bolt-elements-borderColor rounded-md',
+        'flex items-center gap-1 p-1 text-sm border border-bolt-elements-borderColor rounded-md',
         {
           'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary':
             !active,
@@ -164,12 +164,7 @@ export function DeployButton() {
 
   return (
     <div className="flex items-center gap-2">
-      <Button
-        disabled={isDisabled}
-        onClick={handleDeploy}
-        title={status.type === 'error' ? status.message : undefined}
-        className="mr-4"
-      >
+      <Button disabled={isDisabled} onClick={handleDeploy} title={status.type === 'error' ? status.message : undefined}>
         <div className={classNames('w-4 h-4', icon)} />
         <span>{buttonText}</span>
       </Button>
