@@ -19,7 +19,8 @@ import { logStore } from '~/lib/stores/logs';
 import { streamingState } from '~/lib/stores/streaming';
 import { filesToArtifacts } from '~/utils/fileUtils';
 import { ChatContextManager } from '~/lib/ChatContextManager';
-import { ContainerBootState, waitForBootStepCompleted, webcontainer } from '~/lib/webcontainer';
+import { webcontainer } from '~/lib/webcontainer';
+import { ContainerBootState, takeContainerBootError, useContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
 import { FlexAuthWrapper } from './FlexAuthWrapper';
 import { convexStore, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { useQuery } from 'convex/react';
@@ -187,6 +188,16 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       logger.debug('Finished streaming');
     },
   });
+
+  const containerBootState = useContainerBootState();
+  useEffect(() => {
+    if (containerBootState.state === ContainerBootState.ERROR && containerBootState.errorToLog) {
+      captureException(containerBootState.errorToLog);
+      toast.error('Failed to initialize the Chef environment. Please reload the page.');
+      takeContainerBootError();
+    }
+  }, [containerBootState]);
+
   useEffect(() => {
     const prompt = searchParams.get('prompt');
 

@@ -10,7 +10,7 @@ import type { ToolInvocation } from 'ai';
 import { withResolvers } from '~/utils/promises';
 import { viewParameters } from './viewTool';
 import { readPath, renderDirectory, renderFile, workDirRelative } from '~/utils/fileUtils';
-import { ContainerBootState, waitForContainerBootState } from '~/lib/webcontainer';
+import { ContainerBootState, waitForContainerBootState } from '../stores/containerBootState';
 import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { z } from 'zod';

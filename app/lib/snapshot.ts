@@ -20,7 +20,7 @@ export async function loadSnapshot(webcontainer: WebContainer, workbenchStore: W
   console.log("NPM output", cleanTerminalOutput(output));
 
   if (exitCode !== 0) {
-    throw new Error(`Npm install failed with exit code ${exitCode}: ${output}`);
+    throw new Error(`npm install failed with exit code ${exitCode}: ${output}`);
   }
 
   // After loading the snapshot, we need to load the files into the FilesStore since
