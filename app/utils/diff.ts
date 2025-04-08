@@ -1,6 +1,5 @@
 import { createTwoFilesPatch } from 'diff';
 import type { AbsolutePath, FileMap } from '~/lib/stores/files';
-import { WORK_DIR } from './constants';
 
 interface ModifiedFile {
   type: 'diff' | 'file';
