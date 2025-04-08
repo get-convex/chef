@@ -86,7 +86,7 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' }
                       <p className="text-sm font-medium text-bolt-elements-textPrimary">Team: {projectInfo.teamSlug}</p>
                       <a
                         className="flex gap-1 items-center text-sm hover:underline text-bolt-elements-textSecondary"
-                        href={`https://dashboard.convex.dev/d/${projectInfo.deploymentName}`}
+                        href={`https://dashboard.convex.dev/p/${projectInfo.projectSlug}/settings`}
                         target="_blank"
                       >
                         View in Convex Dashboard
