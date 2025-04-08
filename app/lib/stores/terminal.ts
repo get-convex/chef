@@ -29,16 +29,16 @@ export class TerminalStore {
 
   async attachBoltTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
     try {
-      console.log('Attaching bolt terminal...');
       const wc = await this.#webcontainer;
-      console.log('Webcontainer ready, initializing bolt terminal...');
       await this.#boltTerminal.init(wc, terminal);
-      console.log('Bolt terminal initialized successfully');
       if (options?.isReload) {
         await this.#boltTerminal.executeCommand(generateId(), 'npm install');
-        await this.#boltTerminal.executeCommand(generateId(), 'npx convex dev --once');
         if (options?.shouldDeployConvexFunctions) {
-          await this.#boltTerminal.executeCommand(generateId(), 'npx vite --open');
+          const result = await this.#boltTerminal.executeCommand(generateId(), 'npx convex dev --once');
+          // Only run preview if convex functions were deployed successfully
+          if (result?.exitCode === 0) {
+            await this.#boltTerminal.executeCommand(generateId(), 'npx vite --open');
+          }
         }
       }
     } catch (error: any) {
