@@ -1,6 +1,6 @@
 import { convertToCoreMessages, streamText, type LanguageModelV1, type Message, type StepResult } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
-import { roleSystemPrompt, SYSTEM_PROMPT_PRELUDE, systemPrompt } from '~/lib/common/prompts/system';
+import { roleSystemPrompt, SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from '~/lib/common/prompts/system';
 import { deployTool } from '~/lib/runtime/deployTool';
 import { viewTool } from '~/lib/runtime/viewTool';
 import type { ConvexToolSet } from '~/lib/common/types';
@@ -100,7 +100,7 @@ export async function convexAgent(
       },
       {
         role: 'system',
-        content: systemPrompt(opts),
+        content: generalSystemPrompt(opts),
       },
       ...cleanupAssistantMessages(messages),
     ],
