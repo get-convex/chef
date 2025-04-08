@@ -1,6 +1,6 @@
 import { convertToCoreMessages, streamText, type LanguageModelV1, type Message, type StepResult } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
-import { roleSystemPrompt, SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from '~/lib/common/prompts/system';
+import { ROLE_SYSTEM_PROMPT, GENERAL_SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from '~/lib/common/prompts/generalSystem';
 import { deployTool } from '~/lib/runtime/deployTool';
 import { viewTool } from '~/lib/runtime/viewTool';
 import type { ConvexToolSet } from '~/lib/common/types';
@@ -96,7 +96,7 @@ export async function convexAgent(
     messages: [
       {
         role: 'system',
-        content: roleSystemPrompt,
+        content: ROLE_SYSTEM_PROMPT,
       },
       {
         role: 'system',
@@ -153,11 +153,11 @@ function anthropicInjectCacheControl(options?: RequestInit) {
   if (body.system.length < 2) {
     throw new Error('Body must contain at least two system messages');
   }
-  if (body.system[0].text !== roleSystemPrompt) {
+  if (body.system[0].text !== ROLE_SYSTEM_PROMPT) {
     throw new Error('First system message must be the roleSystemPrompt');
   }
-  if (!body.system[1].text.startsWith(SYSTEM_PROMPT_PRELUDE)) {
-    throw new Error('Second system message must be the systemPrompt');
+  if (!body.system[1].text.startsWith(GENERAL_SYSTEM_PROMPT_PRELUDE)) {
+    throw new Error('Second system message must be the generalSystemPrompt');
   }
 
   // Inject the cache control header after the constant prompt, but leave

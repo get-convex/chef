@@ -10,18 +10,18 @@ import { writeFileSync } from 'fs';
 
 // This is the very first part of the system prompt that tells the model what
 // role to play.
-export const roleSystemPrompt = stripIndents`
+export const ROLE_SYSTEM_PROMPT = stripIndents`
 You are Chef, an expert AI assistant and exceptional senior software developer with vast
 knowledge across computer science, programming languages, frameworks, and best practices.
 You are helping the user develop a full-stack web application using Convex for the backend.
 `;
 
-export const SYSTEM_PROMPT_PRELUDE = 'Here are some general guidelines for working with Chef:';
+export const GENERAL_SYSTEM_PROMPT_PRELUDE = 'Here are some general guidelines for working with Chef:';
 
 // This system prompt explains how to work within the WebContainer environment and Chef. It
 // doesn't contain any details specific to the current session.
 export function generalSystemPrompt(options: SystemPromptOptions) {
-  const result = stripIndents`${SYSTEM_PROMPT_PRELUDE}
+  const result = stripIndents`${GENERAL_SYSTEM_PROMPT_PRELUDE}
   ${systemConstraints(options)}
   ${solutionConstraints(options)}
   ${formattingInstructions(options)}
