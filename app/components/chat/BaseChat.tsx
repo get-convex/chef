@@ -108,7 +108,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
             {!chatStarted && (
               <div id="intro" className="mt-[16vh] max-w-chat mx-auto text-center px-4 lg:px-0">
                 <h1 className="text-4xl lg:text-6xl font-black text-bolt-elements-textPrimary mb-4 animate-fade-in font-display tracking-tight">
-                  Now you’re cooking
+                  Now you're cooking
                 </h1>
                 <p className="text-md lg:text-2xl text-balance mb-8 text-bolt-elements-textSecondary animate-fade-in animation-delay-200 font-medium font-display">
                   Generate and launch realtime full‑stack apps you never thought possible
@@ -261,7 +261,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         <SendButton
                           show={input.length > 0 || isStreaming || uploadedFiles.length > 0}
                           isStreaming={isStreaming}
-                          disabled={false}
+                          disabled={!selectedTeamSlug}
                           onClick={(event) => {
                             if (isStreaming) {
                               handleStop?.();
@@ -285,8 +285,15 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           for new line
                         </div>
                       ) : null}
-                      {chatStarted && flexAuthMode === 'ConvexOAuth' && <ConvexConnection size="small" />}
-                      {!chatStarted && flexAuthMode === 'ConvexOAuth' && <TeamSelector />}
+                      {chatStarted && flexAuthMode === 'ConvexOAuth' && <ConvexConnection />}
+                      {!chatStarted && flexAuthMode === 'ConvexOAuth' && (
+                        <TeamSelector
+                          selectedTeamSlug={selectedTeamSlug}
+                          onTeamSelect={(teamSlug) => {
+                            selectedTeamSlugStore.set(teamSlug);
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
