@@ -95,10 +95,10 @@ export class WorkbenchStore {
   }
 
   async snapshotUrl(id?: string) {
-    const SNAPSHOT_URL = 'https://static.convex.dev/chef/snapshot.bin';
+    const templateUrl = '/template-snapshot-351f4521.bin';
     if (!id) {
-      console.log('No chat id yet, downloading from Convex');
-      return SNAPSHOT_URL;
+      console.log('No chat id yet, downloading base template');
+      return templateUrl;
     }
     const sessionId = sessionIdStore.get();
     if (!sessionId) {
@@ -106,8 +106,8 @@ export class WorkbenchStore {
     }
     const maybeSnapshotUrl = await this.#convexClient.query(api.snapshot.getSnapshotUrl, { chatId: id, sessionId });
     if (!maybeSnapshotUrl) {
-      console.log('No snapshot URL found, downloading from Convex');
-      return SNAPSHOT_URL;
+      console.log('No snapshot URL found, downloading base template');
+      return templateUrl;
     }
     console.log('Snapshot URL found, downloading from Convex');
     return maybeSnapshotUrl;

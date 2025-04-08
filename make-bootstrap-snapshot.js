@@ -1,10 +1,11 @@
-import { promises as fs } from "fs";
+import { existsSync, promises as fs } from "fs";
 import path from "path";
 import os from "os";
 import { exec as execCallback } from "child_process";
 import { snapshot } from "@webcontainer/snapshot";
 import { promisify } from "util";
 import * as lz4 from "lz4-wasm-nodejs";
+import { createHash } from "crypto";
 
 const exec = promisify(execCallback);
 
@@ -15,19 +16,25 @@ async function main() {
     path.join(os.tmpdir(), "webcontainer-snapshot-")
   );
   console.log("Temp directory:", tempDir);
-  console.log("Using git to list unignored files...");
-  const files = await getUnignoredGitFiles(absoluteInputDir);
+
+  console.log("Running npm install...");
+  await exec("npm install", { cwd: absoluteInputDir });
+
+  console.log("Using git to list unignored files + package-lock.json...");
+  const files = await getSnapshotFiles(absoluteInputDir);
   console.log(`Copying ${files.length} files to temp directory...`);
   await copyFilesToTemp(files, absoluteInputDir, tempDir);
   console.log("Creating snapshot...");
   const buffer = await snapshot(tempDir);
   const compressed = lz4.compress(buffer);
-  console.log(`Writing snapshot (${compressed.length} bytes) to file...`);
-  await fs.writeFile("public/bootstrap-snapshot.bin", compressed);
+  const sha256 = createHash("sha256").update(compressed).digest("hex").slice(0, 8);
+  const filename = `template-snapshot-${sha256}.bin`;
+  console.log(`Writing snapshot (${compressed.length} bytes) to ${filename}...`);
+  await fs.writeFile(`public/${filename}`, compressed);
   console.log("Done!");
 }
 
-async function getUnignoredGitFiles(dir) {
+async function getSnapshotFiles(dir) {
   try {
     const { stdout } = await exec("git ls-files", {
       cwd: dir,
@@ -36,10 +43,15 @@ async function getUnignoredGitFiles(dir) {
     if (!stdout) {
       throw new Error("No output from git ls-files");
     }
-    return stdout
+    const unignoredFiles = stdout
       .trim()
       .split("\n")
       .filter((file) => file.length > 0);
+    const packageLockFile = "package-lock.json";
+    if (!existsSync(path.join(dir, packageLockFile))) {
+      throw new Error("package-lock.json not found");
+    }
+    return [...unignoredFiles, packageLockFile];
   } catch (error) {
     console.error("Error using git to list files", error);
     process.exit(1);

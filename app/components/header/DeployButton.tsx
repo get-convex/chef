@@ -7,6 +7,7 @@ import { useStore } from '@nanostores/react';
 import { convexStore } from '~/lib/stores/convex';
 import { getFileUpdateCounter, useFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
 import { toast } from 'sonner';
+import { streamOutput } from '~/utils/process';
 
 interface ErrorResponse {
   error: string;
@@ -81,17 +82,9 @@ export function DeployButton() {
 
       // Run the build command
       const buildProcess = await container.spawn('npx', ['vite', 'build', '--mode', 'development']);
-      let buildOutput = '';
-      buildProcess.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            buildOutput += data;
-          },
-        }),
-      );
-      const exitCode = await buildProcess.exit;
+      const { output, exitCode } = await streamOutput(buildProcess);
       if (exitCode !== 0) {
-        throw new Error(`Build failed: ${buildOutput}`);
+        throw new Error(`Build failed: ${output}`);
       }
 
       setStatus({ type: 'zipping' });
