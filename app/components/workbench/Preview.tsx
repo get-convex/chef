@@ -3,40 +3,52 @@ import { useStore } from '@nanostores/react';
 import { IconButton } from '~/components/ui/IconButton';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { PortDropdown } from './PortDropdown';
-import { ScreenshotSelector } from './ScreenshotSelector';
 
 type ResizeSide = 'left' | 'right' | null;
 
-interface WindowSize {
-  name: string;
-  width: number;
-  height: number;
-  icon: string;
-}
-
-const WINDOW_SIZES: WindowSize[] = [
-  { name: 'Mobile', width: 375, height: 667, icon: 'i-ph:device-mobile' },
-  { name: 'Tablet', width: 768, height: 1024, icon: 'i-ph:device-tablet' },
-  { name: 'Laptop', width: 1366, height: 768, icon: 'i-ph:laptop' },
-  { name: 'Desktop', width: 1920, height: 1080, icon: 'i-ph:monitor' },
-];
-
-export const Preview = memo(() => {
+export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClose: () => void }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
   const [isPortDropdownOpen, setIsPortDropdownOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isPreviewOnly, setIsPreviewOnly] = useState(false);
   const hasSelectedPreview = useRef(false);
   const previews = useStore(workbenchStore.previews);
   const activePreview = previews[activePreviewIndex];
 
+  const [proxyBaseUrl, setProxyUrl] = useState<string | null>(null);
+  useEffect(() => {
+    setProxyUrl(null);
+
+    if (!activePreview) {
+      return undefined;
+    }
+
+    let hasUnmounted = false;
+    let proxyPort: number | null = null;
+
+    (async () => {
+      const { proxyUrl, proxyPort: _proxyPort } = await workbenchStore.startProxy(activePreview.port);
+      proxyPort = _proxyPort;
+      setProxyUrl(proxyUrl);
+
+      // Treat the case where startProxy resolves after useEffect unmounts
+      if (hasUnmounted) {
+        workbenchStore.stopProxy(proxyPort);
+      }
+    })();
+
+    return () => {
+      hasUnmounted = true;
+      if (proxyPort !== null) {
+        workbenchStore.stopProxy(proxyPort);
+      }
+    };
+  }, [activePreview?.port]);
+
   const [url, setUrl] = useState('');
   const [iframeUrl, setIframeUrl] = useState<string | undefined>();
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   // Toggle between responsive mode and device mode
   const [isDeviceModeOn, setIsDeviceModeOn] = useState(false);
@@ -54,34 +66,28 @@ export const Preview = memo(() => {
 
   const SCALING_FACTOR = 2;
 
-  const [isWindowSizeDropdownOpen, setIsWindowSizeDropdownOpen] = useState(false);
-  const [selectedWindowSize, setSelectedWindowSize] = useState<WindowSize>(WINDOW_SIZES[0]);
-
   useEffect(() => {
-    if (!activePreview) {
+    if (!proxyBaseUrl) {
       setUrl('');
       setIframeUrl(undefined);
 
       return;
     }
 
-    const { baseUrl } = activePreview;
-    setUrl(baseUrl);
-    setIframeUrl(baseUrl);
-  }, [activePreview]);
+    setUrl(proxyBaseUrl);
+    setIframeUrl(proxyBaseUrl);
+  }, [proxyBaseUrl]);
 
   const validateUrl = useCallback(
     (value: string) => {
-      if (!activePreview) {
+      if (!proxyBaseUrl) {
         return false;
       }
 
-      const { baseUrl } = activePreview;
-
-      if (value === baseUrl) {
+      if (value === proxyBaseUrl) {
         return true;
-      } else if (value.startsWith(baseUrl)) {
-        return ['/', '?', '#'].includes(value.charAt(baseUrl.length));
+      } else if (value.startsWith(proxyBaseUrl)) {
+        return ['/', '?', '#'].includes(value.charAt(proxyBaseUrl.length));
       }
 
       return false;
@@ -108,26 +114,6 @@ export const Preview = memo(() => {
       iframeRef.current.src = iframeRef.current.src;
     }
   };
-
-  const toggleFullscreen = async () => {
-    if (!isFullscreen && containerRef.current) {
-      await containerRef.current.requestFullscreen();
-    } else if (document.fullscreenElement) {
-      await document.exitFullscreen();
-    }
-  };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
 
   const toggleDeviceMode = () => {
     setIsDeviceModeOn((prev) => !prev);
@@ -220,9 +206,9 @@ export const Preview = memo(() => {
     </div>
   );
 
-  const openInNewWindow = (size: WindowSize) => {
-    if (activePreview?.baseUrl) {
-      const match = activePreview.baseUrl.match(/^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/);
+  const openInNewWindow = () => {
+    if (proxyBaseUrl) {
+      const match = proxyBaseUrl.match(/^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/);
 
       if (match) {
         const previewId = match[1];
@@ -230,34 +216,26 @@ export const Preview = memo(() => {
         const newWindow = window.open(
           previewUrl,
           '_blank',
-          `noopener,noreferrer,width=${size.width},height=${size.height},menubar=no,toolbar=no,location=no,status=no`,
+          `noopener,noreferrer,menubar=no,toolbar=no,location=no,status=no`,
         );
 
         if (newWindow) {
           newWindow.focus();
         }
       } else {
-        console.warn('[Preview] Invalid WebContainer URL:', activePreview.baseUrl);
+        console.warn('[Preview] Invalid WebContainer URL:', proxyBaseUrl);
       }
     }
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={`w-full h-full flex flex-col relative ${isPreviewOnly ? 'fixed inset-0 z-50 bg-white' : ''}`}
-    >
+    <div ref={containerRef} className="w-full h-full flex flex-col relative">
       {isPortDropdownOpen && (
         <div className="z-iframe-overlay w-full h-full absolute" onClick={() => setIsPortDropdownOpen(false)} />
       )}
       <div className="bg-bolt-elements-background-depth-2 p-2 flex items-center gap-2">
         <div className="flex items-center gap-2">
           <IconButton icon="i-ph:arrow-clockwise" onClick={reloadPreview} />
-          <IconButton
-            icon="i-ph:selection"
-            onClick={() => setIsSelectionMode(!isSelectionMode)}
-            className={isSelectionMode ? 'bg-bolt-elements-background-depth-3' : ''}
-          />
         </div>
 
         <div className="flex-grow flex items-center gap-1 bg-bolt-elements-preview-addressBar-background border border-bolt-elements-borderColor text-bolt-elements-preview-addressBar-text rounded-full px-3 py-1 text-sm hover:bg-bolt-elements-preview-addressBar-backgroundHover hover:focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within-border-bolt-elements-borderColorActive focus-within:text-bolt-elements-preview-addressBar-textActive">
@@ -300,62 +278,11 @@ export const Preview = memo(() => {
             title={isDeviceModeOn ? 'Switch to Responsive Mode' : 'Switch to Device Mode'}
           />
 
-          <IconButton
-            icon="i-ph:layout-light"
-            onClick={() => setIsPreviewOnly(!isPreviewOnly)}
-            title={isPreviewOnly ? 'Show Full Interface' : 'Show Preview Only'}
-          />
-
-          <IconButton
-            icon={isFullscreen ? 'i-ph:arrows-in' : 'i-ph:arrows-out'}
-            onClick={toggleFullscreen}
-            title={isFullscreen ? 'Exit Full Screen' : 'Full Screen'}
-          />
-
           <div className="flex items-center relative">
-            <IconButton
-              icon="i-ph:arrow-square-out"
-              onClick={() => openInNewWindow(selectedWindowSize)}
-              title={`Open Preview in ${selectedWindowSize.name} Window`}
-            />
-            <IconButton
-              icon="i-ph:caret-down"
-              onClick={() => setIsWindowSizeDropdownOpen(!isWindowSizeDropdownOpen)}
-              className="ml-1"
-              title="Select Window Size"
-            />
-
-            {isWindowSizeDropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-50" onClick={() => setIsWindowSizeDropdownOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 z-50 min-w-[240px] bg-white dark:bg-black rounded-xl shadow-2xl border border-[#E5E7EB] dark:border-[rgba(255,255,255,0.1)] overflow-hidden">
-                  {WINDOW_SIZES.map((size) => (
-                    <button
-                      key={size.name}
-                      className="w-full px-4 py-3.5 text-left text-[#111827] dark:text-gray-300 text-sm whitespace-nowrap flex items-center gap-3 group hover:bg-[#F5EEFF] dark:hover:bg-gray-900 bg-white dark:bg-black"
-                      onClick={() => {
-                        setSelectedWindowSize(size);
-                        setIsWindowSizeDropdownOpen(false);
-                        openInNewWindow(size);
-                      }}
-                    >
-                      <div
-                        className={`${size.icon} w-5 h-5 text-[#6B7280] dark:text-gray-400 group-hover:text-[#6D28D9] dark:group-hover:text-[#6D28D9] transition-colors duration-200`}
-                      />
-                      <div className="flex flex-col">
-                        <span className="font-medium group-hover:text-[#6D28D9] dark:group-hover:text-[#6D28D9] transition-colors duration-200">
-                          {size.name}
-                        </span>
-                        <span className="text-xs text-[#6B7280] dark:text-gray-400 group-hover:text-[#6D28D9] dark:group-hover:text-[#6D28D9] transition-colors duration-200">
-                          {size.width} × {size.height}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+            <IconButton icon="i-ph:arrow-square-out" onClick={() => openInNewWindow()} title="Open Preview" />
           </div>
+
+          {showClose && <IconButton icon="i-ph:x-circle" onClick={onClose} title="Close" />}
         </div>
       </div>
 
@@ -371,21 +298,20 @@ export const Preview = memo(() => {
           }}
         >
           {activePreview ? (
-            <>
+            proxyBaseUrl ? (
               <iframe
                 ref={iframeRef}
                 title="preview"
                 className="border-none w-full h-full bg-bolt-elements-background-depth-1"
                 src={iframeUrl}
-                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
                 allow="cross-origin-isolated"
               />
-              <ScreenshotSelector
-                isSelectionMode={isSelectionMode}
-                setIsSelectionMode={setIsSelectionMode}
-                containerRef={iframeRef}
-              />
-            </>
+            ) : (
+              <div className="flex w-full h-full justify-center items-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
+                <div className="i-svg-spinners:90-ring-with-bg text-bolt-elements-loader-progress text-xl" />
+              </div>
+            )
           ) : (
             <div className="flex w-full h-full justify-center items-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
               No preview available
