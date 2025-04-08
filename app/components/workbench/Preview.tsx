@@ -17,6 +17,36 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
   const previews = useStore(workbenchStore.previews);
   const activePreview = previews[activePreviewIndex];
 
+  const [proxyBaseUrl, setProxyUrl] = useState<string | null>(null);
+  useEffect(() => {
+    setProxyUrl(null);
+
+    if (!activePreview) {
+      return undefined;
+    }
+
+    let hasUnmounted = false;
+    let proxyPort: number | null = null;
+
+    (async () => {
+      const { proxyUrl, proxyPort: _proxyPort } = await workbenchStore.startProxy(activePreview.port);
+      proxyPort = _proxyPort;
+      setProxyUrl(proxyUrl);
+
+      // Treat the case where startProxy resolves after useEffect unmounts
+      if (hasUnmounted) {
+        workbenchStore.stopProxy(proxyPort);
+      }
+    })();
+
+    return () => {
+      hasUnmounted = true;
+      if (proxyPort !== null) {
+        workbenchStore.stopProxy(proxyPort);
+      }
+    };
+  }, [activePreview?.port]);
+
   const [url, setUrl] = useState('');
   const [iframeUrl, setIframeUrl] = useState<string | undefined>();
 
@@ -37,30 +67,27 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
   const SCALING_FACTOR = 2;
 
   useEffect(() => {
-    if (!activePreview) {
+    if (!proxyBaseUrl) {
       setUrl('');
       setIframeUrl(undefined);
 
       return;
     }
 
-    const { baseUrl } = activePreview;
-    setUrl(baseUrl);
-    setIframeUrl(baseUrl);
-  }, [activePreview]);
+    setUrl(proxyBaseUrl);
+    setIframeUrl(proxyBaseUrl);
+  }, [proxyBaseUrl]);
 
   const validateUrl = useCallback(
     (value: string) => {
-      if (!activePreview) {
+      if (!proxyBaseUrl) {
         return false;
       }
 
-      const { baseUrl } = activePreview;
-
-      if (value === baseUrl) {
+      if (value === proxyBaseUrl) {
         return true;
-      } else if (value.startsWith(baseUrl)) {
-        return ['/', '?', '#'].includes(value.charAt(baseUrl.length));
+      } else if (value.startsWith(proxyBaseUrl)) {
+        return ['/', '?', '#'].includes(value.charAt(proxyBaseUrl.length));
       }
 
       return false;
@@ -180,8 +207,8 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
   );
 
   const openInNewWindow = () => {
-    if (activePreview?.baseUrl) {
-      const match = activePreview.baseUrl.match(/^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/);
+    if (proxyBaseUrl) {
+      const match = proxyBaseUrl.match(/^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/);
 
       if (match) {
         const previewId = match[1];
@@ -196,7 +223,7 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
           newWindow.focus();
         }
       } else {
-        console.warn('[Preview] Invalid WebContainer URL:', activePreview.baseUrl);
+        console.warn('[Preview] Invalid WebContainer URL:', proxyBaseUrl);
       }
     }
   };
@@ -271,14 +298,20 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
           }}
         >
           {activePreview ? (
-            <iframe
-              ref={iframeRef}
-              title="preview"
-              className="border-none w-full h-full bg-bolt-elements-background-depth-1"
-              src={iframeUrl}
-              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
-              allow="cross-origin-isolated"
-            />
+            proxyBaseUrl ? (
+              <iframe
+                ref={iframeRef}
+                title="preview"
+                className="border-none w-full h-full bg-bolt-elements-background-depth-1"
+                src={iframeUrl}
+                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
+                allow="cross-origin-isolated"
+              />
+            ) : (
+              <div className="flex w-full h-full justify-center items-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
+                <div className="i-svg-spinners:90-ring-with-bg text-bolt-elements-loader-progress text-xl" />
+              </div>
+            )
           ) : (
             <div className="flex w-full h-full justify-center items-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
               No preview available

@@ -256,7 +256,7 @@ export class WorkbenchStore {
     return this.#previewsStore.startProxy(sourcePort);
   }
 
-  async stopProxy(proxyPort: number) {
+  stopProxy(proxyPort: number) {
     return this.#previewsStore.stopProxy(proxyPort);
   }
 

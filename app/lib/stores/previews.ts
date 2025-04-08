@@ -43,7 +43,7 @@ http.createServer((req, res) => {
 }).listen(targetPort);
 `;
 
-type ProxyState = { sourcePort: number; start: () => void; stop: () => void };
+type ProxyState = { sourcePort: number; start: (arg: { proxyUrl: string }) => void; stop: () => void };
 
 export class PreviewsStore {
   #availablePreviews = new Map<number, PreviewInfo>();
@@ -70,7 +70,7 @@ export class PreviewsStore {
     webcontainer.on('port', (port, type, url) => {
       if (this.#proxies.has(port)) {
         if (type === 'open') {
-          this.#proxies.get(port)?.start();
+          this.#proxies.get(port)?.start({ proxyUrl: url });
         }
         return;
       }
@@ -98,9 +98,16 @@ export class PreviewsStore {
     });
   }
 
-  async startProxy(sourcePort: number): Promise<{ proxyPort: number }> {
+  /**
+   * Starts a proxy server for the given source port.
+   *
+   * Proxy servers are used so that each time a preview is shown on screen,
+   * each preview has a different origin. This helps when testing apps with
+   * auth with multiple users.
+   */
+  async startProxy(sourcePort: number): Promise<{ proxyPort: number; proxyUrl: string }> {
     const targetPort = PROXY_PORT_RANGE_START + this.#proxies.size;
-    const { promise: onStart, resolve: start } = withResolvers<void>();
+    const { promise: onStart, resolve: start } = withResolvers<{ proxyUrl: string }>();
 
     const proxyLogger = createScopedLogger(`Proxy ${targetPort} → ${sourcePort}`);
 
@@ -134,11 +141,14 @@ export class PreviewsStore {
       }),
     );
 
-    await onStart;
-    return { proxyPort: targetPort };
+    const { proxyUrl } = await onStart;
+    return { proxyPort: targetPort, proxyUrl };
   }
 
-  async stopProxy(proxyPort: number) {
+  /**
+   * Called when a proxy server is no longer used and it can be released.
+   */
+  stopProxy(proxyPort: number) {
     const proxy = this.#proxies.get(proxyPort);
     if (!proxy) {
       throw new Error(`Proxy for port ${proxyPort} not found`);
