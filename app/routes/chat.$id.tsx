@@ -1,10 +1,10 @@
 import type { LoaderFunctionArgs } from '@vercel/remix';
-import { default as IndexRoute, meta as IndexMeta } from './_index';
+import { meta as IndexMeta } from './_index';
 import { getFlexAuthModeInLoader } from '~/lib/persistence/convex';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Header } from '~/components/header/Header';
-import { Chat } from '~/components/chat/Chat.client';
 import { SafariWarning } from '~/components/SafariWarning';
+import { ExistingChat } from '~/components/ExistingChat.client';
 
 export const meta = IndexMeta;
 
@@ -25,15 +25,15 @@ export async function loader(args: LoaderFunctionArgs) {
 export default function ChatRoute() {
   return (
     <div className="flex flex-col h-full w-full bg-bolt-elements-background-depth-1">
-    <Header />
-    <ClientOnly>
-      {() => (
-        <>
-          <Chat />
-          <SafariWarning />
-        </>
-      )}
-    </ClientOnly>
-  </div>
-  )
+      <Header />
+      <ClientOnly>
+        {() => (
+          <>
+            <ExistingChat />
+            <SafariWarning />
+          </>
+        )}
+      </ClientOnly>
+    </div>
+  );
 }

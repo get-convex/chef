@@ -9,7 +9,6 @@ import { forwardRef, type ForwardedRef } from 'react';
 interface HistoryItemProps {
   item: ChatHistoryItem;
   handleDeleteClick: (event: React.UIEvent, item: ChatHistoryItem) => void;
-  handleDuplicate: (id: string) => void;
 }
 
 export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
@@ -66,11 +65,6 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
             )}
           >
             <div className="flex items-center gap-2.5 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
-              {/* <ChatActionButton
-                toolTipContent="Duplicate"
-                icon="i-ph:copy h-4 w-4"
-                onClick={() => handleDuplicate(item.id)}
-              /> */}
               <ChatActionButton
                 toolTipContent="Rename"
                 icon="i-ph:pencil-fill h-4 w-4"

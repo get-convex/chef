@@ -1,22 +1,17 @@
-import type { JSONValue, Message } from 'ai';
+import type { Message } from 'ai';
 import React, { type RefCallback } from 'react';
-import { ClientOnly } from 'remix-utils/client-only';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import { classNames } from '~/utils/classNames';
 import { Messages } from './Messages.client';
 import { SendButton } from './SendButton.client';
 import * as Tooltip from '@radix-ui/react-tooltip';
-
 import styles from './BaseChat.module.scss';
-
 import FilePreview from './FilePreview';
 import { ScreenshotStateManager } from './ScreenshotStateManager';
 import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
-import type { ActionRunner } from '~/lib/runtime/action-runner';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
-import { FlexAuthWrapper } from './FlexAuthWrapper';
 import { useFlexAuthMode, useSelectedTeamSlug } from '~/lib/stores/convex';
 import { SuggestionButtons } from './SuggestionButtons';
 import { KeyboardShortcut } from '~/components/ui/KeyboardShortcut';

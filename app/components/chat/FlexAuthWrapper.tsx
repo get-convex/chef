@@ -16,7 +16,7 @@ import {
 
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { classNames } from '~/utils/classNames';
-import { Loading } from '../Loading';
+import { Loading } from '~/components/Loading';
 
 export function FlexAuthWrapper({ children }: { children: React.ReactNode }) {
   const sessionId = useConvexSessionIdOrNullOrLoading();

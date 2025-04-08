@@ -4,12 +4,12 @@ import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useMessageParser, useShortcuts, useSnapScroll } from '~/lib/hooks';
-import { chatIdStore, description, useChatHistoryConvex } from '~/lib/persistence';
+import { chatIdStore } from '~/lib/persistence';
 import { chatStore, useChatIdOrNull } from '~/lib/stores/chat';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { PROMPT_COOKIE_KEY } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
-import { createScopedLogger, renderLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/utils/logger';
 import { BaseChat } from './BaseChat';
 import Cookies from 'js-cookie';
 import { debounce } from '~/utils/debounce';
@@ -24,16 +24,12 @@ import {
   useContainerBootState,
   waitForBootStepCompleted,
 } from '~/lib/stores/containerBootState';
-import { FlexAuthWrapper } from './FlexAuthWrapper';
 import {
   convexStore,
   selectedTeamSlugStore,
   useConvexSessionId,
-  useConvexSessionIdOrNullOrLoading,
 } from '~/lib/stores/convex';
-import { useQuery } from 'convex/react';
-import { api } from '@convex/_generated/api';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import type { PartId } from '~/lib/stores/artifacts';
 import { captureException } from '@sentry/remix';
 import { setExtra, setUser } from '@sentry/remix';
@@ -42,56 +38,6 @@ import { setProfile } from '~/lib/stores/profile';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 
 const logger = createScopedLogger('Chat');
-
-export function Chat() {
-  renderLogger.trace('Chat');
-
-  const { ready, initialMessages, storeMessageHistory, importChat, initializeChat } = useChatHistoryConvex();
-  const title = useStore(description);
-
-  const sessionId = useConvexSessionIdOrNullOrLoading();
-  const chatId = useChatIdOrNull();
-  const projectInfo = useQuery(
-    api.convexProjects.loadConnectedConvexProjectCredentials,
-    sessionId && chatId
-      ? {
-          sessionId,
-          chatId,
-        }
-      : 'skip',
-  );
-
-  useEffect(() => {
-    if (projectInfo?.kind === 'connected') {
-      convexStore.set({
-        token: projectInfo.adminKey,
-        deploymentName: projectInfo.deploymentName,
-        deploymentUrl: projectInfo.deploymentUrl,
-        projectSlug: projectInfo.projectSlug,
-        teamSlug: projectInfo.teamSlug,
-      });
-    }
-  }, [projectInfo]);
-
-  return (
-    <>
-      <FlexAuthWrapper>
-        <SentryUserProvider>
-          {ready ? (
-            <ChatImpl
-              description={title}
-              initialMessages={initialMessages}
-              storeMessageHistory={storeMessageHistory}
-              importChat={importChat}
-              initializeChat={initializeChat}
-            />
-          ) : null}
-        </SentryUserProvider>
-      </FlexAuthWrapper>
-      <Toaster position="bottom-right" closeButton richColors />
-    </>
-  );
-}
 
 const processSampledMessages = createSampler(
   (options: {
@@ -114,12 +60,11 @@ const processSampledMessages = createSampler(
 interface ChatProps {
   initialMessages: Message[];
   storeMessageHistory: (messages: Message[]) => Promise<void>;
-  importChat: (description: string, messages: Message[]) => Promise<void>;
   initializeChat: (teamSlug: string | null) => Promise<void>;
   description?: string;
 }
 
-const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, initializeChat }: ChatProps) => {
+export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat }: ChatProps) => {
   useShortcuts();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
@@ -147,20 +92,7 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       });
   }, [getAccessTokenSilently]);
 
-  const {
-    messages,
-    status,
-    input,
-    handleInputChange,
-    setInput,
-    stop,
-    append,
-    setMessages,
-    reload,
-    error,
-    data: chatData,
-    setData,
-  } = useChat({
+  const { messages, status, input, handleInputChange, setInput, stop, append, setMessages, reload, error } = useChat({
     initialMessages,
     initialInput: Cookies.get(PROMPT_COOKIE_KEY) || '',
     api: '/api/chat',
@@ -207,12 +139,9 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
     },
     onFinish: (message, response) => {
       const usage = response.usage;
-      setData(undefined);
-
       if (usage) {
         console.log('Token usage:', usage);
       }
-
       logger.debug('Finished streaming');
     },
   });
@@ -413,20 +342,25 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
   return (
     <BaseChat
       ref={animationScope}
+      messageRef={messageRef}
       textareaRef={textareaRef}
-      input={input}
+      scrollRef={scrollRef}
       showChat={showChat}
       chatStarted={chatStarted}
-      streamStatus={status}
-      sendMessage={sendMessage}
-      messageRef={messageRef}
-      scrollRef={scrollRef}
+      description={title}
+      input={input}
+      uploadedFiles={uploadedFiles}
+      setUploadedFiles={setUploadedFiles}
+      imageDataList={imageDataList}
+      setImageDataList={setImageDataList}
       handleInputChange={(e) => {
         onTextareaChange(e);
         debouncedCachePrompt(e);
       }}
       handleStop={abort}
-      description={description}
+      sendMessage={sendMessage}
+      streamStatus={status}
+      currentError={error}
       toolStatus={toolStatus}
       messages={messages.map((message, i) => {
         if (message.role === 'user') {
@@ -438,18 +372,12 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
           parts: parsedMessages[i]?.parts || [],
         };
       })}
-      uploadedFiles={uploadedFiles}
-      setUploadedFiles={setUploadedFiles}
-      imageDataList={imageDataList}
-      setImageDataList={setImageDataList}
       actionAlert={actionAlert}
       clearAlert={() => workbenchStore.clearAlert()}
-      data={chatData}
-      currentError={error}
     />
   );
 });
-ChatImpl.displayName = 'ChatImpl';
+Chat.displayName = 'ChatImpl';
 
 function useCurrentToolStatus() {
   const [toolStatus, setToolStatus] = useState<Record<string, ActionStatus>>({});
@@ -493,7 +421,7 @@ function useCurrentToolStatus() {
   return toolStatus;
 }
 
-function SentryUserProvider({ children }: { children: React.ReactNode }) {
+export function SentryUserProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth0();
   const sessionId = useConvexSessionId();
   const chatId = useChatIdOrNull();

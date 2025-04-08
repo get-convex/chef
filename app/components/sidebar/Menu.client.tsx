@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
-import { chatIdStore, useChatHistoryConvex, type ChatHistoryItem } from '~/lib/persistence';
+import { chatIdStore, type ChatHistoryItem } from '~/lib/persistence';
 import { cubicEasingFn } from '~/utils/easings';
 import { logger } from '~/utils/logger';
 import { HistoryItem } from './HistoryItem';
@@ -38,7 +38,6 @@ const menuVariants = {
 type DialogContent = { type: 'delete'; item: ChatHistoryItem } | null;
 
 export const Menu = memo(() => {
-  const { duplicateCurrentChat } = useChatHistoryConvex();
   const menuRef = useRef<HTMLDivElement>(null);
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
@@ -100,13 +99,6 @@ export const Menu = memo(() => {
     setDialogContent({ type: 'delete', item });
   }, []);
 
-  const handleDuplicate = useCallback(
-    async (id: string) => {
-      await duplicateCurrentChat(id);
-    },
-    [duplicateCurrentChat],
-  );
-
   return (
     <>
       <motion.div
@@ -157,12 +149,7 @@ export const Menu = memo(() => {
                   </div>
                   <div className="space-y-0.5 pr-1">
                     {items.map((item) => (
-                      <HistoryItem
-                        key={item.initialId}
-                        item={item}
-                        handleDeleteClick={handleDeleteClick}
-                        handleDuplicate={handleDuplicate}
-                      />
+                      <HistoryItem key={item.initialId} item={item} handleDeleteClick={handleDeleteClick} />
                     ))}
                   </div>
                 </div>

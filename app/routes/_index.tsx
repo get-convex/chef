@@ -2,8 +2,8 @@ import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
 import type { MetaFunction } from '@vercel/remix';
 import { ClientOnly } from 'remix-utils/client-only';
-import { Chat } from '~/components/chat/Chat.client';
 import { Header } from '~/components/header/Header';
+import { Homepage } from '~/components/Homepage.client';
 import { SafariWarning } from '~/components/SafariWarning';
 
 export const meta: MetaFunction = () => {
@@ -35,7 +35,7 @@ export default function Index() {
       <ClientOnly>
         {() => (
           <>
-            <Chat />
+            <Homepage />
             <SafariWarning />
           </>
         )}
