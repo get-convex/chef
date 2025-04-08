@@ -3,8 +3,8 @@ import type { Message as AIMessage } from 'ai';
 import { ConvexError, v } from 'convex/values';
 import type { VAny } from 'convex/values';
 import { isValidSession } from './sessions';
-import { api } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
+import { startProvisionConvexProject } from './convexProjects';
 export type SerializedMessage = Omit<AIMessage, 'createdAt'> & {
   createdAt: number | undefined;
 };
@@ -24,8 +24,6 @@ export const initializeChat = mutation({
   handler: async (ctx, args) => {
     const { id, sessionId, projectInitParams } = args;
     let existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.id, sessionId: args.sessionId });
-
-    console.log('Existing chat:', existing);
 
     if (!existing) {
       await createNewChatFromMessages(ctx, {
@@ -535,7 +533,7 @@ export async function createNewChatFromMessages(
     snapshotId,
   });
 
-  await ctx.scheduler.runAfter(0, api.convexProjects.startProvisionConvexProject, {
+  await startProvisionConvexProject(ctx, {
     sessionId,
     chatId: id,
     projectInitParams,

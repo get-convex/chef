@@ -48,7 +48,7 @@ export default defineSchema({
         }),
         v.object({
           kind: v.literal('connecting'),
-          jobId: v.optional(v.id('_scheduled_functions')),
+          checkConnectionJobId: v.optional(v.id('_scheduled_functions')),
         }),
         v.object({
           kind: v.literal('failed'),

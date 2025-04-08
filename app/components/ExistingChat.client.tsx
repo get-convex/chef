@@ -1,6 +1,6 @@
 import { useConvexChatExisting } from '~/lib/stores/startup';
 import { Chat } from './chat/Chat';
-import { Toaster } from 'sonner';
+import { toast, Toaster } from 'sonner';
 import { FlexAuthWrapper } from './chat/FlexAuthWrapper';
 import { SentryUserProvider } from './chat/Chat';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
