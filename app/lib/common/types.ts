@@ -9,9 +9,9 @@ type EmptyArgs = z.ZodObject<Record<string, never>>;
 
 export type ConvexToolSet = {
   deploy: Tool<EmptyArgs, string>;
-  fileReadContents: Tool<typeof fileReadContentsParameters, string>;
-  npmInstall: Tool<typeof npmInstallToolParameters, string>;
-  fileReplaceString: Tool<typeof fileReplaceStringToolParameters, string>;
+  file_read_contents: Tool<typeof fileReadContentsParameters, string>;
+  npm_install: Tool<typeof npmInstallToolParameters, string>;
+  file_replace_string: Tool<typeof fileReplaceStringToolParameters, string>;
 };
 
 type ConvexToolCall = ToolCallUnion<ConvexToolSet>;
@@ -23,17 +23,17 @@ type ConvexToolResult =
       result?: string;
     }
   | {
-      toolName: 'fileReadContents';
+      toolName: 'file_read_contents';
       args: typeof fileReadContentsParameters;
       result: string;
     }
   | {
-      toolName: 'npmInstall';
+      toolName: 'npm_install';
       args: typeof npmInstallToolParameters;
       result: string;
     }
   | {
-      toolName: 'fileReplaceString';
+      toolName: 'file_replace_string';
       args: typeof fileReplaceStringToolParameters;
       result: string;
     };

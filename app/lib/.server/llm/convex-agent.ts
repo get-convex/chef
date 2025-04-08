@@ -20,9 +20,9 @@ type Provider = {
 
 const tools: ConvexToolSet = {
   deploy: deployTool,
-  npmInstall: npmInstallTool,
-  fileReadContents: fileReadContentsTool,
-  fileReplaceString: fileReplaceStringTool,
+  npm_install: npmInstallTool,
+  file_read_contents: fileReadContentsTool,
+  file_replace_string: fileReplaceStringTool,
 };
 
 export async function convexAgent(

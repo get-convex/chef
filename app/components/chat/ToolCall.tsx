@@ -120,13 +120,13 @@ const ToolUseContents = memo(
       case 'deploy': {
         return <DeployTool artifact={artifact} invocation={invocation} />;
       }
-      case 'fileReadContents': {
+      case 'file_read_contents': {
         return <FileReadContentsTool invocation={invocation} />;
       }
-      case 'npmInstall': {
+      case 'npm_install': {
         return <NpmInstallTool artifact={artifact} invocation={invocation} />;
       }
-      case 'fileReplaceString': {
+      case 'file_replace_string': {
         return <FileReplaceStringTool invocation={invocation} />;
       }
       default: {
@@ -232,8 +232,8 @@ const Terminal = memo(
 );
 
 function NpmInstallTool({ artifact, invocation }: { artifact: ArtifactState; invocation: ConvexToolInvocation }) {
-  if (invocation.toolName !== 'npmInstall') {
-    throw new Error('Terminal can only be used for the npmInstall tool');
+  if (invocation.toolName !== 'npm_install') {
+    throw new Error('Terminal can only be used for the npm_install tool');
   }
 
   if (invocation.state === 'call') {
@@ -283,21 +283,21 @@ function parseToolInvocation(
         }
         break;
       }
-      case 'fileReplaceString': {
+      case 'file_replace_string': {
         const args = loggingSafeParse(fileReplaceStringToolParameters, parsedContent.args);
         if (!args.success) {
           zodError = args.error;
         }
         break;
       }
-      case 'npmInstall': {
+      case 'npm_install': {
         const args = loggingSafeParse(npmInstallToolParameters, parsedContent.args);
         if (!args.success) {
           zodError = args.error;
         }
         break;
       }
-      case 'fileReadContents': {
+      case 'file_read_contents': {
         const args = loggingSafeParse(fileReadContentsParameters, parsedContent.args);
         if (!args.success) {
           zodError = args.error;
@@ -365,7 +365,7 @@ function statusIcon(status: ActionState['status'], invocation: ConvexToolInvocat
 
 function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
   switch (invocation.toolName) {
-    case 'fileReadContents': {
+    case 'file_read_contents': {
       const args = loggingSafeParse(fileReadContentsParameters, invocation.args);
       let verb = 'Read';
       let icon = 'i-ph:file-text';
@@ -394,7 +394,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         </div>
       );
     }
-    case 'npmInstall': {
+    case 'npm_install': {
       if (invocation.state === 'partial-call' || invocation.state === 'call') {
         return `Installing dependencies...`;
       } else if (invocation.result?.startsWith('Error:')) {
@@ -440,7 +440,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         </div>
       );
     }
-    case 'fileReplaceString': {
+    case 'file_replace_string': {
       const args = loggingSafeParse(fileReplaceStringToolParameters, invocation.args);
       let renderedPath = 'a file';
       if (args.success) {
@@ -460,8 +460,8 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
 }
 
 function FileReadContentsTool({ invocation }: { invocation: ConvexToolInvocation }) {
-  if (invocation.toolName !== 'fileReadContents') {
-    throw new Error('FileReadContents tool can only be used for the fileReadContents tool');
+  if (invocation.toolName !== 'file_read_contents') {
+    throw new Error('FileReadContents tool can only be used for the file_read_contents tool');
   }
   if (invocation.state === 'partial-call' || invocation.state === 'call') {
     return null;
@@ -587,7 +587,7 @@ const LineNumberViewer = memo(({ lines, startLineNumber = 1, language = 'typescr
 });
 
 function FileReplaceStringTool({ invocation }: { invocation: ConvexToolInvocation }) {
-  if (invocation.toolName !== 'fileReplaceString') {
+  if (invocation.toolName !== 'file_replace_string') {
     throw new Error('Edit tool can only be used for the edit tool');
   }
   if (invocation.state === 'partial-call') {

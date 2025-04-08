@@ -176,7 +176,7 @@ export class ActionRunner {
           logger.error('Shell action is not supported anymore. Use tool calls instead.');
           break;
         }
-        case 'npmInstall': {
+        case 'npm_install': {
           logger.error('Npm install action is not supported anymore. Use tool calls instead.');
           break;
         }
@@ -352,7 +352,7 @@ export class ActionRunner {
     let result: string;
     try {
       switch (parsed.toolName) {
-        case 'fileReadContents': {
+        case 'file_read_contents': {
           const args = fileReadContentsParameters.parse(parsed.args);
           const container = await this.#webcontainer;
           const relPath = workDirRelative(args.absolute_path);
@@ -367,7 +367,7 @@ export class ActionRunner {
           }
           break;
         }
-        case 'fileReplaceString': {
+        case 'file_replace_string': {
           const args = fileReplaceStringToolParameters.parse(parsed.args);
           const container = await this.#webcontainer;
           const relPath = workDirRelative(args.absolute_path);
@@ -395,7 +395,7 @@ export class ActionRunner {
           result = `Successfully edited ${args.absolute_path}`;
           break;
         }
-        case 'npmInstall': {
+        case 'npm_install': {
           try {
             const args = npmInstallToolParameters.parse(parsed.args);
             const container = await this.#webcontainer;

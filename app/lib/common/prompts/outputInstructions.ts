@@ -118,7 +118,7 @@ function toolsInstructions(options: SystemPromptOptions) {
   <tools>
     <general_guidelines>
       NEVER reference "tools" in your responses. For example:
-      - DO NOT SAY: "This artifact uses the \`npmInstall\` tool to install the dependencies."
+      - DO NOT SAY: "This artifact uses the \`npm_install\` tool to install the dependencies."
       - INSTEAD SAY: "We installed the dependencies."
     </general_guidelines>
 
@@ -151,7 +151,7 @@ function toolsInstructions(options: SystemPromptOptions) {
     </deploy_tool>
 
     <npm_install_tool>
-      You can install additional dependencies for the project with npm using the \`npmInstall\` tool.
+      You can install additional dependencies for the project with npm using the \`npm_install\` tool.
 
       This tool should not be used to install dependencies that are already listed in the \`package.json\` file
       as they are already installed.

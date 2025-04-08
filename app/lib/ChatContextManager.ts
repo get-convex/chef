@@ -239,7 +239,7 @@ export class ChatContextManager {
       }
       if (
         part.type == 'tool-invocation' &&
-        part.toolInvocation.toolName == 'fileReadContents' &&
+        part.toolInvocation.toolName == 'file_read_contents' &&
         part.toolInvocation.state !== 'partial-call'
       ) {
         const args = loggingSafeParse(fileReadContentsParameters, part.toolInvocation.args);
@@ -249,7 +249,7 @@ export class ChatContextManager {
       }
       if (
         part.type == 'tool-invocation' &&
-        part.toolInvocation.toolName == 'fileReplaceString' &&
+        part.toolInvocation.toolName == 'file_replace_string' &&
         part.toolInvocation.state !== 'partial-call'
       ) {
         const args = loggingSafeParse(fileReplaceStringToolParameters, part.toolInvocation.args);
@@ -341,7 +341,7 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
   const wasError = toolInvocation.result.startsWith('Error:');
   let toolCall: string;
   switch (toolInvocation.toolName) {
-    case 'fileReadContents': {
+    case 'file_read_contents': {
       const args = loggingSafeParse(fileReadContentsParameters, toolInvocation.args);
       let verb = 'viewed';
       if (toolInvocation.result.startsWith('Directory:')) {
@@ -354,7 +354,7 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       toolCall = `deployed the app`;
       break;
     }
-    case 'npmInstall': {
+    case 'npm_install': {
       const args = loggingSafeParse(npmInstallToolParameters, toolInvocation.args);
       if (args.success) {
         toolCall = `installed the dependencies ${args.data.packages}`;
@@ -363,7 +363,7 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       }
       break;
     }
-    case 'fileReplaceString': {
+    case 'file_replace_string': {
       const args = loggingSafeParse(fileReplaceStringToolParameters, toolInvocation.args);
       if (args.success) {
         toolCall = `edited the file ${args.data.absolute_path}`;
