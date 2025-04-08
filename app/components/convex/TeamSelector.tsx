@@ -89,7 +89,7 @@ export function TeamSelector() {
             sideOffset={5}
           >
             <Select.Viewport>
-              <div className="border-b p-2 sticky top-0 bg-bolt-elements-button-secondary-background z-10">
+              <div className="border-b border-b-bolt-elements-borderColor p-2 sticky top-0 bg-bolt-elements-button-secondary-background z-10">
                 <h3 className="text-sm font-medium">Select Team</h3>
                 <p className="mt-1 text-xs text-bolt-elements-textSecondary">
                   Your project will be created in this Convex team
