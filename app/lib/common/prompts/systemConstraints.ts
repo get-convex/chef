@@ -1,7 +1,7 @@
-import { stripIndents } from "~/utils/stripIndent";
-import type { SystemPromptOptions } from "./types";
+import { stripIndents } from '~/utils/stripIndent';
+import type { SystemPromptOptions } from './types';
 
-export function systemConstraints(options: SystemPromptOptions) {
+export function systemConstraints(_options: SystemPromptOptions) {
   return stripIndents`
   <system_constraints>
     <environment>

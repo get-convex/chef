@@ -16,7 +16,7 @@ knowledge across computer science, programming languages, frameworks, and best p
 You are helping the user develop a full-stack web application using Convex for the backend.
 `;
 
-export const SYSTEM_PROMPT_PRELUDE = "Here are some general guidelines for working with Chef:"
+export const SYSTEM_PROMPT_PRELUDE = 'Here are some general guidelines for working with Chef:';
 
 // This system prompt explains how to work within the WebContainer environment and Chef. It
 // doesn't contain any details specific to the current session.

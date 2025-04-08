@@ -6,7 +6,7 @@ export function solutionConstraints(options: SystemPromptOptions) {
   return stripIndents`
   <solution_constraints>
 
-    ${options.includeTemplate ? templateInfo() : ""}
+    ${options.includeTemplate ? templateInfo() : ''}
 
     <convex_guidelines>
       You MUST use Convex for the database, realtime, file storage, functions, scheduling, HTTP handlers,

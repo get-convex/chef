@@ -1,7 +1,7 @@
-import { stripIndents } from "~/utils/stripIndent";
-import type { SystemPromptOptions } from "./types";
+import { stripIndents } from '~/utils/stripIndent';
+import type { SystemPromptOptions } from './types';
 
-export function exampleDataInstructions(options: SystemPromptOptions) {
+export function exampleDataInstructions(_options: SystemPromptOptions) {
   return stripIndents`
   <example_data_instructions>
     If the user asks you to make an app that requires data, use some example data to populate the

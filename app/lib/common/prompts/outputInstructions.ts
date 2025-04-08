@@ -29,7 +29,7 @@ export function outputInstructions(options: SystemPromptOptions) {
       ULTRA IMPORTANT: Do NOT be verbose and DO NOT explain anything unless the user is asking for more information. That is VERY important.
     </communication>
 
-    ${options.enableBulkEdits ? artifactInstructions(options) : ""}
+    ${options.enableBulkEdits ? artifactInstructions(options) : ''}
 
     ${toolsInstructions(options)}
 
@@ -37,7 +37,7 @@ export function outputInstructions(options: SystemPromptOptions) {
   `;
 }
 
-function artifactInstructions(options: SystemPromptOptions) {
+function artifactInstructions(_options: SystemPromptOptions) {
   return stripIndents`
   <artifacts>
     To achieve your goal, you need to write code to the WebContainer . You can write files by specifying
@@ -157,12 +157,12 @@ function toolsInstructions(options: SystemPromptOptions) {
       as they are already installed.
     </npm_install_tool>
 
-    ${options.enablePreciseEdits ? preciseToolInstructions(options) : ""}
+    ${options.enablePreciseEdits ? preciseToolInstructions(options) : ''}
   </tools>
   `;
 }
 
-function preciseToolInstructions(options: SystemPromptOptions) {
+function preciseToolInstructions(_options: SystemPromptOptions) {
   return stripIndents`
     <view_tool>
       The environment automatically provides relevant files, but you can ask to see particular files by using the view
@@ -172,5 +172,5 @@ function preciseToolInstructions(options: SystemPromptOptions) {
     <edit_tool>
       Use the \`edit\` tool to make small, targeted changes to code.
     </edit_tool>
-  `
+  `;
 }

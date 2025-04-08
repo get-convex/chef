@@ -1,8 +1,8 @@
 import { allowedHTMLElements } from '~/utils/markdown';
-import type { SystemPromptOptions } from "./types";
+import type { SystemPromptOptions } from './types';
 import { stripIndents } from '~/utils/stripIndent';
 
-export function formattingInstructions(options: SystemPromptOptions) {
+export function formattingInstructions(_options: SystemPromptOptions) {
   return stripIndents`
   <formatting_instructions>
     <code_formatting_instructions>

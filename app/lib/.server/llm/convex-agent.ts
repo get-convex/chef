@@ -89,7 +89,7 @@ export async function convexAgent(
     enableBulkEdits: true,
     enablePreciseEdits: true,
     includeTemplate: true,
-  }
+  };
   const result = streamText({
     model: provider.model,
     maxTokens: provider.maxTokens,
@@ -117,7 +117,7 @@ export async function convexAgent(
     experimental_repairToolCall: async ({ toolCall, tools, parameterSchema, error }) => {
       console.log('repair', toolCall, tools, parameterSchema, error);
       return null;
-    }
+    },
   });
   return result.toDataStream({
     getErrorMessage: (error: any) => {

@@ -1,7 +1,7 @@
-import { stripIndents } from "~/utils/stripIndent";
-import type { SystemPromptOptions } from "./types";
+import { stripIndents } from '~/utils/stripIndent';
+import type { SystemPromptOptions } from './types';
 
-export function secretsInstructions(options: SystemPromptOptions) {
+export function secretsInstructions(_options: SystemPromptOptions) {
   return stripIndents`
    <secrets_instructions>
       If you need to use a secret to call into an API, instruct the user to set up the secret as an
