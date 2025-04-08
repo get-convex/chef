@@ -7,7 +7,7 @@ Line numbers are 1-indexed, and -1 for the end line means read to the end of the
 can only be used when reading files, not when listing directories.
 `;
 
-const viewToolDescription = `
+const viewDescription = `
 Read the contents of a file or list a directory. Be sure to use this tool when you're editing a file
 and aren't sure what its contents are.
 
@@ -20,6 +20,6 @@ export const viewParameters = z.object({
 });
 
 export const viewTool: Tool = {
-  description: viewToolDescription,
+  description: viewDescription,
   parameters: viewParameters,
 };
