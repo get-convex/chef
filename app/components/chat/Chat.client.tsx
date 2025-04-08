@@ -181,6 +181,25 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       return result;
     },
     onError: (e: Error) => {
+      // Clean up the last message if it's an assistant message
+      setMessages((prevMessages) => {
+        const updatedMessages = [...prevMessages];
+        const lastMessage = updatedMessages[updatedMessages.length - 1];
+
+        if (lastMessage?.role === 'assistant' && Array.isArray(lastMessage.parts)) {
+          const updatedParts = [...lastMessage.parts.slice(0, -1)];
+          if (updatedParts.length > 0) {
+            updatedMessages[updatedMessages.length - 1] = {
+              ...lastMessage,
+              parts: updatedParts,
+            };
+          } else {
+            updatedMessages.pop();
+          }
+        }
+
+        return updatedMessages;
+      });
       captureException('Failed to process chat request: ' + e.message, {
         level: 'error',
         extra: {
