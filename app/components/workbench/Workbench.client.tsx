@@ -21,6 +21,7 @@ import useViewport from '~/lib/hooks';
 import { Dashboard } from './Dashboard';
 import { convexStore } from '~/lib/stores/convex';
 import { WORK_DIR } from '~/utils/constants';
+import { SaveStatusIndicator } from '~/components/SaveStatusIndicator';
 
 interface WorkspaceProps {
   chatStarted?: boolean;
@@ -141,88 +142,92 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
 
   return (
     chatStarted && (
-      <motion.div
-        initial="closed"
-        animate={showWorkbench ? 'open' : 'closed'}
-        variants={workbenchVariants}
-        className="z-workbench"
-      >
-        <div
-          className={classNames(
-            'fixed top-[calc(var(--header-height)+1.5rem)] bottom-6 w-[var(--workbench-inner-width)] mr-4 z-0 transition-[left,width] duration-200 bolt-ease-cubic-bezier',
-            {
-              'w-full': isSmallViewport,
-              'left-0': showWorkbench && isSmallViewport,
-              'left-[var(--workbench-left)]': showWorkbench,
-              'left-[100%]': !showWorkbench,
-            },
-          )}
+      <>
+        <motion.div
+          initial="closed"
+          animate={showWorkbench ? 'open' : 'closed'}
+          variants={workbenchVariants}
+          className="z-workbench"
         >
-          <div className="absolute inset-0 px-2 lg:px-6">
-            <div className="h-full flex flex-col bg-bolt-elements-background-depth-2 border border-bolt-elements-borderColor shadow-sm rounded-lg overflow-hidden">
-              <div className="flex items-center px-3 py-2 border-b border-bolt-elements-borderColor">
-                <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
-                <div className="ml-auto" />
-                {selectedView === 'code' && (
-                  <div className="flex overflow-y-auto">
-                    <PanelHeaderButton
-                      className="mr-1 text-sm"
-                      onClick={() => {
-                        workbenchStore.downloadZip();
-                      }}
-                    >
-                      <div className="i-ph:code" />
-                      Download Code
-                    </PanelHeaderButton>
-                    <PanelHeaderButton
-                      className="mr-1 text-sm"
-                      onClick={() => {
-                        workbenchStore.toggleTerminal(!workbenchStore.showTerminal.get());
-                      }}
-                    >
-                      <div className="i-ph:terminal" />
-                      Toggle Terminal
-                    </PanelHeaderButton>
-                  </div>
-                )}
-                <IconButton
-                  icon="i-ph:x-circle"
-                  className="-mr-1"
-                  size="xl"
-                  onClick={() => {
-                    workbenchStore.showWorkbench.set(false);
-                  }}
-                />
-              </div>
-              <div className="relative flex-1 overflow-hidden">
-                <View {...slidingPosition({ view: 'code', selectedView, showDashboard })}>
-                  <EditorPanel
-                    editorDocument={currentDocument}
-                    isStreaming={isStreaming}
-                    selectedFile={selectedFile}
-                    files={files}
-                    unsavedFiles={unsavedFiles}
-                    fileHistory={{}}
-                    onFileSelect={onFileSelect}
-                    onEditorScroll={onEditorScroll}
-                    onEditorChange={onEditorChange}
-                    onFileSave={onFileSave}
-                    onFileReset={onFileReset}
+          <div
+            className={classNames(
+              'fixed top-[calc(var(--header-height)+1.5rem)] bottom-6 w-[var(--workbench-inner-width)] mr-4 z-0 transition-[left,width] duration-200 bolt-ease-cubic-bezier',
+              {
+                'w-full': isSmallViewport,
+                'left-0': showWorkbench && isSmallViewport,
+                'left-[var(--workbench-left)]': showWorkbench,
+                'left-[100%]': !showWorkbench,
+              },
+            )}
+          >
+            <div className="absolute inset-0 px-2 lg:px-6">
+              <div className="h-full flex flex-col bg-bolt-elements-background-depth-2 border border-bolt-elements-borderColor shadow-sm rounded-lg overflow-hidden">
+                <div className="flex items-center px-3 py-2 border-b border-bolt-elements-borderColor">
+                  <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
+                  <div className="ml-auto" />
+                  {selectedView === 'code' && (
+                    <div className="flex overflow-y-auto">
+                      <SaveStatusIndicator />
+                      <div className="w-4" />
+                      <PanelHeaderButton
+                        className="mr-1 text-sm"
+                        onClick={() => {
+                          workbenchStore.downloadZip();
+                        }}
+                      >
+                        <div className="i-ph:code" />
+                        Download Code
+                      </PanelHeaderButton>
+                      <PanelHeaderButton
+                        className="mr-1 text-sm"
+                        onClick={() => {
+                          workbenchStore.toggleTerminal(!workbenchStore.showTerminal.get());
+                        }}
+                      >
+                        <div className="i-ph:terminal" />
+                        Toggle Terminal
+                      </PanelHeaderButton>
+                    </div>
+                  )}
+                  <IconButton
+                    icon="i-ph:x-circle"
+                    className="-mr-1"
+                    size="xl"
+                    onClick={() => {
+                      workbenchStore.showWorkbench.set(false);
+                    }}
                   />
-                </View>
-                <View {...slidingPosition({ view: 'preview', selectedView, showDashboard })}>
-                  <Preview />
-                </View>
-                {showDashboard && (
-                  <View {...slidingPosition({ view: 'dashboard', selectedView, showDashboard })}>
-                    <Dashboard />
+                </div>
+                <div className="relative flex-1 overflow-hidden">
+                  <View {...slidingPosition({ view: 'code', selectedView, showDashboard })}>
+                    <EditorPanel
+                      editorDocument={currentDocument}
+                      isStreaming={isStreaming}
+                      selectedFile={selectedFile}
+                      files={files}
+                      unsavedFiles={unsavedFiles}
+                      fileHistory={{}}
+                      onFileSelect={onFileSelect}
+                      onEditorScroll={onEditorScroll}
+                      onEditorChange={onEditorChange}
+                      onFileSave={onFileSave}
+                      onFileReset={onFileReset}
+                    />
                   </View>
-                )}
+                  <View {...slidingPosition({ view: 'preview', selectedView, showDashboard })}>
+                    <Preview />
+                  </View>
+                  {showDashboard && (
+                    <View {...slidingPosition({ view: 'dashboard', selectedView, showDashboard })}>
+                      <Dashboard />
+                    </View>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </>
     )
   );
 });

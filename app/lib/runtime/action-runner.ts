@@ -10,12 +10,13 @@ import type { ToolInvocation } from 'ai';
 import { withResolvers } from '~/utils/promises';
 import { viewParameters } from './viewTool';
 import { readPath, renderDirectory, renderFile, workDirRelative } from '~/utils/fileUtils';
-import { ContainerBootState, waitForContainerBootState } from '~/lib/webcontainer';
+import { ContainerBootState, waitForContainerBootState } from '~/lib/stores/containerBootState';
 import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { z } from 'zod';
 import { editToolParameters } from './editTool';
 import { getAbsolutePath } from '~/lib/stores/files';
+import { streamOutput } from '~/utils/process';
 
 const logger = createScopedLogger('ActionRunner');
 
@@ -172,39 +173,16 @@ export class ActionRunner {
 
     try {
       switch (action.type) {
-        case 'shell': {
-          logger.error('Shell action is not supported anymore. Use tool calls instead.');
-          break;
-        }
-        case 'npmInstall': {
-          logger.error('Npm install action is not supported anymore. Use tool calls instead.');
-          break;
-        }
-        case 'npmExec': {
-          logger.error('Npm exec action is not supported anymore. Use tool calls instead.');
-          break;
-        }
         case 'file': {
           await this.#runFileAction(action);
-          break;
-        }
-        case 'build': {
-          const buildOutput = await this.#runBuildAction(action);
-          // Store build output for deployment
-          this.buildOutput = buildOutput;
-          break;
-        }
-        case 'start': {
-          logger.error('Start action is not supported anymore. Use tool calls instead.');
-          break;
-        }
-        case 'convex': {
-          logger.error('Convex action is not supported anymore. Use tool calls instead.');
           break;
         }
         case 'toolUse': {
           await this.#runToolUseAction(actionId, action);
           break;
+        }
+        default: {
+          throw new Error(`Unknown action type: ${JSON.stringify(action)}`);
         }
       }
 
@@ -300,41 +278,6 @@ export class ActionRunner {
     return nodePath.join('.history', filePath);
   }
 
-  async #runBuildAction(action: ActionState) {
-    if (action.type !== 'build') {
-      unreachable('Expected build action');
-    }
-
-    const webcontainer = await this.#webcontainer;
-
-    // Create a new terminal specifically for the build
-    const buildProcess = await webcontainer.spawn('npm', ['run', 'build']);
-
-    let output = '';
-    buildProcess.output.pipeTo(
-      new WritableStream({
-        write(data) {
-          output += data;
-        },
-      }),
-    );
-
-    const exitCode = await buildProcess.exit;
-
-    if (exitCode !== 0) {
-      throw new ActionCommandError('Build Failed', output || 'No Output Available');
-    }
-
-    // Get the build output directory path
-    const buildDir = nodePath.join(webcontainer.workdir, 'dist');
-
-    return {
-      path: buildDir,
-      exitCode,
-      output,
-    };
-  }
-
   async #runToolUseAction(actionId: string, action: ActionState) {
     const parsed: ToolInvocation = JSON.parse(action.content);
     if (parsed.state === 'result') {
@@ -404,32 +347,15 @@ export class ActionRunner {
             action.abortSignal.addEventListener('abort', () => {
               npmInstallProc.kill();
             });
-
-            let lastSaved = 0;
-            let output = '';
-            const { resolve, promise } = withResolvers<number>();
-            const terminalOutput = this.terminalOutput;
-            npmInstallProc.output.pipeTo(
-              new WritableStream({
-                write(data) {
-                  output += data.toString();
-                  const now = Date.now();
-                  if (now - lastSaved > 50) {
-                    terminalOutput.set(output);
-                    lastSaved = now;
-                  }
-                  if (data.startsWith('Error: ')) {
-                    resolve(-1);
-                    return;
-                  }
-                },
-              }),
-            );
-            this.terminalOutput.set(output);
-            const npmInstallExitCode = await Promise.race([promise, npmInstallProc.exit]);
+            const { output, exitCode } = await streamOutput(npmInstallProc, {
+              onOutput: (output) => {
+                this.terminalOutput.set(output);
+              },
+              debounceMs: 50,
+            });
             const cleanedOutput = cleanConvexOutput(output);
-            if (npmInstallExitCode !== 0) {
-              throw new Error(`Npm install failed with exit code ${npmInstallExitCode}: ${cleanedOutput}`);
+            if (exitCode !== 0) {
+              throw new Error(`Npm install failed with exit code ${exitCode}: ${cleanedOutput}`);
             }
             result = cleanedOutput;
           } catch (error: unknown) {
@@ -452,31 +378,15 @@ export class ActionRunner {
             convexProc.kill();
           });
 
-          let lastSaved = 0;
-          let output = '';
-          const { resolve, promise } = withResolvers<number>();
-          const terminalOutput = this.terminalOutput;
-          convexProc.output.pipeTo(
-            new WritableStream({
-              write(data) {
-                output += data.toString();
-                const now = Date.now();
-                if (now - lastSaved > 50) {
-                  terminalOutput.set(output);
-                  lastSaved = now;
-                }
-                if (data.startsWith('Error: ')) {
-                  resolve(-1);
-                  return;
-                }
-              },
-            }),
-          );
-          this.terminalOutput.set(output);
-          const convexExitCode = await Promise.race([promise, convexProc.exit]);
+          const { output, exitCode } = await streamOutput(convexProc, {
+            onOutput: (output) => {
+              this.terminalOutput.set(output);
+            },
+            debounceMs: 50,
+          });
           const cleanedOutput = cleanConvexOutput(output);
-          if (convexExitCode !== 0) {
-            throw new Error(`Convex failed with exit code ${convexExitCode}: ${cleanedOutput}`);
+          if (exitCode !== 0) {
+            throw new Error(`Convex failed with exit code ${exitCode}: ${cleanedOutput}`);
           }
           result = cleanedOutput;
 

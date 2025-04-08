@@ -1,8 +1,9 @@
-import type { FileSystemTree, DirectoryNode, FileNode, SymlinkNode, WebContainer } from '@webcontainer/api';
+import type { WebContainer } from '@webcontainer/api';
 import { webcontainer } from './webcontainer';
 import { formatSize } from '~/utils/formatSize';
-import { EXECUTABLES } from '~/utils/constants';
 import type { WorkbenchStore } from './stores/workbench';
+import { streamOutput } from '~/utils/process';
+import { cleanTerminalOutput } from '~/utils/shell';
 
 export async function loadSnapshot(webcontainer: WebContainer, workbenchStore: WorkbenchStore, chatId?: string) {
   console.log('Loading snapshot');
@@ -13,18 +14,14 @@ export async function loadSnapshot(webcontainer: WebContainer, workbenchStore: W
   await webcontainer.mount(decompressed);
   console.timeLog('loadSnapshot', 'Mounted snapshot');
 
-  // Mark all binaries as executable. Only log on failures binaries may be missing in
-  // a subsequent snapshot.
-  Promise.all(
-    EXECUTABLES.map(async (absPath) => {
-      const chmodProc = await webcontainer.spawn('chmod', ['+x', absPath]);
-      if ((await chmodProc.exit) !== 0) {
-        const output = await chmodProc.output.getReader().read();
-        console.log(`Failed to chmod ${absPath}: ${output.value}`);
-      }
-    }),
-  );
-  console.timeLog('loadSnapshot', 'Marked binaries as executable');
+  // Install NPM dependencies.
+  const npm = await webcontainer.spawn('npm', ['install']);
+  const { output, exitCode } = await streamOutput(npm);
+  console.log('NPM output', cleanTerminalOutput(output));
+
+  if (exitCode !== 0) {
+    throw new Error(`npm install failed with exit code ${exitCode}: ${output}`);
+  }
 
   // After loading the snapshot, we need to load the files into the FilesStore since
   // we won't receive file events for snapshot files.
@@ -37,18 +34,12 @@ export async function loadSnapshot(webcontainer: WebContainer, workbenchStore: W
   console.timeEnd('loadSnapshot');
 }
 
-export async function buildSnapshot(format: 'json', exclude_node_modules: boolean): Promise<FileSystemTree>;
-export async function buildSnapshot(format: 'binary', exclude_node_modules: boolean): Promise<Uint8Array>;
-export async function buildSnapshot(
-  format: 'json' | 'binary',
-  exclude_node_modules: boolean,
-): Promise<FileSystemTree | Uint8Array> {
+export async function buildUncompressedSnapshot(): Promise<Uint8Array> {
   const container = await webcontainer;
   const start = Date.now();
-  const excludes = exclude_node_modules ? ['.env.local', 'node_modules'] : ['.env.local'];
   const snapshot = await container.export('.', {
-    excludes,
-    format,
+    excludes: ['.env.local', 'node_modules'],
+    format: 'binary',
   });
   const end = Date.now();
   console.log(`Built snapshot in ${end - start}ms`);
@@ -87,54 +78,4 @@ export async function decompressSnapshot(compressed: Uint8Array): Promise<Uint8A
     `Decompressed snapshot ${formatSize(compressed.length)} to ${formatSize(decompressed.length)} in ${end - start}ms`,
   );
   return decompressed;
-}
-
-// Calculate the size of files recursively and build a size tree
-export function analyzeSnapshotSize(tree: FileSystemTree): {
-  tree: Record<string, any>;
-  totalSize: number;
-} {
-  const result: Record<string, any> = {};
-  let totalSize = 0;
-
-  // Process each entry in the tree
-  for (const [name, node] of Object.entries(tree)) {
-    if ('directory' in node) {
-      // It's a directory - recurse and get size info
-      const dirNode = node as DirectoryNode;
-      const dirAnalysis = analyzeSnapshotSize(dirNode.directory);
-      result[name] = {
-        type: 'directory',
-        size: dirAnalysis.totalSize,
-        children: dirAnalysis.tree,
-      };
-      totalSize += dirAnalysis.totalSize;
-    } else if ('file' in node) {
-      const fileNode = node as FileNode | SymlinkNode;
-      if ('contents' in fileNode.file) {
-        // It's a file - calculate its size
-        const fileContents = (fileNode as FileNode).file.contents;
-        const fileSize =
-          typeof fileContents === 'string' ? new TextEncoder().encode(fileContents).length : fileContents.length;
-
-        result[name] = {
-          type: 'file',
-          size: fileSize,
-        };
-        totalSize += fileSize;
-      } else if ('symlink' in fileNode.file) {
-        // It's a symlink
-        result[name] = {
-          type: 'symlink',
-          target: (fileNode as SymlinkNode).file.symlink,
-          size: 0,
-        };
-      }
-    }
-  }
-
-  return {
-    tree: result,
-    totalSize,
-  };
 }

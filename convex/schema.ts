@@ -1,6 +1,5 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v, type VAny } from 'convex/values';
-import { IChatMetadataValidator } from './messages';
 import type { SerializedMessage } from './messages';
 
 export default defineSchema({
@@ -34,7 +33,7 @@ export default defineSchema({
     urlId: v.optional(v.string()),
     description: v.optional(v.string()),
     timestamp: v.string(),
-    metadata: v.optional(IChatMetadataValidator),
+    metadata: v.optional(v.any()), // TODO migration to remove this column
     snapshotId: v.optional(v.id('_storage')),
     convexProject: v.optional(
       v.union(

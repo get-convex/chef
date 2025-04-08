@@ -35,4 +35,6 @@ interface Env {
   AXIOM_API_TOKEN: string;
   AXIOM_API_URL: string;
   AXIOM_DATASET_NAME: string;
+
+  PROVISION_HOST: string;
 }

@@ -25,8 +25,6 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
           ? messages.map((message, index) => {
               const { role, content, annotations } = message;
               const isUserMessage = role === 'user';
-              const isFirst = index === 0;
-              const isLast = index === messages.length - 1;
               const isHidden = annotations?.includes('hidden');
 
               if (isHidden) {
@@ -36,15 +34,9 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
               return (
                 <div
                   key={index}
-                  className={classNames(
-                    'flex gap-4 p-6 w-full rounded-[calc(0.75rem-1px)] border border-bolt-elements-borderColor',
-                    {
-                      'bg-bolt-elements-messages-background': isUserMessage || !isStreaming || (isStreaming && !isLast),
-                      'bg-gradient-to-b from-bolt-elements-messages-background from-30% to-transparent border-b-0 rounded-b-none':
-                        isStreaming && isLast,
-                      'mt-4': !isFirst,
-                    },
-                  )}
+                  className={classNames('flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)]', {
+                    'bg-bolt-elements-messages-background  border border-bolt-elements-borderColor mx-2': isUserMessage,
+                  })}
                 >
                   {isUserMessage && (
                     <div className="flex items-center justify-center w-[40px] h-[40px] overflow-hidden bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-500 rounded-full shrink-0 self-start">
@@ -61,7 +53,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
                       )}
                     </div>
                   )}
-                  <div className="grid grid-col-1 w-full">
+                  <div className="grid grid-col-1 w-full text-sm">
                     {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
                   </div>
                 </div>

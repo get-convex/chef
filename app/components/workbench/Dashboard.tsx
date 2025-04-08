@@ -68,7 +68,7 @@ export const Dashboard = memo(() => {
         />
       </div>
       <div className="flex-1 border-t border-bolt-elements-borderColor">
-        <iframe ref={iframeRef} className="border-none w-full h-full bg-white" src={actualUrl} />
+        <iframe ref={iframeRef} className="border-none w-full h-full bg-white sentry-mask" src={actualUrl} />
       </div>
     </div>
   );

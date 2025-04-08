@@ -8,15 +8,18 @@ Sentry.init({
   tracesSampleRate: 1,
 
   integrations: [
+    Sentry.feedbackIntegration({
+      colorScheme: 'system',
+      autoInject: false,
+      showName: false,
+      showEmail: false,
+    }),
     Sentry.browserTracingIntegration({
       useEffect,
       useLocation,
       useMatches,
     }),
-    Sentry.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
+    Sentry.replayIntegration(),
   ],
 
   replaysSessionSampleRate: 0.1,

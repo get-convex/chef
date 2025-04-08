@@ -3,7 +3,8 @@ import { createScopedLogger } from '~/utils/logger';
 import { convexAgent, getEnv, type ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
-import type { Message } from 'ai';
+import type { LanguageModelUsage, Message } from 'ai';
+import { checkTokenUsage, recordUsage } from '~/lib/.server/usage';
 
 type Messages = Message[];
 
@@ -19,6 +20,12 @@ async function chatAction({ request }: ActionFunctionArgs, env: Env) {
   const AXIOM_API_TOKEN = getEnv(env, 'AXIOM_API_TOKEN');
   const AXIOM_API_URL = getEnv(env, 'AXIOM_API_URL');
   const AXIOM_DATASET_NAME = getEnv(env, 'AXIOM_DATASET_NAME');
+  const PROVISION_HOST = getEnv(env, 'PROVISION_HOST') || 'https://api.convex.dev';
+  // TODO(nipunn) - enable rate limiting before launch
+  // keeping it off for now to avoid ratelimiting our early adopter testers
+  // until we have full entitlements grants in place.
+  const enableRateLimiting = false;
+
   let tracer: Tracer | null = null;
   if (AXIOM_API_TOKEN && AXIOM_API_URL && AXIOM_DATASET_NAME) {
     const exporter = new OTLPTraceExporter({
@@ -50,12 +57,32 @@ async function chatAction({ request }: ActionFunctionArgs, env: Env) {
   }
 
   const body = await request.json<{
+   
     messages: Messages;
+   
     firstUserMessage: boolean;
+   
     chatId: string;
     modelProvider: ModelProvider;
+    deploymentName: string;
+    token: string | undefined;
+    teamSlug: string;
   }>();
-  const { messages, firstUserMessage, chatId, modelProvider } = body;
+  const { messages, firstUserMessage, chatId, modelProvider, deploymentName, token, teamSlug } = body;
+
+  if (token && enableRateLimiting) {
+    const resp = await checkTokenUsage(PROVISION_HOST, token, teamSlug, deploymentName);
+    if (resp) {
+      return resp;
+    }
+  }
+
+  const recordUsageCb = async (usage: LanguageModelUsage) => {
+    if (token && enableRateLimiting) {
+      await recordUsage(PROVISION_HOST, token, teamSlug, deploymentName, usage);
+    }
+  };
+
   try {
     const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
@@ -66,7 +93,8 @@ async function chatAction({ request }: ActionFunctionArgs, env: Env) {
       messages,
       tracer,
       modelProvider as ModelProvider,
-    );
+      recordUsageCb);
+
     return new Response(dataStream, {
       status: 200,
       headers: {

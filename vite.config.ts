@@ -97,6 +97,7 @@ export default defineConfig((config) => {
     },
     build: {
       target: 'esnext',
+      sourcemap: true,
       rollupOptions: {
         output: {
           format: 'esm',
@@ -116,6 +117,7 @@ export default defineConfig((config) => {
     resolve: {
       alias: {
         buffer: 'vite-plugin-node-polyfills/polyfills/buffer',
+        ...(config.mode === 'test' ? { 'lz4-wasm': 'lz4-wasm/dist/index.js' } : {}),
       },
     },
     plugins: [

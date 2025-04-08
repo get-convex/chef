@@ -1,5 +1,5 @@
 import type { JSONValue, Message } from 'ai';
-import React, { type RefCallback, useEffect } from 'react';
+import React, { type RefCallback } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
@@ -17,11 +17,12 @@ import ChatAlert from './ChatAlert';
 import type { ActionRunner } from '~/lib/runtime/action-runner';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
 import { FlexAuthWrapper } from './FlexAuthWrapper';
-import { useFlexAuthMode } from '~/lib/stores/convex';
+import { useFlexAuthMode, useSelectedTeamSlug } from '~/lib/stores/convex';
 import { SuggestionButtons } from './SuggestionButtons';
 import { KeyboardShortcut } from '~/components/ui/KeyboardShortcut';
 import StreamingIndicator from './StreamingIndicator';
 import type { ToolStatus } from '~/lib/common/types';
+import { TeamSelector } from '~/components/convex/TeamSelector';
 const TEXTAREA_MIN_HEIGHT = 76;
 
 interface BaseChatProps {
@@ -31,12 +32,11 @@ interface BaseChatProps {
   showChat?: boolean;
   chatStarted?: boolean;
   streamStatus?: 'streaming' | 'submitted' | 'ready' | 'error';
-  onStreamingChange?: (streaming: boolean) => void;
   messages?: Message[];
   description?: string;
   input?: string;
   handleStop?: () => void;
-  sendMessage?: (event: React.UIEvent, messageInput?: string) => void;
+  sendMessage?: (event: React.UIEvent, teamSlug: string | null, messageInput?: string) => void;
   handleInputChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   uploadedFiles?: File[];
   setUploadedFiles?: (files: File[]) => void;
@@ -63,7 +63,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       showChat = true,
       chatStarted = false,
       streamStatus = 'ready',
-      onStreamingChange,
       input = '',
       handleInputChange,
       sendMessage,
@@ -82,15 +81,14 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   ) => {
     const flexAuthMode = useFlexAuthMode();
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
+    const selectedTeamSlug = useSelectedTeamSlug();
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
-    useEffect(() => {
-      onStreamingChange?.(isStreaming);
-    }, [isStreaming, onStreamingChange]);
 
     const handleSendMessage = (event: React.UIEvent, messageInput?: string) => {
-      if (sendMessage) {
-        sendMessage(event, messageInput);
+      const canSendMessage = flexAuthMode !== 'ConvexOAuth' || selectedTeamSlug !== null;
+      if (sendMessage && canSendMessage) {
+        sendMessage(event, selectedTeamSlug, messageInput);
       }
     };
 
@@ -106,7 +104,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
             {!chatStarted && (
               <div id="intro" className="mt-[16vh] max-w-chat mx-auto text-center px-4 lg:px-0">
                 <h1 className="text-4xl lg:text-6xl font-black text-bolt-elements-textPrimary mb-4 animate-fade-in font-display tracking-tight">
-                  Now you’re cooking
+                  Now you're cooking
                 </h1>
                 <p className="text-md lg:text-2xl text-balance mb-8 text-bolt-elements-textSecondary animate-fade-in animation-delay-200 font-medium font-display">
                   Generate and launch realtime full‑stack apps you never thought possible
@@ -251,7 +249,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         minHeight: TEXTAREA_MIN_HEIGHT,
                         maxHeight: TEXTAREA_MAX_HEIGHT,
                       }}
-                      placeholder="What app do you want to serve?"
+                      placeholder={
+                        chatStarted ? 'Request changes by sending another message...' : 'What app do you want to serve?'
+                      }
                       translate="no"
                     />
                     <ClientOnly>
@@ -259,7 +259,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         <SendButton
                           show={input.length > 0 || isStreaming || uploadedFiles.length > 0}
                           isStreaming={isStreaming}
-                          disabled={false}
+                          disabled={!selectedTeamSlug}
                           onClick={(event) => {
                             if (isStreaming) {
                               handleStop?.();
@@ -273,8 +273,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         />
                       )}
                     </ClientOnly>
-                    <div className="flex justify-between items-center text-sm p-4 pt-2">
-                      <div></div>
+                    <div className="flex justify-end gap-4 items-center text-sm p-4 pt-2">
                       {input.length > 3 ? (
                         <div className="text-xs text-bolt-elements-textTertiary">
                           <KeyboardShortcut
@@ -284,7 +283,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           for new line
                         </div>
                       ) : null}
-                      {chatStarted && flexAuthMode === 'ConvexOAuth' && <ConvexConnection size="small" />}
+                      {chatStarted && flexAuthMode === 'ConvexOAuth' && <ConvexConnection />}
+                      {!chatStarted && flexAuthMode === 'ConvexOAuth' && <TeamSelector />}
                     </div>
                   </div>
                 </div>

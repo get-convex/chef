@@ -27,7 +27,7 @@ interface Folder {
 export type Dirent = File | Folder;
 
 // Relative to `WORK_DIR`
-export type RelativePath = string & { __brand: 'RelativePath' };
+type RelativePath = string & { __brand: 'RelativePath' };
 export type AbsolutePath = string & { __brand: 'AbsolutePath' };
 
 export const getAbsolutePath = (pathString: string): AbsolutePath => {

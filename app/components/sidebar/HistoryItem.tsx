@@ -23,6 +23,10 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
       syncWithGlobalStore: isActiveChat,
     });
 
+  // Chats get a description from the first message, so have a fallback so
+  // they render reasonably
+  const description = currentDescription ?? 'New chat…';
+
   return (
     <div
       className={classNames(
@@ -49,8 +53,8 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
         </form>
       ) : (
         <a href={`/chat/${item.urlId}`} className="flex w-full relative truncate block">
-          <WithTooltip tooltip={currentDescription}>
-            <span className="truncate pr-24">{currentDescription}</span>
+          <WithTooltip tooltip={description}>
+            <span className="truncate pr-24">{description}</span>
           </WithTooltip>
           <div
             className={classNames(
