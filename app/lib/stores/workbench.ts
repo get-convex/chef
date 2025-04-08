@@ -21,7 +21,7 @@ import type { WebContainer } from '@webcontainer/api';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@convex/_generated/api';
 import type { Id } from '@convex/_generated/dataModel';
-import { buildSnapshot, compressSnapshot } from '~/lib/snapshot';
+import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot';
 import { sessionIdStore } from './convex';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './Artifacts';
@@ -163,12 +163,7 @@ export class WorkbenchStore {
           throw new Error('Session ID is not set');
         }
 
-        const binarySnapshot = await buildSnapshot('binary', true);
-
-        if (!(binarySnapshot instanceof Uint8Array)) {
-          throw new Error('Snapshot must be a Uint8Array');
-        }
-
+        const binarySnapshot = await buildUncompressedSnapshot();
         const compressed = await compressSnapshot(binarySnapshot);
         const uploadUrl = await this.#convexClient.mutation(api.snapshot.generateUploadUrl);
         const result = await fetch(uploadUrl, {
