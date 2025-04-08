@@ -28,8 +28,11 @@ import { toast, Toaster } from 'sonner';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import type { PartId } from '~/lib/stores/Artifacts';
 import { captureException } from '@sentry/remix';
+import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 
 const logger = createScopedLogger('Chat');
+
+const MAX_RETRIES = 3;
 
 export function Chat() {
   renderLogger.trace('Chat');
@@ -119,6 +122,15 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
 
   const chatContextManager = useRef(new ChatContextManager());
 
+  const [retries, setRetries] = useState(0);
+
+  let useAnthropicFraction = import.meta.env.USE_ANTHROPIC_FRACTION || 1.0;
+
+  let modelProviders: ModelProvider[] = ['Bedrock', 'Anthropic'];
+  if (Math.random() < useAnthropicFraction) {
+    modelProviders = ['Anthropic', 'Bedrock'];
+  }
+
   const {
     messages,
     status,
@@ -143,6 +155,7 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
         messages: chatContextManager.current.prepareContext(messages),
         firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
         chatId,
+        modelProvider: modelProviders[retries % modelProviders.length],
       };
     },
     maxSteps: 64,
@@ -152,23 +165,23 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       console.log('Tool call finished', result);
       return result;
     },
-    onError: (e) => {
+    onError: (e: Error) => {
       captureException('Failed to process chat request: ' + e.message, {
         level: 'error',
         extra: {
           error: e,
         },
       });
-      console.log('Error', e);
       logger.error('Request failed\n\n', e, error);
       logStore.logError('Chat request failed', e, {
         component: 'Chat',
         action: 'request',
         error: e.message,
       });
-      toast.error(
-        'There was an error processing your request: ' + (e.message ? e.message : 'No details were returned'),
-      );
+      setRetries((prevRetries) => {
+        const newRetries = prevRetries + 1;
+        return newRetries;
+      });
     },
     onFinish: (message, response) => {
       const usage = response.usage;
@@ -263,6 +276,11 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
   };
 
   const sendMessage = async (_event: React.UIEvent, messageInput?: string) => {
+    if (retries >= MAX_RETRIES) {
+      toast.error('Chef is too busy cooking right now. Please try again later');
+      return;
+    }
+
     const messageContent = messageInput || input;
 
     if (!messageContent?.trim()) {

@@ -1,6 +1,6 @@
 import { type ActionFunctionArgs } from '@remix-run/cloudflare';
 import { createScopedLogger } from '~/utils/logger';
-import { convexAgentWithRetries, getEnv } from '~/lib/.server/llm/convex-agent';
+import { convexAgent, getEnv, type ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import type { Message } from 'ai';
@@ -49,12 +49,24 @@ async function chatAction({ request }: ActionFunctionArgs, env: Env) {
     logger.warn('⚠️ AXIOM_API_TOKEN, AXIOM_API_URL, and AXIOM_DATASET_NAME not set, skipping Axiom instrumentation.');
   }
 
-  const body = await request.json<{ messages: Messages; firstUserMessage: boolean; chatId: string }>();
-  const { messages, firstUserMessage, chatId } = body;
+  const body = await request.json<{
+    messages: Messages;
+    firstUserMessage: boolean;
+    chatId: string;
+    modelProvider: ModelProvider;
+  }>();
+  const { messages, firstUserMessage, chatId, modelProvider } = body;
   try {
     const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
-    const dataStream = await convexAgentWithRetries(chatId, env, firstUserMessage, messages, tracer);
+    const dataStream = await convexAgent(
+      chatId,
+      env,
+      firstUserMessage,
+      messages,
+      tracer,
+      modelProvider as ModelProvider,
+    );
     return new Response(dataStream, {
       status: 200,
       headers: {
