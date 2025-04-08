@@ -11,7 +11,6 @@ import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { webcontainer } from '~/lib/webcontainer';
 import { loadSnapshot } from '~/lib/snapshot';
 import { makePartId, type PartId } from '~/lib/stores/Artifacts';
-import { authParams } from '~/components/convex/ConvexConnectButton';
 import { useAuth0 } from '@auth0/auth0-react';
 
 interface IChatMetadata {
@@ -185,16 +184,14 @@ export const useChatHistoryConvex = () => {
 
         const id = chatIdStore.get() as string;
 
-        const accessToken = await getAccessTokenSilently({
-          authorizationParams: authParams,
-        });
+        const response = await getAccessTokenSilently({ detailedResponse: true });
 
         await convex.mutation(api.messages.initializeChat, {
           id,
           sessionId,
           projectInitParams: {
             teamSlug,
-            auth0AccessToken: accessToken,
+            auth0AccessToken: response.id_token,
           },
         });
         setPersistedMessages([]);

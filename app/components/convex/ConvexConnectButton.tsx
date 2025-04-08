@@ -78,12 +78,6 @@ function ConvexConnectButtonForInviteCode() {
   );
 }
 
-// These match what we use for the Convex dashboard and what Big Brain expects
-export const authParams = {
-  // audience: 'https://console.convex.dev/api/',
-  // scope: 'openid profile email list:instances manage:instances offline_access',
-};
-
 function ConvexConnectButtonViaOauth() {
   const convexClient = useConvex();
   const sessionId = useConvexSessionId();
@@ -106,9 +100,7 @@ function ConvexConnectButtonViaOauth() {
 
   const handleClick = async () => {
     if (credentials?.kind === 'connected') {
-      const accessToken = await getAccessTokenSilently({
-        authorizationParams: authParams,
-      });
+      const tokenResponse = await getAccessTokenSilently({ detailedResponse: true });
       await convexClient.mutation(api.convexProjects.disconnectConvexProject, {
         sessionId,
         chatId,
@@ -118,19 +110,17 @@ function ConvexConnectButtonViaOauth() {
         chatId,
         projectInitParams: {
           teamSlug: 'sshader-test', // TODO: Hook this up to team picker
-          auth0AccessToken: accessToken,
+          auth0AccessToken: tokenResponse.id_token,
         },
       });
     } else {
-      const accessToken = await getAccessTokenSilently({
-        authorizationParams: authParams,
-      });
+      const tokenResponse = await getAccessTokenSilently({ detailedResponse: true });
       await convexClient.mutation(api.convexProjects.startProvisionConvexProject, {
         sessionId,
         chatId,
         projectInitParams: {
           teamSlug: 'sshader-test', // TODO: Hook this up to team picker
-          auth0AccessToken: accessToken,
+          auth0AccessToken: tokenResponse.id_token,
         },
       });
     }

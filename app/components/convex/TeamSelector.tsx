@@ -4,7 +4,6 @@ import { classNames } from '~/utils/classNames';
 import { setSelectedTeamSlug, teamsStore, type ConvexTeam } from '~/lib/stores/convex';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useStore } from '@nanostores/react';
-import { authParams } from './ConvexConnectButton';
 
 interface TeamSelectorProps {
   selectedTeamSlug: string | null;
@@ -20,13 +19,12 @@ export function TeamSelector({ selectedTeamSlug, onTeamSelect }: TeamSelectorPro
     async function fetchTeams() {
       try {
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        const accessToken = await getAccessTokenSilently({
-          authorizationParams: authParams,
+        const tokenResponse = await getAccessTokenSilently({
           detailedResponse: true,
         });
         const response = await fetch('https://api.convex.dev/api/dashboard/teams', {
           headers: {
-            Authorization: `Bearer ${accessToken.id_token}`,
+            Authorization: `Bearer ${tokenResponse.id_token}`,
           },
         });
         if (!response.ok) {
