@@ -195,6 +195,9 @@ To keep performance fast, Convex puts limits on function calls and database reco
 - Queries, mutations, and actions can return at most 8 MiB of data as their return value.
 
 - Arrays in arguments, database records, and return values can have at most 8192 elements.
+- Objects in function arguments and return values must be valid Convex objects, so they can
+  only contain ASCII field names. ALWAYS remap non-ASCII characters like emoji to an
+  ASCII code before storing them in an object synced to Convex.
 - Objects and arrays can only be nested up to depth 16.
 - Database records must be smaller than 1MiB.
 
