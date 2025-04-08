@@ -144,11 +144,33 @@ function removeCodeFromUrl() {
 }
 
 const SELECTED_TEAM_SLUG_KEY = 'selectedConvexTeamSlug';
+export const selectedTeamSlugStore = atom<string | null>(null);
 
-export function getSelectedTeamSlug(): string | null {
-  return getLocalStorage(SELECTED_TEAM_SLUG_KEY);
+export function useSelectedTeamSlug(): string | null {
+  const selectedTeamSlug = useStore(selectedTeamSlugStore);
+  return selectedTeamSlug;
+}
+
+export function initializeSelectedTeamSlug(teams: ConvexTeam[]) {
+  const teamSlugFromLocalStorage = getLocalStorage(SELECTED_TEAM_SLUG_KEY);
+  if (teamSlugFromLocalStorage) {
+    const team = teams.find((team) => team.slug === teamSlugFromLocalStorage);
+    if (team) {
+      selectedTeamSlugStore.set(teamSlugFromLocalStorage);
+      setLocalStorage(SELECTED_TEAM_SLUG_KEY, teamSlugFromLocalStorage);
+      return;
+    }
+  }
+  if (teams.length === 1) {
+    selectedTeamSlugStore.set(teams[0].slug);
+    setLocalStorage(SELECTED_TEAM_SLUG_KEY, teams[0].slug);
+    return;
+  }
+  setSelectedTeamSlug(null);
+  setLocalStorage(SELECTED_TEAM_SLUG_KEY, null);
 }
 
 export function setSelectedTeamSlug(teamSlug: string | null) {
+  selectedTeamSlugStore.set(teamSlug);
   setLocalStorage(SELECTED_TEAM_SLUG_KEY, teamSlug);
 }

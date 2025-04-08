@@ -17,7 +17,7 @@ import ChatAlert from './ChatAlert';
 import type { ActionRunner } from '~/lib/runtime/action-runner';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
 import { FlexAuthWrapper } from './FlexAuthWrapper';
-import { getSelectedTeamSlug, useFlexAuthMode } from '~/lib/stores/convex';
+import { useFlexAuthMode, useSelectedTeamSlug } from '~/lib/stores/convex';
 import { SuggestionButtons } from './SuggestionButtons';
 import { KeyboardShortcut } from '~/components/ui/KeyboardShortcut';
 import StreamingIndicator from './StreamingIndicator';
@@ -83,10 +83,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   ) => {
     const flexAuthMode = useFlexAuthMode();
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
-    const [selectedTeamSlug, setSelectedTeamSlug] = useState<string | null>(() => {
-      const stored = getSelectedTeamSlug();
-      return stored; // Default to first team
-    });
+    const selectedTeamSlug = useSelectedTeamSlug();
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
     useEffect(() => {
@@ -289,9 +286,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         </div>
                       ) : null}
                       {chatStarted && flexAuthMode === 'ConvexOAuth' && <ConvexConnection size="small" />}
-                      {!chatStarted && flexAuthMode === 'ConvexOAuth' && (
-                        <TeamSelector selectedTeamSlug={selectedTeamSlug} onTeamSelect={setSelectedTeamSlug} />
-                      )}
+                      {!chatStarted && flexAuthMode === 'ConvexOAuth' && <TeamSelector />}
                     </div>
                   </div>
                 </div>

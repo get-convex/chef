@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import * as Select from '@radix-ui/react-select';
 import { classNames } from '~/utils/classNames';
-import { setSelectedTeamSlug, teamsStore, type ConvexTeam } from '~/lib/stores/convex';
+import {
+  initializeSelectedTeamSlug,
+  setSelectedTeamSlug,
+  teamsStore,
+  useSelectedTeamSlug,
+  type ConvexTeam,
+} from '~/lib/stores/convex';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useStore } from '@nanostores/react';
 
-interface TeamSelectorProps {
-  selectedTeamSlug: string | null;
-  onTeamSelect: (teamSlug: string) => void;
-}
-
-export function TeamSelector({ selectedTeamSlug, onTeamSelect }: TeamSelectorProps) {
+export function TeamSelector() {
   const [open, setOpen] = useState(false);
   const { getAccessTokenSilently } = useAuth0();
   const teams = useStore(teamsStore);
+  const selectedTeamSlug = useSelectedTeamSlug();
 
   useEffect(() => {
     async function fetchTeams() {
@@ -32,6 +34,7 @@ export function TeamSelector({ selectedTeamSlug, onTeamSelect }: TeamSelectorPro
         }
         const teamsData = await response.json();
         teamsStore.set(teamsData as ConvexTeam[]);
+        initializeSelectedTeamSlug(teamsData as ConvexTeam[]);
       } catch (error) {
         console.error('Error fetching teams:', error);
       }
@@ -61,7 +64,6 @@ export function TeamSelector({ selectedTeamSlug, onTeamSelect }: TeamSelectorPro
         value={selectedTeam.slug}
         onValueChange={(value: string) => {
           setSelectedTeamSlug(value);
-          onTeamSelect(value);
         }}
         open={open}
         onOpenChange={setOpen}
