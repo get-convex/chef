@@ -8,8 +8,8 @@ import { StreamingMessageParser } from './runtime/message-parser';
 import { path } from '~/utils/path';
 import { loggingSafeParse } from '~/lib/zodUtil';
 import { npmInstallToolParameters } from './runtime/npmInstallTool';
-import { editToolParameters } from './runtime/editTool';
-import { viewParameters } from './runtime/viewTool';
+import { fileReplaceStringToolParameters } from './runtime/fileReplaceStringTool';
+import { fileReadContentsParameters } from './runtime/fileReadContentsTool';
 
 // It's wasteful to actually tokenize the content, so we'll just use character
 // counts as a heuristic.
@@ -239,22 +239,22 @@ export class ChatContextManager {
       }
       if (
         part.type == 'tool-invocation' &&
-        part.toolInvocation.toolName == 'view' &&
+        part.toolInvocation.toolName == 'fileReadContents' &&
         part.toolInvocation.state !== 'partial-call'
       ) {
-        const args = loggingSafeParse(viewParameters, part.toolInvocation.args);
+        const args = loggingSafeParse(fileReadContentsParameters, part.toolInvocation.args);
         if (args.success) {
-          filesTouched.set(getAbsolutePath(args.data.path), j);
+          filesTouched.set(getAbsolutePath(args.data.absolute_path), j);
         }
       }
       if (
         part.type == 'tool-invocation' &&
-        part.toolInvocation.toolName == 'edit' &&
+        part.toolInvocation.toolName == 'fileReplaceString' &&
         part.toolInvocation.state !== 'partial-call'
       ) {
-        const args = loggingSafeParse(editToolParameters, part.toolInvocation.args);
+        const args = loggingSafeParse(fileReplaceStringToolParameters, part.toolInvocation.args);
         if (args.success) {
-          filesTouched.set(getAbsolutePath(args.data.path), j);
+          filesTouched.set(getAbsolutePath(args.data.absolute_path), j);
         }
       }
     }
@@ -341,13 +341,13 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
   const wasError = toolInvocation.result.startsWith('Error:');
   let toolCall: string;
   switch (toolInvocation.toolName) {
-    case 'view': {
-      const args = loggingSafeParse(viewParameters, toolInvocation.args);
+    case 'fileReadContents': {
+      const args = loggingSafeParse(fileReadContentsParameters, toolInvocation.args);
       let verb = 'viewed';
       if (toolInvocation.result.startsWith('Directory:')) {
         verb = 'listed';
       }
-      toolCall = `${verb} ${args?.data.path || 'unknown file'}`;
+      toolCall = `${verb} ${args?.data?.absolute_path || 'unknown file'}`;
       break;
     }
     case 'deploy': {
@@ -363,10 +363,10 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       }
       break;
     }
-    case 'edit': {
-      const args = loggingSafeParse(editToolParameters, toolInvocation.args);
+    case 'fileReplaceString': {
+      const args = loggingSafeParse(fileReplaceStringToolParameters, toolInvocation.args);
       if (args.success) {
-        toolCall = `edited the file ${args.data.path}`;
+        toolCall = `edited the file ${args.data.absolute_path}`;
       } else {
         toolCall = `attempted to edit a file`;
       }

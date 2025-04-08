@@ -8,13 +8,13 @@ import type { ActionCallbackData } from './message-parser';
 import { cleanTerminalOutput, type BoltShell } from '~/utils/shell';
 import type { ToolInvocation } from 'ai';
 import { withResolvers } from '~/utils/promises';
-import { viewParameters } from './viewTool';
+import { fileReadContentsParameters } from './fileReadContentsTool';
 import { readPath, renderDirectory, renderFile, workDirRelative } from '~/utils/fileUtils';
 import { ContainerBootState, waitForContainerBootState } from '~/lib/webcontainer';
 import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { z } from 'zod';
-import { editToolParameters } from './editTool';
+import { fileReplaceStringToolParameters } from './fileReplaceStringTool';
 import { getAbsolutePath } from '~/lib/stores/files';
 
 const logger = createScopedLogger('ActionRunner');
@@ -352,47 +352,47 @@ export class ActionRunner {
     let result: string;
     try {
       switch (parsed.toolName) {
-        case 'view': {
-          const args = viewParameters.parse(parsed.args);
+        case 'fileReadContents': {
+          const args = fileReadContentsParameters.parse(parsed.args);
           const container = await this.#webcontainer;
-          const relPath = workDirRelative(args.path);
+          const relPath = workDirRelative(args.absolute_path);
           const file = await readPath(container, relPath);
           if (file.type === 'directory') {
             result = renderDirectory(file.children);
           } else {
-            if (args.view_range && args.view_range.length !== 2) {
-              throw new Error('When provided, view_range must be an array of two numbers');
+            if (args.read_range && args.read_range.length !== 2) {
+              throw new Error('When provided, read_range must be an array of two numbers');
             }
-            result = renderFile(file.content, args.view_range as [number, number]);
+            result = renderFile(file.content, args.read_range as [number, number]);
           }
           break;
         }
-        case 'edit': {
-          const args = editToolParameters.parse(parsed.args);
+        case 'fileReplaceString': {
+          const args = fileReplaceStringToolParameters.parse(parsed.args);
           const container = await this.#webcontainer;
-          const relPath = workDirRelative(args.path);
+          const relPath = workDirRelative(args.absolute_path);
           const file = await readPath(container, relPath);
           if (file.type !== 'file') {
             throw new Error('Expected a file');
           }
           let content = file.content;
-          if (args.old.length > 1024) {
-            throw new Error(`Old text must be less than 1024 characters: ${args.old}`);
+          if (args.old_content.length > 1024) {
+            throw new Error(`Old text must be less than 1024 characters: ${args.old_content}`);
           }
-          if (args.new.length > 1024) {
-            throw new Error(`New text must be less than 1024 characters: ${args.new}`);
+          if (args.new_content.length > 1024) {
+            throw new Error(`New text must be less than 1024 characters: ${args.new_content}`);
           }
-          const matchPos = content.indexOf(args.old);
+          const matchPos = content.indexOf(args.old_content);
           if (matchPos === -1) {
-            throw new Error(`Old text not found: ${args.old}`);
+            throw new Error(`Old text not found: ${args.old_content}`);
           }
-          const secondMatchPos = content.indexOf(args.old, matchPos + args.old.length);
+          const secondMatchPos = content.indexOf(args.old_content, matchPos + args.old_content.length);
           if (secondMatchPos !== -1) {
-            throw new Error(`Old text found multiple times: ${args.old}`);
+            throw new Error(`Old text found multiple times: ${args.old_content}`);
           }
-          content = content.replace(args.old, args.new);
+          content = content.replace(args.old_content, args.new_content);
           await container.fs.writeFile(relPath, content);
-          result = `Successfully edited ${args.path}`;
+          result = `Successfully edited ${args.absolute_path}`;
           break;
         }
         case 'npmInstall': {

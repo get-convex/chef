@@ -11,12 +11,12 @@ import { classNames } from '~/utils/classNames';
 import type { ConvexToolInvocation } from '~/lib/common/types';
 import { getTerminalTheme } from '~/components/workbench/terminal/theme';
 import { FitAddon } from '@xterm/addon-fit';
-import { viewParameters } from '~/lib/runtime/viewTool';
+import { fileReadContentsParameters } from '~/lib/runtime/fileReadContentsTool';
 import { getHighlighter } from 'shiki';
 import { themeStore } from '~/lib/stores/theme';
 import { getLanguageFromExtension } from '~/utils/getLanguageFromExtension';
 import { path } from '~/utils/path';
-import { editToolParameters } from '~/lib/runtime/editTool';
+import { fileReplaceStringToolParameters } from '~/lib/runtime/fileReplaceStringTool';
 import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
 import { loggingSafeParse } from '~/lib/zodUtil';
 import { deployToolParameters } from '~/lib/runtime/deployTool';
@@ -120,14 +120,14 @@ const ToolUseContents = memo(
       case 'deploy': {
         return <DeployTool artifact={artifact} invocation={invocation} />;
       }
-      case 'view': {
-        return <ViewTool invocation={invocation} />;
+      case 'fileReadContents': {
+        return <FileReadContentsTool invocation={invocation} />;
       }
       case 'npmInstall': {
         return <NpmInstallTool artifact={artifact} invocation={invocation} />;
       }
-      case 'edit': {
-        return <EditTool invocation={invocation} />;
+      case 'fileReplaceString': {
+        return <FileReplaceStringTool invocation={invocation} />;
       }
       default: {
         // Fallback for other tool types
@@ -283,8 +283,8 @@ function parseToolInvocation(
         }
         break;
       }
-      case 'edit': {
-        const args = loggingSafeParse(editToolParameters, parsedContent.args);
+      case 'fileReplaceString': {
+        const args = loggingSafeParse(fileReplaceStringToolParameters, parsedContent.args);
         if (!args.success) {
           zodError = args.error;
         }
@@ -297,8 +297,8 @@ function parseToolInvocation(
         }
         break;
       }
-      case 'view': {
-        const args = loggingSafeParse(viewParameters, parsedContent.args);
+      case 'fileReadContents': {
+        const args = loggingSafeParse(fileReadContentsParameters, parsedContent.args);
         if (!args.success) {
           zodError = args.error;
         }
@@ -365,8 +365,8 @@ function statusIcon(status: ActionState['status'], invocation: ConvexToolInvocat
 
 function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
   switch (invocation.toolName) {
-    case 'view': {
-      const args = loggingSafeParse(viewParameters, invocation.args);
+    case 'fileReadContents': {
+      const args = loggingSafeParse(fileReadContentsParameters, invocation.args);
       let verb = 'Read';
       let icon = 'i-ph:file-text';
       let renderedPath = 'a file';
@@ -376,13 +376,13 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         renderedPath = 'a directory';
       }
       let extra = '';
-      if (args.success && args.data.view_range) {
-        const [start, end] = args.data.view_range;
+      if (args.success && args.data.read_range) {
+        const [start, end] = args.data.read_range;
         const endName = end === -1 ? 'end' : end.toString();
         extra = ` (lines ${start} - ${endName})`;
       }
       if (args.success) {
-        renderedPath = args.data.path || '/home/project';
+        renderedPath = args.data.absolute_path || '/home/project';
       }
       return (
         <div className="flex items-center gap-2">
@@ -440,11 +440,11 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         </div>
       );
     }
-    case 'edit': {
-      const args = loggingSafeParse(editToolParameters, invocation.args);
+    case 'fileReplaceString': {
+      const args = loggingSafeParse(fileReplaceStringToolParameters, invocation.args);
       let renderedPath = 'a file';
       if (args.success) {
-        renderedPath = args.data.path;
+        renderedPath = args.data.absolute_path;
       }
       return (
         <div className="flex items-center gap-2">
@@ -459,9 +459,9 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
   }
 }
 
-function ViewTool({ invocation }: { invocation: ConvexToolInvocation }) {
-  if (invocation.toolName !== 'view') {
-    throw new Error('View tool can only be used for the view tool');
+function FileReadContentsTool({ invocation }: { invocation: ConvexToolInvocation }) {
+  if (invocation.toolName !== 'fileReadContents') {
+    throw new Error('FileReadContents tool can only be used for the fileReadContents tool');
   }
   if (invocation.state === 'partial-call' || invocation.state === 'call') {
     return null;
@@ -504,13 +504,13 @@ function ViewTool({ invocation }: { invocation: ConvexToolInvocation }) {
     const [_, ...content] = line.split(':');
     return content.join(':');
   });
-  const args = loggingSafeParse(viewParameters, invocation.args);
+  const args = loggingSafeParse(fileReadContentsParameters, invocation.args);
   let startLine = 1;
   let language = 'typescript';
   if (args.success) {
-    language = getLanguageFromExtension(path.extname(args.data.path));
-    if (args.data.view_range) {
-      startLine = args.data.view_range[0];
+    language = getLanguageFromExtension(path.extname(args.data.absolute_path));
+    if (args.data.read_range) {
+      startLine = args.data.read_range[0];
     }
   }
   return <LineNumberViewer lines={lines} startLineNumber={startLine} language={language} />;
@@ -586,14 +586,14 @@ const LineNumberViewer = memo(({ lines, startLineNumber = 1, language = 'typescr
   );
 });
 
-function EditTool({ invocation }: { invocation: ConvexToolInvocation }) {
-  if (invocation.toolName !== 'edit') {
+function FileReplaceStringTool({ invocation }: { invocation: ConvexToolInvocation }) {
+  if (invocation.toolName !== 'fileReplaceString') {
     throw new Error('Edit tool can only be used for the edit tool');
   }
   if (invocation.state === 'partial-call') {
     return null;
   }
-  const args = loggingSafeParse(editToolParameters, invocation.args);
+  const args = loggingSafeParse(fileReplaceStringToolParameters, invocation.args);
   if (!args.success) {
     return null;
   }
@@ -602,10 +602,10 @@ function EditTool({ invocation }: { invocation: ConvexToolInvocation }) {
       <div className="p-4 space-y-4">
         <div className="space-y-2 overflow-x-auto">
           <div className="flex items-center gap-2">
-            <pre className="text-bolt-elements-icon-error">{args.data.old}</pre>
+            <pre className="text-bolt-elements-icon-error">{args.data.old_content}</pre>
           </div>
           <div className="flex items-center gap-2">
-            <pre className="text-bolt-elements-icon-success">{args.data.new}</pre>
+            <pre className="text-bolt-elements-icon-success">{args.data.new_content}</pre>
           </div>
         </div>
       </div>

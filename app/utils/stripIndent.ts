@@ -14,10 +14,21 @@ export function stripIndents(arg0: string | TemplateStringsArray, ...values: any
 }
 
 function _stripIndents(value: string) {
+  let minIndent = Infinity;
+  for (const line of value.split('\n')) {
+    const trimmed = line.trimStart();
+    if (trimmed.length === 0) {
+      continue;
+    }
+    minIndent = Math.min(minIndent, line.length - trimmed.length);
+  }
+  if (minIndent === Infinity) {
+    return value;
+  }
   return value
     .split('\n')
-    .map((line) => line.trim())
+    .map((line) => line.slice(minIndent).trimEnd())
+    .filter((line) => line.length > 0)
     .join('\n')
-    .trimStart()
     .replace(/[\r\n]$/, '');
 }
