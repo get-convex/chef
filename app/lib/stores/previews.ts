@@ -113,6 +113,9 @@ export class PreviewsStore {
       sourcePort,
       start,
       stop() {
+        // This should never happen since the external users don’t get access to
+        // the ProxyState object before `startProxy` returns (unless they guess
+        // the port number)
         throw new Error('Proxy not started');
       },
     };
@@ -128,6 +131,7 @@ export class PreviewsStore {
     ]);
 
     proxyState.stop = () => {
+      proxyLogger.info('Stopping proxy');
       proxyProcess.kill();
     };
 
