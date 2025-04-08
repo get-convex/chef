@@ -5,7 +5,6 @@ import { useConvex } from 'convex/react';
 import { useConvexAuth } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { authParams } from '~/components/convex/ConvexConnectButton';
 
 import {
   sessionIdStore,

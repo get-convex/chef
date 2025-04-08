@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Dialog, DialogButton, DialogClose, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
+import { Dialog, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { classNames } from '~/utils/classNames';
 import { convexStore, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { useChatIdOrNull } from '~/lib/stores/chat';
@@ -84,14 +84,14 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' }
                         Project: {projectInfo.projectSlug}
                       </p>
                       <p className="text-sm font-medium text-bolt-elements-textPrimary">Team: {projectInfo.teamSlug}</p>
-                      <a
+                      {/* <a
                         className="flex gap-1 items-center text-sm hover:underline text-bolt-elements-textSecondary"
                         href={`https://dashboard.convex.dev/p/${projectInfo.projectSlug}/settings`}
                         target="_blank"
                       >
                         View in Convex Dashboard
                         <div className="i-ph:arrow-square-out w-4 h-4" />
-                      </a>
+                      </a> */}
                     </div>
                   ) : (
                     <p className="text-sm text-bolt-elements-textSecondary">No project connected</p>
