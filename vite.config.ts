@@ -1,16 +1,15 @@
-import { cloudflareDevProxyVitePlugin as remixCloudflareDevProxy, vitePlugin as remixVitePlugin } from '@remix-run/dev';
-import UnoCSS from 'unocss/vite';
-import { defineConfig, type ViteDevServer } from 'vite';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
+import { vitePlugin as remix } from '@remix-run/dev';
+import { defineConfig } from 'vite';
+import { vercelPreset } from '@vercel/remix/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import * as dotenv from 'dotenv';
+import UnoCSS from 'unocss/vite';
+import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import wasm from 'vite-plugin-wasm';
-// importing it is ok, but using it breaks things
-//import topLevelAwait from 'vite-plugin-top-level-await';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 dotenv.config();
 
@@ -95,7 +94,46 @@ export default defineConfig((config) => {
       // Define global values
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     },
+
+    /*
+     * Remix Vite likes to avoid bundling server-side code, so you can end up with errors in Vercel like
+     *
+     * [commonjs--resolver] Could not load /Users/tomb/simple-vercel-remix/node_modules/.pnpm/util@0.12.5/node_modules/util/types:
+     * ENOENT: no such file or directory, open '/Users/tomb/simple-vercel-remix/node_modules/.pnpm/util@0.12.5/node_modules/util/types'
+     *
+     * so we may need to bundle in prod. But we need to make sure we don't bundle do it in dev:
+     * https://github.com/remix-run/react-router/issues/13075
+     *
+     * If we have this issue we need to turn on `noExternal: true`, or manually bundle more libraries.
+     */
+    ssr:
+      config.command === 'build'
+        ? {
+            // noExternal: true,
+            //
+            // Some dependencies are hard to bundler.
+            external: [
+              // the bundler must think this has side effects because I can't
+              // bundle it without problems
+              'cloudflare',
+              // something about eval
+              '@protobufjs/inquire',
+              // doesn't actually help, remove this
+              '@protobufjs/inquire?commonjs-external',
+
+              // these were guesses to fix a bundling issue, must have
+              // needed at least on of the not to be bundled.
+              'semver',
+              'semver-parser',
+              '@sentry/remix',
+
+              'vite-plugin-node-polyfills',
+            ],
+          }
+        : { noExternal: ['@protobufjs/inquire'] },
     build: {
+      //sourcemap: true,
+      // this enabled top-level await
       target: 'esnext',
       sourcemap: true,
       rollupOptions: {
@@ -108,6 +146,9 @@ export default defineConfig((config) => {
       },
     },
     optimizeDeps: {
+      include: [
+        'jose', // discovered late, so causes a reload when optimizing
+      ],
       esbuildOptions: {
         define: {
           global: 'globalThis',
@@ -121,17 +162,23 @@ export default defineConfig((config) => {
       },
     },
     plugins: [
+      // This is complicated: we're polyfilling the browser (!) for some things
+      // and were previously polyfilling Cloudflare worker functions for some things.
+      // Now we could probably remove some since we're using Node.js in Vercel
+      // instead of Cloudflare or Vercel Edge workers.
       nodePolyfills({
-        include: ['buffer', 'process', 'util', 'stream'],
+        include: ['buffer', 'process', 'stream'],
         globals: {
           Buffer: true,
-          process: true,
+          process: true, // this is actually require for some terminal stuff
+          // like the shell tool
           global: true,
         },
         protocolImports: true,
         // Exclude Node.js modules that shouldn't be polyfilled in Cloudflare
         exclude: ['child_process', 'fs', 'path'],
       }),
+      // just added, should remove if not needed
       {
         name: 'buffer-polyfill',
         transform(code, id) {
@@ -143,8 +190,9 @@ export default defineConfig((config) => {
           }
         },
       },
-      config.mode !== 'test' && remixCloudflareDevProxy(),
-      remixVitePlugin({
+
+      remix({
+        presets: [vercelPreset()],
         future: {
           v3_fetcherPersist: true,
           v3_relativeSplatPath: true,
@@ -154,18 +202,10 @@ export default defineConfig((config) => {
       }),
       UnoCSS(),
       tsconfigPaths(),
-      chrome129IssuePlugin(),
       config.mode === 'production' && optimizeCssModules({ apply: 'build' }),
       wasm(),
-      //      topLevelAwait(),  // including this breaks the build, only in cloudflare
     ],
-    envPrefix: [
-      'VITE_',
-      'OPENAI_LIKE_API_BASE_URL',
-      'OLLAMA_API_BASE_URL',
-      'LMSTUDIO_API_BASE_URL',
-      'TOGETHER_API_BASE_URL',
-    ],
+    envPrefix: ['VITE_'],
     css: {
       preprocessorOptions: {
         scss: {
@@ -175,29 +215,3 @@ export default defineConfig((config) => {
     },
   };
 });
-
-function chrome129IssuePlugin() {
-  return {
-    name: 'chrome129IssuePlugin',
-    configureServer(server: ViteDevServer) {
-      server.middlewares.use((req, res, next) => {
-        const raw = req.headers['user-agent']?.match(/Chrom(e|ium)\/([0-9]+)\./);
-
-        if (raw) {
-          const version = parseInt(raw[2], 10);
-
-          if (version === 129) {
-            res.setHeader('content-type', 'text/html');
-            res.end(
-              '<body><h1>Please use Chrome Canary for testing.</h1><p>Chrome 129 has an issue with JavaScript modules & Vite local development, see <a href="https://github.com/stackblitz/bolt.new/issues/86#issuecomment-2395519258">for more information.</a></p><p><b>Note:</b> This only impacts <u>local development</u>. `pnpm run build` and `pnpm run start` will work fine in this browser.</p></body>',
-            );
-
-            return;
-          }
-        }
-
-        next();
-      });
-    },
-  };
-}

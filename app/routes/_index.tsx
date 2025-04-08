@@ -1,10 +1,11 @@
-import { type LoaderFunctionArgs, type MetaFunction } from '@remix-run/cloudflare';
+import { json } from '@vercel/remix';
+import type { LoaderFunctionArgs } from '@vercel/remix';
+import type { MetaFunction } from '@vercel/remix';
 import { ClientOnly } from 'remix-utils/client-only';
 import { WrappedBaseChat } from '~/components/chat/BaseChat';
 import { Chat } from '~/components/chat/Chat.client';
 import { Header } from '~/components/header/Header';
 import { SafariWarning } from '~/components/SafariWarning';
-import { getFlexAuthModeInLoader } from '~/lib/persistence/convex';
 
 export const meta: MetaFunction = () => {
   return [
@@ -16,16 +17,10 @@ export const meta: MetaFunction = () => {
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
   const code = url.searchParams.get('code');
-  const flexAuthMode = getFlexAuthModeInLoader(args.context);
-  return Response.json({ code, flexAuthMode });
+  const flexAuthMode = globalThis.process.env.FLEX_AUTH_MODE;
+  return json({ code, flexAuthMode });
 };
 
-/**
- * Landing page component for Bolt
- * Note: Settings functionality should ONLY be accessed through the sidebar menu.
- * Do not add settings button/panel to this landing page as it was intentionally removed
- * to keep the UI clean and consistent with the design system.
- */
 export default function Index() {
   return (
     <div className="flex flex-col h-full w-full bg-bolt-elements-background-depth-1">

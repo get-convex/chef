@@ -1,4 +1,4 @@
-import { z, type SafeParseReturnType, type ZodTypeDef } from 'zod';
+import type { z, SafeParseReturnType, ZodTypeDef } from 'zod';
 
 const previouslySeen: WeakSet<any> = new WeakSet();
 

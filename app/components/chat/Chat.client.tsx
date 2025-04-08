@@ -25,7 +25,12 @@ import {
   waitForBootStepCompleted,
 } from '~/lib/stores/containerBootState';
 import { FlexAuthWrapper } from './FlexAuthWrapper';
-import { convexStore, useConvexSessionId, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import {
+  convexStore,
+  selectedTeamSlugStore,
+  useConvexSessionId,
+  useConvexSessionIdOrNullOrLoading,
+} from '~/lib/stores/convex';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { toast, Toaster } from 'sonner';
@@ -119,7 +124,6 @@ interface ChatProps {
 
 const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, initializeChat }: ChatProps) => {
   useShortcuts();
-
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -141,6 +145,19 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
   if (Math.random() < useAnthropicFraction) {
     modelProviders = ['Anthropic', 'Bedrock'];
   }
+  const { getAccessTokenSilently } = useAuth0();
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch and store the access token
+    getAccessTokenSilently({ detailedResponse: true })
+      .then((response) => {
+        setToken(response.id_token);
+      })
+      .catch((error) => {
+        console.error('Failed to get access token:', error);
+      });
+  }, [getAccessTokenSilently]);
 
   const {
     messages,
@@ -163,13 +180,21 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
     experimental_prepareRequestBody: ({ messages }) => {
       const chatId = chatIdStore.get() ?? '';
       const convex = convexStore.get();
+      const teamSlug = selectedTeamSlugStore.get();
+      if (!token) {
+        throw new Error('No token');
+      }
+      if (!teamSlug) {
+        throw new Error('No team slug');
+      }
+
       return {
         messages: chatContextManager.current.prepareContext(messages),
         firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
         chatId,
+        token,
+        teamSlug,
         deploymentName: convex?.deploymentName,
-        token: convex?.token,
-        teamSlug: convex?.teamSlug,
         modelProvider: modelProviders[retries % modelProviders.length],
       };
     },

@@ -3,7 +3,7 @@ import { motion, type HTMLMotionProps, type Variants } from 'framer-motion';
 import { computed } from 'nanostores';
 import { memo, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
-import { ActionRunner } from '~/lib/runtime/action-runner';
+import type { ActionRunner } from '~/lib/runtime/action-runner';
 import {
   type OnChangeCallback as OnEditorChange,
   type OnScrollCallback as OnEditorScroll,

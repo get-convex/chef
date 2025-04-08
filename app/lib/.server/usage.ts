@@ -3,7 +3,12 @@ import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('usage');
 
-export async function checkTokenUsage(provisionHost: string, token: string, teamSlug: string, deploymentName: string) {
+export async function checkTokenUsage(
+  provisionHost: string,
+  token: string,
+  teamSlug: string,
+  deploymentName: string | undefined,
+) {
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/get_token_info`;
   const response = await fetch(url, {
@@ -35,7 +40,7 @@ export async function recordUsage(
   provisionHost: string,
   token: string,
   teamSlug: string,
-  deploymentName: string,
+  deploymentName: string | undefined,
   usage: LanguageModelUsage,
 ) {
   const Authorization = `Bearer ${token}`;
@@ -54,4 +59,7 @@ export async function recordUsage(
     logger.error('Failed to record usage', response);
     logger.error(await response.json());
   }
+
+  // Just for the logline (TODO(nipunn) - remove this after recordUsage returns a response)
+  await checkTokenUsage(provisionHost, token, teamSlug, deploymentName);
 }

@@ -26,8 +26,6 @@ export function TeamSelector() {
         const tokenResponse = await getAccessTokenSilently({
           detailedResponse: true,
         });
-        console.log('tokenResponse', tokenResponse);
-        console.log('VITE_PROVISION_HOST', VITE_PROVISION_HOST);
         const response = await fetch(`${VITE_PROVISION_HOST}/api/dashboard/teams`, {
           headers: {
             Authorization: `Bearer ${tokenResponse.id_token}`,

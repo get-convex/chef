@@ -1,4 +1,6 @@
-import { ArrowUp } from '@phosphor-icons/react';
+// required to avoid to many open files
+// https://github.com/phosphor-icons/react/issues/45
+import { ArrowUp } from '@phosphor-icons/react/dist/csr/ArrowUp';
 
 interface SuggestionButtonsProps {
   chatStarted: boolean;

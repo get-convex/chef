@@ -2,7 +2,8 @@ import { acceptCompletion, autocompletion, closeBrackets } from '@codemirror/aut
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching, foldGutter, indentOnInput, indentUnit } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
-import { Compartment, EditorSelection, EditorState, StateEffect, StateField, type Extension } from '@codemirror/state';
+import type { EditorSelection } from '@codemirror/state';
+import { Compartment, EditorState, StateEffect, StateField, type Extension } from '@codemirror/state';
 import {
   drawSelection,
   dropCursor,
