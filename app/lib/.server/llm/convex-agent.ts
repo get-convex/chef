@@ -2,12 +2,12 @@ import { convertToCoreMessages, streamText, type LanguageModelV1, type Message, 
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { roleSystemPrompt, SYSTEM_PROMPT_PRELUDE, systemPrompt } from '~/lib/common/prompts/system';
 import { deployTool } from '~/lib/runtime/deployTool';
-import { fileReadContentsTool } from '~/lib/runtime/fileReadContentsTool';
+import { viewTool } from '~/lib/runtime/viewTool';
 import type { ConvexToolSet } from '~/lib/common/types';
 import { npmInstallTool } from '~/lib/runtime/npmInstallTool';
 import { openai } from '@ai-sdk/openai';
 import type { Tracer } from '~/routes/api.chat';
-import { fileReplaceStringTool } from '~/lib/runtime/fileReplaceStringTool';
+import { editTool } from '~/lib/runtime/editTool';
 import { captureException } from '@sentry/remix';
 import type { SystemPromptOptions } from '~/lib/common/prompts/types';
 
@@ -20,9 +20,9 @@ type Provider = {
 
 const tools: ConvexToolSet = {
   deploy: deployTool,
-  npm_install: npmInstallTool,
-  file_read_contents: fileReadContentsTool,
-  file_replace_string: fileReplaceStringTool,
+  view: viewTool,
+  npmInstall: npmInstallTool,
+  edit: editTool,
 };
 
 export async function convexAgent(
@@ -113,10 +113,6 @@ export async function convexAgent(
         firstUserMessage,
         chatId,
       },
-    },
-    experimental_repairToolCall: async ({ toolCall, tools, parameterSchema, error }) => {
-      console.log('repair', toolCall, tools, parameterSchema, error);
-      return null;
     },
   });
   return result.toDataStream({

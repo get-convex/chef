@@ -1,17 +1,17 @@
 import type { Tool, ToolCallUnion } from 'ai';
 import { z } from 'zod';
 import type { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
-import type { fileReplaceStringToolParameters } from '~/lib/runtime/fileReplaceStringTool';
-import type { fileReadContentsParameters } from '~/lib/runtime/fileReadContentsTool';
+import type { editToolParameters } from '~/lib/runtime/editTool';
+import type { viewParameters } from '~/lib/runtime/viewTool';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 
 type EmptyArgs = z.ZodObject<Record<string, never>>;
 
 export type ConvexToolSet = {
   deploy: Tool<EmptyArgs, string>;
-  file_read_contents: Tool<typeof fileReadContentsParameters, string>;
-  npm_install: Tool<typeof npmInstallToolParameters, string>;
-  file_replace_string: Tool<typeof fileReplaceStringToolParameters, string>;
+  view: Tool<typeof viewParameters, string>;
+  npmInstall: Tool<typeof npmInstallToolParameters, string>;
+  edit: Tool<typeof editToolParameters, string>;
 };
 
 type ConvexToolCall = ToolCallUnion<ConvexToolSet>;
@@ -23,18 +23,18 @@ type ConvexToolResult =
       result?: string;
     }
   | {
-      toolName: 'file_read_contents';
-      args: typeof fileReadContentsParameters;
+      toolName: 'view';
+      args: typeof viewParameters;
       result: string;
     }
   | {
-      toolName: 'npm_install';
+      toolName: 'npmInstall';
       args: typeof npmInstallToolParameters;
       result: string;
     }
   | {
-      toolName: 'file_replace_string';
-      args: typeof fileReplaceStringToolParameters;
+      toolName: 'edit';
+      args: typeof editToolParameters;
       result: string;
     };
 

@@ -11,12 +11,12 @@ import { classNames } from '~/utils/classNames';
 import type { ConvexToolInvocation } from '~/lib/common/types';
 import { getTerminalTheme } from '~/components/workbench/terminal/theme';
 import { FitAddon } from '@xterm/addon-fit';
-import { fileReadContentsParameters } from '~/lib/runtime/fileReadContentsTool';
+import { viewParameters } from '~/lib/runtime/viewTool';
 import { getHighlighter } from 'shiki';
 import { themeStore } from '~/lib/stores/theme';
 import { getLanguageFromExtension } from '~/utils/getLanguageFromExtension';
 import { path } from '~/utils/path';
-import { fileReplaceStringToolParameters } from '~/lib/runtime/fileReplaceStringTool';
+import { editToolParameters } from '~/lib/runtime/editTool';
 import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
 import { loggingSafeParse } from '~/lib/zodUtil';
 import { deployToolParameters } from '~/lib/runtime/deployTool';
@@ -120,14 +120,14 @@ const ToolUseContents = memo(
       case 'deploy': {
         return <DeployTool artifact={artifact} invocation={invocation} />;
       }
-      case 'file_read_contents': {
-        return <FileReadContentsTool invocation={invocation} />;
+      case 'view': {
+        return <ViewTool invocation={invocation} />;
       }
-      case 'npm_install': {
+      case 'npmInstall': {
         return <NpmInstallTool artifact={artifact} invocation={invocation} />;
       }
-      case 'file_replace_string': {
-        return <FileReplaceStringTool invocation={invocation} />;
+      case 'edit': {
+        return <EditTool invocation={invocation} />;
       }
       default: {
         // Fallback for other tool types
@@ -232,8 +232,8 @@ const Terminal = memo(
 );
 
 function NpmInstallTool({ artifact, invocation }: { artifact: ArtifactState; invocation: ConvexToolInvocation }) {
-  if (invocation.toolName !== 'npm_install') {
-    throw new Error('Terminal can only be used for the npm_install tool');
+  if (invocation.toolName !== 'npmInstall') {
+    throw new Error('Terminal can only be used for the npmInstall tool');
   }
 
   if (invocation.state === 'call') {
@@ -283,22 +283,22 @@ function parseToolInvocation(
         }
         break;
       }
-      case 'file_replace_string': {
-        const args = loggingSafeParse(fileReplaceStringToolParameters, parsedContent.args);
+      case 'edit': {
+        const args = loggingSafeParse(editToolParameters, parsedContent.args);
         if (!args.success) {
           zodError = args.error;
         }
         break;
       }
-      case 'npm_install': {
+      case 'npmInstall': {
         const args = loggingSafeParse(npmInstallToolParameters, parsedContent.args);
         if (!args.success) {
           zodError = args.error;
         }
         break;
       }
-      case 'file_read_contents': {
-        const args = loggingSafeParse(fileReadContentsParameters, parsedContent.args);
+      case 'view': {
+        const args = loggingSafeParse(viewParameters, parsedContent.args);
         if (!args.success) {
           zodError = args.error;
         }
@@ -365,8 +365,8 @@ function statusIcon(status: ActionState['status'], invocation: ConvexToolInvocat
 
 function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
   switch (invocation.toolName) {
-    case 'file_read_contents': {
-      const args = loggingSafeParse(fileReadContentsParameters, invocation.args);
+    case 'view': {
+      const args = loggingSafeParse(viewParameters, invocation.args);
       let verb = 'Read';
       let icon = 'i-ph:file-text';
       let renderedPath = 'a file';
@@ -376,13 +376,13 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         renderedPath = 'a directory';
       }
       let extra = '';
-      if (args.success && args.data.read_range) {
-        const [start, end] = args.data.read_range;
+      if (args.success && args.data.view_range) {
+        const [start, end] = args.data.view_range;
         const endName = end === -1 ? 'end' : end.toString();
         extra = ` (lines ${start} - ${endName})`;
       }
       if (args.success) {
-        renderedPath = args.data.absolute_path || '/home/project';
+        renderedPath = args.data.path || '/home/project';
       }
       return (
         <div className="flex items-center gap-2">
@@ -394,7 +394,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         </div>
       );
     }
-    case 'npm_install': {
+    case 'npmInstall': {
       if (invocation.state === 'partial-call' || invocation.state === 'call') {
         return `Installing dependencies...`;
       } else if (invocation.result?.startsWith('Error:')) {
@@ -440,11 +440,11 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         </div>
       );
     }
-    case 'file_replace_string': {
-      const args = loggingSafeParse(fileReplaceStringToolParameters, invocation.args);
+    case 'edit': {
+      const args = loggingSafeParse(editToolParameters, invocation.args);
       let renderedPath = 'a file';
       if (args.success) {
-        renderedPath = args.data.absolute_path;
+        renderedPath = args.data.path;
       }
       return (
         <div className="flex items-center gap-2">
@@ -459,9 +459,9 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
   }
 }
 
-function FileReadContentsTool({ invocation }: { invocation: ConvexToolInvocation }) {
-  if (invocation.toolName !== 'file_read_contents') {
-    throw new Error('FileReadContents tool can only be used for the file_read_contents tool');
+function ViewTool({ invocation }: { invocation: ConvexToolInvocation }) {
+  if (invocation.toolName !== 'view') {
+    throw new Error('View tool can only be used for the view tool');
   }
   if (invocation.state === 'partial-call' || invocation.state === 'call') {
     return null;
@@ -504,13 +504,13 @@ function FileReadContentsTool({ invocation }: { invocation: ConvexToolInvocation
     const [_, ...content] = line.split(':');
     return content.join(':');
   });
-  const args = loggingSafeParse(fileReadContentsParameters, invocation.args);
+  const args = loggingSafeParse(viewParameters, invocation.args);
   let startLine = 1;
   let language = 'typescript';
   if (args.success) {
-    language = getLanguageFromExtension(path.extname(args.data.absolute_path));
-    if (args.data.read_range) {
-      startLine = args.data.read_range[0];
+    language = getLanguageFromExtension(path.extname(args.data.path));
+    if (args.data.view_range) {
+      startLine = args.data.view_range[0];
     }
   }
   return <LineNumberViewer lines={lines} startLineNumber={startLine} language={language} />;
@@ -586,14 +586,14 @@ const LineNumberViewer = memo(({ lines, startLineNumber = 1, language = 'typescr
   );
 });
 
-function FileReplaceStringTool({ invocation }: { invocation: ConvexToolInvocation }) {
-  if (invocation.toolName !== 'file_replace_string') {
+function EditTool({ invocation }: { invocation: ConvexToolInvocation }) {
+  if (invocation.toolName !== 'edit') {
     throw new Error('Edit tool can only be used for the edit tool');
   }
   if (invocation.state === 'partial-call') {
     return null;
   }
-  const args = loggingSafeParse(fileReplaceStringToolParameters, invocation.args);
+  const args = loggingSafeParse(editToolParameters, invocation.args);
   if (!args.success) {
     return null;
   }
@@ -602,10 +602,10 @@ function FileReplaceStringTool({ invocation }: { invocation: ConvexToolInvocatio
       <div className="p-4 space-y-4">
         <div className="space-y-2 overflow-x-auto">
           <div className="flex items-center gap-2">
-            <pre className="text-bolt-elements-icon-error">{args.data.old_content}</pre>
+            <pre className="text-bolt-elements-icon-error">{args.data.old}</pre>
           </div>
           <div className="flex items-center gap-2">
-            <pre className="text-bolt-elements-icon-success">{args.data.new_content}</pre>
+            <pre className="text-bolt-elements-icon-success">{args.data.new}</pre>
           </div>
         </div>
       </div>

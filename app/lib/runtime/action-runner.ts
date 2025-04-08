@@ -8,13 +8,13 @@ import type { ActionCallbackData } from './message-parser';
 import { cleanTerminalOutput, type BoltShell } from '~/utils/shell';
 import type { ToolInvocation } from 'ai';
 import { withResolvers } from '~/utils/promises';
-import { fileReadContentsParameters } from './fileReadContentsTool';
+import { viewParameters } from './viewTool';
 import { readPath, renderDirectory, renderFile, workDirRelative } from '~/utils/fileUtils';
 import { ContainerBootState, waitForContainerBootState } from '~/lib/webcontainer';
 import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { z } from 'zod';
-import { fileReplaceStringToolParameters } from './fileReplaceStringTool';
+import { editToolParameters } from './editTool';
 import { getAbsolutePath } from '~/lib/stores/files';
 
 const logger = createScopedLogger('ActionRunner');
@@ -176,7 +176,7 @@ export class ActionRunner {
           logger.error('Shell action is not supported anymore. Use tool calls instead.');
           break;
         }
-        case 'npm_install': {
+        case 'npmInstall': {
           logger.error('Npm install action is not supported anymore. Use tool calls instead.');
           break;
         }
@@ -352,50 +352,50 @@ export class ActionRunner {
     let result: string;
     try {
       switch (parsed.toolName) {
-        case 'file_read_contents': {
-          const args = fileReadContentsParameters.parse(parsed.args);
+        case 'view': {
+          const args = viewParameters.parse(parsed.args);
           const container = await this.#webcontainer;
-          const relPath = workDirRelative(args.absolute_path);
+          const relPath = workDirRelative(args.path);
           const file = await readPath(container, relPath);
           if (file.type === 'directory') {
             result = renderDirectory(file.children);
           } else {
-            if (args.read_range && args.read_range.length !== 2) {
+            if (args.view_range && args.view_range.length !== 2) {
               throw new Error('When provided, read_range must be an array of two numbers');
             }
-            result = renderFile(file.content, args.read_range as [number, number]);
+            result = renderFile(file.content, args.view_range as [number, number]);
           }
           break;
         }
-        case 'file_replace_string': {
-          const args = fileReplaceStringToolParameters.parse(parsed.args);
+        case 'edit': {
+          const args = editToolParameters.parse(parsed.args);
           const container = await this.#webcontainer;
-          const relPath = workDirRelative(args.absolute_path);
+          const relPath = workDirRelative(args.path);
           const file = await readPath(container, relPath);
           if (file.type !== 'file') {
             throw new Error('Expected a file');
           }
           let content = file.content;
-          if (args.old_content.length > 1024) {
-            throw new Error(`Old text must be less than 1024 characters: ${args.old_content}`);
+          if (args.old.length > 1024) {
+            throw new Error(`Old text must be less than 1024 characters: ${args.old}`);
           }
-          if (args.new_content.length > 1024) {
-            throw new Error(`New text must be less than 1024 characters: ${args.new_content}`);
+          if (args.new.length > 1024) {
+            throw new Error(`New text must be less than 1024 characters: ${args.new}`);
           }
-          const matchPos = content.indexOf(args.old_content);
+          const matchPos = content.indexOf(args.old);
           if (matchPos === -1) {
-            throw new Error(`Old text not found: ${args.old_content}`);
+            throw new Error(`Old text not found: ${args.old}`);
           }
-          const secondMatchPos = content.indexOf(args.old_content, matchPos + args.old_content.length);
+          const secondMatchPos = content.indexOf(args.old, matchPos + args.old.length);
           if (secondMatchPos !== -1) {
-            throw new Error(`Old text found multiple times: ${args.old_content}`);
+            throw new Error(`Old text found multiple times: ${args.old}`);
           }
-          content = content.replace(args.old_content, args.new_content);
+          content = content.replace(args.old, args.new);
           await container.fs.writeFile(relPath, content);
-          result = `Successfully edited ${args.absolute_path}`;
+          result = `Successfully edited ${args.path}`;
           break;
         }
-        case 'npm_install': {
+        case 'npmInstall': {
           try {
             const args = npmInstallToolParameters.parse(parsed.args);
             const container = await this.#webcontainer;

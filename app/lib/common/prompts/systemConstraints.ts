@@ -22,7 +22,7 @@ export function systemConstraints(_options: SystemPromptOptions) {
       WebAssembly and are LIMITED TO THE PYTHON STANDARD LIBRARY ONLY. This means:
       - There is NO \`pip\` support! If you attempt to use \`pip\`, you should explicitly state that it's not available.
       - CRITICAL: Third-party libraries cannot be installed or imported.
-      - Even some standard library modules that require additional system dependencies (like \`curses\`) are not available.
+      - Even some standard library modulesj that require additional system dependencies (like \`curses\`) are not available.
       - Only modules from the core Python standard library can be used.
     </python>
   </system_constraints>
