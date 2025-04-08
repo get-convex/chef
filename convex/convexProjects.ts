@@ -247,7 +247,6 @@ export const connectConvexProjectForOauth = internalAction({
     let projectName: string | null = null;
     let attempts = 0;
     while (attempts < 10) {
-      console.log('Waiting!');
       projectName = await ctx.runQuery(internal.convexProjects.getProjectName, {
         sessionId: args.sessionId,
         chatId: args.chatId,
@@ -255,7 +254,7 @@ export const connectConvexProjectForOauth = internalAction({
       if (projectName) {
         break;
       }
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       attempts++;
     }
     projectName = projectName ?? 'My Project (Chef)';
