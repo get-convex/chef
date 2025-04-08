@@ -20,8 +20,6 @@ const targetPort = Number(process.argv[2]);
 console.log(\`Starting proxy server: proxying \${targetPort} → \${sourcePort}\`);
 
 http.createServer((req, res) => {
-  console.log(\`[\${new Date().toISOString()}] \${req.method} \${req.url}\`);
-  
   const proxyReq = http.request({
     hostname: 'localhost',
     port: sourcePort,
