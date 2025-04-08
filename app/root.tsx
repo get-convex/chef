@@ -105,7 +105,6 @@ export const ErrorBoundary = () => {
 };
 
 export default function App() {
-  const theme = useStore(themeStore);
   const loaderData = useRouteLoaderData<typeof loader>('root');
   console.log('loaderData in App:', loaderData);
   const CONVEX_URL = loaderData!.ENV.CONVEX_URL;
