@@ -1,6 +1,7 @@
 import type { WebContainer, WebContainerProcess } from '@webcontainer/api';
 import { atom, type WritableAtom } from 'nanostores';
-import type { ITerminal } from '~/types/terminal';
+import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
+import { generateId } from '~/utils/fileUtils';
 import { newBoltShellProcess, newShellProcess } from '~/utils/shell';
 import { coloredText } from '~/utils/terminal';
 
@@ -22,14 +23,26 @@ export class TerminalStore {
   }
 
   toggleTerminal(value?: boolean) {
+    console.log('Terminal store toggle:', { current: this.showTerminal.get(), new: value });
     this.showTerminal.set(value !== undefined ? value : !this.showTerminal.get());
   }
 
-  async attachBoltTerminal(terminal: ITerminal) {
+  async attachBoltTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
     try {
+      console.log('Attaching bolt terminal...');
       const wc = await this.#webcontainer;
+      console.log('Webcontainer ready, initializing bolt terminal...');
       await this.#boltTerminal.init(wc, terminal);
+      console.log('Bolt terminal initialized successfully');
+      if (options?.isReload) {
+        await this.#boltTerminal.executeCommand(generateId(), 'npm install');
+        await this.#boltTerminal.executeCommand(generateId(), 'npx convex dev --once');
+        if (options?.shouldDeployConvexFunctions) {
+          await this.#boltTerminal.executeCommand(generateId(), 'npx vite --open');
+        }
+      }
     } catch (error: any) {
+      console.error('Failed to initialize bolt terminal:', error);
       terminal.write(coloredText.red('Failed to spawn dev server shell\n\n') + error.message);
       return;
     }

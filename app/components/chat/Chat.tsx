@@ -372,6 +372,10 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
       })}
       actionAlert={actionAlert}
       clearAlert={() => workbenchStore.clearAlert()}
+      terminalInitializationOptions={{
+        isReload: initialMessages.length > 0,
+        shouldDeployConvexFunctions: initialMessages.length > 0,
+      }}
     />
   );
 });

@@ -47,7 +47,7 @@ const workbenchVariants = {
   },
 } satisfies Variants;
 
-export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => {
+export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializationOptions }: WorkspaceProps) => {
   renderLogger.trace('Workbench');
 
   // const modifiedFiles = Array.from(useStore(workbenchStore.unsavedFiles).keys());
@@ -224,6 +224,7 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
                       onEditorChange={onEditorChange}
                       onFileSave={onFileSave}
                       onFileReset={onFileReset}
+                      terminalInitializationOptions={terminalInitializationOptions}
                     />
                   </View>
                   <View {...slidingPosition({ view: 'preview', selectedView, showDashboard })}>
