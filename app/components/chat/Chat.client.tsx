@@ -20,17 +20,22 @@ import { streamingState } from '~/lib/stores/streaming';
 import { filesToArtifacts } from '~/utils/fileUtils';
 import { ChatContextManager } from '~/lib/ChatContextManager';
 import { webcontainer } from '~/lib/webcontainer';
-import { ContainerBootState, takeContainerBootError, useContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
+import {
+  ContainerBootState,
+  takeContainerBootError,
+  useContainerBootState,
+  waitForBootStepCompleted,
+} from '~/lib/stores/containerBootState';
 import { FlexAuthWrapper } from './FlexAuthWrapper';
 import { convexStore, useConvexSessionId, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { toast, Toaster } from 'sonner';
-import type { ActionStatus } from '~/lib/runtime/action-runner';
 import type { PartId } from '~/lib/stores/Artifacts';
 import { captureException } from '@sentry/remix';
 import { setExtra, setUser } from '@sentry/remix';
 import { useAuth0 } from '@auth0/auth0-react';
+import { setProfile } from '~/lib/stores/profile';
 
 const logger = createScopedLogger('Chat');
 
@@ -504,6 +509,10 @@ function SentryUserProvider({ children }: { children: React.ReactNode }) {
         email: user.email ?? undefined,
       });
     }
+    setProfile({
+      username: user?.name ?? user?.nickname ?? '',
+      avatar: user?.picture ?? '',
+    });
   }, [user]);
 
   return children;
