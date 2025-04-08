@@ -9,6 +9,7 @@ import { type PartId } from '~/lib/stores/Artifacts';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
 import { WORK_DIR } from '~/utils/constants';
+import { captureException } from '@sentry/remix';
 
 const highlighterOptions = {
   langs: ['shell'],
@@ -149,8 +150,8 @@ const ActionList = memo(({ actions }: ActionListProps) => {
         {actions.map((action, index) => {
           const { status, type } = action;
           if (type !== 'file') {
-            console.log('action', action);
-            throw new Error('Action is not a file');
+            captureException(`Action is not a file: ${action.type}`);
+            return null;
           }
           const message = action.isEdit ? 'Edit' : 'Create';
           return (
