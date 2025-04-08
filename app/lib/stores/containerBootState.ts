@@ -9,10 +9,10 @@ export enum ContainerBootState {
   SETTING_UP_CONVEX_PROJECT = 2,
   SETTING_UP_CONVEX_ENV_VARS = 3,
   CONFIGURING_CONVEX_AUTH = 4,
-  READY = 5
+  READY = 5,
 }
 
-const containerBootStore = atom<{ state: ContainerBootState; startTime: number; errorToLog?: Error; }>({
+const containerBootStore = atom<{ state: ContainerBootState; startTime: number; errorToLog?: Error }>({
   state: ContainerBootState.STARTING,
   startTime: Date.now(),
 });

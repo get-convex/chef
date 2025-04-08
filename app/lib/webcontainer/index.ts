@@ -4,7 +4,7 @@ import { cleanStackTrace } from '~/utils/stacktrace';
 import { loadSnapshot } from '~/lib/snapshot';
 import { waitForConvexProjectConnection, type ConvexProject } from '~/lib/stores/convex';
 import { createScopedLogger } from '~/utils/logger';
-import { setContainerBootState, ContainerBootState } from '../stores/containerBootState';
+import { setContainerBootState, ContainerBootState } from '~/lib/stores/containerBootState';
 
 interface WebContainerContext {
   loaded: boolean;

@@ -17,7 +17,7 @@ export async function loadSnapshot(webcontainer: WebContainer, workbenchStore: W
   // Install NPM dependencies.
   const npm = await webcontainer.spawn('npm', ['install']);
   const { output, exitCode } = await streamOutput(npm);
-  console.log("NPM output", cleanTerminalOutput(output));
+  console.log('NPM output', cleanTerminalOutput(output));
 
   if (exitCode !== 0) {
     throw new Error(`npm install failed with exit code ${exitCode}: ${output}`);
