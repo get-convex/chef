@@ -1,4 +1,4 @@
-type AgentMode = 'bulk' | 'precise';
+type _AgentMode = 'bulk' | 'precise';
 
 export interface SystemPromptOptions {
   enableBulkEdits: boolean;
