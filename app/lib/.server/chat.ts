@@ -1,6 +1,6 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
 import { createScopedLogger } from '~/utils/logger';
-import { convexAgent, getEnv } from '~/lib/.server/llm/convex-agent';
+import { convexAgent, getEnv, type ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import type { LanguageModelUsage, Message } from 'ai';
@@ -60,6 +60,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     token: string;
     teamSlug: string;
     deploymentName: string | undefined;
+    modelProvider: ModelProvider;
   };
   const { messages, firstUserMessage, chatId, deploymentName, token, teamSlug } = body;
 
@@ -79,7 +80,15 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   try {
     const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
-    const dataStream = await convexAgent(chatId, env, firstUserMessage, messages, tracer, recordUsageCb);
+    const dataStream = await convexAgent(
+      chatId,
+      env,
+      firstUserMessage,
+      messages,
+      tracer,
+      body.modelProvider,
+      recordUsageCb,
+    );
 
     return new Response(dataStream, {
       status: 200,
