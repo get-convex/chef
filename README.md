@@ -11,7 +11,7 @@ This is fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-
 - set up the .env.local file (do this BEFORE running the next command). Copy from 1Password (flex .env.local)
 - run `pnpx convex dev --configure existing --team convex --project chef --once`
 
-Coming soon: using vercel to get the local environment variables
+Coming soon: using vercel to get the local environment variables!
 
 # each time
 
