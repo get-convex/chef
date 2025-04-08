@@ -1,9 +1,9 @@
 import type { WebContainer, WebContainerProcess } from '@webcontainer/api';
 import { atom, type WritableAtom } from 'nanostores';
 import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
-import { generateId } from '~/utils/fileUtils';
 import { newBoltShellProcess, newShellProcess } from '~/utils/shell';
 import { coloredText } from '~/utils/terminal';
+import { sessionIdStore } from './convex';
 
 export class TerminalStore {
   #webcontainer: Promise<WebContainer>;
@@ -32,12 +32,16 @@ export class TerminalStore {
       const wc = await this.#webcontainer;
       await this.#boltTerminal.init(wc, terminal);
       if (options?.isReload) {
-        await this.#boltTerminal.executeCommand(generateId(), 'npm install');
+        const sessionId = sessionIdStore.get();
+        if (!sessionId) {
+          throw new Error('No session id found when trying to run terminal commands');
+        }
+        await this.#boltTerminal.executeCommand(sessionId, 'npm install');
         if (options?.shouldDeployConvexFunctions) {
-          const result = await this.#boltTerminal.executeCommand(generateId(), 'npx convex dev --once');
+          const result = await this.#boltTerminal.executeCommand(sessionId, 'npx convex dev --once');
           // Only run preview if convex functions were deployed successfully
           if (result?.exitCode === 0) {
-            await this.#boltTerminal.executeCommand(generateId(), 'npx vite --open');
+            await this.#boltTerminal.executeCommand(sessionId, 'npx vite --open');
           }
         }
       }
