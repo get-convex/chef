@@ -9,7 +9,6 @@ export type SerializedMessage = Omit<AIMessage, 'createdAt'> & {
   createdAt: number | undefined;
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const IChatMetadataValidator = v.object({
   gitUrl: v.string(),
   gitBranch: v.optional(v.string()),
@@ -17,6 +16,38 @@ export const IChatMetadataValidator = v.object({
 });
 
 type IChatMetadata = Infer<typeof IChatMetadataValidator>;
+
+export const initializeChat = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    id: v.string(),
+    projectInitParams: v.object({
+      teamSlug: v.string(),
+      auth0AccessToken: v.string(),
+    }),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { id, sessionId, projectInitParams } = args;
+    let existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.id, sessionId: args.sessionId });
+
+    console.log('Existing chat:', existing);
+
+    if (!existing) {
+      await createNewChatFromMessages(ctx, {
+        id,
+        sessionId,
+        projectInitParams,
+      });
+
+      existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
+
+      if (!existing) {
+        throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
+      }
+    }
+  },
+});
 
 export const addMessages = mutation({
   args: {
@@ -32,19 +63,11 @@ export const addMessages = mutation({
   }),
   handler: async (ctx, args) => {
     const { id, sessionId, messages, expectedLength, startIndex } = args;
-    let existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
+
+    const existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
 
     if (!existing) {
-      await createNewChatFromMessages(ctx, {
-        id,
-        sessionId,
-      });
-
-      existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
-
-      if (!existing) {
-        throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
-      }
+      throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
     }
 
     return _appendMessages(ctx, {
@@ -521,9 +544,13 @@ export async function createNewChatFromMessages(
     description?: string;
     metadata?: IChatMetadata;
     snapshotId?: Id<'_storage'>;
+    projectInitParams?: {
+      teamSlug: string;
+      auth0AccessToken: string;
+    };
   },
 ): Promise<Id<'chats'>> {
-  const { id, sessionId, description, metadata, snapshotId } = args;
+  const { id, sessionId, description, metadata, snapshotId, projectInitParams } = args;
   const existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
 
   if (existing) {
@@ -544,14 +571,11 @@ export async function createNewChatFromMessages(
     snapshotId,
   });
 
-  // This is the invite code flow
-  const shouldAutomaticallyAllocateConvexProject = session.memberId === undefined;
-  if (shouldAutomaticallyAllocateConvexProject) {
-    await ctx.scheduler.runAfter(0, api.convexProjects.startProvisionConvexProject, {
-      sessionId,
-      chatId: id,
-    });
-  }
+  await ctx.scheduler.runAfter(0, api.convexProjects.startProvisionConvexProject, {
+    sessionId,
+    chatId: id,
+    projectInitParams,
+  });
 
   return chatId;
 }

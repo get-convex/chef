@@ -1,19 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Dialog, DialogButton, DialogClose, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
+import { Dialog, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { classNames } from '~/utils/classNames';
-import { ConvexConnectButton } from './ConvexConnectButton';
-import { convexStore, flexAuthModeStore, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
-import { chatStore, useChatIdOrNull } from '~/lib/stores/chat';
-import { useQuery, useConvex } from 'convex/react';
+import { convexStore, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import { useChatIdOrNull } from '~/lib/stores/chat';
+import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { useStore } from '@nanostores/react';
 
 export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' }) {
   const [isDesiredOpen, setIsOpen] = useState(false);
 
-  const chatStarted = useStore(chatStore).started;
-
-  const convexClient = useConvex();
+  // const convexClient = useConvex();
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chatId = useChatIdOrNull();
   const projectInfo = useQuery(
@@ -38,21 +34,19 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' }
 
   const isConnected = projectInfo !== null;
 
-  const forceOpen = useStore(flexAuthModeStore) === 'ConvexOAuth' && !isConnected && chatStarted;
-  const isOpen = isDesiredOpen || forceOpen;
-  const forcedOpen = forceOpen && !isDesiredOpen;
+  const isOpen = isDesiredOpen;
 
-  const handleDisconnect = async () => {
-    convexStore.set(null);
-    if (sessionId && chatId) {
-      void convexClient.mutation(api.convexProjects.disconnectConvexProject, {
-        sessionId,
-        chatId,
-      });
-    } else {
-      console.error('No sessionId or chatId so cannot disconnect');
-    }
-  };
+  // const handleDisconnect = async () => {
+  //   convexStore.set(null);
+  //   if (sessionId && chatId) {
+  //     void convexClient.mutation(api.convexProjects.disconnectConvexProject, {
+  //       sessionId,
+  //       chatId,
+  //     });
+  //   } else {
+  //     console.error('No sessionId or chatId so cannot disconnect');
+  //   }
+  // };
 
   return (
     <div className="relative">
@@ -60,16 +54,12 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' }
         <button
           onClick={() => setIsOpen(true)}
           className={classNames(
-            'hover:bg-bolt-elements-item-backgroundActive flex items-center gap-2 p-1.5',
-            isConnected
-              ? 'bg-bolt-elements-item-backgroundDefault text-bolt-elements-item-contentAccent'
-              : 'bg-bolt-elements-item-backgroundDefault text-bolt-elements-textTertiary',
+            'flex items-center gap-2 p-1.5 w-full rounded-md text-left text-bolt-elements-textPrimary bg-bolt-elements-button-secondary-background',
+            'hover:bg-bolt-elements-item-backgroundAccent/90',
           )}
         >
           <img className="w-4 h-4" height="20" width="20" src="/icons/Convex.svg" alt="Convex" />
-          {isConnected && projectInfo && (
-            <span className="ml-1 text-xs max-w-[100px] truncate">{`project:${projectInfo.teamSlug}:${projectInfo.projectSlug}`}</span>
-          )}
+          {isConnected && projectInfo && <span className="max-w-32 truncate">{`${projectInfo.projectSlug}`}</span>}
           {!isConnected && size === 'full' && (
             <span className={classNames('text-bolt-elements-button-primary-text font-medium')}>Connect to Convex</span>
           )}
@@ -78,7 +68,7 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' }
 
       <DialogRoot open={isOpen} onOpenChange={setIsOpen}>
         {isOpen && (
-          <Dialog className="max-w-[520px] p-6" showCloseButton={!forcedOpen}>
+          <Dialog className="max-w-[520px] p-6" showCloseButton>
             <div className="space-y-4">
               <DialogTitle>
                 <div className="flex items-center gap-2 px-3">
@@ -89,24 +79,25 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' }
               <div className="flex items-center justify-between rounded-lg mx-3">
                 <div>
                   {projectInfo ? (
-                    <>
-                      <h4 className="text-sm font-medium text-bolt-elements-textPrimary">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-medium text-bolt-elements-textPrimary">
                         Project: {projectInfo.projectSlug}
-                      </h4>
-                      <p className="text-xs text-bolt-elements-textSecondary">Team: {projectInfo.teamSlug}</p>
-                    </>
+                      </p>
+                      <p className="text-sm font-medium text-bolt-elements-textPrimary">Team: {projectInfo.teamSlug}</p>
+                      {/* <a
+                        className="flex gap-1 items-center text-sm hover:underline text-bolt-elements-textSecondary"
+                        href={`https://dashboard.convex.dev/p/${projectInfo.projectSlug}/settings`}
+                        target="_blank"
+                      >
+                        View in Convex Dashboard
+                        <div className="i-ph:arrow-square-out w-4 h-4" />
+                      </a> */}
+                    </div>
                   ) : (
-                    <>
-                      <h4 className="text-sm font-medium text-bolt-elements-textSecondary">No project connected</h4>
-                      {forcedOpen && (
-                        <p className="text-sm text-bolt-elements-textSecondary mt-2">
-                          You're one OAuth dance away from an application running on Convex!
-                        </p>
-                      )}
-                    </>
+                    <p className="text-sm text-bolt-elements-textSecondary">No project connected</p>
                   )}
                 </div>
-                {projectInfo ? (
+                {/* {projectInfo ? (
                   <button
                     onClick={handleDisconnect}
                     className="px-4 py-1.5 rounded-md bg-transparent hover:bg-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 text-sm transition-colors"
@@ -117,17 +108,8 @@ export function ConvexConnection({ size = 'small' }: { size?: 'small' | 'full' }
                   <div className="flex justify-end gap-2 mt-6 px-3">
                     {sessionId && chatId ? <ConvexConnectButton /> : null}
                   </div>
-                )}
+                )} */}
               </div>
-              {!forcedOpen && (
-                <div className="flex justify-end gap-2 mt-6 px-3">
-                  <DialogClose asChild>
-                    <DialogButton type="secondary" onClick={() => setIsOpen(false)}>
-                      Close
-                    </DialogButton>
-                  </DialogClose>
-                </div>
-              )}
             </div>
           </Dialog>
         )}

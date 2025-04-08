@@ -1,12 +1,10 @@
-import { useRouteLoaderData } from '@remix-run/react';
 import { classNames } from '~/utils/classNames';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useStore } from '@nanostores/react';
 import { convexStore, useConvexSessionId, useFlexAuthMode } from '~/lib/stores/convex';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useChatId } from '~/lib/stores/chat';
-import type { loader } from '~/root';
 import { useAuth0 } from '@auth0/auth0-react';
 
 export function ConvexConnectButton() {
@@ -81,7 +79,7 @@ function ConvexConnectButtonForInviteCode() {
 }
 
 // These match what we use for the Convex dashboard and what Big Brain expects
-const authParams = {
+export const authParams = {
   audience: 'https://console.convex.dev/api/',
   scope: 'openid profile email list:instances manage:instances offline_access',
 };
@@ -118,8 +116,10 @@ function ConvexConnectButtonViaOauth() {
       await convexClient.mutation(api.convexProjects.startProvisionConvexProject, {
         sessionId,
         chatId,
-        accessToken,
-        teamSlug: 'sshader-test', // TODO: Hook this up to team picker
+        projectInitParams: {
+          teamSlug: 'sshader-test', // TODO: Hook this up to team picker
+          auth0AccessToken: accessToken,
+        },
       });
     } else {
       const accessToken = await getAccessTokenSilently({
@@ -128,8 +128,10 @@ function ConvexConnectButtonViaOauth() {
       await convexClient.mutation(api.convexProjects.startProvisionConvexProject, {
         sessionId,
         chatId,
-        accessToken,
-        teamSlug: 'sshader-test',
+        projectInitParams: {
+          teamSlug: 'sshader-test', // TODO: Hook this up to team picker
+          auth0AccessToken: accessToken,
+        },
       });
     }
   };

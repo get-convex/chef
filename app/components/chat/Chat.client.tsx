@@ -99,7 +99,7 @@ interface ChatProps {
   initialMessages: Message[];
   storeMessageHistory: (messages: Message[]) => Promise<void>;
   importChat: (description: string, messages: Message[]) => Promise<void>;
-  initializeChat: () => Promise<void>;
+  initializeChat: (teamSlug: string) => Promise<void>;
   description?: string;
 }
 
@@ -262,7 +262,7 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
     setChatStarted(true);
   };
 
-  const sendMessage = async (_event: React.UIEvent, messageInput?: string) => {
+  const sendMessage = async (_event: React.UIEvent, teamSlug: string, messageInput?: string) => {
     const messageContent = messageInput || input;
 
     if (!messageContent?.trim()) {
@@ -273,7 +273,7 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       abort();
       return;
     }
-    await initializeChat();
+    await initializeChat(teamSlug);
 
     runAnimation();
 

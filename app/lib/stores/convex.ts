@@ -6,6 +6,14 @@ import { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { CONVEX_INVITE_CODE_QUERY_PARAM } from '~/lib/persistence/convex';
 
+export type ConvexTeam = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export const teamsStore = atom<ConvexTeam[] | null>(null);
+
 export type ConvexProject = {
   token: string;
   deploymentName: string;
@@ -133,4 +141,14 @@ function removeCodeFromUrl() {
   const url = new URL(window.location.href);
   url.searchParams.delete(CONVEX_INVITE_CODE_QUERY_PARAM);
   window.history.replaceState({}, '', url);
+}
+
+const SELECTED_TEAM_SLUG_KEY = 'selectedConvexTeamSlug';
+
+export function getSelectedTeamSlug(): string | null {
+  return getLocalStorage(SELECTED_TEAM_SLUG_KEY);
+}
+
+export function setSelectedTeamSlug(teamSlug: string | null) {
+  setLocalStorage(SELECTED_TEAM_SLUG_KEY, teamSlug);
 }
