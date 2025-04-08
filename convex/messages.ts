@@ -13,10 +13,12 @@ export const initializeChat = mutation({
   args: {
     sessionId: v.id('sessions'),
     id: v.string(),
-    projectInitParams: v.object({
-      teamSlug: v.string(),
-      auth0AccessToken: v.string(),
-    }),
+    projectInitParams: v.optional(
+      v.object({
+        teamSlug: v.string(),
+        auth0AccessToken: v.string(),
+      }),
+    ),
   },
   returns: v.null(),
   handler: async (ctx, args) => {

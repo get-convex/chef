@@ -37,7 +37,7 @@ interface BaseChatProps {
   description?: string;
   input?: string;
   handleStop?: () => void;
-  sendMessage?: (event: React.UIEvent, teamSlug: string, messageInput?: string) => void;
+  sendMessage?: (event: React.UIEvent, teamSlug: string | null, messageInput?: string) => void;
   handleInputChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   uploadedFiles?: File[];
   setUploadedFiles?: (files: File[]) => void;
@@ -91,7 +91,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     }, [isStreaming, onStreamingChange]);
 
     const handleSendMessage = (event: React.UIEvent, messageInput?: string) => {
-      if (sendMessage && selectedTeamSlug) {
+      const canSendMessage = flexAuthMode !== 'ConvexOAuth' || selectedTeamSlug !== null;
+      if (sendMessage && canSendMessage) {
         sendMessage(event, selectedTeamSlug, messageInput);
       }
     };

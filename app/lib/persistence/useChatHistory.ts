@@ -7,7 +7,7 @@ import { useConvex } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { ConvexError } from 'convex/values';
 import type { SerializedMessage } from '@convex/messages';
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import { flexAuthModeStore, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { webcontainer } from '~/lib/webcontainer';
 import { loadSnapshot } from '~/lib/snapshot';
 import { makePartId, type PartId } from '~/lib/stores/Artifacts';
@@ -135,7 +135,7 @@ export const useChatHistoryConvex = () => {
     ready: mixedId === undefined || (ready && !isLoading),
     initialMessages: initialDeserializedMessages,
     initializeChat: useCallback(
-      async (teamSlug: string) => {
+      async (teamSlug: string | null) => {
         if (!sessionId) {
           console.error('Cannot start chat with no session ID');
           return;
@@ -152,15 +152,24 @@ export const useChatHistoryConvex = () => {
 
         const id = chatIdStore.get() as string;
 
-        const response = await getAccessTokenSilently({ detailedResponse: true });
+        const flexAuthMode = flexAuthModeStore.get();
+        let projectInitParams: { teamSlug: string; auth0AccessToken: string } | undefined = undefined;
+        if (flexAuthMode === 'ConvexOAuth') {
+          if (teamSlug === null) {
+            console.error('Team slug is null');
+            return;
+          }
+          const response = await getAccessTokenSilently({ detailedResponse: true });
+          projectInitParams = {
+            teamSlug,
+            auth0AccessToken: response.id_token,
+          };
+        }
 
         await convex.mutation(api.messages.initializeChat, {
           id,
           sessionId,
-          projectInitParams: {
-            teamSlug,
-            auth0AccessToken: response.id_token,
-          },
+          projectInitParams,
         });
         setPersistedMessages([]);
 
