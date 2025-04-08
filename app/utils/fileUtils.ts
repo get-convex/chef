@@ -2,7 +2,7 @@ import type { DirEnt } from '@webcontainer/api';
 import { WORK_DIR } from './constants';
 import type { WebContainer } from '@webcontainer/api';
 
-export const generateId = () => Math.random().toString(36).substring(2, 15);
+const generateId = () => Math.random().toString(36).substring(2, 15);
 
 export const filesToArtifacts = (files: { [path: string]: { content: string } }, id: string): string => {
   return `
