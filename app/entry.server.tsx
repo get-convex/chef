@@ -1,71 +1,33 @@
-import type { AppLoadContext } from '@remix-run/cloudflare';
+import type { AppLoadContext, EntryContext } from '@remix-run/node';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
-import { renderToReadableStream } from 'react-dom/server';
-import { renderHeadToString } from 'remix-island';
-import { Head } from './root';
-import { themeStore } from '~/lib/stores/theme';
+
+import type { renderToReadableStream as RenderToReadableStream } from 'react-dom/server';
+// @ts-ignore There just aren't types for it, long-standing issue
+import { renderToReadableStream as renderToReadableStreamSSR } from 'react-dom/server.browser';
+const renderToReadableStream = renderToReadableStreamSSR as typeof RenderToReadableStream;
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: any,
+  remixContext: EntryContext,
   _loadContext: AppLoadContext,
 ) {
-  // await initializeModelList({});
-
-  const readable = await renderToReadableStream(<RemixServer context={remixContext} url={request.url} />, {
-    signal: request.signal,
+  const body = await renderToReadableStream(<RemixServer context={remixContext} url={request.url} />, {
+    // TODO we ought to abort, say by timeout, but it looked involved:
+    // see https://github.com/vercel/next.js/issues/56919
+    // and https://github.com/remix-run/remix/issues/10014
+    // and https://github.com/remix-run/remix/pull/10047/files/4b9036ed72a21008e8559bd06c6292c457f9e0db
+    //signal: request.signal,
     onError(error: unknown) {
       console.error(error);
       responseStatusCode = 500;
     },
   });
 
-  const body = new ReadableStream({
-    start(controller) {
-      const head = renderHeadToString({ request, remixContext, Head });
-
-      controller.enqueue(
-        new Uint8Array(
-          new TextEncoder().encode(
-            `<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`,
-          ),
-        ),
-      );
-
-      const reader = readable.getReader();
-
-      function read() {
-        reader
-          .read()
-          .then(({ done, value }) => {
-            if (done) {
-              controller.enqueue(new Uint8Array(new TextEncoder().encode('</div></body></html>')));
-              controller.close();
-
-              return;
-            }
-
-            controller.enqueue(value);
-            read();
-          })
-          .catch((error) => {
-            controller.error(error);
-            readable.cancel();
-          });
-      }
-      read();
-    },
-
-    cancel() {
-      readable.cancel();
-    },
-  });
-
   if (isbot(request.headers.get('user-agent') || '')) {
-    await readable.allReady;
+    await body.allReady;
   }
 
   responseHeaders.set('Content-Type', 'text/html');

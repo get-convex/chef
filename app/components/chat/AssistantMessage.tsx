@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Markdown } from './Markdown';
 import type { Message } from 'ai';
 import { ToolCall } from './ToolCall';
-import { makePartId } from '~/lib/stores/Artifacts';
+import { makePartId } from '~/lib/stores/artifacts';
 
 interface AssistantMessageProps {
   message: Message;

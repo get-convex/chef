@@ -7,16 +7,11 @@ import { useConvex } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { ConvexError } from 'convex/values';
 import type { SerializedMessage } from '@convex/messages';
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import { flexAuthModeStore, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { webcontainer } from '~/lib/webcontainer';
 import { loadSnapshot } from '~/lib/snapshot';
-import { makePartId, type PartId } from '~/lib/stores/Artifacts';
-
-interface IChatMetadata {
-  gitUrl: string;
-  gitBranch?: string;
-  netlifySiteId?: string;
-}
+import { makePartId, type PartId } from '~/lib/stores/artifacts';
+import { useAuth0 } from '@auth0/auth0-react';
 
 export interface ChatHistoryItem {
   /*
@@ -28,7 +23,6 @@ export interface ChatHistoryItem {
   urlId?: string;
   description?: string;
   timestamp: string;
-  metadata?: IChatMetadata;
 }
 
 /*
@@ -45,7 +39,6 @@ export interface ChatHistoryItem {
  */
 export const chatIdStore = atom<string | undefined>(undefined);
 export const description = atom<string | undefined>(undefined);
-const chatMetadata = atom<IChatMetadata | undefined>(undefined);
 
 export const useChatHistoryConvex = () => {
   const navigate = useNavigate();
@@ -84,7 +77,6 @@ export const useChatHistoryConvex = () => {
       // The chat has changed. Clear all state.
 
       description.set(undefined);
-      chatMetadata.set(undefined);
 
       setInitialMessages([]);
       setInitialDeserializedMessages([]);
@@ -106,15 +98,16 @@ export const useChatHistoryConvex = () => {
           setUrlId(rawMessages.urlId);
           description.set(rawMessages.description);
           chatIdStore.set(rawMessages.initialId);
-          chatMetadata.set(rawMessages.metadata);
           try {
             const container = await webcontainer;
             const { workbenchStore } = await import('~/lib/stores/workbench');
 
             const partIds: PartId[] = [];
             for (const message of rawMessages.messages) {
-              for (let i = 0; i < Math.min(1, message.parts?.length ?? 0); i++) {
-                partIds.push(makePartId(message.id, i));
+              if (message.parts) {
+                for (let i = 0; i < message.parts.length; i++) {
+                  partIds.push(makePartId(message.id, i));
+                }
               }
             }
             workbenchStore.setReloadedParts(partIds);
@@ -136,64 +129,55 @@ export const useChatHistoryConvex = () => {
       });
   }, [mixedId, sessionId, convex]);
 
+  const { getAccessTokenSilently } = useAuth0();
+
   return {
     ready: mixedId === undefined || (ready && !isLoading),
     initialMessages: initialDeserializedMessages,
-    updateChatMetadata: useCallback(
-      async (metadata: IChatMetadata) => {
-        const id = chatIdStore.get();
-
-        if (!id || !sessionId) {
+    initializeChat: useCallback(
+      async (teamSlug: string | null) => {
+        if (!sessionId) {
+          console.error('Cannot start chat with no session ID');
           return;
         }
 
-        try {
-          await convex.mutation(api.messages.setMetadata, {
-            id,
-            sessionId,
-            metadata,
-          });
-          chatMetadata.set(metadata);
-        } catch (error) {
-          toast.error('Failed to update chat metadata');
-          console.error(error);
+        /*
+         * Synchronously allocate a new ID -- this ID is temporary and will be replaced by a
+         * more human-friendly ID when the first message is added.
+         */
+        if (!chatIdStore.get()) {
+          const nextId = crypto.randomUUID();
+          chatIdStore.set(nextId);
         }
+
+        const id = chatIdStore.get() as string;
+
+        const flexAuthMode = flexAuthModeStore.get();
+        let projectInitParams: { teamSlug: string; auth0AccessToken: string } | undefined = undefined;
+        if (flexAuthMode === 'ConvexOAuth') {
+          if (teamSlug === null) {
+            console.error('Team slug is null');
+            return;
+          }
+          const response = await getAccessTokenSilently({ detailedResponse: true });
+          projectInitParams = {
+            teamSlug,
+            auth0AccessToken: response.id_token,
+          };
+        }
+
+        await convex.mutation(api.messages.initializeChat, {
+          id,
+          sessionId,
+          projectInitParams,
+        });
+        setPersistedMessages([]);
+
+        setUrlId(id);
+        navigateChat(id);
       },
-      [convex, sessionId],
+      [convex, urlId, sessionId, getAccessTokenSilently],
     ),
-    initializeChat: useCallback(async () => {
-      if (!sessionId) {
-        console.error('Cannot start chat with no session ID');
-        return;
-      }
-
-      /*
-       * Synchronously allocate a new ID -- this ID is temporary and will be replaced by a
-       * more human-friendly ID when the first message is added.
-       */
-      if (!chatIdStore.get()) {
-        const nextId = crypto.randomUUID();
-        chatIdStore.set(nextId);
-      }
-
-      const id = chatIdStore.get() as string;
-
-      const result = await convex.mutation(api.messages.addMessages, {
-        id,
-        sessionId,
-        messages: [],
-        expectedLength: 0,
-        startIndex: 0,
-      });
-
-      setPersistedMessages([]);
-      persistInProgress.current = false;
-
-      if (urlId !== result.id) {
-        setUrlId(result.id);
-        navigateChat(result.id);
-      }
-    }, [convex, urlId, sessionId]),
     storeMessageHistory: useCallback(
       async (messages: Message[]) => {
         if (messages.length === 0) {
@@ -279,7 +263,7 @@ export const useChatHistoryConvex = () => {
       [convex, sessionId],
     ),
     importChat: useCallback(
-      async (description: string, messages: Message[], metadata?: IChatMetadata) => {
+      async (description: string, messages: Message[]) => {
         if (!sessionId) {
           return;
         }
@@ -288,7 +272,6 @@ export const useChatHistoryConvex = () => {
           const newId = await convex.mutation(api.messages.importChat, {
             description,
             messages: messages.map(serializeMessageForConvex),
-            metadata,
             sessionId,
           });
           window.location.href = `/chat/${newId}`;

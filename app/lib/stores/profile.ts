@@ -2,7 +2,6 @@ import { atom } from 'nanostores';
 
 interface Profile {
   username: string;
-  bio: string;
   avatar: string;
 }
 
@@ -12,8 +11,12 @@ const initialProfile: Profile = storedProfile
   ? JSON.parse(storedProfile)
   : {
       username: '',
-      bio: '',
       avatar: '',
     };
 
 export const profileStore = atom<Profile>(initialProfile);
+
+export const setProfile = (profile: Profile) => {
+  profileStore.set(profile);
+  localStorage.setItem('bolt_profile', JSON.stringify(profile));
+};

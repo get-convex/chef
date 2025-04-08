@@ -4,7 +4,7 @@ import { cleanStackTrace } from '~/utils/stacktrace';
 import { loadSnapshot } from '~/lib/snapshot';
 import { waitForConvexProjectConnection, type ConvexProject } from '~/lib/stores/convex';
 import { createScopedLogger } from '~/utils/logger';
-import { atom } from 'nanostores';
+import { setContainerBootState, ContainerBootState } from '~/lib/stores/containerBootState';
 
 interface WebContainerContext {
   loaded: boolean;
@@ -22,61 +22,6 @@ export let webcontainer: Promise<WebContainer> = new Promise(() => {
   // noop for ssr
 });
 
-export enum ContainerBootState {
-  ERROR = -1,
-
-  STARTING = 0,
-  LOADING_SNAPSHOT = 1,
-  SETTING_UP_CONVEX_PROJECT = 2,
-  SETTING_UP_CONVEX_ENV_VARS = 3,
-  CONFIGURING_CONVEX_AUTH = 4,
-  READY = 5,
-}
-
-const containerBootStore = atom<{ state: ContainerBootState; startTime: number; error?: Error }>({
-  state: ContainerBootState.STARTING,
-  startTime: Date.now(),
-});
-
-function setContainerBootState(state: ContainerBootState, error?: Error) {
-  const existing = containerBootStore.get();
-  const msg = `Container boot [${(Date.now() - existing.startTime).toFixed(2)}ms]`;
-  if (error) {
-    logger.error(msg, ContainerBootState[state], error);
-  } else {
-    logger.info(msg, ContainerBootState[state]);
-  }
-  error = error ?? existing.error;
-  containerBootStore.set({ ...existing, state, error });
-}
-
-export function waitForBootStepCompleted(step: ContainerBootState) {
-  return waitForContainerBootState(step + 1);
-}
-
-export function waitForContainerBootState(minState: ContainerBootState) {
-  return new Promise((resolve, reject) => {
-    const result = containerBootStore.get();
-    if (result.state === ContainerBootState.ERROR) {
-      reject(result.error);
-      return;
-    }
-    if (result.state >= minState) {
-      resolve(result);
-      return;
-    }
-    const unsubscribe = containerBootStore.subscribe((result) => {
-      if (result.state >= minState) {
-        unsubscribe();
-        resolve(result);
-      }
-      if (result.state === ContainerBootState.ERROR) {
-        unsubscribe();
-        reject(result.error);
-      }
-    });
-  });
-}
 const logger = createScopedLogger('webcontainer');
 
 if (!import.meta.env.SSR) {
@@ -114,11 +59,7 @@ if (!import.meta.env.SSR) {
           }
         });
 
-        if (window.location.pathname !== '/admin/build-snapshot') {
-          void finishContainerBoot(webcontainer);
-        } else {
-          setContainerBootState(ContainerBootState.READY);
-        }
+        void finishContainerBoot(webcontainer);
 
         (globalThis as any).webcontainer = webcontainer;
         return webcontainer;

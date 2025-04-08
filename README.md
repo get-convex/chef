@@ -1,4 +1,4 @@
-# flex-diy
+# Chef
 
 This is fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-labs/bolt.diy).
 
@@ -9,7 +9,9 @@ This is fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-
 - install pnpm somehow, e.g. `npm install -g pnpm
 - run `pnpm i`
 - set up the .env.local file (do this BEFORE running the next command). Copy from 1Password (flex .env.local)
-- run `pnpx convex dev --configure existing --team convex --project bolt-diy-f612e --once`
+- run `pnpx convex dev --configure existing --team convex --project chef --once`
+
+Coming soon: using vercel to get the local environment variables!
 
 # each time
 
@@ -34,12 +36,20 @@ There are two forms of auth, dictated by the `FLEX_AUTH_MODE` environment variab
   - `CONVEX_OAUTH_CLIENT_ID`
   - `CONVEX_OAUTH_CLIENT_SECRET`
 
+Additionally make sure `CHEF_OAUTH_APP_NAME` is set to the same value as `CONVEX_OAUTH_CLIENT_ID` on your Convex deployment
+(it'll also be in the default Convex project env vars, so you can sync via dashboard).
+
 #### `FLEX_AUTH_MODE=InviteCode`
 
 - Convex projects are provisioned automatically against one of our teams
 - The credentials are saved as default environment variables on the `bolt-diy-f612` Convex project
 - You need a "code" to access Flex. There's an internal mutation you can run to issue yourself a code (e.g. `sshader-test`).
 - Each code corresponds to a user, so if you're doing this in production, issue a code with your name in it.
+
+### Developing against local big-brain
+
+- Start local big-brain/usher/dashboard the traditional way
+- Switch .env.local env vars to the dev variants (from 1Password)
 
 # Working on the template
 

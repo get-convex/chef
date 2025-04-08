@@ -21,12 +21,12 @@ import type { WebContainer } from '@webcontainer/api';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@convex/_generated/api';
 import type { Id } from '@convex/_generated/dataModel';
-import { buildSnapshot, compressSnapshot } from '~/lib/snapshot';
+import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot';
 import { sessionIdStore } from './convex';
 import { withResolvers } from '~/utils/promises';
-import type { Artifacts, PartId } from './Artifacts';
+import type { Artifacts, PartId } from './artifacts';
 
-const BACKUP_DEBOUNCE_MS = 1000 * 5;
+const BACKUP_DEBOUNCE_MS = 100;
 
 const { saveAs } = fileSaver;
 
@@ -50,7 +50,7 @@ export class WorkbenchStore {
   #convexClient: ConvexHttpClient;
   #toolCalls: Map<string, PromiseWithResolvers<string> & { done: boolean }> = new Map();
 
-  #reloadedParts = new Set<string>();
+  #reloadedParts = import.meta.hot?.data.reloadedParts ?? new Set<string>();
 
   artifacts: Artifacts = import.meta.hot?.data.artifacts ?? map({});
 
@@ -61,6 +61,7 @@ export class WorkbenchStore {
   unsavedFiles: WritableAtom<Set<AbsolutePath>> = import.meta.hot?.data.unsavedFiles ?? atom(new Set<AbsolutePath>());
   actionAlert: WritableAtom<ActionAlert | undefined> =
     import.meta.hot?.data.unsavedFiles ?? atom<ActionAlert | undefined>(undefined);
+  saveState: WritableAtom<'saved' | 'saving' | 'error'> = import.meta.hot?.data.saveState ?? atom('saved');
   modifiedFiles = new Set<string>();
   partIdList: PartId[] = [];
   #globalExecutionQueue = Promise.resolve();
@@ -72,6 +73,8 @@ export class WorkbenchStore {
       import.meta.hot.data.showWorkbench = this.showWorkbench;
       import.meta.hot.data.currentView = this.currentView;
       import.meta.hot.data.actionAlert = this.actionAlert;
+      import.meta.hot.data.saveState = this.saveState;
+      import.meta.hot.data.reloadedParts = this.#reloadedParts;
     }
 
     this.#convexClient = new ConvexHttpClient(import.meta.env.VITE_CONVEX_URL!);
@@ -92,10 +95,10 @@ export class WorkbenchStore {
   }
 
   async snapshotUrl(id?: string) {
-    const SNAPSHOT_URL = 'https://static.convex.dev/chef/snapshot.bin';
+    const templateUrl = '/template-snapshot-351f4521.bin';
     if (!id) {
-      console.log('No chat id yet, downloading from Convex');
-      return SNAPSHOT_URL;
+      console.log('No chat id yet, downloading base template');
+      return templateUrl;
     }
     const sessionId = sessionIdStore.get();
     if (!sessionId) {
@@ -103,8 +106,8 @@ export class WorkbenchStore {
     }
     const maybeSnapshotUrl = await this.#convexClient.query(api.snapshot.getSnapshotUrl, { chatId: id, sessionId });
     if (!maybeSnapshotUrl) {
-      console.log('No snapshot URL found, downloading from Convex');
-      return SNAPSHOT_URL;
+      console.log('No snapshot URL found, downloading base template');
+      return templateUrl;
     }
     console.log('Snapshot URL found, downloading from Convex');
     return maybeSnapshotUrl;
@@ -140,6 +143,7 @@ export class WorkbenchStore {
 
       try {
         isUploading = true;
+        this.saveState.set('saving');
 
         const id = chatIdStore.get();
 
@@ -159,12 +163,7 @@ export class WorkbenchStore {
           throw new Error('Session ID is not set');
         }
 
-        const binarySnapshot = await buildSnapshot('binary', true);
-
-        if (!(binarySnapshot instanceof Uint8Array)) {
-          throw new Error('Snapshot must be a Uint8Array');
-        }
-
+        const binarySnapshot = await buildUncompressedSnapshot();
         const compressed = await compressSnapshot(binarySnapshot);
         const uploadUrl = await this.#convexClient.mutation(api.snapshot.generateUploadUrl);
         const result = await fetch(uploadUrl, {
@@ -184,8 +183,11 @@ export class WorkbenchStore {
           chatId: id,
           sessionId,
         });
+
+        this.saveState.set('saved');
       } catch (error) {
         console.error('Failed to upload snapshot:', error);
+        this.saveState.set('error');
       } finally {
         isUploading = false;
 
@@ -200,6 +202,8 @@ export class WorkbenchStore {
 
     let debounceTimeout: NodeJS.Timeout | undefined;
     const debouncedUploadSnapshot = () => {
+      this.saveState.set('saving');
+      console.log('debouncedUploadSnapshot hasTimeout', debounceTimeout);
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
       }
@@ -218,16 +222,32 @@ export class WorkbenchStore {
           recursive: true,
           persistent: true,
         },
-        () => {
+        (_event, filename) => {
+          if (typeof filename === 'string' && filename.startsWith('node_modules/')) {
+            return;
+          }
           debouncedUploadSnapshot();
         },
       );
     })();
 
+    // Add beforeunload event listener to prevent navigation while uploading
+    const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
+      if (this.saveState.get() === 'saving') {
+        // Some browsers require both preventDefault and setting returnValue
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+      return undefined;
+    };
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+
     return () => {
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
       }
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
     };
   }
 

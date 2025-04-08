@@ -3,7 +3,7 @@ import { renderFile } from '~/utils/fileUtils';
 import { getAbsolutePath, type AbsolutePath, type Dirent } from './stores/files';
 import { PREWARM_PATHS, WORK_DIR } from '~/utils/constants';
 import { workbenchStore } from './stores/workbench';
-import { makePartId, type PartId } from './stores/Artifacts';
+import { makePartId, type PartId } from './stores/artifacts';
 import { StreamingMessageParser } from './runtime/message-parser';
 import { path } from '~/utils/path';
 import { loggingSafeParse } from '~/lib/zodUtil';
@@ -13,10 +13,10 @@ import { viewParameters } from './runtime/viewTool';
 
 // It's wasteful to actually tokenize the content, so we'll just use character
 // counts as a heuristic.
-const MAX_RELEVANT_FILES_SIZE = 16384;
-const MAX_RELEVANT_FILES = 32;
+const MAX_RELEVANT_FILES_SIZE = 8192;
+const MAX_RELEVANT_FILES = 16;
 
-const MAX_COLLAPSED_MESSAGES_SIZE = 16384;
+const MAX_COLLAPSED_MESSAGES_SIZE = 8192;
 
 type UIMessagePart = UIMessage['parts'][number];
 
@@ -347,7 +347,7 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       if (toolInvocation.result.startsWith('Directory:')) {
         verb = 'listed';
       }
-      toolCall = `${verb} ${args?.data.path || 'unknown file'}`;
+      toolCall = `${verb} ${args?.data?.path || 'unknown file'}`;
       break;
     }
     case 'deploy': {

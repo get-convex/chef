@@ -21,7 +21,6 @@
     "@iconify-json/svg-spinners" // For spinner icons (i-svg-spinners:*)
   ],
   "ignoreBinaries": [
-    "version", // from `pnpm version`, needed until https://github.com/webpro-nl/knip/pull/1020 lands
     "open" // yeah this only works on macs, sorry
   ]
 }

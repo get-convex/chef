@@ -42,6 +42,13 @@ export default [
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports', // This is the default, enforces 'import type'
+          fixStyle: 'separate-type-imports', // This is also the default, enforces 'import type { Foo }'
+        },
+      ],
     },
   },
   {

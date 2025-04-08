@@ -2,14 +2,24 @@ import type { Id } from '@convex/_generated/dataModel';
 import { atom } from 'nanostores';
 import { useStore } from '@nanostores/react';
 import { getLocalStorage, setLocalStorage } from '~/lib/persistence';
-import { ConvexReactClient } from 'convex/react';
+import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { CONVEX_INVITE_CODE_QUERY_PARAM } from '~/lib/persistence/convex';
+
+export type ConvexTeam = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export const teamsStore = atom<ConvexTeam[] | null>(null);
 
 export type ConvexProject = {
   token: string;
   deploymentName: string;
   deploymentUrl: string;
+  projectSlug: string;
+  teamSlug: string;
 };
 
 export const convexStore = atom<ConvexProject | null>(null);
@@ -133,4 +143,78 @@ function removeCodeFromUrl() {
   const url = new URL(window.location.href);
   url.searchParams.delete(CONVEX_INVITE_CODE_QUERY_PARAM);
   window.history.replaceState({}, '', url);
+}
+
+const VALID_ACCESS_CODE_KEY = 'validAccessCodeSessionId';
+
+export async function setValidAccessCode(convex: ConvexReactClient, code: string | null): Promise<boolean> {
+  const existing = getLocalStorage(VALID_ACCESS_CODE_KEY);
+  if (existing) {
+    let isValidSession: boolean = false;
+    try {
+      isValidSession = await convex.query(api.sessions.verifySession, {
+        sessionId: existing as Id<'sessions'>,
+        flexAuthMode: 'InviteCode',
+      });
+    } catch (_error) {
+      setLocalStorage(VALID_ACCESS_CODE_KEY, null);
+      return false;
+    }
+    if (isValidSession) {
+      setLocalStorage(VALID_ACCESS_CODE_KEY, existing);
+      return true;
+    }
+    setLocalStorage(VALID_ACCESS_CODE_KEY, null);
+    return false;
+  }
+  if (code === null) {
+    setLocalStorage(VALID_ACCESS_CODE_KEY, null);
+    return false;
+  }
+  let sessionId: Id<'sessions'> | null = null;
+  try {
+    sessionId = await convex.mutation(api.sessions.getSession, { code });
+  } catch (_error) {
+    setLocalStorage(VALID_ACCESS_CODE_KEY, null);
+    return false;
+  }
+  if (sessionId) {
+    setLocalStorage(VALID_ACCESS_CODE_KEY, sessionId);
+    return true;
+  }
+  setLocalStorage(VALID_ACCESS_CODE_KEY, null);
+  return false;
+}
+
+const SELECTED_TEAM_SLUG_KEY = 'selectedConvexTeamSlug';
+export const selectedTeamSlugStore = atom<string | null>(null);
+
+export function initializeSelectedTeamSlug(teams: ConvexTeam[]) {
+  const teamSlugFromLocalStorage = getLocalStorage(SELECTED_TEAM_SLUG_KEY);
+  if (teamSlugFromLocalStorage) {
+    const team = teams.find((team) => team.slug === teamSlugFromLocalStorage);
+    if (team) {
+      selectedTeamSlugStore.set(teamSlugFromLocalStorage);
+      setLocalStorage(SELECTED_TEAM_SLUG_KEY, teamSlugFromLocalStorage);
+      return;
+    }
+  }
+  if (teams.length > 0) {
+    selectedTeamSlugStore.set(teams[0].slug);
+    setLocalStorage(SELECTED_TEAM_SLUG_KEY, teams[0].slug);
+    return;
+  }
+  console.error('Unexpected state -- no teams found');
+  selectedTeamSlugStore.set(null);
+  setLocalStorage(SELECTED_TEAM_SLUG_KEY, null);
+}
+
+export function setSelectedTeamSlug(teamSlug: string | null) {
+  setLocalStorage(SELECTED_TEAM_SLUG_KEY, teamSlug);
+  selectedTeamSlugStore.set(teamSlug);
+}
+
+export function useSelectedTeamSlug(): string | null {
+  const selectedTeamSlug = useStore(selectedTeamSlugStore);
+  return selectedTeamSlug;
 }

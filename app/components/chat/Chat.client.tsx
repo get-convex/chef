@@ -15,19 +15,31 @@ import Cookies from 'js-cookie';
 import { debounce } from '~/utils/debounce';
 import { useSearchParams } from '@remix-run/react';
 import { createSampler } from '~/utils/sampler';
-import { logStore } from '~/lib/stores/logs';
-import { streamingState } from '~/lib/stores/streaming';
 import { filesToArtifacts } from '~/utils/fileUtils';
 import { ChatContextManager } from '~/lib/ChatContextManager';
-import { ContainerBootState, waitForBootStepCompleted, webcontainer } from '~/lib/webcontainer';
+import { webcontainer } from '~/lib/webcontainer';
+import {
+  ContainerBootState,
+  takeContainerBootError,
+  useContainerBootState,
+  waitForBootStepCompleted,
+} from '~/lib/stores/containerBootState';
 import { FlexAuthWrapper } from './FlexAuthWrapper';
-import { convexStore, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import {
+  convexStore,
+  selectedTeamSlugStore,
+  useConvexSessionId,
+  useConvexSessionIdOrNullOrLoading,
+} from '~/lib/stores/convex';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { toast, Toaster } from 'sonner';
-import type { ActionStatus } from '~/lib/runtime/action-runner';
-import type { PartId } from '~/lib/stores/Artifacts';
+import type { PartId } from '~/lib/stores/artifacts';
 import { captureException } from '@sentry/remix';
+import { setExtra, setUser } from '@sentry/remix';
+import { useAuth0 } from '@auth0/auth0-react';
+import { setProfile } from '~/lib/stores/profile';
+import type { ActionStatus } from '~/lib/runtime/action-runner';
 
 const logger = createScopedLogger('Chat');
 
@@ -55,6 +67,8 @@ export function Chat() {
         token: projectInfo.adminKey,
         deploymentName: projectInfo.deploymentName,
         deploymentUrl: projectInfo.deploymentUrl,
+        projectSlug: projectInfo.projectSlug,
+        teamSlug: projectInfo.teamSlug,
       });
     }
   }, [projectInfo]);
@@ -62,15 +76,17 @@ export function Chat() {
   return (
     <>
       <FlexAuthWrapper>
-        {ready && (
-          <ChatImpl
-            description={title}
-            initialMessages={initialMessages}
-            storeMessageHistory={storeMessageHistory}
-            importChat={importChat}
-            initializeChat={initializeChat}
-          />
-        )}
+        <SentryUserProvider>
+          {ready ? (
+            <ChatImpl
+              description={title}
+              initialMessages={initialMessages}
+              storeMessageHistory={storeMessageHistory}
+              importChat={importChat}
+              initializeChat={initializeChat}
+            />
+          ) : null}
+        </SentryUserProvider>
       </FlexAuthWrapper>
       <Toaster position="bottom-right" closeButton richColors />
     </>
@@ -99,13 +115,12 @@ interface ChatProps {
   initialMessages: Message[];
   storeMessageHistory: (messages: Message[]) => Promise<void>;
   importChat: (description: string, messages: Message[]) => Promise<void>;
-  initializeChat: () => Promise<void>;
+  initializeChat: (teamSlug: string | null) => Promise<void>;
   description?: string;
 }
 
 const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, initializeChat }: ChatProps) => {
   useShortcuts();
-
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -118,6 +133,19 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
   const [animationScope, animate] = useAnimate();
 
   const chatContextManager = useRef(new ChatContextManager());
+  const { getAccessTokenSilently } = useAuth0();
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch and store the access token
+    getAccessTokenSilently({ detailedResponse: true })
+      .then((response) => {
+        setToken(response.id_token);
+      })
+      .catch((error) => {
+        console.error('Failed to get access token:', error);
+      });
+  }, [getAccessTokenSilently]);
 
   const {
     messages,
@@ -139,10 +167,22 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
     sendExtraMessageFields: true,
     experimental_prepareRequestBody: ({ messages }) => {
       const chatId = chatIdStore.get() ?? '';
+      const convex = convexStore.get();
+      const teamSlug = selectedTeamSlugStore.get();
+      if (!token) {
+        throw new Error('No token');
+      }
+      if (!teamSlug) {
+        throw new Error('No team slug');
+      }
+
       return {
         messages: chatContextManager.current.prepareContext(messages),
         firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
         chatId,
+        token,
+        teamSlug,
+        deploymentName: convex?.deploymentName,
       };
     },
     maxSteps: 64,
@@ -161,11 +201,6 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       });
       console.log('Error', e);
       logger.error('Request failed\n\n', e, error);
-      logStore.logError('Chat request failed', e, {
-        component: 'Chat',
-        action: 'request',
-        error: e.message,
-      });
       toast.error(
         'There was an error processing your request: ' + (e.message ? e.message : 'No details were returned'),
       );
@@ -176,17 +211,21 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
 
       if (usage) {
         console.log('Token usage:', usage);
-        logStore.logProvider('Chat response completed', {
-          component: 'Chat',
-          action: 'response',
-          usage,
-          messageLength: message.content.length,
-        });
       }
 
       logger.debug('Finished streaming');
     },
   });
+
+  const containerBootState = useContainerBootState();
+  useEffect(() => {
+    if (containerBootState.state === ContainerBootState.ERROR && containerBootState.errorToLog) {
+      captureException(containerBootState.errorToLog);
+      toast.error('Failed to initialize the Chef environment. Please reload the page.');
+      takeContainerBootError();
+    }
+  }, [containerBootState]);
+
   useEffect(() => {
     const prompt = searchParams.get('prompt');
 
@@ -225,11 +264,6 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
     stop();
     chatStore.setKey('aborted', true);
     workbenchStore.abortAllActions();
-
-    logStore.logProvider('Chat response aborted', {
-      component: 'Chat',
-      action: 'abort',
-    });
   };
 
   useEffect(() => {
@@ -262,7 +296,7 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
     setChatStarted(true);
   };
 
-  const sendMessage = async (_event: React.UIEvent, messageInput?: string) => {
+  const sendMessage = async (_event: React.UIEvent, teamSlug: string | null, messageInput?: string) => {
     const messageContent = messageInput || input;
 
     if (!messageContent?.trim()) {
@@ -273,7 +307,7 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       abort();
       return;
     }
-    await initializeChat();
+    await initializeChat(teamSlug);
 
     runAnimation();
 
@@ -384,9 +418,6 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       showChat={showChat}
       chatStarted={chatStarted}
       streamStatus={status}
-      onStreamingChange={(streaming) => {
-        streamingState.set(streaming);
-      }}
       sendMessage={sendMessage}
       messageRef={messageRef}
       scrollRef={scrollRef}
@@ -460,4 +491,34 @@ function useCurrentToolStatus() {
     };
   }, []);
   return toolStatus;
+}
+
+function SentryUserProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth0();
+  const sessionId = useConvexSessionId();
+  const chatId = useChatIdOrNull();
+
+  useEffect(() => {
+    setExtra('sessionId', sessionId);
+  }, [sessionId]);
+
+  useEffect(() => {
+    setExtra('chatId', chatId);
+  }, [chatId]);
+
+  useEffect(() => {
+    if (user) {
+      setUser({
+        id: user.sub ?? undefined,
+        username: user.name ?? user.nickname ?? undefined,
+        email: user.email ?? undefined,
+      });
+    }
+    setProfile({
+      username: user?.name ?? user?.nickname ?? '',
+      avatar: user?.picture ?? '',
+    });
+  }, [user]);
+
+  return children;
 }

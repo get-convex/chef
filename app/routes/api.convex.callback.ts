@@ -1,16 +1,51 @@
-import type { LoaderFunctionArgs } from '@remix-run/cloudflare';
+import type { LoaderFunctionArgs } from '@vercel/remix';
 
-export async function loader({ request, context }: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
-  const CLIENT_ID =
-    (context.cloudflare.env as Record<string, any>).CONVEX_OAUTH_CLIENT_ID || process.env.CONVEX_OAUTH_CLIENT_ID;
-  const CLIENT_SECRET =
-    (context.cloudflare.env as Record<string, any>).CONVEX_OAUTH_CLIENT_SECRET ||
-    process.env.CONVEX_OAUTH_CLIENT_SECRET;
+  const CLIENT_ID = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID;
+  const CLIENT_SECRET = globalThis.process.env.CONVEX_OAUTH_CLIENT_SECRET;
+  const PROVISION_HOST = globalThis.process.env.PROVISION_HOST || 'https://api.convex.dev';
+
+  async function fetchDeploymentCredentials(
+    provisionHost: string,
+    projectDeployKey: string,
+    deploymentType: 'prod' | 'dev',
+  ) {
+    const response = await fetch(`${provisionHost}/api/deployment/provision_and_authorize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Convex-Client': 'bolt-0.0.0',
+        Authorization: `Bearer ${projectDeployKey}`,
+      },
+      body: JSON.stringify({
+        // teamSlug and projectSlug are not needed since we’re using a project deploy key as an auth token
+        teamSlug: null,
+        projectSlug: null,
+        deploymentType,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch deployment credentials');
+    }
+
+    const json = (await response.json()) as {
+      deploymentName: string;
+      url: string;
+      adminKey: string;
+    };
+
+    return json;
+  }
 
   if (!code) {
     return Response.json({ error: 'No authorization code provided' }, { status: 400 });
+  }
+
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    throw new Error('Missing required environment variables (CONVEX_OAUTH_CLIENT_ID, CONVEX_OAUTH_CLIENT_SECRET)');
   }
 
   try {
@@ -18,7 +53,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     const origin = url.origin;
 
     // Exchange the code for a token
-    const tokenResponse = await fetch('https://api.convex.dev/oauth/token', {
+    const tokenResponse = await fetch(`${PROVISION_HOST}/oauth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -43,7 +78,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     const tokenData = tokenResponseJson as { access_token: string; token_type: 'bearer' };
     const token = tokenData.access_token;
 
-    const { deploymentName, url: deploymentUrl } = await fetchDeploymentCredentials(token, 'dev');
+    const { deploymentName, url: deploymentUrl } = await fetchDeploymentCredentials(PROVISION_HOST, token, 'dev');
 
     // Return the token as JSON
     return Response.json({ token, deploymentName, deploymentUrl });
@@ -51,35 +86,4 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     console.error('Error in Convex OAuth callback:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
-const CONVEX_PROVISION_API = 'https://provision.convex.dev/api';
-
-async function fetchDeploymentCredentials(projectDeployKey: string, deploymentType: 'prod' | 'dev') {
-  const response = await fetch(`${CONVEX_PROVISION_API}/deployment/provision_and_authorize`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Convex-Client': 'bolt-0.0.0',
-      Authorization: `Bearer ${projectDeployKey}`,
-    },
-    body: JSON.stringify({
-      // teamSlug and projectSlug are not needed since we’re using a project deploy key as an auth token
-      teamSlug: null,
-      projectSlug: null,
-      deploymentType,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch deployment credentials');
-  }
-
-  const json = (await response.json()) as {
-    deploymentName: string;
-    url: string;
-    adminKey: string;
-  };
-
-  return json;
 }
