@@ -155,7 +155,6 @@ export function getSelectedTeamSlug(): string | null {
 }
 
 export function setSelectedTeamSlug(teamSlug: string | null) {
-  selectedTeamSlugStore.set(teamSlug);
   setLocalStorage(SELECTED_TEAM_SLUG_KEY, teamSlug);
   selectedTeamSlugStore.set(teamSlug);
 }
