@@ -13,10 +13,15 @@ import { viewTool } from '~/lib/runtime/viewTool';
 import type { ConvexToolSet } from '~/lib/common/types';
 import { npmInstallTool } from '~/lib/runtime/npmInstallTool';
 import { openai } from '@ai-sdk/openai';
-import type { Tracer } from '~/routes/api.chat';
+import type { Tracer } from '~/lib/.server/chat';
 import { editTool } from '~/lib/runtime/editTool';
 import { captureException } from '@sentry/remix';
 import type { SystemPromptOptions } from '~/lib/common/prompts/types';
+
+// workaround for Vercel environment from
+// https://github.com/vercel/ai/issues/199#issuecomment-1605245593
+import { fetch as undiciFetch } from 'undici';
+type Fetch = typeof fetch;
 
 type Messages = Message[];
 
@@ -34,7 +39,7 @@ const tools: ConvexToolSet = {
 
 export async function convexAgent(
   chatId: string,
-  env: Env,
+  env: Record<string, string | undefined>,
   firstUserMessage: boolean,
   messages: Messages,
   tracer: Tracer | null,
@@ -48,6 +53,9 @@ export async function convexAgent(
       maxTokens: 8192,
     };
   } else {
+    // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
+    const fetch = undiciFetch as unknown as Fetch;
+
     // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
     const rateLimitAwareFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const enrichedOptions = anthropicInjectCacheControl(init);
@@ -114,6 +122,9 @@ export async function convexAgent(
     ],
     tools,
     onFinish: (result) => onFinishHandler(result, tracer, chatId, recordUsageCb),
+    onError({ error }) {
+      console.error(error);
+    },
 
     experimental_telemetry: {
       isEnabled: true,
@@ -226,6 +237,7 @@ async function onFinishHandler(
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-export function getEnv(env: Env, name: keyof Env): string | undefined {
-  return env[name] || process.env[name];
+// TODO this was cool, do something to type our environment variables
+export function getEnv(env: Record<string, string | undefined>, name: string): string | undefined {
+  return env[name] || globalThis.process.env[name];
 }

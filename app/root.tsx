@@ -1,44 +1,36 @@
 import { captureRemixErrorBoundaryError } from '@sentry/remix';
 import { useStore } from '@nanostores/react';
-import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/cloudflare';
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  json,
-  useRouteLoaderData,
-  useRouteError,
-} from '@remix-run/react';
+import type { LinksFunction, LoaderFunctionArgs } from '@vercel/remix';
+import { json } from '@vercel/remix';
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, useRouteError } from '@remix-run/react';
 import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
 import { themeStore } from './lib/stores/theme';
 import { stripIndents } from './utils/stripIndent';
-import { createHead } from 'remix-island';
 import { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Auth0Provider } from '@auth0/auth0-react';
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
+import { logStore } from './lib/stores/logs';
 import { ConvexReactClient } from 'convex/react';
-import {
-  getFlexAuthModeInLoader,
-  getConvexUrlInLoader,
-  getConvexOAuthClientIdInLoader,
-} from './lib/persistence/convex';
+import { ErrorDisplay } from './components/ErrorComponent';
+
 import globalStyles from './styles/index.scss?url';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 
 import 'virtual:uno.css';
 
-export async function loader({ context }: LoaderFunctionArgs) {
-  const convexUrl = getConvexUrlInLoader(context);
-  const convexOauthClientId = getConvexOAuthClientIdInLoader(context);
-  const authMode = getFlexAuthModeInLoader(context);
-  // These environment variables are available in the client (they aren't secret).
+export async function loader({ context: _context }: LoaderFunctionArgs) {
+  const convexUrl = globalThis.process.env.CONVEX_URL || import.meta.env.VITE_CONVEX_URL;
+  const convexOauthClientId = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID;
+  const authMode = globalThis.process.env.FLEX_AUTH_MODE;
   return json({
-    ENV: { CONVEX_URL: convexUrl, FLEX_AUTH_MODE: authMode, CONVEX_OAUTH_CLIENT_ID: convexOauthClientId },
+    ENV: {
+      CONVEX_URL: convexUrl,
+      FLEX_AUTH_MODE: authMode,
+      CONVEX_OAUTH_CLIENT_ID: convexOauthClientId,
+    },
   });
 }
 
@@ -80,20 +72,44 @@ const inlineThemeCode = stripIndents`
   }
 `;
 
-export const Head = createHead(() => (
-  <>
-    <meta charSet="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <Meta />
-    <Links />
-    <script dangerouslySetInnerHTML={{ __html: inlineThemeCode }} />
-  </>
-));
-
+// Layout is responsible for rendering when loaders succeed AND when they fail
 export function Layout({ children }: { children: React.ReactNode }) {
   const theme = useStore(themeStore);
+
+  // TODO does it still make sense?
+  useEffect(() => {
+    document.querySelector('html')?.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  return (
+    <html lang="en" data-theme={theme}>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <Links />
+        <script dangerouslySetInnerHTML={{ __html: inlineThemeCode }} />
+      </head>
+      <body>
+        {children}
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+export const ErrorBoundary = () => {
+  const error = useRouteError();
+  captureRemixErrorBoundaryError(error);
+  return <ErrorDisplay error={error} />;
+};
+
+export default function App() {
+  const theme = useStore(themeStore);
   const loaderData = useRouteLoaderData<typeof loader>('root');
-  const CONVEX_URL = import.meta.env.VITE_CONVEX_URL || (loaderData as any)?.ENV.CONVEX_URL;
+  console.log('loaderData in App:', loaderData);
+  const CONVEX_URL = loaderData!.ENV.CONVEX_URL;
   if (!CONVEX_URL) {
     throw new Error(`Missing CONVEX_URL: ${CONVEX_URL}`);
   }
@@ -109,44 +125,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    document.querySelector('html')?.setAttribute('data-theme', theme);
-  }, [theme]);
+    logStore.logSystem('Application initialized', {
+      theme,
+      platform: navigator.platform,
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString(),
+    });
+  }, []);
 
   return (
-    <>
-      <ClientOnly>
-        {() => (
-          <DndProvider backend={HTML5Backend}>
-            <Auth0Provider
-              domain={import.meta.env.VITE_AUTH0_DOMAIN}
-              clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
-              authorizationParams={{
-                redirect_uri: window.location.origin,
-              }}
-              useRefreshTokens={true}
-              cacheLocation="localstorage"
-            >
-              <ConvexProviderWithAuth0 client={convex}>{children}</ConvexProviderWithAuth0>
-            </Auth0Provider>
-          </DndProvider>
-        )}
-      </ClientOnly>
-      <ScrollRestoration />
-      <Scripts />
-    </>
-  );
-}
-
-export const ErrorBoundary = () => {
-  const error = useRouteError();
-  captureRemixErrorBoundaryError(error);
-  return <div>Something went wrong</div>;
-};
-
-export default function App() {
-  return (
-    <Layout>
-      <Outlet />
-    </Layout>
+    <ClientOnly>
+      {() => (
+        <DndProvider backend={HTML5Backend}>
+          <Auth0Provider
+            domain={import.meta.env.VITE_AUTH0_DOMAIN}
+            clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
+            authorizationParams={{
+              redirect_uri: window.location.origin,
+            }}
+            useRefreshTokens={true}
+            cacheLocation="localstorage"
+          >
+            <ConvexProviderWithAuth0 client={convex}>
+              <Outlet />
+            </ConvexProviderWithAuth0>
+          </Auth0Provider>
+        </DndProvider>
+      )}
+    </ClientOnly>
   );
 }

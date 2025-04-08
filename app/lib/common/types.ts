@@ -1,5 +1,5 @@
 import type { Tool, ToolCallUnion } from 'ai';
-import { z } from 'zod';
+import type { z } from 'zod';
 import type { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
 import type { editToolParameters } from '~/lib/runtime/editTool';
 import type { viewParameters } from '~/lib/runtime/viewTool';

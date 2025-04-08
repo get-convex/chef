@@ -2,9 +2,8 @@
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "types": [
-      "@remix-run/cloudflare",
+      "@remix-run/node",
       "vite/client",
-      "@cloudflare/workers-types/2023-07-01",
       "@types/dom-speech-recognition"
     ],
     "isolatedModules": true,

@@ -2,7 +2,7 @@ import type { Id } from '@convex/_generated/dataModel';
 import { atom } from 'nanostores';
 import { useStore } from '@nanostores/react';
 import { getLocalStorage, setLocalStorage } from '~/lib/persistence';
-import { ConvexReactClient } from 'convex/react';
+import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { CONVEX_INVITE_CODE_QUERY_PARAM } from '~/lib/persistence/convex';
 
