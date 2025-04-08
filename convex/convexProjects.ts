@@ -173,67 +173,9 @@ export const recordProvisionedConvexProjectCredentials = internalMutation({
     });
   },
 });
-export const registerConvexProjectViaOauth = mutation({
-  args: {
-    sessionId: v.id('sessions'),
-    chatId: v.string(),
-    token: v.string(),
-    deploymentName: v.string(),
-    deploymentUrl: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
-    if (!chat) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
-    }
-    const member = await getCurrentMember(ctx);
-    // We should really assert that these match the key
-    const { projectSlug, teamSlug, projectDeployKey } = parseToken(args.token);
-    await ctx.db.patch(chat._id, {
-      convexProject: {
-        kind: 'connected',
-        projectSlug,
-        teamSlug,
-        deploymentUrl: args.deploymentUrl,
-        deploymentName: args.deploymentName,
-      },
-    });
-    const allCredentialsForProject = await ctx.db
-      .query('convexProjectCredentials')
-      .withIndex('bySlugs', (q) => q.eq('teamSlug', teamSlug).eq('projectSlug', projectSlug))
-      .collect();
-    const existingCredential = allCredentialsForProject.find((c) => c.memberId === member._id);
-    if (!existingCredential) {
-      await ctx.db.insert('convexProjectCredentials', {
-        projectSlug,
-        teamSlug,
-        memberId: member._id,
-        projectDeployKey,
-      });
-    } else {
-      await ctx.db.patch(existingCredential._id, {
-        projectDeployKey,
-      });
-    }
-  },
-});
 
-function parseToken(token: string) {
-  // project:teamSlug:projectSlug|<secret>
-  const parts = token.split('|');
-  if (parts.length !== 2) {
-    throw new ConvexError({ code: 'InvalidToken', message: 'Invalid token' });
-  }
-  const firstParts = parts[0].split(':');
-  if (firstParts.length !== 3) {
-    throw new ConvexError({ code: 'InvalidToken', message: 'Invalid token' });
-  }
-  return {
-    projectSlug: firstParts[2],
-    teamSlug: firstParts[1],
-    projectDeployKey: token,
-  };
-}
+const TOTAL_WAIT_TIME_MS = 5000;
+const WAIT_TIME_MS = 500;
 
 export const connectConvexProjectForOauth = internalAction({
   args: {
@@ -245,8 +187,10 @@ export const connectConvexProjectForOauth = internalAction({
   handler: async (ctx, args) => {
     const bigBrainHost = ensureEnvVar('BIG_BRAIN_HOST');
     let projectName: string | null = null;
-    let attempts = 0;
-    while (attempts < 10) {
+    let timeElapsed = 0;
+    // Project names get set via the first message from the LLM, so best effort
+    // get the name and use it to create the project.
+    while (timeElapsed < TOTAL_WAIT_TIME_MS) {
       projectName = await ctx.runQuery(internal.convexProjects.getProjectName, {
         sessionId: args.sessionId,
         chatId: args.chatId,
@@ -254,8 +198,8 @@ export const connectConvexProjectForOauth = internalAction({
       if (projectName) {
         break;
       }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      attempts++;
+      await new Promise((resolve) => setTimeout(resolve, WAIT_TIME_MS));
+      timeElapsed += WAIT_TIME_MS;
     }
     projectName = projectName ?? 'My Project (Chef)';
     const response = await fetch(`${bigBrainHost}/api/create_project`, {
@@ -311,6 +255,23 @@ export const connectConvexProjectForOauth = internalAction({
       projectDeployKey,
       deploymentUrl: data.prodUrl,
       deploymentName: data.deploymentName,
+    });
+  },
+});
+
+export const recordFailedConvexProjectConnection = internalMutation({
+  args: {
+    sessionId: v.id('sessions'),
+    chatId: v.string(),
+    errorMessage: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
+    if (!chat) {
+      throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
+    }
+    await ctx.db.patch(chat._id, {
+      convexProject: { kind: 'failed', errorMessage: args.errorMessage },
     });
   },
 });

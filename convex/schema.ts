@@ -44,9 +44,15 @@ export default defineSchema({
           // for this member's dev deployment
           deploymentUrl: v.string(),
           deploymentName: v.string(),
+          warningMessage: v.optional(v.string()),
         }),
         v.object({
           kind: v.literal('connecting'),
+          jobId: v.optional(v.id('_scheduled_functions')),
+        }),
+        v.object({
+          kind: v.literal('failed'),
+          errorMessage: v.string(),
         }),
       ),
     ),
