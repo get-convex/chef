@@ -4,7 +4,7 @@ import { ConvexError, v } from 'convex/values';
 import type { VAny } from 'convex/values';
 import { isValidSession } from './sessions';
 import type { Doc, Id } from './_generated/dataModel';
-import { startProvisionConvexProject } from './convexProjects';
+import { startProvisionConvexProjectHelper } from './convexProjects';
 export type SerializedMessage = Omit<AIMessage, 'createdAt'> & {
   createdAt: number | undefined;
 };
@@ -533,7 +533,7 @@ export async function createNewChatFromMessages(
     snapshotId,
   });
 
-  await startProvisionConvexProject(ctx, {
+  await startProvisionConvexProjectHelper(ctx, {
     sessionId,
     chatId: id,
     projectInitParams,

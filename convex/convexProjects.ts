@@ -84,7 +84,23 @@ export const loadConnectedConvexProjectCredentials = query({
 
 const CHECK_CONNECTION_DEADLINE_MS = 15000;
 
-export async function startProvisionConvexProject(
+export const startProvisionConvexProject = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    chatId: v.string(),
+    projectInitParams: v.optional(
+      v.object({
+        teamSlug: v.string(),
+        auth0AccessToken: v.string(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    await startProvisionConvexProjectHelper(ctx, args);
+  },
+});
+
+export async function startProvisionConvexProjectHelper(
   ctx: MutationCtx,
   args: {
     sessionId: Id<'sessions'>;
