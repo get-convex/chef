@@ -23,7 +23,6 @@ export class TerminalStore {
   }
 
   toggleTerminal(value?: boolean) {
-    console.log('Terminal store toggle:', { current: this.showTerminal.get(), new: value });
     this.showTerminal.set(value !== undefined ? value : !this.showTerminal.get());
   }
 
