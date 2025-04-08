@@ -59,10 +59,8 @@ hen encoded as UTF-8.                                                         |
 e limit for Convex types.                                                     |
 | Array       | Array]      | \`[1, 3.2, "abc"]\`      | \`v.array(values)\`                              | Arrays can have at most 8192 values.
                                                                               |
-| Object      | Object      | \`{a: "abc"}\`           | \`v.object({property: value})\`                  | Convex only supports "plain old JavaScript objects" (objects that do not have a custom prototype). Objects can have at m
-ost 1024 entries. Field names must be nonempty and not start with "$" or "_". |
-| Record      | Record      | \`{"a": "1", "b": "2"}\` | \`v.record(keys, values)\`                       | Records are objects at runtime, but can have dynamic keys. Keys must be only ASCII characters, nonempty, and not start w
-ith "$" or "_".
+| Object      | Object      | \`{a: "abc"}\`           | \`v.object({property: value})\`                  | Convex only supports "plain old JavaScript objects" (objects that do not have a custom prototype). Objects can have at most 1024 entries. Field names must be ASCII characters, nonempty, and not start with "$" or "_". |
+| Record      | Record      | \`{"a": "1", "b": "2"}\` | \`v.record(keys, values)\`                       | Records are objects at runtime, but can have dynamic keys. Keys must be only ASCII characters, nonempty, and not start with "$" or "_".
 
 - \`v.object()\`, \`v.array()\`, \`v.boolean()\`, \`v.number()\`, \`v.string()\`, \`v.id()\`, and \`v.null()\` are the most common
   validators you'll need. Do NOT use any other validators. In particular, \`v.map()\` and \`v.set()\` are not supported.
