@@ -153,7 +153,7 @@ const ActionList = memo(({ actions }: ActionListProps) => {
             captureException(`Action is not a file: ${action.type}`);
             return null;
           }
-          const message = action.isEdit ? 'Edit' : 'Create';
+          // Handle non-file actions
           return (
             <motion.li
               key={index}
@@ -177,15 +177,7 @@ const ActionList = memo(({ actions }: ActionListProps) => {
                     <div className="i-ph:x"></div>
                   ) : null}
                 </div>
-                <div>
-                  {message}{' '}
-                  <code
-                    className="bg-bolt-elements-artifacts-inlineCode-background text-bolt-elements-artifacts-inlineCode-text px-1.5 py-1 rounded-md text-bolt-elements-item-contentAccent hover:underline cursor-pointer"
-                    onClick={() => openArtifactInWorkbench(action.filePath)}
-                  >
-                    {action.filePath}
-                  </code>
-                </div>
+                <div>{type} action</div>
               </div>
             </motion.li>
           );
