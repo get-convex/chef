@@ -25,6 +25,8 @@ import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
 import globalStyles from './styles/index.scss?url';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 
+import 'allotment/dist/style.css';
+
 import 'virtual:uno.css';
 
 export async function loader({ context }: LoaderFunctionArgs) {

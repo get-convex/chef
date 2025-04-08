@@ -6,7 +6,7 @@ import { PortDropdown } from './PortDropdown';
 
 type ResizeSide = 'left' | 'right' | null;
 
-export const Preview = memo(() => {
+export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClose: () => void }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -254,6 +254,8 @@ export const Preview = memo(() => {
           <div className="flex items-center relative">
             <IconButton icon="i-ph:arrow-square-out" onClick={() => openInNewWindow()} title="Open Preview" />
           </div>
+
+          {showClose && <IconButton icon="i-ph:x-circle" onClick={onClose} title="Close" />}
         </div>
       </div>
 
@@ -269,16 +271,14 @@ export const Preview = memo(() => {
           }}
         >
           {activePreview ? (
-            <>
-              <iframe
-                ref={iframeRef}
-                title="preview"
-                className="border-none w-full h-full bg-bolt-elements-background-depth-1"
-                src={iframeUrl}
-                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                allow="cross-origin-isolated"
-              />
-            </>
+            <iframe
+              ref={iframeRef}
+              title="preview"
+              className="border-none w-full h-full bg-bolt-elements-background-depth-1"
+              src={iframeUrl}
+              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
+              allow="cross-origin-isolated"
+            />
           ) : (
             <div className="flex w-full h-full justify-center items-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
               No preview available
