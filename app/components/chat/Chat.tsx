@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useMessageParser, useShortcuts, useSnapScroll } from '~/lib/hooks';
-import { chatIdStore } from '~/lib/persistence';
+import { chatIdStore, description } from '~/lib/persistence';
 import { chatStore, useChatIdOrNull } from '~/lib/stores/chat';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { PROMPT_COOKIE_KEY } from '~/utils/constants';
@@ -24,11 +24,7 @@ import {
   useContainerBootState,
   waitForBootStepCompleted,
 } from '~/lib/stores/containerBootState';
-import {
-  convexStore,
-  selectedTeamSlugStore,
-  useConvexSessionId,
-} from '~/lib/stores/convex';
+import { convexStore, selectedTeamSlugStore, useConvexSessionId } from '~/lib/stores/convex';
 import { toast } from 'sonner';
 import type { PartId } from '~/lib/stores/artifacts';
 import { captureException } from '@sentry/remix';
@@ -72,6 +68,8 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
   const [imageDataList, setImageDataList] = useState<string[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
   const actionAlert = useStore(workbenchStore.alert);
+
+  const title = useStore(description);
 
   const { showChat } = useStore(chatStore);
 
@@ -377,7 +375,7 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
     />
   );
 });
-Chat.displayName = 'ChatImpl';
+Chat.displayName = 'Chat';
 
 function useCurrentToolStatus() {
   const [toolStatus, setToolStatus] = useState<Record<string, ActionStatus>>({});

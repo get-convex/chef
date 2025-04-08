@@ -21,6 +21,7 @@ import { Dashboard } from './Dashboard';
 import { convexStore } from '~/lib/stores/convex';
 import { WORK_DIR } from '~/utils/constants';
 import { SaveStatusIndicator } from '~/components/SaveStatusIndicator';
+import { Allotment } from 'allotment';
 
 interface WorkspaceProps {
   chatStarted?: boolean;
