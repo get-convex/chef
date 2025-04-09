@@ -1,12 +1,9 @@
-import { convexStore, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { Chat, SentryUserProvider } from './chat/Chat';
 import { FlexAuthWrapper } from './chat/FlexAuthWrapper';
-import { useEffect, useRef } from 'react';
-import { api } from '@convex/_generated/api';
-import { useQuery } from 'convex/react';
-import { useConvexChatHomepage } from '~/lib/persistence/useConvexChat';
+import { useRef } from 'react';
+import { useConvexChatHomepage } from '~/lib/stores/startup';
 import { Toaster } from 'sonner';
-import { setPageLoadChatId, setKnownInitialId } from '~/lib/persistence/chatIdStore';
+import { setPageLoadChatId } from '~/lib/stores/chatId';
 import type { Message } from '@ai-sdk/react';
 
 export function Homepage() {

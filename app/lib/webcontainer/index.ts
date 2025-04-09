@@ -2,7 +2,7 @@ import { WebContainer } from '@webcontainer/api';
 import { WORK_DIR_NAME } from '~/utils/constants';
 import { cleanStackTrace } from '~/utils/stacktrace';
 import { loadSnapshot } from '~/lib/snapshot';
-import { waitForConvexProjectConnection, type ConvexProject } from '~/lib/stores/convex';
+import { waitForConvexProjectConnection, type ConvexProject } from '../stores/convexProject';
 import { createScopedLogger } from '~/utils/logger';
 import { setContainerBootState, ContainerBootState } from '~/lib/stores/containerBootState';
 

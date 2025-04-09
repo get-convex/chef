@@ -13,7 +13,7 @@ import JSZip from 'jszip';
 import fileSaver from 'file-saver';
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 import { path } from '~/utils/path';
-import { description } from '~/lib/persistence';
+import { description } from './description';
 import Cookies from 'js-cookie';
 import { createSampler } from '~/utils/sampler';
 import type { ActionAlert } from '~/types/actions';
@@ -22,11 +22,11 @@ import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@convex/_generated/api';
 import type { Id } from '@convex/_generated/dataModel';
 import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot';
-import { sessionIdStore } from './convex';
+import { sessionIdStore } from './sessionId';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './artifacts';
 import { WORK_DIR } from '~/utils/constants';
-import { chatIdStore } from '~/lib/persistence/chatIdStore';
+import { chatIdStore } from '~/lib/stores/chatId';
 
 const BACKUP_DEBOUNCE_MS = 100;
 

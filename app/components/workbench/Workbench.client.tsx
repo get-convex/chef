@@ -18,7 +18,7 @@ import { EditorPanel } from './EditorPanel';
 import { Preview } from './Preview';
 import useViewport from '~/lib/hooks';
 import { Dashboard } from './Dashboard';
-import { convexStore } from '~/lib/stores/convex';
+import { convexProjectStore } from '~/lib/stores/convexProject';
 import { SaveStatusIndicator } from '~/components/SaveStatusIndicator';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { getAbsolutePath } from '~/lib/stores/files';
@@ -115,7 +115,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
     workbenchStore.resetCurrentDocument();
   }, []);
 
-  const showDashboard = useStore(convexStore) !== null;
+  const showDashboard = useStore(convexProjectStore) !== null;
 
   const sliderOptions: SliderOptions<WorkbenchViewType> = useMemo(
     () => ({

@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
-import { type ChatHistoryItem } from '~/lib/persistence';
+import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
 import { cubicEasingFn } from '~/utils/easings';
 import { logger } from '~/utils/logger';
 import { HistoryItem } from './HistoryItem';
@@ -12,8 +12,8 @@ import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { classNames } from '~/utils/classNames';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
-import { getKnownInitialId } from '~/lib/persistence/chatIdStore';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { getKnownInitialId } from '~/lib/stores/chatId';
 
 const menuVariants = {
   closed: {

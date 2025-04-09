@@ -1,9 +1,9 @@
-import { useConvexChatExisting } from '~/lib/persistence';
+import { useConvexChatExisting } from '~/lib/stores/startup';
 import { Chat } from './chat/Chat';
 import { Toaster } from 'sonner';
 import { FlexAuthWrapper } from './chat/FlexAuthWrapper';
 import { SentryUserProvider } from './chat/Chat';
-import { setPageLoadChatId } from '~/lib/persistence/chatIdStore';
+import { setPageLoadChatId } from '~/lib/stores/chatId';
 
 export function ExistingChat({ chatId }: { chatId: string }) {
   // Fill in the chatID store from props early in app initialization. If this

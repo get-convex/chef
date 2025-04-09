@@ -4,7 +4,7 @@ import { webcontainer } from '~/lib/webcontainer';
 import type { WebContainer } from '@webcontainer/api';
 import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
-import { convexStore } from '~/lib/stores/convex';
+import { convexProjectStore } from '~/lib/stores/convexProject';
 import { getFileUpdateCounter, useFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
 import { toast } from 'sonner';
 import { streamOutput } from '~/utils/process';
@@ -74,7 +74,7 @@ type DeployStatus =
 export function DeployButton() {
   const [status, setStatus] = useState<DeployStatus>({ type: 'idle' });
 
-  const convex = useStore(convexStore);
+  const convex = useStore(convexProjectStore);
   const currentCounter = useFileUpdateCounter();
 
   const addFilesToZip = async (container: WebContainer, zip: JSZip, basePath: string, currentPath: string = '') => {

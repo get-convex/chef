@@ -1,10 +1,13 @@
 import { classNames } from '~/utils/classNames';
 import { useEffect } from 'react';
 import { useStore } from '@nanostores/react';
-import { convexStore, useConvexSessionId, useFlexAuthMode, useSelectedTeamSlug } from '~/lib/stores/convex';
+import { useFlexAuthMode } from '~/lib/stores/convex';
+import { useConvexSessionId } from '~/lib/stores/sessionId';
+import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { convexProjectStore } from '~/lib/stores/convexProject';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { useChatId } from '~/lib/stores/chat';
+import { useChatId } from '~/lib/stores/chatId';
 import { useAuth0 } from '@auth0/auth0-react';
 import { TeamSelector } from './TeamSelector';
 
@@ -27,7 +30,7 @@ function ConvexConnectButtonForInviteCode() {
 
   useEffect(() => {
     if (credentials?.kind === 'connected') {
-      convexStore.set({
+      convexProjectStore.set({
         token: credentials.adminKey,
         deploymentName: credentials.deploymentName,
         deploymentUrl: credentials.deploymentUrl,
@@ -112,7 +115,7 @@ function ConvexConnectButtonViaOauth() {
       },
     });
   };
-  const isConnected = useStore(convexStore) !== null;
+  const isConnected = useStore(convexProjectStore) !== null;
   const isLoading = credentials === undefined || credentials?.kind === 'connecting';
 
   return (

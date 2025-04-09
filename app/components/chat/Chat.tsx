@@ -4,8 +4,8 @@ import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useMessageParser, useShortcuts, useSnapScroll } from '~/lib/hooks';
-import { description } from '~/lib/persistence';
-import { chatStore, useChatId } from '~/lib/stores/chat';
+import { description } from '~/lib/stores/description';
+import { chatStore, useChatId } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { PROMPT_COOKIE_KEY } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
@@ -24,7 +24,9 @@ import {
   useContainerBootState,
   waitForBootStepCompleted,
 } from '~/lib/stores/containerBootState';
-import { convexStore, selectedTeamSlugStore, useConvexSessionId } from '~/lib/stores/convex';
+import { useConvexSessionId } from '~/lib/stores/sessionId';
+import { selectedTeamSlugStore } from '~/lib/stores/convexTeams';
+import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
 import type { PartId } from '~/lib/stores/artifacts';
 import { captureException } from '@sentry/remix';
@@ -32,7 +34,7 @@ import { setExtra, setUser } from '@sentry/remix';
 import { useAuth0 } from '@auth0/auth0-react';
 import { setProfile } from '~/lib/stores/profile';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
-import { chatIdStore } from '~/lib/persistence/chatIdStore';
+import { chatIdStore } from '~/lib/stores/chatId';
 
 const logger = createScopedLogger('Chat');
 
@@ -98,7 +100,7 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
     sendExtraMessageFields: true,
     experimental_prepareRequestBody: ({ messages }) => {
       const chatId = chatIdStore.get();
-      const convex = convexStore.get();
+      const convex = convexProjectStore.get();
       const teamSlug = selectedTeamSlugStore.get();
       if (!token) {
         throw new Error('No token');

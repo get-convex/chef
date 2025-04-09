@@ -5,7 +5,8 @@
  *
  * Server-side functions accept either, so we call their union a `chatId`.
  */
-import { atom, computed } from 'nanostores';
+import { useStore } from '@nanostores/react';
+import { atom, computed, map } from 'nanostores';
 
 /*
  * When loading the homepage, we set `pageLoadMixedId` to a randomly generated initialId.
@@ -70,6 +71,10 @@ export const chatIdStore = computed(
   },
 );
 
+export function useChatId() {
+  return useStore(chatIdStore);
+}
+
 // Very important: This *only* updates the state in `window.history` and
 // does not reload the app. This way we keep all our in-memory state
 // intact.
@@ -78,3 +83,9 @@ function navigateChat(chatId: string) {
   url.pathname = `/chat/${chatId}`;
   window.history.replaceState({}, '', url);
 }
+
+export const chatStore = map({
+  started: false,
+  aborted: false,
+  showChat: true,
+});

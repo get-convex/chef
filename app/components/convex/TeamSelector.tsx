@@ -3,14 +3,14 @@ import * as Select from '@radix-ui/react-select';
 import { classNames } from '~/utils/classNames';
 import {
   setSelectedTeamSlug,
-  teamsStore,
-  useSelectedTeamSlug,
-} from '~/lib/stores/convex';
+  useSelectedTeamSlug
+} from '~/lib/stores/convexTeams';
+import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { useStore } from '@nanostores/react';
 
 export function TeamSelector() {
   const [open, setOpen] = useState(false);
-  const teams = useStore(teamsStore);
+  const teams = useStore(convexTeamsStore);
   const selectedTeamSlug = useSelectedTeamSlug();
 
   if (!teams) {

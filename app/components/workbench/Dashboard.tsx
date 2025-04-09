@@ -1,13 +1,13 @@
 import { useStore } from '@nanostores/react';
 import { memo, useEffect, useRef } from 'react';
 import { IconButton } from '~/components/ui/IconButton';
-import { convexStore } from '~/lib/stores/convex';
+import { convexProjectStore } from '~/lib/stores/convexProject';
 
 export const Dashboard = memo(() => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const convexProject = useStore(convexStore);
+  const convexProject = useStore(convexProjectStore);
 
   if (!convexProject) {
     throw new Error('No Convex project connected');

@@ -7,14 +7,15 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
-  sessionIdStore,
   flexAuthModeStore,
-  setInitialConvexSessionId,
-  setConvexSessionIdFromCode,
   setValidAccessCode,
 } from '~/lib/stores/convex';
+import {
+  sessionIdStore, setInitialConvexSessionId,
+  setConvexSessionIdFromCode
+} from '~/lib/stores/sessionId';
 
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { classNames } from '~/utils/classNames';
 import { Loading } from '~/components/Loading';
 
