@@ -29,9 +29,10 @@ Let's use the same Node.js version as the monorepo for convenience
 even though it's old. This project uses `pnpm` instead of `npm`. Download an
 .env.local from Vercel. Add `VITE_CONVEX_URL` because otherwise `npx convex dev`
 will incorrectly guess that you want to use `CONVEX_URL` as the client
-environment variable. Connect to the same Convex project as the rest of us
-so that you get some environment variables populated in your dev deployment
-automatically.
+environment variable (Nicolas added a fix to the convex CLI that will be in
+the next client release so we can avoid this.) Connect to the same Convex
+project as the rest of us so that you get some environment variables populated
+in your dev deployment automatically.
 
 ### Developing
 
@@ -43,12 +44,26 @@ pnpm run dev
 
 npx convex dev
 
-# you'll need to issue an invite code to use
+# you'll need to issue an invite code to use, so just once run
 npx convex run sessions:issueInviteCode '{issuedReason: "development testing locally", code: "dev-test"}'
 
 # now visit http://localhost:5173
 # make sure to use this port, it's been specifically listed in our Auth0 application.
+# Wait a few seconds, and then RELOAD THE PAGE! Unfortunately this is currently required
+# to use the hot-reloading dev server. Enter your 'dev-test' code and you're off.
 ```
+
+Probably set up an editor plugin for running prettier on save.
+
+We have a commit queue, we don't block on test (nobody runs them) but we do block
+on lints and formatting.
+
+We have deploy previews, click the link on
+your PR or push a branch and go to [vercel.com/convex-dev/chef/deployments](https://vercel.com/convex-dev/chef/deployments)
+to find your preview deploy. Preview deploys have a test code of 'preview-test'
+issued on them during the deploy process.
+
+Test your work, we don't have automated tests!
 
 ### Auth
 
@@ -56,8 +71,10 @@ There are two forms of auth, dictated by the `FLEX_AUTH_MODE` environment variab
 
 #### `FLEX_AUTH_MODE=ConvexOAuth`
 
-- Users sign in with their Github account to Convex (as of writing, actually a test Convex Auth0 app)
-- Users go through an OAuth flow to link projects in their account to Flex
+- Users sign in with their Github account to Convex via the same Auth0 app as the dashboard.
+- Users choose a team to create a new project in for app they conconct with Chef.
+  Note that this is _not_ the OAuth flow that we offer to customers; if a customer wants this,
+  they need to use the OAuth flow that grants them access to a user's specific Convex project.
 - You'll need the following env vars set in `.env.local` (values are in 1Password under `flex .env.local`)
   - `VITE_AUTH0_CLIENT_ID`
   - `VITE_AUTH0_DOMAIN`
@@ -84,7 +101,3 @@ Additionally make sure `CHEF_OAUTH_APP_NAME` is set to the same value as `CONVEX
 There are a few steps to iterating on the template.
 
 Run `npm run rebuild-template` for directions.
-
-```
-
-```
