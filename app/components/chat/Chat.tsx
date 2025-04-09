@@ -102,7 +102,7 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
     USE_ANTHROPIC_FRACTION = Number(import.meta.env.VITE_USE_ANTHROPIC_FRACTION);
   }
 
-  let modelProviders: ModelProvider[] = USE_ANTHROPIC_FRACTION === 1.0 ? ['Anthropic'] : ['Anthropic', 'Bedrock'];
+  const modelProviders: ModelProvider[] = USE_ANTHROPIC_FRACTION === 1.0 ? ['Anthropic'] : ['Anthropic', 'Bedrock'];
 
   const chatContextManager = useRef(new ChatContextManager());
   const { getAccessTokenSilently } = useAuth0();
@@ -147,10 +147,7 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
         token,
         teamSlug,
         deploymentName: convex?.deploymentName,
-        modelProvider:
-          modelProviders[
-            (Math.floor(Math.random() * modelProviders.length) + retries.numFailures) % modelProviders.length
-          ],
+        modelProvider,
       };
     },
     maxSteps: 64,
