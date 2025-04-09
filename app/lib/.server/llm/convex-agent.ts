@@ -50,9 +50,14 @@ export async function convexAgent(
   messages: Messages,
   tracer: Tracer | null,
   modelProvider: ModelProvider,
+  userApiKey: string | undefined,
   recordUsageCb: (usage: LanguageModelUsage) => Promise<void>,
 ) {
-  console.debug('Starting agent with model provider ', modelProvider);
+  console.debug('Starting agent with model provider', modelProvider);
+  if (userApiKey) {
+    console.debug('Using user provided API key');
+  }
+
   let provider: Provider;
   let model: string;
   // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
@@ -122,9 +127,10 @@ export async function convexAgent(
         };
       };
       const anthropic = createAnthropic({
-        apiKey: getEnv(env, 'ANTHROPIC_API_KEY'),
-        fetch: rateLimitAwareFetch(),
+        apiKey: userApiKey || getEnv(env, 'ANTHROPIC_API_KEY'),
+        fetch: userApiKey ? fetch : rateLimitAwareFetch(),
       });
+
       provider = {
         model: anthropic(model),
         maxTokens: 8192,

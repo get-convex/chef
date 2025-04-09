@@ -2,6 +2,11 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v, type VAny } from 'convex/values';
 import type { SerializedMessage } from './messages';
 
+export const apiKeyValidator = v.object({
+  preference: v.union(v.literal('always'), v.literal('quotaExhausted')),
+  value: v.string(),
+});
+
 export default defineSchema({
   /*
    * We create a session (if it does not exist) and store the ID in local storage.
@@ -17,6 +22,7 @@ export default defineSchema({
 
   convexMembers: defineTable({
     tokenIdentifier: v.string(),
+    apiKey: v.optional(apiKeyValidator),
   }).index('byTokenIdentifier', ['tokenIdentifier']),
 
   /*

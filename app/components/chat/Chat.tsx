@@ -31,7 +31,8 @@ import { setProfile } from '~/lib/stores/profile';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import { chatIdStore } from '~/lib/stores/chatId';
 import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
-import { useConvex } from 'convex/react';
+import { useConvex, useQuery } from 'convex/react';
+import { api } from '@convex/_generated/api';
 
 const logger = createScopedLogger('Chat');
 
@@ -84,6 +85,8 @@ export const Chat = memo(
     const { showChat } = useStore(chatStore);
 
     const [animationScope, animate] = useAnimate();
+
+    const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
 
     const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number }>({
       numFailures: 0,
@@ -142,6 +145,7 @@ export const Chat = memo(
           teamSlug,
           deploymentName,
           modelProvider,
+          userApiKey: apiKey,
         };
       },
       maxSteps: 64,

@@ -61,13 +61,20 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     teamSlug: string;
     deploymentName: string | undefined;
     modelProvider: ModelProvider;
+    userApiKey: { preference: 'always' | 'quotaExhausted'; value: string } | undefined;
   };
   const { messages, firstUserMessage, chatId, deploymentName, token, teamSlug } = body;
+
+  let userApiKey = body.userApiKey?.preference === 'always' ? body.userApiKey.value : undefined;
 
   if (enableRateLimiting) {
     const resp = await checkTokenUsage(PROVISION_HOST, token, teamSlug, deploymentName);
     if (resp) {
-      return resp;
+      if (body.userApiKey) {
+        userApiKey = body.userApiKey.value;
+      } else {
+        return resp;
+      }
     }
   }
 
@@ -86,7 +93,8 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       firstUserMessage,
       messages,
       tracer,
-      body.modelProvider,
+      userApiKey ? 'Anthropic' : body.modelProvider,
+      userApiKey,
       recordUsageCb,
     );
 
