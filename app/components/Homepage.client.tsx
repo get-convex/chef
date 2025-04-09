@@ -29,7 +29,8 @@ export function Homepage() {
             storeMessageHistory={storeMessageHistory}
             initializeChat={initializeChat}
             isReload={false}
-            hadSuccessfulDeploy={false} />
+            hadSuccessfulDeploy={false}
+          />
         </SentryUserProvider>
       </FlexAuthWrapper>
       <Toaster position="bottom-right" closeButton richColors />

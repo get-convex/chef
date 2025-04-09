@@ -15,8 +15,24 @@ export function getFileUpdateCounter() {
   return fileUpdateCounter.get();
 }
 
+export async function waitForFileUpdateCounterChanged(counter: number) {
+  return new Promise<void>((resolve) => {
+    if (getFileUpdateCounter() !== counter) {
+      resolve();
+      return;
+    }
+    fileUpdateCounter.listen((newCounter) => {
+      if (newCounter !== counter) {
+        resolve();
+      }
+    });
+  });
+}
+
+const IGNORED_PATHS = ['/home/project/dist/', '/home/project/node_modules/'];
+
 export function incrementFileUpdateCounter(path: string) {
-  if (path.startsWith('/home/project/dist/')) {
+  if (IGNORED_PATHS.some((p) => path.startsWith(p))) {
     return;
   }
   if (currentTimer) {

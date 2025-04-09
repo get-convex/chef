@@ -82,8 +82,6 @@ async function setupContainer(snapshotUrl: string) {
     throw new Error(`npm install failed with exit code ${exitCode}: ${output}`);
   }
 
-  workbenchStore.markInitialSnapshotLoaded();
-
   setContainerBootState(ContainerBootState.SETTING_UP_CONVEX_PROJECT);
   const convexProject = await waitForConvexProjectConnection();
   setContainerBootState(ContainerBootState.SETTING_UP_CONVEX_ENV_VARS);
@@ -92,6 +90,10 @@ async function setupContainer(snapshotUrl: string) {
   setContainerBootState(ContainerBootState.CONFIGURING_CONVEX_AUTH);
   const { initializeConvexAuth } = await import('~/lib/convexAuth');
   await initializeConvexAuth(convexProject);
+
+  setContainerBootState(ContainerBootState.STARTING_BACKUP);
+  await workbenchStore.startBackup();
+
   setContainerBootState(ContainerBootState.READY);
 }
 

@@ -49,6 +49,8 @@ export function ExistingChat({ chatId }: { chatId: string }) {
     loading = 'Setting up Convex environment variables...';
   } else if (bootState.state === ContainerBootState.CONFIGURING_CONVEX_AUTH) {
     loading = 'Configuring Convex auth...';
+  } else if (bootState.state === ContainerBootState.STARTING_BACKUP) {
+    loading = 'Starting backup...';
   } else if (bootState.state !== ContainerBootState.READY) {
     loading = 'Loading Chef environment...';
   }
@@ -82,5 +84,3 @@ export function ExistingChat({ chatId }: { chatId: string }) {
     </>
   );
 }
-
-
