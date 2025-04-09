@@ -63,7 +63,6 @@ export class BoltShell {
   #webcontainer: WebContainer | undefined;
   #terminal: ITerminal | undefined;
   #process: WebContainerProcess | undefined;
-  #executionState: { active: boolean; executionPrms?: Promise<any> } | undefined;
   #outputStream: ReadableStreamDefaultReader<string> | undefined;
   #shellInputStream: WritableStreamDefaultWriter<string> | undefined;
 
@@ -113,10 +112,8 @@ export class BoltShell {
 
     // Wait for the execution to finish
     const executionPromise = this.getCurrentExecutionResult();
-    this.#executionState = { active: true, executionPrms: executionPromise };
 
     const resp = await executionPromise;
-    this.#executionState = { active: false };
 
     if (resp) {
       try {
