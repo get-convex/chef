@@ -6,10 +6,11 @@ on:
       - staging
       - release
   pull_request:
+  merge_group:
 
 jobs:
   test:
-    name: Test
+    name: Typecheck and Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

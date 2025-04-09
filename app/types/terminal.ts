@@ -7,3 +7,8 @@ export interface ITerminal {
   onData: (cb: (data: string) => void) => void;
   input: (data: string) => void;
 }
+
+export type TerminalInitializationOptions = {
+  isReload?: boolean;
+  shouldDeployConvexFunctions?: boolean;
+};

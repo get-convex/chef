@@ -1,11 +1,12 @@
 import { captureRemixErrorBoundaryError } from '@sentry/remix';
 import { useStore } from '@nanostores/react';
-import type { LinksFunction, LoaderFunctionArgs } from '@vercel/remix';
+import type { LinksFunction } from '@vercel/remix';
 import { json } from '@vercel/remix';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, useRouteError } from '@remix-run/react';
 import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
 import { themeStore } from './lib/stores/theme';
 import { stripIndents } from './utils/stripIndent';
+import { createHead } from 'remix-island';
 import { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -13,23 +14,24 @@ import { ClientOnly } from 'remix-utils/client-only';
 import { Auth0Provider } from '@auth0/auth0-react';
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
 import { ConvexReactClient } from 'convex/react';
-import { ErrorDisplay } from './components/ErrorComponent';
-
+import {
+  getFlexAuthModeInLoader,
+  getConvexUrlInLoader,
+  getConvexOAuthClientIdInLoader,
+} from './lib/persistence/convex';
 import globalStyles from './styles/index.scss?url';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 
 import 'virtual:uno.css';
+import { ErrorDisplay } from './components/ErrorComponent';
 
-export async function loader({ context: _context }: LoaderFunctionArgs) {
-  const convexUrl = globalThis.process.env.CONVEX_URL || import.meta.env.VITE_CONVEX_URL;
-  const convexOauthClientId = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID;
-  const authMode = globalThis.process.env.FLEX_AUTH_MODE;
+export async function loader() {
+  const convexUrl = getConvexUrlInLoader();
+  const convexOauthClientId = getConvexOAuthClientIdInLoader();
+  const authMode = getFlexAuthModeInLoader();
+  // These environment variables are available in the client (they aren't secret).
   return json({
-    ENV: {
-      CONVEX_URL: convexUrl,
-      FLEX_AUTH_MODE: authMode,
-      CONVEX_OAUTH_CLIENT_ID: convexOauthClientId,
-    },
+    ENV: { CONVEX_URL: convexUrl, FLEX_AUTH_MODE: authMode, CONVEX_OAUTH_CLIENT_ID: convexOauthClientId },
   });
 }
 
@@ -71,44 +73,20 @@ const inlineThemeCode = stripIndents`
   }
 `;
 
-// Layout is responsible for rendering when loaders succeed AND when they fail
+export const Head = createHead(() => (
+  <>
+    <meta charSet="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <Meta />
+    <Links />
+    <script dangerouslySetInnerHTML={{ __html: inlineThemeCode }} />
+  </>
+));
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const theme = useStore(themeStore);
-
-  // TODO does it still make sense?
-  useEffect(() => {
-    document.querySelector('html')?.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  return (
-    <html lang="en" data-theme={theme}>
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-        <script dangerouslySetInnerHTML={{ __html: inlineThemeCode }} />
-      </head>
-      <body>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
-export const ErrorBoundary = () => {
-  const error = useRouteError();
-  captureRemixErrorBoundaryError(error);
-  return <ErrorDisplay error={error} />;
-};
-
-export default function App() {
-  const theme = useStore(themeStore);
   const loaderData = useRouteLoaderData<typeof loader>('root');
-  console.log('loaderData in App:', loaderData);
-  const CONVEX_URL = loaderData!.ENV.CONVEX_URL;
+  const CONVEX_URL = import.meta.env.VITE_CONVEX_URL || (loaderData as any)?.ENV.CONVEX_URL;
   if (!CONVEX_URL) {
     throw new Error(`Missing CONVEX_URL: ${CONVEX_URL}`);
   }
@@ -123,25 +101,46 @@ export default function App() {
       ),
   );
 
+  // TODO does it still make sense?
+  useEffect(() => {
+    document.querySelector('html')?.setAttribute('data-theme', theme);
+  }, [theme]);
+
   return (
-    <ClientOnly>
-      {() => (
-        <DndProvider backend={HTML5Backend}>
-          <Auth0Provider
-            domain={import.meta.env.VITE_AUTH0_DOMAIN}
-            clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
-            authorizationParams={{
-              redirect_uri: window.location.origin,
-            }}
-            useRefreshTokens={true}
-            cacheLocation="localstorage"
-          >
-            <ConvexProviderWithAuth0 client={convex}>
-              <Outlet />
-            </ConvexProviderWithAuth0>
-          </Auth0Provider>
-        </DndProvider>
-      )}
-    </ClientOnly>
+    <>
+      <ClientOnly>
+        {() => (
+          <DndProvider backend={HTML5Backend}>
+            <Auth0Provider
+              domain={import.meta.env.VITE_AUTH0_DOMAIN}
+              clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
+              authorizationParams={{
+                redirect_uri: window.location.origin,
+              }}
+              useRefreshTokens={true}
+              cacheLocation="localstorage"
+            >
+              <ConvexProviderWithAuth0 client={convex}>{children}</ConvexProviderWithAuth0>
+            </Auth0Provider>
+          </DndProvider>
+        )}
+      </ClientOnly>
+      <ScrollRestoration />
+      <Scripts />
+    </>
+  );
+}
+
+export const ErrorBoundary = () => {
+  const error = useRouteError();
+  captureRemixErrorBoundaryError(error);
+  return <ErrorDisplay error={error} />;
+};
+
+export default function App() {
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
   );
 }

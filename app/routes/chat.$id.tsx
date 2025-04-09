@@ -1,14 +1,46 @@
 import type { LoaderFunctionArgs } from '@vercel/remix';
-import { default as IndexRoute, meta as IndexMeta } from './_index';
+import { json } from '@vercel/remix';
+import { meta as IndexMeta } from './_index';
 import { getFlexAuthModeInLoader } from '~/lib/persistence/convex';
+import { ClientOnly } from 'remix-utils/client-only';
+import { Header } from '~/components/header/Header';
+import { SafariWarning } from '~/components/SafariWarning';
+import { ExistingChat } from '~/components/ExistingChat.client';
+import { redirect, useLoaderData } from '@remix-run/react';
 
 export const meta = IndexMeta;
 
 export async function loader(args: LoaderFunctionArgs) {
   const flexAuthMode = getFlexAuthModeInLoader();
   const url = new URL(args.request.url);
-  const code = url.searchParams.get('code');
-  return Response.json({ id: args.params.id, flexAuthMode, code });
+  // an empty string code is confusing, consider it no code
+  const code = url.searchParams.get('code') || null;
+  return json({ id: args.params.id, flexAuthMode, code });
 }
 
-export default IndexRoute;
+// This route is *only* used when reloading an existing chat. The flow
+// of going to the homepage and typing in a prompt goes through
+// `_index.tsx` and then does a client navigation without rendering
+// `ChatRoute` directly.
+//
+// So, this route is less latency critical the the homepage, and we're
+// more comfortable showing spinners to rehydrate the app state.
+export default function ChatRoute() {
+  const loaderData = useLoaderData<{ id: string }>();
+  if (!loaderData.id) {
+    redirect('/');
+  }
+  return (
+    <div className="flex flex-col h-full w-full bg-bolt-elements-background-depth-1">
+      <Header />
+      <ClientOnly>
+        {() => (
+          <>
+            <ExistingChat chatId={loaderData.id} />
+            <SafariWarning />
+          </>
+        )}
+      </ClientOnly>
+    </div>
+  );
+}

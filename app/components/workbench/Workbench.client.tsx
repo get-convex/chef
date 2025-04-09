@@ -3,7 +3,6 @@ import { motion, type HTMLMotionProps, type Variants } from 'framer-motion';
 import { computed } from 'nanostores';
 import { memo, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
-import type { ActionRunner } from '~/lib/runtime/action-runner';
 import {
   type OnChangeCallback as OnEditorChange,
   type OnScrollCallback as OnEditorScroll,
@@ -20,13 +19,14 @@ import { Preview } from './Preview';
 import useViewport from '~/lib/hooks';
 import { Dashboard } from './Dashboard';
 import { convexStore } from '~/lib/stores/convex';
-import { WORK_DIR } from '~/utils/constants';
 import { SaveStatusIndicator } from '~/components/SaveStatusIndicator';
+import type { TerminalInitializationOptions } from '~/types/terminal';
+import { getAbsolutePath } from '~/lib/stores/files';
 
 interface WorkspaceProps {
   chatStarted?: boolean;
   isStreaming?: boolean;
-  actionRunner: ActionRunner;
+  terminalInitializationOptions?: TerminalInitializationOptions;
 }
 
 const viewTransition = { ease: cubicEasingFn };
@@ -48,7 +48,7 @@ const workbenchVariants = {
   },
 } satisfies Variants;
 
-export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => {
+export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializationOptions }: WorkspaceProps) => {
   renderLogger.trace('Workbench');
 
   // const modifiedFiles = Array.from(useStore(workbenchStore.unsavedFiles).keys());
@@ -76,19 +76,25 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
   useEffect(() => {
     workbenchStore.setDocuments(files);
   }, [files]);
+  const currentDocumentPath = currentDocument?.filePath;
 
-  const onEditorChange = useCallback<OnEditorChange>((update) => {
-    // This is called debounced, so it's not fair to use it to update
-    // the current doc: we don't actually know which files it's for!
+  const onEditorChange = useCallback<OnEditorChange>(
+    (update) => {
+      // This is called debounced, so it's not fair to use it to update
+      // the current doc: we don't actually know which files it's for!
 
-    const updateAbsPath = update.filePath.startsWith('/') ? update.filePath : `${WORK_DIR}/${update.filePath}`;
-    if (currentDocument?.filePath !== updateAbsPath) {
-      console.log('onEditorChange fired for what is no longer the current document');
-      return;
-    }
+      const updateAbsPath = getAbsolutePath(update.filePath);
+      if (currentDocumentPath !== updateAbsPath) {
+        console.log(
+          `onEditorChange fired for what is no longer the current document, changed: ${updateAbsPath} current: ${currentDocumentPath}`,
+        );
+        return;
+      }
 
-    workbenchStore.setCurrentDocumentContent(update.content);
-  }, []);
+      workbenchStore.setCurrentDocumentContent(update.content);
+    },
+    [currentDocumentPath],
+  );
 
   const onEditorScroll = useCallback<OnEditorScroll>((position) => {
     workbenchStore.setCurrentDocumentScrollPosition(position);
@@ -212,6 +218,7 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
                       onEditorChange={onEditorChange}
                       onFileSave={onFileSave}
                       onFileReset={onFileReset}
+                      terminalInitializationOptions={terminalInitializationOptions}
                     />
                   </View>
                   <View {...slidingPosition({ view: 'preview', selectedView, showDashboard })}>

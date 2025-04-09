@@ -21,6 +21,7 @@ import { FileBreadcrumb } from './FileBreadcrumb';
 import { FileTree } from './FileTree';
 import { DEFAULT_TERMINAL_SIZE, TerminalTabs } from './terminal/TerminalTabs';
 import { workbenchStore } from '~/lib/stores/workbench';
+import type { TerminalInitializationOptions } from '~/types/terminal';
 
 interface EditorPanelProps {
   files?: FileMap;
@@ -34,6 +35,7 @@ interface EditorPanelProps {
   onFileSelect?: (value?: string) => void;
   onFileSave?: OnEditorSave;
   onFileReset?: () => void;
+  terminalInitializationOptions?: TerminalInitializationOptions;
 }
 
 const DEFAULT_EDITOR_SIZE = 100 - DEFAULT_TERMINAL_SIZE;
@@ -53,6 +55,7 @@ export const EditorPanel = memo(
     onEditorScroll,
     onFileSave,
     onFileReset,
+    terminalInitializationOptions,
   }: EditorPanelProps) => {
     renderLogger.trace('EditorPanel');
 
@@ -130,7 +133,7 @@ export const EditorPanel = memo(
           </PanelGroup>
         </Panel>
         <PanelResizeHandle />
-        <TerminalTabs />
+        <TerminalTabs {...terminalInitializationOptions} />
       </PanelGroup>
     );
   },

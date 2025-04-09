@@ -8,13 +8,14 @@ import { workbenchStore } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
 import { Terminal, type TerminalRef } from './Terminal';
 import { createScopedLogger } from '~/utils/logger';
+import type { TerminalInitializationOptions } from '~/types/terminal';
 
 const logger = createScopedLogger('Terminal');
 
 const MAX_TERMINALS = 3;
 export const DEFAULT_TERMINAL_SIZE = 25;
 
-export const TerminalTabs = memo(() => {
+export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitializationOptions) => {
   const showTerminal = useStore(workbenchStore.showTerminal);
   const theme = useStore(themeStore);
 
@@ -156,7 +157,9 @@ export const TerminalTabs = memo(() => {
                   ref={(ref) => {
                     terminalRefs.current.push(ref);
                   }}
-                  onTerminalReady={(terminal) => workbenchStore.attachBoltTerminal(terminal)}
+                  onTerminalReady={(terminal) =>
+                    workbenchStore.attachBoltTerminal(terminal, terminalInitializationOptions)
+                  }
                   onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
                   theme={theme}
                 />

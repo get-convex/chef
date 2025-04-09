@@ -1,5 +1,5 @@
 import { json } from '@vercel/remix';
-import type { ActionFunctionArgs } from '@remix-run/node';
+import type { ActionFunctionArgs } from '@vercel/remix';
 import Cloudflare from 'cloudflare';
 
 export async function deploy({ request }: ActionFunctionArgs) {

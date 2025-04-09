@@ -1,11 +1,18 @@
-import type { AppLoadContext, EntryContext } from '@remix-run/node';
+import type { AppLoadContext, EntryContext } from '@vercel/remix';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
-
+import * as Sentry from '@sentry/remix';
 import type { renderToReadableStream as RenderToReadableStream } from 'react-dom/server';
 // @ts-ignore There just aren't types for it, long-standing issue
 import { renderToReadableStream as renderToReadableStreamSSR } from 'react-dom/server.browser';
+import { renderHeadToString } from 'remix-island';
 const renderToReadableStream = renderToReadableStreamSSR as typeof RenderToReadableStream;
+import { Head } from './root';
+import { themeStore } from '~/lib/stores/theme';
+
+export const handleError = Sentry.wrapHandleErrorWithSentry((_error, {}) => {
+  // Custom handleError implementation
+});
 
 export default async function handleRequest(
   request: Request,
@@ -14,7 +21,7 @@ export default async function handleRequest(
   remixContext: EntryContext,
   _loadContext: AppLoadContext,
 ) {
-  const body = await renderToReadableStream(<RemixServer context={remixContext} url={request.url} />, {
+  const readable = await renderToReadableStream(<RemixServer context={remixContext} url={request.url} />, {
     // TODO we ought to abort, say by timeout, but it looked involved:
     // see https://github.com/vercel/next.js/issues/56919
     // and https://github.com/remix-run/remix/issues/10014
@@ -26,8 +33,49 @@ export default async function handleRequest(
     },
   });
 
+  const body = new ReadableStream({
+    start(controller) {
+      const head = renderHeadToString({ request, remixContext, Head });
+
+      controller.enqueue(
+        new Uint8Array(
+          new TextEncoder().encode(
+            `<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`,
+          ),
+        ),
+      );
+
+      const reader = readable.getReader();
+
+      function read() {
+        reader
+          .read()
+          .then(({ done, value }) => {
+            if (done) {
+              controller.enqueue(new Uint8Array(new TextEncoder().encode('</div></body></html>')));
+              controller.close();
+
+              return;
+            }
+
+            controller.enqueue(value);
+            read();
+          })
+          .catch((error) => {
+            controller.error(error);
+            readable.cancel();
+          });
+      }
+      read();
+    },
+
+    cancel() {
+      readable.cancel();
+    },
+  });
+
   if (isbot(request.headers.get('user-agent') || '')) {
-    await body.allReady;
+    await readable.allReady;
   }
 
   responseHeaders.set('Content-Type', 'text/html');

@@ -3,7 +3,7 @@ import type { EditorDocument, ScrollPosition } from '~/components/editor/codemir
 import { ActionRunner } from '~/lib/runtime/action-runner';
 import type { ActionCallbackData, ArtifactCallbackData } from '~/lib/runtime/message-parser';
 import { webcontainer } from '~/lib/webcontainer';
-import type { ITerminal } from '~/types/terminal';
+import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
 import { unreachable } from '~/utils/unreachable';
 import { EditorStore } from './editor';
 import { FilesStore, getAbsolutePath, getRelativePath, type AbsolutePath, type FileMap } from './files';
@@ -25,6 +25,7 @@ import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot';
 import { sessionIdStore } from './convex';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './artifacts';
+import { WORK_DIR } from '~/utils/constants';
 
 const BACKUP_DEBOUNCE_MS = 100;
 
@@ -330,8 +331,8 @@ export class WorkbenchStore {
   attachTerminal(terminal: ITerminal) {
     this.#terminalStore.attachTerminal(terminal);
   }
-  attachBoltTerminal(terminal: ITerminal) {
-    this.#terminalStore.attachBoltTerminal(terminal);
+  attachBoltTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
+    this.#terminalStore.attachBoltTerminal(terminal, options);
   }
 
   onTerminalResize(cols: number, rows: number) {
@@ -422,6 +423,10 @@ export class WorkbenchStore {
     newUnsavedFiles.delete(absPath);
 
     this.unsavedFiles.set(newUnsavedFiles);
+    // If the file is in the convex/ folder, rerun convex deploy
+    if (filePath.startsWith(path.join(WORK_DIR, 'convex'))) {
+      await this.#terminalStore.deployFunctionsAndRunDevServer(true);
+    }
   }
 
   async saveCurrentDocument() {

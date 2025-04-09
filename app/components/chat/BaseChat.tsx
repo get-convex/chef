@@ -1,58 +1,60 @@
-import type { JSONValue, Message } from 'ai';
+import type { Message } from 'ai';
 import React, { type RefCallback } from 'react';
-import { ClientOnly } from 'remix-utils/client-only';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import { classNames } from '~/utils/classNames';
 import { Messages } from './Messages.client';
 import { SendButton } from './SendButton.client';
 import * as Tooltip from '@radix-ui/react-tooltip';
-
 import styles from './BaseChat.module.scss';
-
 import FilePreview from './FilePreview';
 import { ScreenshotStateManager } from './ScreenshotStateManager';
 import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
-import type { ActionRunner } from '~/lib/runtime/action-runner';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
-import { FlexAuthWrapper } from './FlexAuthWrapper';
 import { useFlexAuthMode, useSelectedTeamSlug } from '~/lib/stores/convex';
 import { SuggestionButtons } from './SuggestionButtons';
 import { KeyboardShortcut } from '~/components/ui/KeyboardShortcut';
 import StreamingIndicator from './StreamingIndicator';
 import type { ToolStatus } from '~/lib/common/types';
 import { TeamSelector } from '~/components/convex/TeamSelector';
+import type { TerminalInitializationOptions } from '~/types/terminal';
 const TEXTAREA_MIN_HEIGHT = 76;
 
 interface BaseChatProps {
-  textareaRef?: React.RefObject<HTMLTextAreaElement> | undefined;
-  messageRef?: RefCallback<HTMLDivElement> | undefined;
-  scrollRef?: RefCallback<HTMLDivElement> | undefined;
-  showChat?: boolean;
-  chatStarted?: boolean;
-  streamStatus?: 'streaming' | 'submitted' | 'ready' | 'error';
-  messages?: Message[];
-  description?: string;
-  input?: string;
-  handleStop?: () => void;
-  sendMessage?: (event: React.UIEvent, teamSlug: string | null, messageInput?: string) => void;
-  handleInputChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  uploadedFiles?: File[];
-  setUploadedFiles?: (files: File[]) => void;
-  imageDataList?: string[];
-  setImageDataList?: (dataList: string[]) => void;
-  actionAlert?: ActionAlert;
-  clearAlert?: () => void;
-  data?: JSONValue[] | undefined;
-  actionRunner?: ActionRunner;
-  currentError?: Error;
-  toolStatus?: ToolStatus;
-}
+  // Refs
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  messageRef: RefCallback<HTMLDivElement> | undefined;
+  scrollRef: RefCallback<HTMLDivElement> | undefined;
 
-export const WrappedBaseChat = (props: BaseChatProps) => {
-  return <FlexAuthWrapper>{<BaseChat {...props} />}</FlexAuthWrapper>;
-};
+  // Top-level chat props
+  showChat: boolean;
+  chatStarted: boolean;
+  description: string | undefined;
+
+  // Current input props
+  input: string;
+  uploadedFiles: File[];
+  setUploadedFiles: (files: File[]) => void;
+  imageDataList: string[];
+  setImageDataList: (dataList: string[]) => void;
+
+  // Chat user interactions
+  handleInputChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  handleStop: () => void;
+  sendMessage: (event: React.UIEvent, teamSlug: string | null, messageInput?: string) => void;
+
+  // Current chat history props
+  streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
+  currentError: Error | undefined;
+  toolStatus: ToolStatus;
+  messages: Message[];
+  terminalInitializationOptions: TerminalInitializationOptions | undefined;
+
+  // Alert related props
+  actionAlert: ActionAlert | undefined;
+  clearAlert: () => void;
+}
 
 export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   (
@@ -74,8 +76,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       messages,
       actionAlert,
       clearAlert,
-      actionRunner,
       toolStatus,
+      terminalInitializationOptions,
     },
     ref,
   ) => {
@@ -98,13 +100,13 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         className={classNames(styles.BaseChat, 'relative flex h-full w-full overflow-hidden')}
         data-chat-visible={showChat}
       >
-        <ClientOnly>{() => <Menu />}</ClientOnly>
+        <Menu />
         <div ref={scrollRef} className="flex flex-col lg:flex-row overflow-y-auto w-full h-full">
           <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
             {!chatStarted && (
               <div id="intro" className="mt-[16vh] max-w-chat mx-auto text-center px-4 lg:px-0">
                 <h1 className="text-4xl lg:text-6xl font-black text-bolt-elements-textPrimary mb-4 animate-fade-in font-display tracking-tight">
-                  Now you're cooking
+                  Now you’re cooking
                 </h1>
                 <p className="text-md lg:text-2xl text-balance mb-8 text-bolt-elements-textSecondary animate-fade-in animation-delay-200 font-medium font-display">
                   Generate and launch realtime full‑stack apps you never thought possible
@@ -117,18 +119,14 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               })}
               ref={scrollRef}
             >
-              <ClientOnly>
-                {() => {
-                  return chatStarted ? (
-                    <Messages
-                      ref={messageRef}
-                      className="flex flex-col w-full flex-1 max-w-chat pb-6 mx-auto z-1"
-                      messages={messages}
-                      isStreaming={isStreaming}
-                    />
-                  ) : null;
-                }}
-              </ClientOnly>
+              {chatStarted ? (
+                <Messages
+                  ref={messageRef}
+                  className="flex flex-col w-full flex-1 max-w-chat pb-6 mx-auto z-1"
+                  messages={messages}
+                  isStreaming={isStreaming}
+                />
+              ) : null}
               <div
                 className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt mb-6', {
                   'sticky bottom-2': chatStarted,
@@ -140,7 +138,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       alert={actionAlert}
                       clearAlert={() => clearAlert?.()}
                       postMessage={(message) => {
-                        sendMessage?.({} as any, message);
+                        handleSendMessage?.({} as any, message);
                         clearAlert?.();
                       }}
                     />
@@ -153,17 +151,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     toolStatus={toolStatus}
                   />
                 }
-                <div
-                  className={classNames(
-                    'bg-bolt-elements-background-depth-2 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
-
-                    /*
-                     * {
-                     *   'sticky bottom-2': chatStarted,
-                     * },
-                     */
-                  )}
-                >
+                <div className="bg-bolt-elements-background-depth-2 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt">
                   <FilePreview
                     files={uploadedFiles}
                     imageDataList={imageDataList}
@@ -172,16 +160,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       setImageDataList?.(imageDataList.filter((_, i) => i !== index));
                     }}
                   />
-                  <ClientOnly>
-                    {() => (
-                      <ScreenshotStateManager
-                        setUploadedFiles={setUploadedFiles}
-                        setImageDataList={setImageDataList}
-                        uploadedFiles={uploadedFiles}
-                        imageDataList={imageDataList}
-                      />
-                    )}
-                  </ClientOnly>
+                  <ScreenshotStateManager
+                    setUploadedFiles={setUploadedFiles}
+                    setImageDataList={setImageDataList}
+                    uploadedFiles={uploadedFiles}
+                    imageDataList={imageDataList}
+                  />
                   <div>
                     <textarea
                       ref={textareaRef}
@@ -254,25 +238,20 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       }
                       translate="no"
                     />
-                    <ClientOnly>
-                      {() => (
-                        <SendButton
-                          show={input.length > 0 || isStreaming || uploadedFiles.length > 0}
-                          isStreaming={isStreaming}
-                          disabled={!selectedTeamSlug}
-                          onClick={(event) => {
-                            if (isStreaming) {
-                              handleStop?.();
-                              return;
-                            }
-
-                            if (input.length > 0 || uploadedFiles.length > 0) {
-                              handleSendMessage?.(event);
-                            }
-                          }}
-                        />
-                      )}
-                    </ClientOnly>
+                    <SendButton
+                      show={input.length > 0 || isStreaming || uploadedFiles.length > 0}
+                      isStreaming={isStreaming}
+                      disabled={!selectedTeamSlug}
+                      onClick={(event) => {
+                        if (isStreaming) {
+                          handleStop?.();
+                          return;
+                        }
+                        if (input.length > 0 || uploadedFiles.length > 0) {
+                          handleSendMessage?.(event);
+                        }
+                      }}
+                    />
                     <div className="flex justify-end gap-4 items-center text-sm p-4 pt-2">
                       {input.length > 3 ? (
                         <div className="text-xs text-bolt-elements-textTertiary">
@@ -297,15 +276,11 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               }}
             />
           </div>
-          <ClientOnly>
-            {() => (
-              <Workbench
-                actionRunner={actionRunner ?? ({} as ActionRunner)}
-                chatStarted={chatStarted}
-                isStreaming={isStreaming}
-              />
-            )}
-          </ClientOnly>
+          <Workbench
+            chatStarted={chatStarted}
+            isStreaming={isStreaming}
+            terminalInitializationOptions={terminalInitializationOptions}
+          />
         </div>
         {!chatStarted && (
           <div className="absolute bottom-4 right-6 text-lg font-display font-medium text-bolt-elements-textTertiary flex gap-3">

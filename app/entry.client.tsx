@@ -6,6 +6,9 @@ import { hydrateRoot } from 'react-dom/client';
 Sentry.init({
   dsn: 'https://16615d9875b4630cfabeed5d376c4343@o1192621.ingest.us.sentry.io/4509097600811008',
   tracesSampleRate: 1,
+  // TODO do we need to add release and environment here?
+
+  enabled: process.env.NODE_ENV === 'production',
 
   integrations: [
     Sentry.feedbackIntegration({
@@ -19,7 +22,10 @@ Sentry.init({
       useLocation,
       useMatches,
     }),
-    Sentry.replayIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: false,
+      blockAllMedia: false,
+    }),
   ],
 
   replaysSessionSampleRate: 0.1,
@@ -27,5 +33,5 @@ Sentry.init({
 });
 
 startTransition(() => {
-  hydrateRoot(document, <RemixBrowser />);
+  hydrateRoot(document.getElementById('root')!, <RemixBrowser />);
 });
