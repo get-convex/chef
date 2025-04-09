@@ -1,7 +1,6 @@
 import type { WebContainer, WebContainerProcess } from '@webcontainer/api';
 import type { ITerminal } from '~/types/terminal';
 import { withResolvers } from './promises';
-import { atom } from 'nanostores';
 import { ContainerBootState, waitForContainerBootState } from '~/lib/stores/containerBootState';
 
 export async function newShellProcess(webcontainer: WebContainer, terminal: ITerminal) {
@@ -64,7 +63,7 @@ export class BoltShell {
   #webcontainer: WebContainer | undefined;
   #terminal: ITerminal | undefined;
   #process: WebContainerProcess | undefined;
-  #executionState: { sessionId: string; active: boolean; executionPrms?: Promise<any>; abort?: () => void } | undefined;
+  #executionState: { active: boolean; executionPrms?: Promise<any>; abort?: () => void } | undefined;
   #outputStream: ReadableStreamDefaultReader<string> | undefined;
   #shellInputStream: WritableStreamDefaultWriter<string> | undefined;
 
@@ -97,7 +96,7 @@ export class BoltShell {
     return this.#process;
   }
 
-  async startCommand(sessionId: string, command: string) {
+  async startCommand(command: string) {
     if (!this.process || !this.terminal) {
       return;
     }
@@ -114,7 +113,7 @@ export class BoltShell {
     this.terminal.input(command.trim() + '\n');
   }
 
-  async executeCommand(sessionId: string, command: string, abort?: () => void): Promise<ExecutionResult> {
+  async executeCommand(command: string, abort?: () => void): Promise<ExecutionResult> {
     if (!this.process || !this.terminal) {
       return undefined;
     }
@@ -141,10 +140,10 @@ export class BoltShell {
 
     //wait for the execution to finish
     const executionPromise = this.getCurrentExecutionResult();
-    this.#executionState = { sessionId, active: true, executionPrms: executionPromise, abort };
+    this.#executionState = { active: true, executionPrms: executionPromise, abort };
 
     const resp = await executionPromise;
-    this.#executionState = { sessionId, active: false };
+    this.#executionState = { active: false };
 
     if (resp) {
       try {
