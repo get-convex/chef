@@ -123,11 +123,11 @@ export function processMessage(
 
 type Part = UIMessage['parts'][number];
 
-export function useMessageParser() {
+export function useMessageParser(partCache: PartCache) {
   const [parsedMessages, setParsedMessages] = useState<Message[]>([]);
 
   const previousMessages = useRef<{ original: Message; parsed: Message }[]>([]);
-  const previousParts = useRef<PartCache>(new Map());
+  const previousParts = useRef<PartCache>(partCache);
 
   const parseMessages = useCallback((messages: Message[], isLoading: boolean) => {
     if (import.meta.env.DEV && !isLoading) {

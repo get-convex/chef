@@ -20,10 +20,9 @@ export function useNewChatContainerSetup() {
       try {
         await waitForBootStepCompleted(ContainerBootState.STARTING);
         await setupContainer(TEMPLATE_URL);
-      } catch (error) {
-        console.error('Failed to setup container', error);
+      } catch (error: any) {
         toast.error('Failed to setup Chef environment. Try reloading the page?');
-        setContainerBootState(ContainerBootState.ERROR);
+        setContainerBootState(ContainerBootState.ERROR, error);
       }
     };
     void runSetup();
@@ -43,15 +42,15 @@ export function useExistingChatContainerSetup(loadedChatId: string | undefined) 
     const runSetup = async () => {
       try {
         await waitForBootStepCompleted(ContainerBootState.STARTING);
-        const maybeSnapshotUrl = await convex.query(api.snapshot.getSnapshotUrl, { chatId: loadedChatId, sessionId });
-        if (!maybeSnapshotUrl) {
-          throw new Error(`Failed to load snapshot for chat ${loadedChatId}`);
+        let snapshotUrl = await convex.query(api.snapshot.getSnapshotUrl, { chatId: loadedChatId, sessionId });
+        if (!snapshotUrl) {
+          console.warn(`Existing chat ${loadedChatId} has no snapshot. Loading the base template.`);
+          snapshotUrl = TEMPLATE_URL;
         }
-        await setupContainer(maybeSnapshotUrl);
-      } catch (error) {
-        console.error('Failed to setup container', error);
+        await setupContainer(snapshotUrl);
+      } catch (error: any) {
         toast.error('Failed to setup Chef environment. Try reloading the page?');
-        setContainerBootState(ContainerBootState.ERROR);
+        setContainerBootState(ContainerBootState.ERROR, error);
       }
     };
     void runSetup();

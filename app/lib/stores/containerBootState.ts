@@ -34,15 +34,6 @@ export function setContainerBootState(state: ContainerBootState, error?: Error) 
   containerBootStore.set({ ...existing, state, errorToLog: error });
 }
 
-export function takeContainerBootError() {
-  const existing = containerBootStore.get();
-  if (existing.state !== ContainerBootState.ERROR) {
-    throw new Error('Container boot state is not in error');
-  }
-  const { errorToLog: _, ...rest } = existing;
-  containerBootStore.set(rest);
-}
-
 export function waitForBootStepCompleted(step: ContainerBootState) {
   return waitForContainerBootState(step + 1);
 }

@@ -3,7 +3,7 @@ import type { Message } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { useMessageParser, useShortcuts, useSnapScroll } from '~/lib/hooks';
+import { useMessageParser, useShortcuts, useSnapScroll, type PartCache } from '~/lib/hooks';
 import { description } from '~/lib/stores/description';
 import { chatStore, useChatId } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench';
@@ -20,8 +20,6 @@ import { ChatContextManager } from '~/lib/ChatContextManager';
 import { webcontainer } from '~/lib/webcontainer';
 import {
   ContainerBootState,
-  takeContainerBootError,
-  useContainerBootState,
   waitForBootStepCompleted,
 } from '~/lib/stores/containerBootState';
 import { useConvexSessionId } from '~/lib/stores/sessionId';
@@ -58,12 +56,16 @@ const processSampledMessages = createSampler(
 
 interface ChatProps {
   initialMessages: Message[];
+  partCache: PartCache;
   storeMessageHistory: (messages: Message[]) => Promise<void>;
   initializeChat: (teamSlug: string | null) => Promise<void>;
   description?: string;
+
+  isReload: boolean;
+  hadSuccessfulDeploy: boolean;
 }
 
-export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat }: ChatProps) => {
+export const Chat = memo(({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy }: ChatProps) => {
   useShortcuts();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
@@ -147,15 +149,6 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
     },
   });
 
-  const containerBootState = useContainerBootState();
-  useEffect(() => {
-    if (containerBootState.state === ContainerBootState.ERROR && containerBootState.errorToLog) {
-      captureException(containerBootState.errorToLog);
-      toast.error('Failed to initialize the Chef environment. Please reload the page.');
-      takeContainerBootError();
-    }
-  }, [containerBootState]);
-
   useEffect(() => {
     // an empty string code is confusing, consider it no code
     const prompt = searchParams.get('prompt') || null;
@@ -173,7 +166,7 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
     });
   }, [searchParams]);
 
-  const { parsedMessages, parseMessages } = useMessageParser();
+  const { parsedMessages, parseMessages } = useMessageParser(partCache);
 
   const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
 
@@ -340,11 +333,6 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
   );
 
   const [messageRef, scrollRef] = useSnapScroll();
-  const shouldDeployConvexFunctions = messages.some(
-    (message) =>
-      message.role === 'assistant' &&
-      message.parts?.some((part) => part.type === 'tool-invocation' && part.toolInvocation.toolName === 'deploy'),
-  );
 
   return (
     <BaseChat
@@ -382,8 +370,8 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
       actionAlert={actionAlert}
       clearAlert={() => workbenchStore.clearAlert()}
       terminalInitializationOptions={{
-        isReload: initialMessages.length > 0,
-        shouldDeployConvexFunctions,
+        isReload,
+        shouldDeployConvexFunctions: hadSuccessfulDeploy,
       }}
     />
   );

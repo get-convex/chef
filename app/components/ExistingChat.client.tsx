@@ -9,6 +9,7 @@ import { Loading } from './Loading';
 import { useStore } from '@nanostores/react';
 import { ContainerBootState, useContainerBootState } from '~/lib/stores/containerBootState';
 import { useReloadMessages } from '~/lib/stores/startup/reloadMessages';
+import { useSplines } from '~/lib/splines';
 
 export function ExistingChat({ chatId }: { chatId: string }) {
   // Fill in the chatID store from props early in app initialization. If this
@@ -19,7 +20,6 @@ export function ExistingChat({ chatId }: { chatId: string }) {
   const sessionId = useStore(sessionIdStore);
   const { initialMessages, storeMessageHistory, initializeChat } = useConvexChatExisting(chatId);
 
-  // TODO: Pass this down into the chat component with the warm cache.
   const reloadState = useReloadMessages(initialMessages);
   const bootState = useContainerBootState();
 
@@ -53,16 +53,27 @@ export function ExistingChat({ chatId }: { chatId: string }) {
     loading = 'Loading Chef environment...';
   }
 
+  const hadSuccessfulDeploy = initialMessages?.some(
+    (message) =>
+      message.role === 'assistant' &&
+      message.parts?.some((part) => part.type === 'tool-invocation' && part.toolInvocation.toolName === 'deploy'),
+  );
+
+  const isError = bootState.state === ContainerBootState.ERROR;
+  const easterEgg = useSplines(!isError && !!loading);
   return (
     <>
       <FlexAuthWrapper>
         <SentryUserProvider>
-          {loading && <Loading message={loading} />}
+          {loading && <Loading message={easterEgg ?? loading} />}
           {!loading && (
             <Chat
               initialMessages={initialMessages!}
+              partCache={reloadState!.partCache}
               storeMessageHistory={storeMessageHistory}
               initializeChat={initializeChat}
+              isReload={true}
+              hadSuccessfulDeploy={!!hadSuccessfulDeploy}
             />
           )}
         </SentryUserProvider>
@@ -71,3 +82,5 @@ export function ExistingChat({ chatId }: { chatId: string }) {
     </>
   );
 }
+
+
