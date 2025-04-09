@@ -31,7 +31,6 @@ interface BaseChatProps {
   showChat: boolean;
   chatStarted: boolean;
   description: string | undefined;
-  terminalInitializationOptions: TerminalInitializationOptions | undefined;
 
   // Current input props
   input: string;
@@ -50,6 +49,7 @@ interface BaseChatProps {
   currentError: Error | undefined;
   toolStatus: ToolStatus;
   messages: Message[];
+  terminalInitializationOptions: TerminalInitializationOptions | undefined;
 
   // Alert related props
   actionAlert: ActionAlert | undefined;
