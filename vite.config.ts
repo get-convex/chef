@@ -7,6 +7,7 @@ import UnoCSS from 'unocss/vite';
 import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 dotenv.config();
 
@@ -114,6 +115,12 @@ export default defineConfig((config) => {
       tsconfigPaths(),
       config.mode === 'production' && optimizeCssModules({ apply: 'build' }),
       wasm(),
+      sentryVitePlugin({
+        // TODO there's probably some correct environment variable name to use here instead
+        authToken: process.env.SENTRY_VITE_PLUGIN_AUTH_TOKEN,
+        org: 'convex-dev',
+        project: '4509097600811008',
+      }),
     ],
     envPrefix: ['VITE_'],
     css: {
