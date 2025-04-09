@@ -273,11 +273,28 @@ async function _connectConvexProjectForMember(
   });
   if (!response.ok) {
     const text = await response.text();
-    throw new ConvexError({
+    const defaultProvisioningError = new ConvexError({
       code: 'ProvisioningError',
       message: `Failed to create project: ${response.status}`,
       details: text,
     });
+    if (response.status !== 400) {
+      throw defaultProvisioningError;
+    }
+    try {
+      const data: { code?: string; message?: string } = JSON.parse(text);
+      // Special case this error since it's probably semi-common
+      if (data.code === 'ProjectQuotaReached' && typeof data.message === 'string') {
+        throw new ConvexError({
+          code: 'ProvisioningError',
+          message: `Failed to create project: ProjectQuotaReached: ${data.message}`,
+          details: text,
+        });
+      }
+    } catch (_e) {
+      throw defaultProvisioningError;
+    }
+    throw defaultProvisioningError;
   }
   const data: {
     projectSlug: string;
