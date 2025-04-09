@@ -3,8 +3,9 @@ import { useStore } from '@nanostores/react';
 import { useConvex } from 'convex/react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { chatIdStore as chatIdStore, description as descriptionStore } from '~/lib/persistence';
+import { description as descriptionStore } from '~/lib/persistence';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import { chatIdStore } from '~/lib/persistence/chatIdStore';
 interface EditChatDescriptionOptions {
   initialDescription?: string;
   customChatId?: string;

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { classNames } from '~/utils/classNames';
 import { convexStore, useConvexSessionIdOrNullOrLoading, useFlexAuthMode } from '~/lib/stores/convex';
-import { useChatIdOrNull } from '~/lib/stores/chat';
+import { useChatId } from '~/lib/stores/chat';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { ConvexConnectButton } from '~/components/convex/ConvexConnectButton';
@@ -12,7 +12,7 @@ export function ConvexConnection() {
 
   const convexClient = useConvex();
   const sessionId = useConvexSessionIdOrNullOrLoading();
-  const chatId = useChatIdOrNull();
+  const chatId = useChatId();
   const projectInfo = useQuery(
     api.convexProjects.loadConnectedConvexProjectCredentials,
     sessionId && chatId

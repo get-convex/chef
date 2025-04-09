@@ -13,7 +13,7 @@ import JSZip from 'jszip';
 import fileSaver from 'file-saver';
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 import { path } from '~/utils/path';
-import { chatIdStore, description } from '~/lib/persistence';
+import { description } from '~/lib/persistence';
 import Cookies from 'js-cookie';
 import { createSampler } from '~/utils/sampler';
 import type { ActionAlert } from '~/types/actions';
@@ -26,6 +26,7 @@ import { sessionIdStore } from './convex';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './artifacts';
 import { WORK_DIR } from '~/utils/constants';
+import { chatIdStore } from '~/lib/persistence/chatIdStore';
 
 const BACKUP_DEBOUNCE_MS = 100;
 
@@ -146,18 +147,7 @@ export class WorkbenchStore {
         isUploading = true;
         this.saveState.set('saving');
 
-        const id = chatIdStore.get();
-
-        if (!id) {
-          // Subscribe to chat ID changes and execute upload when it becomes available
-          chatIdStore.subscribe((newId) => {
-            if (newId) {
-              void handleUploadSnapshot();
-            }
-          });
-          return;
-        }
-
+        const chatId = chatIdStore.get();
         const sessionId = sessionIdStore.get();
 
         if (!sessionId) {
@@ -181,7 +171,7 @@ export class WorkbenchStore {
 
         await this.#convexClient.mutation(api.snapshot.saveSnapshot, {
           storageId: response.storageId as Id<'_storage'>,
-          chatId: id,
+          chatId,
           sessionId,
         });
 

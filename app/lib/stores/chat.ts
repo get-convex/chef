@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react';
 import { map } from 'nanostores';
-import { chatIdStore } from '~/lib/persistence';
+import { chatIdStore } from '~/lib/persistence/chatIdStore';
 
 export const chatStore = map({
   started: false,
@@ -8,14 +8,6 @@ export const chatStore = map({
   showChat: true,
 });
 
-export function useChatId(): string {
-  const chatId = useStore(chatIdStore);
-  if (chatId === undefined) {
-    throw new Error('Chat ID is not set');
-  }
-  return chatId;
-}
-export function useChatIdOrNull(): string | null {
-  const chatId = useStore(chatIdStore);
-  return chatId ?? null;
+export function useChatId() {
+  return useStore(chatIdStore);
 }

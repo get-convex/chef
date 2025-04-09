@@ -4,8 +4,8 @@ import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useMessageParser, useShortcuts, useSnapScroll } from '~/lib/hooks';
-import { chatIdStore, description } from '~/lib/persistence';
-import { chatStore, useChatIdOrNull } from '~/lib/stores/chat';
+import { description } from '~/lib/persistence';
+import { chatStore, useChatId } from '~/lib/stores/chat';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { PROMPT_COOKIE_KEY } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
@@ -32,6 +32,7 @@ import { setExtra, setUser } from '@sentry/remix';
 import { useAuth0 } from '@auth0/auth0-react';
 import { setProfile } from '~/lib/stores/profile';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
+import { chatIdStore } from '~/lib/persistence/chatIdStore';
 
 const logger = createScopedLogger('Chat');
 
@@ -96,7 +97,7 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
     api: '/api/chat',
     sendExtraMessageFields: true,
     experimental_prepareRequestBody: ({ messages }) => {
-      const chatId = chatIdStore.get() ?? '';
+      const chatId = chatIdStore.get();
       const convex = convexStore.get();
       const teamSlug = selectedTeamSlugStore.get();
       if (!token) {
@@ -432,7 +433,7 @@ function useCurrentToolStatus() {
 export function SentryUserProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth0();
   const sessionId = useConvexSessionId();
-  const chatId = useChatIdOrNull();
+  const chatId = useChatId();
 
   useEffect(() => {
     setExtra('sessionId', sessionId);

@@ -9,6 +9,7 @@ import { webcontainer } from '~/lib/webcontainer';
 import { loadSnapshot } from '~/lib/snapshot';
 import { makePartId, type PartId } from '~/lib/stores/artifacts';
 import { useAuth0 } from '@auth0/auth0-react';
+import { setKnownUrlId, setKnownInitialId } from './chatIdStore';
 
 export interface ChatHistoryItem {
   /*
@@ -22,25 +23,11 @@ export interface ChatHistoryItem {
   timestamp: string;
 }
 
-/*
- * All chats eventually have two IDs:
- * - The initialId is the ID of the chat when it is first created (a UUID)
- * - The urlId is the ID of the chat that is displayed in the URL. This is a human-friendly ID that is
- *   displayed in the URL.
- *
- * Functions accept either ID.
- *
- * The urlId is set when the first message is added from an LLM response.
- *
- * `chatIdStore` stores the intialId
- */
-export const chatIdStore = atom<string | undefined>(undefined);
 export const description = atom<string | undefined>(undefined);
 
 export function useConvexChatHomepage(chatId: string) {
-  const handleServerAssignedId = useHandleUrlIdUpdate(chatId);
   const initializeChat = useInitializeChat(chatId);
-  const storeMessageHistory = useStoreMessageHistory(chatId, [], handleServerAssignedId);
+  const storeMessageHistory = useStoreMessageHistory(chatId, []);
   return {
     initializeChat,
     storeMessageHistory,
@@ -48,10 +35,9 @@ export function useConvexChatHomepage(chatId: string) {
 }
 
 export function useConvexChatExisting(chatId: string) {
-  const handleServerAssignedId = useHandleUrlIdUpdate(chatId);
   const initializeChat = useInitializeChat(chatId);
-  const { ready, initialMessages, initialDeserializedMessages } = useInitialMessages(chatId, handleServerAssignedId);
-  const storeMessageHistory = useStoreMessageHistory(chatId, initialMessages, handleServerAssignedId);
+  const { ready, initialMessages, initialDeserializedMessages } = useInitialMessages(chatId);
+  const storeMessageHistory = useStoreMessageHistory(chatId, initialMessages);
   return {
     ready,
     initialMessages: initialDeserializedMessages,
@@ -60,29 +46,12 @@ export function useConvexChatExisting(chatId: string) {
   };
 }
 
-function useHandleUrlIdUpdate(chatId: string) {
-  const [urlId, setUrlId] = useState<string>(chatId);
-  const handleServerAssignedId = useCallback(
-    (id: string) => {
-      if (urlId !== id) {
-        setUrlId(id);
-        navigateChat(id);
-      }
-    },
-    [setUrlId, urlId],
-  );
-  return handleServerAssignedId;
-}
-
 function useInitializeChat(chatId: string) {
   const { getAccessTokenSilently } = useAuth0();
   const convex = useConvex();
   return useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
-
-    console.log('Waiting for selected team slug...');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-
     const flexAuthMode = flexAuthModeStore.get();
     if (flexAuthMode !== 'ConvexOAuth') {
       throw new Error('Flex auth mode is not ConvexOAuth');
@@ -102,11 +71,7 @@ function useInitializeChat(chatId: string) {
   }, [convex, chatId, getAccessTokenSilently]);
 }
 
-function useStoreMessageHistory(
-  chatId: string,
-  initialMessages: SerializedMessage[],
-  handleServerAssignedId: (id: string) => void,
-) {
+function useStoreMessageHistory(chatId: string, initialMessages: SerializedMessage[]) {
   const convex = useConvex();
 
   // The messages that have been persisted to the database
@@ -151,21 +116,18 @@ function useStoreMessageHistory(
       if (description.get() !== result.description) {
         description.set(result.description);
       }
-      handleServerAssignedId(result.id);
+      if (result.initialId) {
+        setKnownInitialId(result.initialId);
+      }
+      if (result.urlId) {
+        setKnownUrlId(result.urlId);
+      }
     },
-    [
-      convex,
-      chatId,
-      initialMessages,
-      persistedMessages,
-      persistInProgress,
-      setPersistedMessages,
-      handleServerAssignedId,
-    ],
+    [convex, chatId, initialMessages, persistedMessages, persistInProgress, setPersistedMessages],
   );
 }
 
-function useInitialMessages(chatId: string, handleServerAssignedId: (id: string) => void) {
+function useInitialMessages(chatId: string) {
   const convex = useConvex();
 
   // Messages that should be displayed + fed into the chat -- this is a prefix
@@ -190,18 +152,17 @@ function useInitialMessages(chatId: string, handleServerAssignedId: (id: string)
           return;
         }
 
+        setKnownInitialId(rawMessages.initialId);
         if (rawMessages.urlId) {
-          handleServerAssignedId(rawMessages.urlId);
+          setKnownUrlId(rawMessages.urlId);
         }
+
         setInitialMessages(rawMessages.messages);
 
         const deserializedMessages = rawMessages.messages.map(deserializeMessageForConvex);
         setInitialDeserializedMessages(deserializedMessages);
 
         description.set(rawMessages.description);
-
-        // TODO: Get more rigorous about mixedId -> initialId + urlId
-        chatIdStore.set(rawMessages.initialId);
 
         const container = await webcontainer;
         const { workbenchStore } = await import('~/lib/stores/workbench');
@@ -224,7 +185,7 @@ function useInitialMessages(chatId: string, handleServerAssignedId: (id: string)
       }
     };
     void loadInitialMessages();
-  }, [convex, chatId, handleServerAssignedId, setReady, setIsLoading]);
+  }, [convex, chatId, setReady, setIsLoading]);
 
   return {
     ready: ready && !isLoading,
@@ -232,15 +193,6 @@ function useInitialMessages(chatId: string, handleServerAssignedId: (id: string)
     initialMessages,
     initialDeserializedMessages,
   };
-}
-
-// Very important: This *only* updates the state in `window.history` and
-// does not reload the app. This way we keep all our in-memory state
-// intact.
-function navigateChat(urlId: string) {
-  const url = new URL(window.location.href);
-  url.pathname = `/chat/${urlId}`;
-  window.history.replaceState({}, '', url);
 }
 
 function serializeMessageForConvex(message: Message) {
