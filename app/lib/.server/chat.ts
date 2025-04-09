@@ -78,18 +78,19 @@ export async function chatAction({ request }: ActionFunctionArgs) {
           userApiKey = body.userApiKey.value;
         } else {
           logger.error(`No tokens available for ${deploymentName}: ${resp.tokensUsed} of ${resp.tokensQuota}`);
-        return new Response(
-          JSON.stringify({ error: `No tokens available. Used ${resp.tokensUsed} of ${resp.tokensQuota}` }),
-          {
-            status: 402,
-          },
-        );
+          return new Response(
+            JSON.stringify({ error: `No tokens available. Used ${resp.tokensUsed} of ${resp.tokensQuota}` }),
+            {
+              status: 402,
+            },
+          );
+        }
       }
     }
   }
 
   const recordUsageCb = async (usage: LanguageModelUsage) => {
-    if (enableRateLimiting) {
+    if (enableRateLimiting && !userApiKey) {
       await recordUsage(PROVISION_HOST, token, teamSlug, deploymentName, usage);
     }
   };
