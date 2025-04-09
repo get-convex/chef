@@ -23,8 +23,6 @@ import { description } from './description';
 import { createSampler } from '~/utils/sampler';
 import type { ActionAlert } from '~/types/actions';
 import type { WebContainer } from '@webcontainer/api';
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '@convex/_generated/api';
 import type { Id } from '@convex/_generated/dataModel';
 import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot';
 import { waitForConvexSessionId } from './sessionId';
@@ -62,7 +60,6 @@ export class WorkbenchStore {
   #filesStore = new FilesStore(webcontainer);
   #editorStore = new EditorStore(this.#filesStore);
   #terminalStore = new TerminalStore(webcontainer);
-  #convexClient: ConvexHttpClient;
   #toolCalls: Map<string, PromiseWithResolvers<string> & { done: boolean }> = new Map();
 
   #reloadedParts = import.meta.hot?.data.reloadedParts ?? new Set<string>();
@@ -98,8 +95,6 @@ export class WorkbenchStore {
       import.meta.hot.data.backupState = this.backupState;
       import.meta.hot.data.reloadedParts = this.#reloadedParts;
     }
-
-    this.#convexClient = new ConvexHttpClient(import.meta.env.VITE_CONVEX_URL!);
   }
 
   get followingStreamedCode() {
@@ -134,7 +129,7 @@ export class WorkbenchStore {
       lastSync: 0,
     });
 
-    void backupWorker(this.#convexClient, this.backupState);
+    void backupWorker(this.backupState);
 
     // Add beforeunload event listener to prevent navigation while uploading
     const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
@@ -544,7 +539,7 @@ export class WorkbenchStore {
 
 export const workbenchStore = new WorkbenchStore();
 
-async function backupWorker(convexClient: ConvexHttpClient, backupState: WritableAtom<BackupState>) {
+async function backupWorker(backupState: WritableAtom<BackupState>) {
   const sessionId = await waitForConvexSessionId('backupWorker');
   while (true) {
     const currentState = backupState.get();
@@ -559,7 +554,7 @@ async function backupWorker(convexClient: ConvexHttpClient, backupState: Writabl
     const nextUpdateCounter = getFileUpdateCounter();
     console.log(`Performing backup (advancing from ${currentState.savedUpdateCounter} to ${nextUpdateCounter})...`);
     try {
-      await performBackup(sessionId, convexClient);
+      await performBackup(sessionId);
     } catch (error) {
       console.error('Failed to upload snapshot:', error);
       backupState.set({
@@ -579,7 +574,7 @@ async function backupWorker(convexClient: ConvexHttpClient, backupState: Writabl
   }
 }
 
-async function performBackup(sessionId: Id<'sessions'>, convexClient: ConvexHttpClient) {
+async function performBackup(sessionId: Id<'sessions'>) {
   let convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
   if (!convexSiteUrl) {
     const convexUrl: string = import.meta.env.VITE_CONVEX_URL;
