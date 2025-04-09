@@ -240,7 +240,11 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         maxHeight: TEXTAREA_MAX_HEIGHT,
                       }}
                       placeholder={
-                        chatStarted ? 'Request changes by sending another message...' : 'What app do you want to serve?'
+                        overQuota
+                          ? 'You have reached your token limit. Please upgrade your plan to continue.'
+                          : chatStarted
+                            ? 'Request changes by sending another message...'
+                            : 'What app do you want to serve?'
                       }
                       translate="no"
                     />
