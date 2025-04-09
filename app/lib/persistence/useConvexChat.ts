@@ -4,7 +4,7 @@ import type { Message } from '@ai-sdk/react';
 import { useConvex } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import type { SerializedMessage } from '@convex/messages';
-import { flexAuthModeStore, useTeamsInitializer, waitForConvexSessionId, waitForSelectedTeamSlug } from '~/lib/stores/convex';
+import { flexAuthModeStore, useProjectInitializer, useTeamsInitializer, waitForConvexSessionId, waitForSelectedTeamSlug } from '~/lib/stores/convex';
 import { webcontainer } from '~/lib/webcontainer';
 import { loadSnapshot } from '~/lib/snapshot';
 import { makePartId, type PartId } from '~/lib/stores/artifacts';
@@ -27,6 +27,7 @@ export const description = atom<string | undefined>(undefined);
 
 export function useConvexChatHomepage(chatId: string) {
   useTeamsInitializer();
+  useProjectInitializer(chatId);
   const initializeChat = useInitializeChat(chatId);
   const storeMessageHistory = useStoreMessageHistory(chatId, []);
   return {
@@ -37,6 +38,7 @@ export function useConvexChatHomepage(chatId: string) {
 
 export function useConvexChatExisting(chatId: string) {
   useTeamsInitializer();
+  useProjectInitializer(chatId);
   const initializeChat = useInitializeChat(chatId);
   const { ready, initialMessages, initialDeserializedMessages } = useInitialMessages(chatId);
   const storeMessageHistory = useStoreMessageHistory(chatId, initialMessages);
@@ -110,6 +112,7 @@ function useStoreMessageHistory(chatId: string, initialMessages: SerializedMessa
       } finally {
         persistInProgress.current = false;
       }
+      console.log('result', result);
       setPersistedMessages(messages);
 
       // Update the description + URL ID if they have changed
@@ -123,7 +126,7 @@ function useStoreMessageHistory(chatId: string, initialMessages: SerializedMessa
         setKnownUrlId(result.urlId);
       }
     },
-    [convex, chatId, initialMessages, persistedMessages, persistInProgress, setPersistedMessages],
+    [convex, chatId, initialMessages, persistedMessages, setPersistedMessages, persistInProgress],
   );
 }
 

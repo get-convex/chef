@@ -7,6 +7,7 @@ import { useQuery } from 'convex/react';
 import { useConvexChatHomepage } from '~/lib/persistence/useConvexChat';
 import { Toaster } from 'sonner';
 import { setPageLoadChatId, setKnownInitialId } from '~/lib/persistence/chatIdStore';
+import type { Message } from '@ai-sdk/react';
 
 export function Homepage() {
   // Set up a temporary chat ID early in app initialization. We'll
@@ -14,35 +15,6 @@ export function Homepage() {
   // artifact from the model if the user submits a prompt.
   const initialId = useRef(crypto.randomUUID());
   setPageLoadChatId(initialId.current);
-  setKnownInitialId(initialId.current);
-
-  // Initialization order:
-  // 1. `FlexAuthWrapper` sets the current session ID.
-  // 2. We fill in a temporary chat ID right after component mount.
-  // 3. Once we have both a session ID and chat ID, we fetch the
-  //    current project credentials and set it in the Convex store.
-  const sessionId = useConvexSessionIdOrNullOrLoading();
-
-  const projectInfo = useQuery(
-    api.convexProjects.loadConnectedConvexProjectCredentials,
-    sessionId
-      ? {
-          sessionId,
-          chatId: initialId.current,
-        }
-      : 'skip',
-  );
-  useEffect(() => {
-    if (projectInfo?.kind === 'connected') {
-      convexStore.set({
-        token: projectInfo.adminKey,
-        deploymentName: projectInfo.deploymentName,
-        deploymentUrl: projectInfo.deploymentUrl,
-        projectSlug: projectInfo.projectSlug,
-        teamSlug: projectInfo.teamSlug,
-      });
-    }
-  }, [projectInfo]);
 
   const { storeMessageHistory, initializeChat } = useConvexChatHomepage(initialId.current);
 
@@ -51,10 +23,12 @@ export function Homepage() {
     <>
       <FlexAuthWrapper>
         <SentryUserProvider>
-          <Chat initialMessages={[]} storeMessageHistory={storeMessageHistory} initializeChat={initializeChat} />
+          <Chat initialMessages={emptyList} storeMessageHistory={storeMessageHistory} initializeChat={initializeChat} />
         </SentryUserProvider>
       </FlexAuthWrapper>
       <Toaster position="bottom-right" closeButton richColors />
     </>
   );
 }
+
+const emptyList: Message[] = [];

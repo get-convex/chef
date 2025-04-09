@@ -32,9 +32,8 @@ export function getKnownInitialId() {
 }
 
 export function setKnownInitialId(initialId: string) {
-  const existing = knownInitialId.get();
-  if (existing !== undefined && existing !== initialId) {
-    throw new Error(`knownInitialId already set to ${existing} but trying to set to ${initialId}`);
+  if (!knownInitialId.get() && !knownUrlId.get()) {
+    navigateChat(initialId);
   }
   knownInitialId.set(initialId);
 }
@@ -49,7 +48,7 @@ export function getKnownUrlId() {
 }
 
 export function setKnownUrlId(urlId: string) {
-  if (chatIdStore.get() !== urlId) {
+  if (!knownUrlId.get()) {
     navigateChat(urlId);
   }
   knownUrlId.set(urlId);

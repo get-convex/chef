@@ -2,7 +2,7 @@ import type { Id } from '@convex/_generated/dataModel';
 import { atom } from 'nanostores';
 import { useStore } from '@nanostores/react';
 import { getLocalStorage, setLocalStorage } from '~/lib/persistence';
-import type { ConvexReactClient } from 'convex/react';
+import { useQuery, type ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { CONVEX_INVITE_CODE_QUERY_PARAM } from '~/lib/persistence/convex';
 import { useAuth0 } from '@auth0/auth0-react';
@@ -25,6 +25,31 @@ export type ConvexProject = {
 };
 
 export const convexStore = atom<ConvexProject | null>(null);
+
+export function useProjectInitializer(chatId: string) {
+  const sessionId = useConvexSessionIdOrNullOrLoading();
+  const projectInfo = useQuery(
+    api.convexProjects.loadConnectedConvexProjectCredentials,
+    sessionId
+      ? {
+          sessionId,
+          chatId,
+        }
+      : 'skip',
+  );
+  useEffect(() => {
+    if (projectInfo?.kind === 'connected') {
+      convexStore.set({
+        token: projectInfo.adminKey,
+        deploymentName: projectInfo.deploymentName,
+        deploymentUrl: projectInfo.deploymentUrl,
+        projectSlug: projectInfo.projectSlug,
+        teamSlug: projectInfo.teamSlug,
+      });
+      setSelectedTeamSlug(projectInfo.teamSlug);
+    }
+  }, [projectInfo]);
+}
 
 export function waitForConvexProjectConnection(): Promise<ConvexProject> {
   return new Promise((resolve) => {
