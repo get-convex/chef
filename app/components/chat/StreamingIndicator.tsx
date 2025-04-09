@@ -11,6 +11,19 @@ interface StreamingIndicatorProps {
   currentError?: Error;
 }
 
+// Icon components
+const LoadingIcon = () => <div className="i-svg-spinners:90-ring-with-bg" />;
+const WarningIcon = () => <div className="i-ph:warning text-yellow-500" />;
+const CheckIcon = () => <div className="i-ph:check" />;
+
+// Status messages
+const STATUS_MESSAGES = {
+  cooking: 'Cooking...',
+  stopped: 'Generation stopped',
+  error: 'The model hit an error. Try sending your message again?',
+  generated: 'Response Generated',
+} as const;
+
 export default function StreamingIndicator(props: StreamingIndicatorProps) {
   const { aborted } = useStore(chatStore);
   let streamStatus = props.streamStatus;
@@ -22,33 +35,31 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
   if (streamStatus === 'ready' && props.numMessages === 0) {
     return null;
   }
-  let icon;
-  let message;
-  switch (streamStatus) {
-    case 'submitted':
-    case 'streaming':
-      if (aborted) {
-        icon = <div className="i-ph:warning text-yellow-500"></div>;
-        message = 'Generation stopped';
-      } else {
-        icon = <div className="i-svg-spinners:90-ring-with-bg"></div>;
-        message = 'Cooking...';
-      }
-      break;
-    case 'error':
-      icon = <div className="i-ph:warning text-yellow-500"></div>;
-      message = 'The model hit an error. Try sending your message again?';
-      break;
-    case 'ready':
-      if (aborted) {
-        icon = <div className="i-ph:warning text-yellow-500"></div>;
-        message = 'Generation stopped';
-      } else {
-        icon = <div className="i-ph:check"></div>;
-        message = 'Response Generated';
-      }
-      break;
+
+  let icon: React.ReactNode;
+  let message: string;
+
+  if (aborted) {
+    icon = <WarningIcon />;
+    message = STATUS_MESSAGES.stopped;
+  } else {
+    switch (streamStatus) {
+      case 'submitted':
+      case 'streaming':
+        icon = <LoadingIcon />;
+        message = STATUS_MESSAGES.cooking;
+        break;
+      case 'error':
+        icon = <WarningIcon />;
+        message = STATUS_MESSAGES.error;
+        break;
+      case 'ready':
+        icon = <CheckIcon />;
+        message = STATUS_MESSAGES.generated;
+        break;
+    }
   }
+
   return (
     <AnimatePresence>
       <div
