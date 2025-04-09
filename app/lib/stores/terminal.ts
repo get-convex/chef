@@ -31,23 +31,28 @@ export class TerminalStore {
       const wc = await this.#webcontainer;
       await this.#boltTerminal.init(wc, terminal);
       if (options?.isReload) {
-        const sessionId = sessionIdStore.get();
-        if (!sessionId) {
-          throw new Error('No session id found when trying to run terminal commands');
-        }
-        if (options?.shouldDeployConvexFunctions) {
-          const result = await this.#boltTerminal.executeCommand(sessionId, 'npx convex dev --once');
-          // Only run preview if convex functions were deployed successfully
-          if (result?.exitCode === 0) {
-            await this.#boltTerminal.executeCommand(sessionId, 'npx vite --open');
-          }
-        }
+        await this.deployFunctionsAndRunDevServer(options.shouldDeployConvexFunctions ?? false);
       }
     } catch (error: any) {
       console.error('Failed to initialize bolt terminal:', error);
       terminal.write(coloredText.red('Failed to spawn dev server shell\n\n') + error.message);
       return;
     }
+  }
+
+  async deployFunctionsAndRunDevServer(shouldDeployConvexFunctions: boolean) {
+    const sessionId = sessionIdStore.get();
+    if (!sessionId) {
+      throw new Error('No session id found when trying to run terminal commands');
+    }
+    if (shouldDeployConvexFunctions) {
+      const result = await this.#boltTerminal.executeCommand(sessionId, 'npx convex dev --once');
+      // Only run preview if convex functions were deployed successfully
+      if (result?.exitCode !== 0) {
+        throw new Error('Failed to deploy convex functions');
+      }
+    }
+    await this.#boltTerminal.executeCommand(sessionId, 'npx vite --open');
   }
 
   async attachTerminal(terminal: ITerminal) {

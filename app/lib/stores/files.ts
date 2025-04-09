@@ -150,6 +150,7 @@ export class FilesStore {
       this.files.setKey(filePath, { type: 'file', content, isBinary: false });
       this.userWrites.set(filePath, Date.now());
 
+
       logger.info('File updated');
     } catch (error) {
       logger.error('Failed to update file content\n\n', error);

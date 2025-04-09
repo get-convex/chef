@@ -25,6 +25,7 @@ import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot';
 import { sessionIdStore } from './convex';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './artifacts';
+import { WORK_DIR } from '~/utils/constants';
 
 const BACKUP_DEBOUNCE_MS = 100;
 
@@ -430,6 +431,10 @@ export class WorkbenchStore {
     newUnsavedFiles.delete(absPath);
 
     this.unsavedFiles.set(newUnsavedFiles);
+    // If the file is in the convex/ folder, rerun convex deploy
+    if (filePath.startsWith(path.join(WORK_DIR, 'convex'))) {
+      await this.#terminalStore.deployFunctionsAndRunDevServer(true);
+    }
   }
 
   async saveCurrentDocument() {
