@@ -66,8 +66,17 @@ export async function chatAction({ request }: ActionFunctionArgs) {
 
   if (enableRateLimiting) {
     const resp = await checkTokenUsage(PROVISION_HOST, token, teamSlug, deploymentName);
-    if (resp) {
-      return resp;
+    if (resp.status === 'error') {
+      return resp.response;
+    }
+    if (resp.tokensUsed >= resp.tokensQuota) {
+      logger.error(`No tokens available for ${deploymentName}: ${resp.tokensUsed} of ${resp.tokensQuota}`);
+      return new Response(
+        JSON.stringify({ error: `No tokens available. Used ${resp.tokensUsed} of ${resp.tokensQuota}` }),
+        {
+          status: 402,
+        },
+      );
     }
   }
 
