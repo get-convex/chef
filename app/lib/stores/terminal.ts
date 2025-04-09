@@ -54,16 +54,20 @@ export class TerminalStore {
     if (shouldDeployConvexFunctions) {
       isConvexDeployTerminalVisibleStore.set(true);
       activeTerminalTabStore.set(CONVEX_DEPLOY_TAB_INDEX);
+
+      await this.#deployTerminal.executeCommand('clear');
       const result = await this.#deployTerminal.executeCommand('npx convex dev --once');
 
       if (result.exitCode !== 0) {
         toast.error('Failed to deploy Convex functions. Check the terminal for more details.');
+        workbenchStore.currentView.set('code');
         activeTerminalTabStore.set(CONVEX_DEPLOY_TAB_INDEX);
-      } else {
-        isConvexDeployTerminalVisibleStore.set(false);
-        activeTerminalTabStore.set(VITE_TAB_INDEX);
-        toast.success('Convex functions deployed successfully');
+        return;
       }
+
+      isConvexDeployTerminalVisibleStore.set(false);
+      activeTerminalTabStore.set(VITE_TAB_INDEX);
+      toast.success('Convex functions deployed successfully');
     }
 
     if (!workbenchStore.isDefaultPreviewRunning()) {
