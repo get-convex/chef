@@ -83,29 +83,29 @@ export const Chat = memo(
 
     const [animationScope, animate] = useAnimate();
 
-  const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number }>({
-    numFailures: 0,
-    nextRetry: Date.now(),
-  });
+    const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number }>({
+      numFailures: 0,
+      nextRetry: Date.now(),
+    });
 
-  // Reset retries counter every 10 minutes
-  useEffect(() => {
-    const resetInterval = setInterval(
-      () => {
-        setRetries({ numFailures: 0, nextRetry: Date.now() });
-      },
-      10 * 60 * 1000,
-    );
+    // Reset retries counter every 10 minutes
+    useEffect(() => {
+      const resetInterval = setInterval(
+        () => {
+          setRetries({ numFailures: 0, nextRetry: Date.now() });
+        },
+        10 * 60 * 1000,
+      );
 
-    return () => clearInterval(resetInterval);
-  }, []);
+      return () => clearInterval(resetInterval);
+    }, []);
 
-  let USE_ANTHROPIC_FRACTION = 1.0;
-  if (import.meta.env.VITE_USE_ANTHROPIC_FRACTION) {
-    USE_ANTHROPIC_FRACTION = Number(import.meta.env.VITE_USE_ANTHROPIC_FRACTION);
-  }
+    let USE_ANTHROPIC_FRACTION = 1.0;
+    if (import.meta.env.VITE_USE_ANTHROPIC_FRACTION) {
+      USE_ANTHROPIC_FRACTION = Number(import.meta.env.VITE_USE_ANTHROPIC_FRACTION);
+    }
 
-  const modelProviders: ModelProvider[] = USE_ANTHROPIC_FRACTION === 1.0 ? ['Anthropic'] : ['Anthropic', 'Bedrock'];
+    const modelProviders: ModelProvider[] = USE_ANTHROPIC_FRACTION === 1.0 ? ['Anthropic'] : ['Anthropic', 'Bedrock'];
 
     const chatContextManager = useRef(new ChatContextManager());
     const { getAccessTokenSilently } = useAuth0();
@@ -138,86 +138,86 @@ export const Chat = memo(
           throw new Error('No team slug');
         }
 
-      let modelProvider = Math.random() < USE_ANTHROPIC_FRACTION ? 'Anthropic' : 'Bedrock';
-      if (retries.numFailures > 0) {
-        modelProvider = modelProviders[retries.numFailures % modelProviders.length];
-      }
-
-      return {
-        messages: chatContextManager.current.prepareContext(messages),
-        firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
-        chatId,
-        token,
-        teamSlug,
-        deploymentName: convex?.deploymentName,
-        modelProvider,
-      };
-    },
-    maxSteps: 64,
-    async onToolCall({ toolCall }) {
-      console.log('Starting tool call', toolCall);
-      const result = await workbenchStore.waitOnToolCall(toolCall.toolCallId);
-      console.log('Tool call finished', result);
-      return result;
-    },
-    onError: (e: Error) => {
-      // Clean up the last message if it's an assistant message
-      setMessages((prevMessages) => {
-        const updatedMessages = [...prevMessages];
-        const lastMessage = updatedMessages[updatedMessages.length - 1];
-
-        if (lastMessage?.role === 'assistant' && Array.isArray(lastMessage.parts)) {
-          const updatedParts = [...lastMessage.parts.slice(0, -1)];
-          if (updatedParts.length > 0) {
-            updatedMessages[updatedMessages.length - 1] = {
-              ...lastMessage,
-              parts: updatedParts,
-            };
-          } else {
-            updatedMessages.pop();
-          }
+        let modelProvider = Math.random() < USE_ANTHROPIC_FRACTION ? 'Anthropic' : 'Bedrock';
+        if (retries.numFailures > 0) {
+          modelProvider = modelProviders[retries.numFailures % modelProviders.length];
         }
 
-        return updatedMessages;
-      });
-      captureException('Failed to process chat request: ' + e.message, {
-        level: 'error',
-        extra: {
-          error: e,
-        },
-      });
-      logger.error('Request failed\n\n', e, error);
-      setRetries((prevRetries) => {
-        const newRetries = prevRetries.numFailures + 1;
-        const retryTime = error?.message.includes('Too Many Requests')
-          ? Date.now() + exponentialBackoff(newRetries)
-          : Date.now();
-        return { numFailures: newRetries, nextRetry: retryTime };
-      });
-      if (error?.message.includes('Too Many Requests')) {
-        toast.error(CHEF_TOO_BUSY_ERROR);
-      }
-    },
-    onFinish: (message, response) => {
-      const usage = response.usage;
-      if (usage) {
-        console.log('Token usage:', usage);
-      }
-      if (response.finishReason == 'stop') {
-        setRetries({ numFailures: 0, nextRetry: Date.now() });
-      }
-      logger.debug('Finished streaming');
-    },
-  });
+        return {
+          messages: chatContextManager.current.prepareContext(messages),
+          firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
+          chatId,
+          token,
+          teamSlug,
+          deploymentName: convex?.deploymentName,
+          modelProvider,
+        };
+      },
+      maxSteps: 64,
+      async onToolCall({ toolCall }) {
+        console.log('Starting tool call', toolCall);
+        const result = await workbenchStore.waitOnToolCall(toolCall.toolCallId);
+        console.log('Tool call finished', result);
+        return result;
+      },
+      onError: (e: Error) => {
+        // Clean up the last message if it's an assistant message
+        setMessages((prevMessages) => {
+          const updatedMessages = [...prevMessages];
+          const lastMessage = updatedMessages[updatedMessages.length - 1];
 
-  const containerBootState = useContainerBootState();
-  useEffect(() => {
-    if (containerBootState.state === ContainerBootState.ERROR && containerBootState.errorToLog) {
-      captureException(containerBootState.errorToLog);
-      toast.error('Failed to initialize the Chef environment. Please reload the page.');
-      takeContainerBootError();
-    }
-  }, [containerBootState]);
+          if (lastMessage?.role === 'assistant' && Array.isArray(lastMessage.parts)) {
+            const updatedParts = [...lastMessage.parts.slice(0, -1)];
+            if (updatedParts.length > 0) {
+              updatedMessages[updatedMessages.length - 1] = {
+                ...lastMessage,
+                parts: updatedParts,
+              };
+            } else {
+              updatedMessages.pop();
+            }
+          }
+
+          return updatedMessages;
+        });
+        captureException('Failed to process chat request: ' + e.message, {
+          level: 'error',
+          extra: {
+            error: e,
+          },
+        });
+        logger.error('Request failed\n\n', e, error);
+        setRetries((prevRetries) => {
+          const newRetries = prevRetries.numFailures + 1;
+          const retryTime = error?.message.includes('Too Many Requests')
+            ? Date.now() + exponentialBackoff(newRetries)
+            : Date.now();
+          return { numFailures: newRetries, nextRetry: retryTime };
+        });
+        if (error?.message.includes('Too Many Requests')) {
+          toast.error(CHEF_TOO_BUSY_ERROR);
+        }
+      },
+      onFinish: (message, response) => {
+        const usage = response.usage;
+        if (usage) {
+          console.log('Token usage:', usage);
+        }
+        if (response.finishReason == 'stop') {
+          setRetries({ numFailures: 0, nextRetry: Date.now() });
+        }
+        logger.debug('Finished streaming');
+      },
+    });
+
+    const containerBootState = useContainerBootState();
+    useEffect(() => {
+      if (containerBootState.state === ContainerBootState.ERROR && containerBootState.errorToLog) {
+        captureException(containerBootState.errorToLog);
+        toast.error('Failed to initialize the Chef environment. Please reload the page.');
+        takeContainerBootError();
+      }
+    }, [containerBootState]);
 
     useEffect(() => {
       // an empty string code is confusing, consider it no code
@@ -291,10 +291,10 @@ export const Chat = memo(
     };
 
     const sendMessage = async (_event: React.UIEvent, teamSlug: string | null, messageInput?: string) => {
-    if (retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) {
-      toast.error(CHEF_TOO_BUSY_ERROR);
-      return;
-    }
+      if (retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) {
+        toast.error(CHEF_TOO_BUSY_ERROR);
+        return;
+      }
 
       const messageContent = messageInput || input;
 
