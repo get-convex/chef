@@ -16,8 +16,13 @@ export const meta: MetaFunction = () => {
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
-  // an empty string code is confusing, consider it no code
-  const code = url.searchParams.get('code') || null;
+  let code: string | null = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  // If state is also set, this is probably the GitHub OAuth login flow finishing.
+  // The code is probably not for us.
+  if (state) {
+    code = null;
+  }
   const flexAuthMode = getFlexAuthModeInLoader();
   return json({ code, flexAuthMode });
 };

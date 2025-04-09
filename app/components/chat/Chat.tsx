@@ -31,6 +31,7 @@ import { setProfile } from '~/lib/stores/profile';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import { chatIdStore } from '~/lib/stores/chatId';
 import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
+import { useConvex } from 'convex/react';
 
 const logger = createScopedLogger('Chat');
 
@@ -70,6 +71,7 @@ interface ChatProps {
 export const Chat = memo(
   ({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy }: ChatProps) => {
     useShortcuts();
+    const convex = useConvex();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -108,19 +110,6 @@ export const Chat = memo(
     const modelProviders: ModelProvider[] = USE_ANTHROPIC_FRACTION === 1.0 ? ['Anthropic'] : ['Anthropic', 'Bedrock'];
 
     const chatContextManager = useRef(new ChatContextManager());
-    const { getAccessTokenSilently } = useAuth0();
-    const [token, setToken] = useState<string | null>(null);
-
-    useEffect(() => {
-      // Fetch and store the access token
-      getAccessTokenSilently({ detailedResponse: true })
-        .then((response) => {
-          setToken(response.id_token);
-        })
-        .catch((error) => {
-          console.error('Failed to get access token:', error);
-        });
-    }, [getAccessTokenSilently]);
 
     const { messages, status, input, handleInputChange, setInput, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
@@ -129,8 +118,10 @@ export const Chat = memo(
       sendExtraMessageFields: true,
       experimental_prepareRequestBody: ({ messages }) => {
         const chatId = chatIdStore.get();
-        const convex = convexProjectStore.get();
+        const deploymentName = convexProjectStore.get()?.deploymentName;
         const teamSlug = selectedTeamSlugStore.get();
+        const convexAny = convex as any;
+        const token = convexAny?.sync?.state?.auth?.value;
         if (!token) {
           throw new Error('No token');
         }
@@ -149,7 +140,7 @@ export const Chat = memo(
           chatId,
           token,
           teamSlug,
-          deploymentName: convex?.deploymentName,
+          deploymentName,
           modelProvider,
         };
       },
@@ -211,8 +202,7 @@ export const Chat = memo(
     });
 
     useEffect(() => {
-      // an empty string code is confusing, consider it no code
-      const prompt = searchParams.get('prompt') || null;
+      const prompt = searchParams.get('prompt');
 
       if (!prompt) {
         return;
