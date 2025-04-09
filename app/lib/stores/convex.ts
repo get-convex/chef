@@ -5,6 +5,8 @@ import { getLocalStorage, setLocalStorage } from '~/lib/persistence';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { CONVEX_INVITE_CODE_QUERY_PARAM } from '~/lib/persistence/convex';
+import { useAuth0 } from '@auth0/auth0-react';
+import { useEffect } from 'react';
 
 export type ConvexTeam = {
   id: string;
@@ -206,8 +208,39 @@ export async function setValidAccessCode(convex: ConvexReactClient, code: string
 
 const SELECTED_TEAM_SLUG_KEY = 'selectedConvexTeamSlug';
 export const selectedTeamSlugStore = atom<string | null>(null);
+const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
-export function initializeSelectedTeamSlug(teams: ConvexTeam[]) {
+export function useTeamsInitializer() {
+  const { getAccessTokenSilently } = useAuth0();
+  useEffect(() => {
+    void fetchTeams(getAccessTokenSilently);
+  }, [getAccessTokenSilently]);
+}
+
+async function fetchTeams(
+  getAccessTokenSilently: ReturnType<typeof useAuth0>['getAccessTokenSilently'],
+) {
+  let teams: ConvexTeam[];
+  await waitForConvexSessionId('fetchTeams');
+  try {
+    const tokenResponse = await getAccessTokenSilently({
+      detailedResponse: true,
+    });
+    const response = await fetch(`${VITE_PROVISION_HOST}/api/dashboard/teams`, {
+      headers: {
+        Authorization: `Bearer ${tokenResponse.id_token}`,
+      },
+    });
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Failed to fetch teams: ${response.statusText}: ${body}`);
+    }
+    teams = await response.json();
+  } catch (error) {
+    console.error('Error fetching teams:', error);
+    return;
+  }
+  teamsStore.set(teams);
   const teamSlugFromLocalStorage = getLocalStorage(SELECTED_TEAM_SLUG_KEY);
   if (teamSlugFromLocalStorage) {
     const team = teams.find((team) => team.slug === teamSlugFromLocalStorage);

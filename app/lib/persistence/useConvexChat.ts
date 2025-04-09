@@ -4,7 +4,7 @@ import type { Message } from '@ai-sdk/react';
 import { useConvex } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import type { SerializedMessage } from '@convex/messages';
-import { flexAuthModeStore, waitForConvexSessionId, waitForSelectedTeamSlug } from '~/lib/stores/convex';
+import { flexAuthModeStore, useTeamsInitializer, waitForConvexSessionId, waitForSelectedTeamSlug } from '~/lib/stores/convex';
 import { webcontainer } from '~/lib/webcontainer';
 import { loadSnapshot } from '~/lib/snapshot';
 import { makePartId, type PartId } from '~/lib/stores/artifacts';
@@ -26,6 +26,7 @@ export interface ChatHistoryItem {
 export const description = atom<string | undefined>(undefined);
 
 export function useConvexChatHomepage(chatId: string) {
+  useTeamsInitializer();
   const initializeChat = useInitializeChat(chatId);
   const storeMessageHistory = useStoreMessageHistory(chatId, []);
   return {
@@ -35,6 +36,7 @@ export function useConvexChatHomepage(chatId: string) {
 }
 
 export function useConvexChatExisting(chatId: string) {
+  useTeamsInitializer();
   const initializeChat = useInitializeChat(chatId);
   const { ready, initialMessages, initialDeserializedMessages } = useInitialMessages(chatId);
   const storeMessageHistory = useStoreMessageHistory(chatId, initialMessages);
@@ -56,13 +58,11 @@ function useInitializeChat(chatId: string) {
     if (flexAuthMode !== 'ConvexOAuth') {
       throw new Error('Flex auth mode is not ConvexOAuth');
     }
-
     const response = await getAccessTokenSilently({ detailedResponse: true });
     const projectInitParams = {
       teamSlug,
       auth0AccessToken: response.id_token,
     };
-
     await convex.mutation(api.messages.initializeChat, {
       id: chatId,
       sessionId,

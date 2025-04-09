@@ -10,10 +10,10 @@ import { FlexAuthWrapper } from './chat/FlexAuthWrapper';
 import { SentryUserProvider } from './chat/Chat';
 import { setPageLoadChatId } from '~/lib/persistence/chatIdStore';
 
-// TODO: handle unknown chatId?
-
 export function ExistingChat({ chatId }: { chatId: string }) {
-  // Fill in the chatID store from props early in app initialization.
+  // Fill in the chatID store from props early in app initialization. If this
+  // chat ID ends up being invalid, we'll abandon the page and redirect to
+  // the homepage.
   setPageLoadChatId(chatId);
 
   const { ready, initialMessages, storeMessageHistory, initializeChat } = useConvexChatExisting(chatId);
