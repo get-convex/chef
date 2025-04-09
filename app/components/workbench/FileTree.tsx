@@ -5,6 +5,7 @@ import { createScopedLogger, renderLogger } from '~/utils/logger';
 import * as ContextMenu from '@radix-ui/react-context-menu';
 import type { FileHistory } from '~/types/actions';
 import { diffLines, type Change } from 'diff';
+import { DEFAULT_COLLAPSED_FOLDERS } from '~/utils/constants';
 
 const logger = createScopedLogger('FileTree');
 
@@ -48,9 +49,11 @@ export const FileTree = memo(
     }, [files, rootFolder, hideRoot, computedHiddenFiles]);
 
     const [collapsedFolders, setCollapsedFolders] = useState(() => {
-      return collapsed
-        ? new Set(fileList.filter((item) => item.kind === 'folder').map((item) => item.fullPath))
-        : new Set<string>();
+      const allFolders = fileList.filter((item) => item.kind === 'folder').map((item) => item.fullPath);
+      if (collapsed) {
+        return new Set(allFolders);
+      }
+      return new Set(allFolders.filter((folder) => DEFAULT_COLLAPSED_FOLDERS.has(folder)));
     });
 
     useEffect(() => {

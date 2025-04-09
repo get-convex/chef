@@ -7,6 +7,14 @@ export const PREWARM_PATHS = [`${WORK_DIR}/package.json`, `${WORK_DIR}/convex/sc
 export const IGNORED_PATHS = [`${WORK_DIR}/dist/`, `${WORK_DIR}/node_modules/`, `${WORK_DIR}/.env.local`];
 export const IGNORED_RELATIVE_PATHS = ['dist', 'node_modules', '.env.local'];
 
+export const DEFAULT_COLLAPSED_FOLDERS = new Set([
+  `${WORK_DIR}/convex/_generated`,
+  `${WORK_DIR}/public`,
+  `${WORK_DIR}/src/components`,
+  `${WORK_DIR}/src/hooks`,
+  `${WORK_DIR}/src/lib`,
+]);
+
 export const MIN_BACKOFF = 500;
 export const MAX_BACKOFF = 60000;
 
