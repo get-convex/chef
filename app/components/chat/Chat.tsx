@@ -176,6 +176,20 @@ export const Chat = memo(
       stop();
       chatStore.setKey('aborted', true);
       workbenchStore.abortAllActions();
+
+      // Update all running tools to aborted status
+      const artifacts = workbenchStore.artifacts.get();
+      Object.values(artifacts).forEach((artifact) => {
+        const actions = artifact.runner.actions.get();
+        Object.entries(actions).forEach(([actionId, action]) => {
+          if (action.status === 'running' || action.status === 'pending') {
+            artifact.runner.updateAction(actionId, {
+              ...action,
+              status: 'aborted',
+            });
+          }
+        });
+      });
     };
 
     useEffect(() => {

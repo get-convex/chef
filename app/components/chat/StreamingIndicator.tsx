@@ -40,8 +40,13 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
       message = 'The model hit an error. Try sending your message again?';
       break;
     case 'ready':
-      icon = <div className="i-ph:check"></div>;
-      message = 'Response Generated';
+      if (aborted) {
+        icon = <div className="i-ph:warning text-yellow-500"></div>;
+        message = 'Generation stopped';
+      } else {
+        icon = <div className="i-ph:check"></div>;
+        message = 'Response Generated';
+      }
       break;
   }
   return (
