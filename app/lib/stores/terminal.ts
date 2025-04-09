@@ -3,7 +3,6 @@ import { atom, type WritableAtom } from 'nanostores';
 import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
 import { newBoltShellProcess, newShellProcess } from '~/utils/shell';
 import { coloredText } from '~/utils/terminal';
-import { sessionIdStore } from './sessionId';
 
 export class TerminalStore {
   #webcontainer: Promise<WebContainer>;
@@ -43,18 +42,14 @@ export class TerminalStore {
   }
 
   async deployFunctionsAndRunDevServer(shouldDeployConvexFunctions: boolean) {
-    const sessionId = sessionIdStore.get();
-    if (!sessionId) {
-      throw new Error('No session id found when trying to run terminal commands');
-    }
     if (shouldDeployConvexFunctions) {
-      const result = await this.#boltTerminal.executeCommand(sessionId, 'npx convex dev --once');
+      const result = await this.#boltTerminal.executeCommand('npx convex dev --once');
       // Only run preview if convex functions were deployed successfully
       if (result?.exitCode !== 0) {
         throw new Error('Failed to deploy convex functions');
       }
     }
-    await this.#boltTerminal.executeCommand(sessionId, 'npx vite --open');
+    await this.#boltTerminal.executeCommand('npx vite --open');
   }
 
   async attachTerminal(terminal: ITerminal) {

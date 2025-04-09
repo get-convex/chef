@@ -51,7 +51,7 @@ interface BaseChatProps {
   toolStatus: ToolStatus;
   messages: Message[];
   terminalInitializationOptions: TerminalInitializationOptions | undefined;
-
+  overQuota: boolean;
   // Alert related props
   actionAlert: ActionAlert | undefined;
   clearAlert: () => void;
@@ -79,6 +79,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       clearAlert,
       toolStatus,
       terminalInitializationOptions,
+      overQuota,
     },
     ref,
   ) => {
@@ -175,6 +176,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent text-sm',
                         'transition-all duration-200',
                         'hover:border-bolt-elements-focus',
+                        {
+                          'opacity-50 cursor-not-allowed': overQuota,
+                        },
                       )}
                       onDragEnter={(e) => {
                         e.preventDefault();
@@ -236,7 +240,11 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         maxHeight: TEXTAREA_MAX_HEIGHT,
                       }}
                       placeholder={
-                        chatStarted ? 'Request changes by sending another message...' : 'What app do you want to serve?'
+                        overQuota
+                          ? 'You have reached your token limit. Please upgrade your plan to continue.'
+                          : chatStarted
+                            ? 'Request changes by sending another message...'
+                            : 'What app do you want to serve?'
                       }
                       translate="no"
                     />

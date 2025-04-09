@@ -390,7 +390,7 @@ export class ActionRunner {
           }
           result = cleanedOutput;
 
-          await shell.startCommand(this.runnerId.get(), 'npx vite --open');
+          await shell.startCommand('npx vite --open');
           result += '\n\nDev server started successfully!';
           break;
         }

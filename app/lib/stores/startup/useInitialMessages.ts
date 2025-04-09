@@ -34,10 +34,37 @@ export function useInitialMessages(chatId: string): InitialMessages | undefined 
         if (rawMessages.urlId) {
           setKnownUrlId(rawMessages.urlId);
         }
-        const deserializedMessages = rawMessages.messages.map(deserializeMessageForConvex);
+
+        // Transform messages to convert partial-call states to failed states
+        const transformedMessages = rawMessages.messages.map((message) => {
+          if (!message.parts) {
+            return message;
+          }
+
+          const updatedParts = message.parts.map((part) => {
+            if (part.type === 'tool-invocation' && part.toolInvocation.state === 'partial-call') {
+              return {
+                ...part,
+                toolInvocation: {
+                  ...part.toolInvocation,
+                  state: 'result' as const,
+                  result: 'Error: Tool call was interrupted',
+                },
+              };
+            }
+            return part;
+          });
+
+          return {
+            ...message,
+            parts: updatedParts,
+          };
+        });
+
+        const deserializedMessages = transformedMessages.map(deserializeMessageForConvex);
         setInitialMessages({
           loadedChatId: rawMessages.id,
-          serialized: rawMessages.messages,
+          serialized: transformedMessages,
           deserialized: deserializedMessages,
         });
         description.set(rawMessages.description);

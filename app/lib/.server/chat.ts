@@ -68,12 +68,22 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   let userApiKey = body.userApiKey?.preference === 'always' ? body.userApiKey.value : undefined;
 
   if (enableRateLimiting) {
-    const resp = await checkTokenUsage(PROVISION_HOST, token, teamSlug, deploymentName);
-    if (resp) {
-      if (body.userApiKey) {
-        userApiKey = body.userApiKey.value;
-      } else {
-        return resp;
+    if (!userApiKey) {
+      const resp = await checkTokenUsage(PROVISION_HOST, token, teamSlug, deploymentName);
+      if (resp.status === 'error') {
+        return resp.response;
+      }
+      if (resp.tokensUsed >= resp.tokensQuota) {
+        if (body.userApiKey?.preference === 'quotaExhausted') {
+          userApiKey = body.userApiKey.value;
+        } else {
+          logger.error(`No tokens available for ${deploymentName}: ${resp.tokensUsed} of ${resp.tokensQuota}`);
+        return new Response(
+          JSON.stringify({ error: `No tokens available. Used ${resp.tokensUsed} of ${resp.tokensQuota}` }),
+          {
+            status: 402,
+          },
+        );
       }
     }
   }

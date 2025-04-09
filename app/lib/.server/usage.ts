@@ -3,12 +3,23 @@ import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('usage');
 
+export type CheckTokenUsageResponse =
+  | {
+      status: 'success';
+      tokensUsed: number;
+      tokensQuota: number;
+    }
+  | {
+      status: 'error';
+      response: Response;
+    };
+
 export async function checkTokenUsage(
   provisionHost: string,
   token: string,
   teamSlug: string,
   deploymentName: string | undefined,
-) {
+): Promise<CheckTokenUsageResponse> {
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/get_token_info`;
   const response = await fetch(url, {
@@ -21,19 +32,16 @@ export async function checkTokenUsage(
   if (!response.ok) {
     const body = await response.text();
     logger.error(`Failed to check for token usage: ${url} -> ${response.statusText}: ${body}`);
-    return new Response(JSON.stringify({ error: 'Failed to check for tokens' }), {
-      status: response.status,
-    });
+    return {
+      status: 'error',
+      response: new Response(JSON.stringify({ error: 'Failed to check for tokens' }), {
+        status: response.status,
+      }),
+    };
   }
   const { tokensUsed, tokensQuota }: { tokensUsed: number; tokensQuota: number } = await response.json();
-  if (tokensUsed >= tokensQuota) {
-    logger.error(`No tokens available for ${deploymentName}: ${tokensUsed} of ${tokensQuota}`);
-    return new Response(JSON.stringify({ error: `No tokens available. Used ${tokensUsed} of ${tokensQuota}` }), {
-      status: 402,
-    });
-  }
   logger.info(`${teamSlug}/${deploymentName}: Tokens used: ${tokensUsed} / ${tokensQuota}`);
-  return null;
+  return { status: 'success', tokensUsed, tokensQuota };
 }
 
 export async function recordUsage(

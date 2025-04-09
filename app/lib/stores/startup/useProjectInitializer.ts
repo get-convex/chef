@@ -5,6 +5,7 @@ import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 export function useProjectInitializer(chatId: string) {
   const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -27,6 +28,9 @@ export function useProjectInitializer(chatId: string) {
         teamSlug: projectInfo.teamSlug,
       });
       setSelectedTeamSlug(projectInfo.teamSlug);
+    }
+    if (projectInfo?.kind === 'failed') {
+      toast.error(projectInfo.errorMessage);
     }
   }, [projectInfo]);
 }
