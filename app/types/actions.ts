@@ -1,5 +1,5 @@
 import type { Change } from 'diff';
-
+import type { RelativePath } from '~/lib/stores/files';
 export type ActionType = 'file' | 'toolUse';
 
 interface BaseAction {
@@ -8,7 +8,7 @@ interface BaseAction {
 
 export interface FileAction extends BaseAction {
   type: 'file';
-  filePath: string;
+  filePath: RelativePath;
   isEdit?: boolean;
 }
 

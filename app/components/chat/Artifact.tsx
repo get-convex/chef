@@ -8,9 +8,9 @@ import { workbenchStore } from '~/lib/stores/workbench';
 import { type PartId } from '~/lib/stores/artifacts';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
-import { WORK_DIR } from '~/utils/constants';
 import { captureException } from '@sentry/remix';
-
+import type { RelativePath } from '~/lib/stores/files';
+import { getAbsolutePath } from '~/lib/stores/files';
 const highlighterOptions = {
   langs: ['shell'],
   themes: ['light-plus', 'dark-plus'],
@@ -135,12 +135,12 @@ const actionVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-function openArtifactInWorkbench(filePath: any) {
+function openArtifactInWorkbench(filePath: RelativePath) {
   if (workbenchStore.currentView.get() !== 'code') {
     workbenchStore.currentView.set('code');
   }
 
-  workbenchStore.setSelectedFile(`${WORK_DIR}/${filePath}`);
+  workbenchStore.setSelectedFile(getAbsolutePath(filePath));
 }
 
 const ActionList = memo(({ actions }: ActionListProps) => {

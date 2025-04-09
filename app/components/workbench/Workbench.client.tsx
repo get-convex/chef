@@ -102,7 +102,8 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
 
   const onFileSelect = useCallback((filePath: string | undefined) => {
     workbenchStore.followingStreamedCode.set(false);
-    workbenchStore.setSelectedFile(filePath);
+    const absPath = filePath ? getAbsolutePath(filePath) : undefined;
+    workbenchStore.setSelectedFile(absPath);
   }, []);
 
   const onFileSave = useCallback(() => {

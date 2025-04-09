@@ -3,6 +3,7 @@ import type { BoltArtifactData } from '~/types/artifact';
 import { createScopedLogger } from '~/utils/logger';
 import { unreachable } from '~/utils/unreachable';
 import type { PartId } from '~/lib/stores/artifacts';
+import { getRelativePath } from '~/lib/stores/files';
 
 const ARTIFACT_TAG_OPEN = '<boltArtifact';
 const ARTIFACT_TAG_CLOSE = '</boltArtifact>';
@@ -321,7 +322,7 @@ export class StreamingMessageParser {
         logger.debug('File path not specified');
       }
 
-      (actionAttributes as FileAction).filePath = filePath;
+      (actionAttributes as FileAction).filePath = getRelativePath(filePath);
     } else {
       logger.warn(`Unknown action type '${actionType}'`);
     }

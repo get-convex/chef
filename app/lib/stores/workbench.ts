@@ -346,7 +346,9 @@ export class WorkbenchStore {
       // we find the first file and select it
       for (const [filePath, dirent] of Object.entries(files)) {
         if (dirent?.type === 'file') {
-          this.setSelectedFile(filePath);
+          // Note -- cast is safe since `FileMap` is a record of `AbsolutePath` -> `Dirent`,
+          // but `Object.entries` loses the type information.
+          this.setSelectedFile(filePath as AbsolutePath);
           break;
         }
       }
@@ -402,10 +404,9 @@ export class WorkbenchStore {
     this.#editorStore.updateScrollPosition(filePath, position);
   }
 
-  setSelectedFile(filePath: string | undefined) {
+  setSelectedFile(filePath: AbsolutePath | undefined) {
     this.setLastChangedFile();
-    const absPath = filePath ? getAbsolutePath(filePath) : undefined;
-    this.#editorStore.setSelectedFile(absPath);
+    this.#editorStore.setSelectedFile(filePath);
   }
 
   async saveFile(filePath: string) {
@@ -579,7 +580,7 @@ export class WorkbenchStore {
         const selectedView = workbenchStore.currentView.value;
         const followingStreamedCode = workbenchStore.followingStreamedCode.get();
         if (selectedView === 'code' && followingStreamedCode) {
-          this.setSelectedFile(fullPath);
+          this.setSelectedFile(fullPath as AbsolutePath);
         }
       }
 
