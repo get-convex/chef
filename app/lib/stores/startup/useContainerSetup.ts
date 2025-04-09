@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { waitForConvexProjectConnection, type ConvexProject } from '~/lib/stores/convexProject';
 import type { WebContainer } from '@webcontainer/api';
 
-const TEMPLATE_URL = '/template-snapshot-351f4521.bin';
+const TEMPLATE_URL = '/template-snapshot-ba3672ee.bin';
 
 export function useNewChatContainerSetup() {
   useEffect(() => {
