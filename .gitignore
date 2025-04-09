@@ -52,3 +52,4 @@ template/pnpm-lock.yaml
 .env.sentry-build-plugin
 
 .vercel
+.env*.local

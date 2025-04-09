@@ -2,24 +2,52 @@
 
 This is fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-labs/bolt.diy).
 
+We use two branches:
+
+- staging (use this like main): [chef.convex.dev](https://chef.convex.dev)
+- release: [chef-staging.convex.dev](https://chef-staging.convex.dev)
+
 ### One-time setup
 
-- clone the repo, e.g. git clone git@github.com:get-convex/flex-diy.git
-- use node 18 or 20, e.g. `nvm use 18`
-- install pnpm somehow, e.g. `npm install -g pnpm
-- run `pnpm i`
-- set up the .env.local file (do this BEFORE running the next command). Copy from 1Password (flex .env.local)
-- run `pnpx convex dev --configure existing --team convex --project chef --once`
+```
+git clone git@github.com:get-convex/flex-diy.git chef
+cd chef
+nvm install
+nvm use
+npm install -g pnpm
+pnpm i
+npx vercel link --scope convex-dev --project chef -y
+npx vercel env pull
+echo 'VITE_CONVEX_URL=placeholder' >> .env.local
+npx convex dev --configure existing --team convex --project chef --once
+```
 
-Coming soon: using vercel to get the local environment variables!!
+Explanation:
 
-# each time
+Clone the 100MB repo (don't worry, it's not much code) into a dir called chef.
+Let's use the same Node.js version as the monorepo for convenience
+even though it's old. This project uses `pnpm` instead of `npm`. Download an
+.env.local from Vercel. Add `VITE_CONVEX_URL` because otherwise `npx convex dev`
+will incorrectly guess that you want to use `CONVEX_URL` as the client
+environment variable. Connect to the same Convex project as the rest of us
+so that you get some environment variables populated in your dev deployment
+automatically.
+
+### Developing
 
 ```
 pnpm i
 pnpm run dev
+
 # and in another terminal,
-pnpx convex dev
+
+npx convex dev
+
+# you'll need to issue an invite code to use
+npx convex run sessions:issueInviteCode '{issuedReason: "development testing locally", code: "dev-test"}'
+
+# now visit http://localhost:5173
+# make sure to use this port, it's been specifically listed in our Auth0 application.
 ```
 
 ### Auth
@@ -56,3 +84,7 @@ Additionally make sure `CHEF_OAUTH_APP_NAME` is set to the same value as `CONVEX
 There are a few steps to iterating on the template.
 
 Run `npm run rebuild-template` for directions.
+
+```
+
+```
