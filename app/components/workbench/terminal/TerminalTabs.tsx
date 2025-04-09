@@ -8,6 +8,7 @@ import { workbenchStore } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
 import { Terminal, type TerminalRef } from './Terminal';
 import type { TerminalInitializationOptions } from '~/types/terminal';
+import { CONVEX_DEPLOY_TAB_INDEX } from '~/lib/stores/terminalTabs';
 
 const MAX_TERMINALS = 3;
 export const DEFAULT_TERMINAL_SIZE = 25;
@@ -142,6 +143,7 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
               }}
               onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
               theme={theme}
+              readonly={index === CONVEX_DEPLOY_TAB_INDEX}
             />
           ))}
         </div>
