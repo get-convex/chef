@@ -6,28 +6,33 @@ import { webcontainer } from '~/lib/webcontainer';
 import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
 import { unreachable } from '~/utils/unreachable';
 import { EditorStore } from './editor';
-import { FilesStore, getAbsolutePath, getRelativePath, type AbsolutePath, type FileMap } from './files';
+import {
+  FILE_EVENTS_DEBOUNCE_MS,
+  FilesStore,
+  getAbsolutePath,
+  getRelativePath,
+  type AbsolutePath,
+  type FileMap,
+} from './files';
 import { PreviewsStore } from './previews';
 import { TerminalStore } from './terminal';
 import JSZip from 'jszip';
 import fileSaver from 'file-saver';
-import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 import { path } from '~/utils/path';
-import { chatIdStore, description } from '~/lib/persistence';
-import Cookies from 'js-cookie';
+import { description } from './description';
 import { createSampler } from '~/utils/sampler';
 import type { ActionAlert } from '~/types/actions';
 import type { WebContainer } from '@webcontainer/api';
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '@convex/_generated/api';
 import type { Id } from '@convex/_generated/dataModel';
 import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot';
-import { sessionIdStore } from './convex';
+import { waitForConvexSessionId } from './sessionId';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './artifacts';
-import { WORK_DIR } from '~/utils/constants';
+import { backoffTime, WORK_DIR } from '~/utils/constants';
+import { chatIdStore } from '~/lib/stores/chatId';
+import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from './fileUpdateCounter';
 
-const BACKUP_DEBOUNCE_MS = 100;
+const BACKUP_DEBOUNCE_MS = 1000;
 
 const { saveAs } = fileSaver;
 
@@ -43,12 +48,18 @@ type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard';
 
+type BackupState = {
+  started: boolean;
+  numFailures: number;
+  savedUpdateCounter: number | null;
+  lastSync: number;
+};
+
 export class WorkbenchStore {
   #previewsStore = new PreviewsStore(webcontainer);
   #filesStore = new FilesStore(webcontainer);
   #editorStore = new EditorStore(this.#filesStore);
   #terminalStore = new TerminalStore(webcontainer);
-  #convexClient: ConvexHttpClient;
   #toolCalls: Map<string, PromiseWithResolvers<string> & { done: boolean }> = new Map();
 
   #reloadedParts = import.meta.hot?.data.reloadedParts ?? new Set<string>();
@@ -62,11 +73,18 @@ export class WorkbenchStore {
   unsavedFiles: WritableAtom<Set<AbsolutePath>> = import.meta.hot?.data.unsavedFiles ?? atom(new Set<AbsolutePath>());
   actionAlert: WritableAtom<ActionAlert | undefined> =
     import.meta.hot?.data.unsavedFiles ?? atom<ActionAlert | undefined>(undefined);
-  saveState: WritableAtom<'saved' | 'saving' | 'error'> = import.meta.hot?.data.saveState ?? atom('saved');
+  backupState: WritableAtom<BackupState> =
+    import.meta.hot?.data.backupState ??
+    atom<BackupState>({
+      started: false,
+      numFailures: 0,
+      savedUpdateCounter: null,
+      lastSync: 0,
+    });
   modifiedFiles = new Set<string>();
   partIdList: PartId[] = [];
   #globalExecutionQueue = Promise.resolve();
-  #initialSnapshotLoaded = false;
+
   constructor() {
     if (import.meta.hot) {
       import.meta.hot.data.artifacts = this.artifacts;
@@ -74,12 +92,9 @@ export class WorkbenchStore {
       import.meta.hot.data.showWorkbench = this.showWorkbench;
       import.meta.hot.data.currentView = this.currentView;
       import.meta.hot.data.actionAlert = this.actionAlert;
-      import.meta.hot.data.saveState = this.saveState;
+      import.meta.hot.data.backupState = this.backupState;
       import.meta.hot.data.reloadedParts = this.#reloadedParts;
     }
-
-    this.#convexClient = new ConvexHttpClient(import.meta.env.VITE_CONVEX_URL!);
-    this.startBackup();
   }
 
   get followingStreamedCode() {
@@ -95,146 +110,35 @@ export class WorkbenchStore {
     this._lastChangedFile = Date.now();
   }
 
-  async snapshotUrl(id?: string) {
-    const templateUrl = '/template-snapshot-351f4521.bin';
-    if (!id) {
-      console.log('No chat id yet, downloading base template');
-      return templateUrl;
-    }
-    const sessionId = sessionIdStore.get();
-    if (!sessionId) {
-      throw new Error('No session ID found');
-    }
-    const maybeSnapshotUrl = await this.#convexClient.query(api.snapshot.getSnapshotUrl, { chatId: id, sessionId });
-    if (!maybeSnapshotUrl) {
-      console.log('No snapshot URL found, downloading base template');
-      return templateUrl;
-    }
-    console.log('Snapshot URL found, downloading from Convex');
-    return maybeSnapshotUrl;
-  }
-
-  async downloadSnapshot(id?: string) {
-    const snapshotUrl = await this.snapshotUrl(id);
-    // Download the snapshot from Convex
-    const resp = await fetch(snapshotUrl);
-    if (!resp.ok) {
-      throw new Error(`Failed to download snapshot (${resp.statusText}): ${resp.statusText}`);
-    }
-    return await resp.arrayBuffer();
-  }
-
+  // Start the backup worker, assuming that the current filesystem state is
+  // fully saved. Therefore, this method must be called early in initialization
+  // after the snapshot has been loaded but before any subsequent changes are
+  // made.
   async startBackup() {
-    let isUploading = false;
-    let pendingUpload = false;
+    console.log('Starting backup worker...');
 
-    const handleUploadSnapshot = async () => {
-      if (isUploading) {
-        pendingUpload = true;
-        return;
-      }
+    // This is a bit racy, but we need to flush the current file events before
+    // deciding that we're synced up to the current update counter. Sleep for
+    // twice the batching interval.
+    await new Promise((resolve) => setTimeout(resolve, 2 * FILE_EVENTS_DEBOUNCE_MS));
 
-      // Don't upload if initial snapshot hasn't been loaded yet
-      if (!this.#initialSnapshotLoaded) {
-        console.log('[WorkbenchStore] Skipping upload - initial snapshot not loaded yet');
-        return;
-      }
+    this.backupState.set({
+      started: true,
+      numFailures: 0,
+      savedUpdateCounter: getFileUpdateCounter(),
+      lastSync: 0,
+    });
 
-      console.log('[WorkbenchStore] Starting upload - initial snapshot loaded');
-
-      try {
-        isUploading = true;
-        this.saveState.set('saving');
-
-        const id = chatIdStore.get();
-
-        if (!id) {
-          // Subscribe to chat ID changes and execute upload when it becomes available
-          chatIdStore.subscribe((newId) => {
-            if (newId) {
-              void handleUploadSnapshot();
-            }
-          });
-          return;
-        }
-
-        const sessionId = sessionIdStore.get();
-
-        if (!sessionId) {
-          throw new Error('Session ID is not set');
-        }
-
-        const binarySnapshot = await buildUncompressedSnapshot();
-        const compressed = await compressSnapshot(binarySnapshot);
-        const uploadUrl = await this.#convexClient.mutation(api.snapshot.generateUploadUrl);
-        const result = await fetch(uploadUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/octet-stream' },
-          body: compressed,
-        });
-
-        const response = (await result.json()) as { storageId: string };
-
-        if (!response || typeof response.storageId !== 'string') {
-          throw new Error('Invalid response from server');
-        }
-
-        await this.#convexClient.mutation(api.snapshot.saveSnapshot, {
-          storageId: response.storageId as Id<'_storage'>,
-          chatId: id,
-          sessionId,
-        });
-
-        this.saveState.set('saved');
-      } catch (error) {
-        console.error('Failed to upload snapshot:', error);
-        this.saveState.set('error');
-      } finally {
-        isUploading = false;
-
-        if (pendingUpload) {
-          pendingUpload = false;
-
-          // If there was a pending upload while we were uploading, do another upload
-          void handleUploadSnapshot();
-        }
-      }
-    };
-
-    let debounceTimeout: NodeJS.Timeout | undefined;
-    const debouncedUploadSnapshot = () => {
-      this.saveState.set('saving');
-      console.log('debouncedUploadSnapshot hasTimeout', debounceTimeout);
-      if (debounceTimeout) {
-        clearTimeout(debounceTimeout);
-      }
-
-      debounceTimeout = setTimeout(handleUploadSnapshot, BACKUP_DEBOUNCE_MS);
-    };
-
-    const wc = await webcontainer;
-
-    // Subscribe to file change events
-    void (async () => {
-      wc.fs.watch(
-        '',
-        {
-          encoding: 'utf-8',
-          recursive: true,
-          persistent: true,
-        },
-        (_event, filename) => {
-          if (typeof filename === 'string' && filename.startsWith('node_modules/')) {
-            return;
-          }
-          debouncedUploadSnapshot();
-        },
-      );
-    })();
+    void backupWorker(this.backupState);
 
     // Add beforeunload event listener to prevent navigation while uploading
     const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-      if (this.saveState.get() === 'saving') {
+      const currentState = this.backupState.get();
+      const currentUpdateCounter = getFileUpdateCounter();
+      if (currentState.started && currentState.savedUpdateCounter !== currentUpdateCounter) {
+        console.log(
+          `Unsaved changes (${currentState.savedUpdateCounter} -> ${currentUpdateCounter}) detected, preventing navigation...`,
+        );
         // Some browsers require both preventDefault and setting returnValue
         e.preventDefault();
         e.returnValue = '';
@@ -243,26 +147,6 @@ export class WorkbenchStore {
       return undefined;
     };
     window.addEventListener('beforeunload', beforeUnloadHandler);
-
-    return () => {
-      if (debounceTimeout) {
-        clearTimeout(debounceTimeout);
-      }
-      window.removeEventListener('beforeunload', beforeUnloadHandler);
-    };
-  }
-
-  // Add a method to mark initial snapshot as loaded
-  markInitialSnapshotLoaded() {
-    console.log('[WorkbenchStore] Marking initial snapshot as loaded');
-    this.#initialSnapshotLoaded = true;
-    console.log('[WorkbenchStore] Initial snapshot loaded state:', this.#initialSnapshotLoaded);
-  }
-
-  markInitialSnapshotNotLoaded() {
-    console.log('[WorkbenchStore] Marking initial snapshot as not loaded');
-    this.#initialSnapshotLoaded = false;
-    console.log('[WorkbenchStore] Initial snapshot loaded state:', this.#initialSnapshotLoaded);
   }
 
   addToExecutionQueue(callback: () => Promise<void>) {
@@ -477,8 +361,8 @@ export class WorkbenchStore {
     // TODO: what do we wanna do and how do we wanna recover from this?
   }
 
-  setReloadedParts(partIds: PartId[]) {
-    this.#reloadedParts = new Set(partIds);
+  addReloadedPart(partId: PartId) {
+    this.#reloadedParts.add(partId);
   }
 
   isReloadedPart(partId: PartId) {
@@ -651,146 +535,65 @@ export class WorkbenchStore {
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `${uniqueProjectName}.zip`);
   }
-
-  async syncFiles(targetHandle: FileSystemDirectoryHandle) {
-    const files = this.files.get();
-    const syncedFiles = [];
-
-    for (const [filePath, dirent] of Object.entries(files)) {
-      if (dirent?.type === 'file' && !dirent.isBinary) {
-        const relativePath = getRelativePath(filePath);
-        const pathSegments = relativePath.split('/');
-        let currentHandle = targetHandle;
-
-        for (let i = 0; i < pathSegments.length - 1; i++) {
-          currentHandle = await currentHandle.getDirectoryHandle(pathSegments[i], { create: true });
-        }
-
-        // create or get the file
-        const fileHandle = await currentHandle.getFileHandle(pathSegments[pathSegments.length - 1], {
-          create: true,
-        });
-
-        // write the file content
-        const writable = await fileHandle.createWritable();
-        await writable.write(dirent.content);
-        await writable.close();
-
-        syncedFiles.push(relativePath);
-      }
-    }
-
-    return syncedFiles;
-  }
-
-  async pushToGitHub(repoName: string, commitMessage?: string, githubUsername?: string, ghToken?: string) {
-    try {
-      // Use cookies if username and token are not provided
-      const githubToken = ghToken || Cookies.get('githubToken');
-      const owner = githubUsername || Cookies.get('githubUsername');
-
-      if (!githubToken || !owner) {
-        throw new Error('GitHub token or username is not set in cookies or provided.');
-      }
-
-      // Initialize Octokit with the auth token
-      const octokit = new Octokit({ auth: githubToken });
-
-      // Check if the repository already exists before creating it
-      let repo: RestEndpointMethodTypes['repos']['get']['response']['data'];
-
-      try {
-        const resp = await octokit.repos.get({ owner, repo: repoName });
-        repo = resp.data;
-      } catch (error) {
-        if (error instanceof Error && 'status' in error && error.status === 404) {
-          // Repository doesn't exist, so create a new one
-          const { data: newRepo } = await octokit.repos.createForAuthenticatedUser({
-            name: repoName,
-            private: false,
-            auto_init: true,
-          });
-          repo = newRepo;
-        } else {
-          console.log('cannot create repo!');
-          throw error; // Some other error occurred
-        }
-      }
-
-      // Get all files
-      const files = this.files.get();
-
-      if (!files || Object.keys(files).length === 0) {
-        throw new Error('No files found to push');
-      }
-
-      // Create blobs for each file
-      const blobs = await Promise.all(
-        Object.entries(files).map(async ([filePath, dirent]) => {
-          if (dirent?.type === 'file' && dirent.content) {
-            const { data: blob } = await octokit.git.createBlob({
-              owner: repo.owner.login,
-              repo: repo.name,
-              content: Buffer.from(dirent.content).toString('base64'),
-              encoding: 'base64',
-            });
-            return { path: getRelativePath(filePath), sha: blob.sha };
-          }
-
-          return null;
-        }),
-      );
-
-      const validBlobs = blobs.filter(Boolean); // Filter out any undefined blobs
-
-      if (validBlobs.length === 0) {
-        throw new Error('No valid files to push');
-      }
-
-      // Get the latest commit SHA (assuming main branch, update dynamically if needed)
-      const { data: ref } = await octokit.git.getRef({
-        owner: repo.owner.login,
-        repo: repo.name,
-        ref: `heads/${repo.default_branch || 'main'}`, // Handle dynamic branch
-      });
-      const latestCommitSha = ref.object.sha;
-
-      // Create a new tree
-      const { data: newTree } = await octokit.git.createTree({
-        owner: repo.owner.login,
-        repo: repo.name,
-        base_tree: latestCommitSha,
-        tree: validBlobs.map((blob) => ({
-          path: blob!.path,
-          mode: '100644',
-          type: 'blob',
-          sha: blob!.sha,
-        })),
-      });
-
-      // Create a new commit
-      const { data: newCommit } = await octokit.git.createCommit({
-        owner: repo.owner.login,
-        repo: repo.name,
-        message: commitMessage || 'Initial commit from your app',
-        tree: newTree.sha,
-        parents: [latestCommitSha],
-      });
-
-      // Update the reference
-      await octokit.git.updateRef({
-        owner: repo.owner.login,
-        repo: repo.name,
-        ref: `heads/${repo.default_branch || 'main'}`, // Handle dynamic branch
-        sha: newCommit.sha,
-      });
-
-      alert(`Repository created and code pushed: ${repo.html_url}`);
-    } catch (error) {
-      console.error('Error pushing to GitHub:', error);
-      throw error; // Rethrow the error for further handling
-    }
-  }
 }
 
 export const workbenchStore = new WorkbenchStore();
+
+async function backupWorker(backupState: WritableAtom<BackupState>) {
+  const sessionId = await waitForConvexSessionId('backupWorker');
+  while (true) {
+    const currentState = backupState.get();
+    if (currentState.savedUpdateCounter !== null) {
+      await waitForFileUpdateCounterChanged(currentState.savedUpdateCounter);
+    }
+    const nextSync = currentState.lastSync + BACKUP_DEBOUNCE_MS;
+    const now = Date.now();
+    if (now < nextSync) {
+      await new Promise((resolve) => setTimeout(resolve, nextSync - now));
+    }
+    const nextUpdateCounter = getFileUpdateCounter();
+    console.log(`Performing backup (advancing from ${currentState.savedUpdateCounter} to ${nextUpdateCounter})...`);
+    try {
+      await performBackup(sessionId);
+    } catch (error) {
+      console.error('Failed to upload snapshot:', error);
+      backupState.set({
+        ...currentState,
+        numFailures: currentState.numFailures + 1,
+      });
+      const sleepTime = backoffTime(currentState.numFailures);
+      console.error(`Failed to upload snapshot, sleeping for ${sleepTime.toFixed(2)}ms`, error);
+      await new Promise((resolve) => setTimeout(resolve, sleepTime));
+      continue;
+    }
+    backupState.set({
+      ...currentState,
+      savedUpdateCounter: nextUpdateCounter,
+      lastSync: now,
+    });
+  }
+}
+
+async function performBackup(sessionId: Id<'sessions'>) {
+  let convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
+  if (!convexSiteUrl) {
+    const convexUrl: string = import.meta.env.VITE_CONVEX_URL;
+    if (convexUrl.endsWith('.convex.cloud')) {
+      convexSiteUrl = convexUrl.replace('.convex.cloud', '.convex.site');
+    }
+  }
+  if (!convexSiteUrl) {
+    throw new Error('VITE_CONVEX_SITE_URL is not set');
+  }
+  const chatId = chatIdStore.get();
+  const binarySnapshot = await buildUncompressedSnapshot();
+  const compressed = await compressSnapshot(binarySnapshot);
+
+  const uploadUrl = `${convexSiteUrl}/upload_snapshot?sessionId=${sessionId}&chatId=${chatId}`;
+  const result = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream' },
+    body: compressed,
+  });
+  console.log('Uploaded snapshot', result);
+}

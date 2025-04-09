@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as convexProjects from "../convexProjects.js";
 import type * as dev from "../dev.js";
+import type * as http from "../http.js";
 import type * as messages from "../messages.js";
 import type * as sessions from "../sessions.js";
 import type * as snapshot from "../snapshot.js";
@@ -30,6 +31,7 @@ import type * as snapshot from "../snapshot.js";
 declare const fullApi: ApiFromModules<{
   convexProjects: typeof convexProjects;
   dev: typeof dev;
+  http: typeof http;
   messages: typeof messages;
   sessions: typeof sessions;
   snapshot: typeof snapshot;

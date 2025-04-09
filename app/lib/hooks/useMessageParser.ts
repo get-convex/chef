@@ -31,7 +31,7 @@ const messageParser = new StreamingMessageParser({
   },
 });
 
-type PartCache = Map<PartId, { original: Part; parsed: Part }>;
+export type PartCache = Map<PartId, { original: Part; parsed: Part }>;
 
 function isPartMaybeEqual(a: Part, b: Part): boolean {
   if (a.type === 'text' && b.type === 'text') {
@@ -45,7 +45,10 @@ function isPartMaybeEqual(a: Part, b: Part): boolean {
   return false;
 }
 
-function processMessage(message: Message, previousParts: PartCache): { message: Message; hitRate: [number, number] } {
+export function processMessage(
+  message: Message,
+  previousParts: PartCache,
+): { message: Message; hitRate: [number, number] } {
   if (message.role === 'user') {
     return { message, hitRate: [0, 0] };
   }
@@ -120,11 +123,11 @@ function processMessage(message: Message, previousParts: PartCache): { message: 
 
 type Part = UIMessage['parts'][number];
 
-export function useMessageParser() {
+export function useMessageParser(partCache: PartCache) {
   const [parsedMessages, setParsedMessages] = useState<Message[]>([]);
 
   const previousMessages = useRef<{ original: Message; parsed: Message }[]>([]);
-  const previousParts = useRef<PartCache>(new Map());
+  const previousParts = useRef<PartCache>(partCache);
 
   const parseMessages = useCallback((messages: Message[], isLoading: boolean) => {
     if (import.meta.env.DEV && !isLoading) {

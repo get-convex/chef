@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { classNames } from '~/utils/classNames';
-import { convexStore, useConvexSessionIdOrNullOrLoading, useFlexAuthMode } from '~/lib/stores/convex';
-import { useChatIdOrNull } from '~/lib/stores/chat';
+import { useFlexAuthMode } from '~/lib/stores/convex';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { convexProjectStore } from '~/lib/stores/convexProject';
+import { useChatId } from '~/lib/stores/chatId';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { ConvexConnectButton } from '~/components/convex/ConvexConnectButton';
@@ -12,7 +14,7 @@ export function ConvexConnection() {
 
   const convexClient = useConvex();
   const sessionId = useConvexSessionIdOrNullOrLoading();
-  const chatId = useChatIdOrNull();
+  const chatId = useChatId();
   const projectInfo = useQuery(
     api.convexProjects.loadConnectedConvexProjectCredentials,
     sessionId && chatId
@@ -25,7 +27,7 @@ export function ConvexConnection() {
 
   useEffect(() => {
     if (projectInfo?.kind === 'connected') {
-      convexStore.set({
+      convexProjectStore.set({
         token: projectInfo.adminKey,
         deploymentName: projectInfo.deploymentName,
         deploymentUrl: projectInfo.deploymentUrl,
@@ -40,7 +42,7 @@ export function ConvexConnection() {
   const isOpen = isDesiredOpen;
 
   const handleDisconnect = async () => {
-    convexStore.set(null);
+    convexProjectStore.set(null);
     if (sessionId && chatId) {
       void convexClient.mutation(api.convexProjects.disconnectConvexProject, {
         sessionId,

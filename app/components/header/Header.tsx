@@ -1,10 +1,10 @@
 import { useStore } from '@nanostores/react';
 import { ClientOnly } from 'remix-utils/client-only';
-import { chatStore } from '~/lib/stores/chat';
+import { chatStore } from '~/lib/stores/chatId';
 import { classNames } from '~/utils/classNames';
 import { HeaderActionButtons } from './HeaderActionButtons.client';
-import { ChatDescription } from '~/lib/persistence/ChatDescription.client';
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import { ChatDescription } from '~/components/header/ChatDescription.client';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { DeployButton } from './DeployButton';
 import { FeedbackButton } from './FeedbackButton';
 
