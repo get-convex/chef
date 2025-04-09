@@ -18,6 +18,7 @@ import type { Tracer } from '~/lib/.server/chat';
 import { editTool } from '~/lib/runtime/editTool';
 import { captureException } from '@sentry/remix';
 import type { SystemPromptOptions } from '~/lib/common/prompts/types';
+import { awsCredentialsProvider } from '@vercel/functions/oidc';
 
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
@@ -70,9 +71,9 @@ export async function convexAgent(
       const sessionToken = getEnv(env, 'AWS_SESSION_TOKEN');
       const bedrock = createAmazonBedrock({
         region,
-        accessKeyId,
-        secretAccessKey,
-        sessionToken,
+        credentialProvider: awsCredentialsProvider({
+          roleArn: getEnv(env, 'AWS_ROLE_ARN')!,
+        }),
       });
       provider = {
         model: bedrock(model),
