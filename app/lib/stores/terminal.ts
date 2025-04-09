@@ -10,6 +10,7 @@ import {
   isConvexDeployTerminalVisibleStore,
   VITE_TAB_INDEX,
 } from './terminalTabs';
+import { toast } from 'sonner';
 
 export class TerminalStore {
   #webcontainer: Promise<WebContainer>;
@@ -59,6 +60,7 @@ export class TerminalStore {
       } else {
         isConvexDeployTerminalVisibleStore.set(false);
         activeTerminalTabStore.set(VITE_TAB_INDEX);
+        toast.success('Your Convex functions were deployed successfully');
       }
     }
 
