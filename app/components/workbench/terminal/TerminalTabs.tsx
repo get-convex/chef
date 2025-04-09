@@ -10,8 +10,9 @@ import { Terminal, type TerminalRef } from './Terminal';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import {
   activeTerminalTabStore,
-  CONVEX_DEPLOY_TAB_INDEX,
   isConvexDeployTerminalVisibleStore,
+  VITE_TAB_INDEX,
+  CONVEX_DEPLOY_TAB_INDEX,
 } from '~/lib/stores/terminalTabs';
 
 const MAX_TERMINALS = 3;
@@ -113,9 +114,9 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
                   onClick={() => activeTerminalTabStore.set(index)}
                 >
                   <div className="i-ph:terminal-window-duotone text-lg" />
-                  {index === 0
+                  {index === VITE_TAB_INDEX
                     ? 'Dev Server'
-                    : index === 1
+                    : index === CONVEX_DEPLOY_TAB_INDEX
                       ? 'Convex Deploy'
                       : `Terminal ${terminalCount > 1 && index}`}
                 </button>
@@ -141,9 +142,9 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
                 terminalRefs.current.push(ref);
               }}
               onTerminalReady={(terminal) => {
-                if (index === 0) {
+                if (index === VITE_TAB_INDEX) {
                   workbenchStore.attachBoltTerminal(terminal, terminalInitializationOptions?.isReload ?? false);
-                } else if (index === 1) {
+                } else if (index === CONVEX_DEPLOY_TAB_INDEX) {
                   workbenchStore.attachDeployTerminal(terminal, {
                     ...terminalInitializationOptions,
                   });
