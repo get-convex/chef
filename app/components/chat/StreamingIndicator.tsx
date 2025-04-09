@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { ToolStatus } from '~/lib/common/types';
 import { classNames } from '~/utils/classNames';
+import { useStore } from '@nanostores/react';
+import { chatStore } from '~/lib/stores/chatId';
 
 interface StreamingIndicatorProps {
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
@@ -10,6 +12,7 @@ interface StreamingIndicatorProps {
 }
 
 export default function StreamingIndicator(props: StreamingIndicatorProps) {
+  const { aborted } = useStore(chatStore);
   let streamStatus = props.streamStatus;
   const anyToolRunning =
     props.toolStatus && Object.values(props.toolStatus).some((status) => status === 'running' || status === 'pending');
@@ -24,8 +27,13 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
   switch (streamStatus) {
     case 'submitted':
     case 'streaming':
-      icon = <div className="i-svg-spinners:90-ring-with-bg"></div>;
-      message = 'Cooking...';
+      if (aborted) {
+        icon = <div className="i-ph:warning text-yellow-500"></div>;
+        message = 'Generation stopped';
+      } else {
+        icon = <div className="i-svg-spinners:90-ring-with-bg"></div>;
+        message = 'Cooking...';
+      }
       break;
     case 'error':
       icon = <div className="i-ph:warning text-yellow-500"></div>;
