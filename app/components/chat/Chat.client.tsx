@@ -46,6 +46,8 @@ const logger = createScopedLogger('Chat');
 
 const MAX_RETRIES = 3;
 
+const CHEF_TOO_BUSY_ERROR = 'Chef is too busy cooking right now. Please try again in a moment.';
+
 export function Chat() {
   renderLogger.trace('Chat');
 
@@ -137,7 +139,19 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
 
   const chatContextManager = useRef(new ChatContextManager());
 
-  const [retries, setRetries] = useState(0);
+  const [retries, setRetries] = useState<[number, number]>([0, Date.now()]);
+
+  // Reset retries counter every 10 minutes
+  useEffect(() => {
+    const resetInterval = setInterval(
+      () => {
+        setRetries([0, Date.now()]);
+      },
+      10 * 60 * 1000,
+    );
+
+    return () => clearInterval(resetInterval);
+  }, []);
 
   let useAnthropicFraction = import.meta.env.USE_ANTHROPIC_FRACTION || 1.0;
 
@@ -195,7 +209,7 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
         token,
         teamSlug,
         deploymentName: convex?.deploymentName,
-        modelProvider: modelProviders[retries % modelProviders.length],
+        modelProvider: modelProviders[retries[0] % modelProviders.length],
       };
     },
     maxSteps: 64,
@@ -233,9 +247,13 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       });
       logger.error('Request failed\n\n', e, error);
       setRetries((prevRetries) => {
-        const newRetries = prevRetries + 1;
-        return newRetries;
+        const newRetries = prevRetries[0] + 1;
+        const retryTime = error?.message.includes('Too Many Requests') ? Date.now() + 5 * 1000 : Date.now();
+        return [newRetries, retryTime];
       });
+      if (error?.message.includes('Too Many Requests')) {
+        toast.error(CHEF_TOO_BUSY_ERROR);
+      }
     },
     onFinish: (message, response) => {
       const usage = response.usage;
@@ -329,8 +347,8 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
   };
 
   const sendMessage = async (_event: React.UIEvent, teamSlug: string | null, messageInput?: string) => {
-    if (retries >= MAX_RETRIES) {
-      toast.error('Chef is too busy cooking right now. Please try again later');
+    if (retries[0] >= MAX_RETRIES || Date.now() < retries[1]) {
+      toast.error(CHEF_TOO_BUSY_ERROR);
       return;
     }
 

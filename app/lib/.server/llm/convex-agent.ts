@@ -52,6 +52,8 @@ export async function convexAgent(
   console.debug('Starting agent with model provider ', modelProvider);
   let provider: Provider;
   let model: string;
+  // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
+  const fetch = undiciFetch as unknown as Fetch;
   switch (modelProvider) {
     case 'OpenAI':
       model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4o-2024-11-20';
@@ -71,7 +73,6 @@ export async function convexAgent(
         accessKeyId,
         secretAccessKey,
         sessionToken,
-        fetch: () => fetch('http://localhost:3000'),
       });
       provider = {
         model: bedrock(model),
@@ -79,8 +80,6 @@ export async function convexAgent(
       };
       break;
     case 'Anthropic':
-      // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
-      const fetch = undiciFetch as unknown as Fetch;
       model = getEnv(env, 'ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
       // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
       const rateLimitAwareFetch = () => {
