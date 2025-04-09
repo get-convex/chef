@@ -31,11 +31,18 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
                 return <Fragment key={index} />;
               }
 
+              // When the agent hits an error, we can have two user messages
+              // back to back without spacing. Add `mb-4` in this condition.
+              let consecutiveUserMessages = false;
+              if (isUserMessage && index < messages.length - 1) {
+                consecutiveUserMessages = messages[index + 1].role === 'user';
+              }
               return (
                 <div
                   key={index}
                   className={classNames('flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)]', {
                     'bg-bolt-elements-messages-background  border border-bolt-elements-borderColor mx-2': isUserMessage,
+                    'mb-4': consecutiveUserMessages,
                   })}
                 >
                   {isUserMessage && (

@@ -1,52 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import * as Select from '@radix-ui/react-select';
 import { classNames } from '~/utils/classNames';
-import {
-  initializeSelectedTeamSlug,
-  setSelectedTeamSlug,
-  teamsStore,
-  useSelectedTeamSlug,
-  type ConvexTeam,
-} from '~/lib/stores/convex';
-import { useAuth0 } from '@auth0/auth0-react';
+import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { useStore } from '@nanostores/react';
-
-const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
 export function TeamSelector() {
   const [open, setOpen] = useState(false);
-  const { getAccessTokenSilently } = useAuth0();
-  const teams = useStore(teamsStore);
+  const teams = useStore(convexTeamsStore);
   const selectedTeamSlug = useSelectedTeamSlug();
-
-  useEffect(() => {
-    async function fetchTeams() {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        const tokenResponse = await getAccessTokenSilently({
-          detailedResponse: true,
-        });
-        const response = await fetch(`${VITE_PROVISION_HOST}/api/dashboard/teams`, {
-          headers: {
-            Authorization: `Bearer ${tokenResponse.id_token}`,
-          },
-        });
-        if (!response.ok) {
-          const body = await response.text();
-          throw new Error(`Failed to fetch teams: ${response.statusText}: ${body}`);
-        }
-        const teamsData = await response.json();
-        teamsStore.set(teamsData as ConvexTeam[]);
-        initializeSelectedTeamSlug(teamsData as ConvexTeam[]);
-      } catch (error) {
-        console.error('Error fetching teams:', error);
-      }
-    }
-
-    if (!teams) {
-      fetchTeams();
-    }
-  }, [getAccessTokenSilently, teams]);
 
   if (!teams) {
     return (

@@ -2,8 +2,7 @@ import { json, type LoaderFunctionArgs } from '@vercel/remix';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
-  // an empty string code is confusing, consider it no code
-  const code = url.searchParams.get('code') || null;
+  const code = url.searchParams.get('code');
   const CLIENT_ID = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID;
   const CLIENT_SECRET = globalThis.process.env.CONVEX_OAUTH_CLIENT_SECRET;
   const PROVISION_HOST = globalThis.process.env.PROVISION_HOST || 'https://api.convex.dev';

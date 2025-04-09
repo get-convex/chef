@@ -1,8 +1,6 @@
 import { WebContainer } from '@webcontainer/api';
 import { WORK_DIR_NAME } from '~/utils/constants';
 import { cleanStackTrace } from '~/utils/stacktrace';
-import { loadSnapshot } from '~/lib/snapshot';
-import { waitForConvexProjectConnection, type ConvexProject } from '~/lib/stores/convex';
 import { createScopedLogger } from '~/utils/logger';
 import { setContainerBootState, ContainerBootState } from '~/lib/stores/containerBootState';
 
@@ -37,10 +35,7 @@ if (!import.meta.env.SSR) {
         });
       })
       .then(async (webcontainer) => {
-        setContainerBootState(ContainerBootState.LOADING_SNAPSHOT);
         const { workbenchStore } = await import('~/lib/stores/workbench');
-        await loadSnapshot(webcontainer, workbenchStore);
-        webcontainerContext.loaded = true;
 
         // Listen for preview errors
         webcontainer.on('preview-message', (message) => {
@@ -58,9 +53,9 @@ if (!import.meta.env.SSR) {
             });
           }
         });
-
-        void finishContainerBoot(webcontainer);
-
+        // Set the container boot state to LOADING_SNAPSHOT to hand off control
+        // to the container setup code.
+        setContainerBootState(ContainerBootState.LOADING_SNAPSHOT);
         (globalThis as any).webcontainer = webcontainer;
         return webcontainer;
       })
@@ -71,57 +66,5 @@ if (!import.meta.env.SSR) {
 
   if (import.meta.hot) {
     import.meta.hot.data.webcontainer = webcontainer;
-  }
-}
-
-async function finishContainerBoot(webcontainer: WebContainer) {
-  try {
-    setContainerBootState(ContainerBootState.SETTING_UP_CONVEX_PROJECT);
-    const convexProject = await waitForConvexProjectConnection();
-    setContainerBootState(ContainerBootState.SETTING_UP_CONVEX_ENV_VARS);
-    await setupConvexEnvVars(webcontainer, convexProject);
-    setContainerBootState(ContainerBootState.CONFIGURING_CONVEX_AUTH);
-    const { initializeConvexAuth } = await import('../convexAuth');
-    await initializeConvexAuth(convexProject);
-    setContainerBootState(ContainerBootState.READY);
-  } catch (error) {
-    setContainerBootState(ContainerBootState.ERROR, error as Error);
-  }
-}
-
-async function setupConvexEnvVars(webcontainer: WebContainer, convexProject: ConvexProject) {
-  const { token } = convexProject;
-
-  const envFilePath = '.env.local';
-  const envVarName = 'CONVEX_DEPLOY_KEY';
-  const envVarLine = `${envVarName}=${token}\n`;
-
-  let content: string | null = null;
-  try {
-    content = await webcontainer.fs.readFile(envFilePath, 'utf-8');
-  } catch (err: any) {
-    if (!err.toString().includes('ENOENT')) {
-      throw err;
-    }
-  }
-
-  if (content === null) {
-    // Create the file if it doesn't exist
-    await webcontainer.fs.writeFile(envFilePath, envVarLine);
-    logger.debug('Created .env.local with Convex token');
-  } else {
-    const lines = content.split('\n');
-
-    // Check if the env var already exists
-    const envVarExists = lines.some((line) => line.startsWith(`${envVarName}=`));
-
-    if (!envVarExists) {
-      // Add the env var to the end of the file
-      const newContent = content.endsWith('\n') ? `${content}${envVarLine}` : `${content}\n${envVarLine}`;
-      await webcontainer.fs.writeFile(envFilePath, newContent);
-      logger.debug('Added Convex token to .env.local');
-    } else {
-      logger.debug('Convex token already exists in .env.local');
-    }
   }
 }

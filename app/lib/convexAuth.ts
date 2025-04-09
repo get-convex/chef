@@ -1,5 +1,5 @@
 import { generateKeyPair, exportPKCS8, exportJWK } from 'jose';
-import type { ConvexProject } from './stores/convex';
+import type { ConvexProject } from './stores/convexProject';
 
 export async function initializeConvexAuth(project: ConvexProject) {
   const SITE_URL = await queryEnvVariable(project, 'SITE_URL');

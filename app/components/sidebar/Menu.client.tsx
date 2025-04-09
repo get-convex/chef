@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
-import { chatIdStore, type ChatHistoryItem } from '~/lib/persistence';
+import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
 import { cubicEasingFn } from '~/utils/easings';
 import { logger } from '~/utils/logger';
 import { HistoryItem } from './HistoryItem';
@@ -12,7 +12,8 @@ import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { classNames } from '~/utils/classNames';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { getKnownInitialId } from '~/lib/stores/chatId';
 
 const menuVariants = {
   closed: {
@@ -52,21 +53,21 @@ export const Menu = memo(() => {
 
   const deleteItem = useCallback((event: React.UIEvent, item: ChatHistoryItem) => {
     event.preventDefault();
-
-    if (sessionId) {
-      convex
-        .mutation(api.messages.remove, { id: item.id, sessionId })
-        .then(() => {
-          if (chatIdStore.get() === item.id) {
-            // hard page navigation to clear the stores
-            window.location.pathname = '/';
-          }
-        })
-        .catch((error) => {
-          toast.error('Failed to delete conversation');
-          logger.error(error);
-        });
+    if (!sessionId) {
+      return;
     }
+    convex
+      .mutation(api.messages.remove, { id: item.id, sessionId })
+      .then(() => {
+        if (getKnownInitialId() === item.initialId) {
+          // hard page navigation to clear the stores
+          window.location.pathname = '/';
+        }
+      })
+      .catch((error) => {
+        toast.error('Failed to delete conversation');
+        logger.error(error);
+      });
   }, []);
 
   const closeDialog = () => {

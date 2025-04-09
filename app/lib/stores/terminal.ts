@@ -10,6 +10,8 @@ export class TerminalStore {
   #boltTerminal = newBoltShellProcess();
   showTerminal: WritableAtom<boolean> = import.meta.hot?.data.showTerminal ?? atom(true);
 
+  startDevServerOnAttach = false;
+
   constructor(webcontainerPromise: Promise<WebContainer>) {
     this.#webcontainer = webcontainerPromise;
 

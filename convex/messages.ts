@@ -53,6 +53,8 @@ export const addMessages = mutation({
   },
   returns: v.object({
     id: v.string(),
+    initialId: v.optional(v.string()),
+    urlId: v.optional(v.string()),
     description: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
@@ -454,6 +456,8 @@ async function _appendMessages(
 
   return {
     id: updatedId,
+    initialId: chat.initialId,
+    urlId: chat.urlId,
     description: updatedDescription,
   };
 }

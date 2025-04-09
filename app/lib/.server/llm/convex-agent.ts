@@ -6,17 +6,19 @@ import {
   type Message,
   type StepResult,
 } from 'ai';
+import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { ROLE_SYSTEM_PROMPT, GENERAL_SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from '~/lib/common/prompts/system';
 import { deployTool } from '~/lib/runtime/deployTool';
 import { viewTool } from '~/lib/runtime/viewTool';
 import type { ConvexToolSet } from '~/lib/common/types';
 import { npmInstallTool } from '~/lib/runtime/npmInstallTool';
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
 import type { Tracer } from '~/lib/.server/chat';
 import { editTool } from '~/lib/runtime/editTool';
 import { captureException } from '@sentry/remix';
 import type { SystemPromptOptions } from '~/lib/common/prompts/types';
+import { awsCredentialsProvider } from '@vercel/functions/oidc';
 
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
@@ -37,70 +39,100 @@ const tools: ConvexToolSet = {
   edit: editTool,
 };
 
+export type ModelProvider = 'Anthropic' | 'Bedrock' | 'OpenAI';
+
+const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
+
 export async function convexAgent(
   chatId: string,
   env: Record<string, string | undefined>,
   firstUserMessage: boolean,
   messages: Messages,
   tracer: Tracer | null,
+  modelProvider: ModelProvider,
   recordUsageCb: (usage: LanguageModelUsage) => Promise<void>,
 ) {
+  console.debug('Starting agent with model provider ', modelProvider);
   let provider: Provider;
-  if (getEnv(env, 'USE_OPENAI')) {
-    const model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4o-2024-11-20';
-    provider = {
-      model: openai(model),
-      maxTokens: 8192,
-    };
-  } else {
-    // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
-    const fetch = undiciFetch as unknown as Fetch;
-
-    // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
-    const rateLimitAwareFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const enrichedOptions = anthropicInjectCacheControl(init);
-      try {
-        const response = await fetch(input, enrichedOptions);
-        if (response.status == 429) {
-          captureException('Rate limited by Anthropic, switching to low QoS API key', {
-            level: 'warning',
-            extra: {
-              response,
-            },
-          });
-
-          const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
-
-          if (!lowQosKey) {
-            return response;
-          }
-
-          if (enrichedOptions && enrichedOptions.headers) {
-            const headers = new Headers(enrichedOptions.headers);
-            headers.set('x-api-key', lowQosKey);
-            enrichedOptions.headers = headers;
-          }
-
-          return fetch(input, enrichedOptions);
-        }
-
-        return response;
-      } catch (error) {
-        console.error('Error with Anthropic API call:', error);
-        throw error;
+  let model: string;
+  // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
+  const fetch = undiciFetch as unknown as Fetch;
+  switch (modelProvider) {
+    case 'OpenAI': {
+      model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4o-2024-11-20';
+      const openai = createOpenAI({
+        fetch,
+      });
+      provider = {
+        model: openai(model),
+        maxTokens: 8192,
+      };
+      break;
+    }
+    case 'Bedrock': {
+      model = getEnv(env, 'AMAZON_BEDROCK_MODEL') || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
+      let region = getEnv(env, 'AWS_REGION');
+      if (!region || !ALLOWED_AWS_REGIONS.includes(region)) {
+        region = 'us-west-2';
       }
-    };
+      const bedrock = createAmazonBedrock({
+        region,
+        credentialProvider: awsCredentialsProvider({
+          roleArn: getEnv(env, 'AWS_ROLE_ARN')!,
+        }),
+        fetch,
+      });
+      provider = {
+        model: bedrock(model),
+        maxTokens: 8192,
+      };
+      break;
+    }
+    case 'Anthropic': {
+      model = getEnv(env, 'ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
+      // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
+      const rateLimitAwareFetch = () => {
+        return async (input: RequestInfo | URL, init?: RequestInit) => {
+          const enrichedOptions = anthropicInjectCacheControl(init);
+          try {
+            const response = await fetch(input, enrichedOptions);
+            if (response.status == 429) {
+              captureException('Rate limited by Anthropic, switching to low QoS API key', {
+                level: 'warning',
+                extra: {
+                  response,
+                },
+              });
+              const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
+              if (!lowQosKey) {
+                return response;
+              }
+              if (enrichedOptions && enrichedOptions.headers) {
+                const headers = new Headers(enrichedOptions.headers);
+                headers.set('x-api-key', lowQosKey);
+                enrichedOptions.headers = headers;
+              }
+              return fetch(input, enrichedOptions);
+            }
 
-    const anthropic = createAnthropic({
-      apiKey: getEnv(env, 'ANTHROPIC_API_KEY'),
-      fetch: rateLimitAwareFetch,
-    });
-    const model = getEnv(env, 'ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
-    provider = {
-      model: anthropic(model),
-      maxTokens: 8192,
-    };
+            return response;
+          } catch (error) {
+            throw error;
+          }
+        };
+      };
+      const anthropic = createAnthropic({
+        apiKey: getEnv(env, 'ANTHROPIC_API_KEY'),
+        fetch: rateLimitAwareFetch(),
+      });
+      provider = {
+        model: anthropic(model),
+        maxTokens: 8192,
+      };
+      break;
+    }
   }
+
   const opts: SystemPromptOptions = {
     enableBulkEdits: true,
     enablePreciseEdits: false,
@@ -131,12 +163,13 @@ export async function convexAgent(
       metadata: {
         firstUserMessage,
         chatId,
+        provider: modelProvider,
       },
     },
   });
   return result.toDataStream({
     getErrorMessage: (error: any) => {
-      return `Failed to generate response: ${error.message}`;
+      return error.message;
     },
   });
 }

@@ -27,7 +27,7 @@ interface Folder {
 export type Dirent = File | Folder;
 
 // Relative to `WORK_DIR`
-type RelativePath = string & { __brand: 'RelativePath' };
+export type RelativePath = string & { __brand: 'RelativePath' };
 export type AbsolutePath = string & { __brand: 'AbsolutePath' };
 
 export const getAbsolutePath = (pathString: string): AbsolutePath => {
@@ -163,7 +163,7 @@ export class FilesStore {
     (globalThis as any).webcontainer = webcontainer;
     webcontainer.internal.watchPaths(
       { include: [`${WORK_DIR}/**`], exclude: ['**/node_modules', '.git'], includeContent: true },
-      bufferWatchEvents(100, this.#processEventBuffer.bind(this)),
+      bufferWatchEvents(FILE_EVENTS_DEBOUNCE_MS, this.#processEventBuffer.bind(this)),
     );
   }
 
@@ -293,3 +293,5 @@ function isBinaryFile(buffer: Uint8Array | undefined) {
 function convertToBuffer(view: Uint8Array): Buffer {
   return Buffer.from(view.buffer, view.byteOffset, view.byteLength);
 }
+
+export const FILE_EVENTS_DEBOUNCE_MS = 100;

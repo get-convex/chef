@@ -6,25 +6,18 @@ import { useConvexAuth } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import {
-  sessionIdStore,
-  flexAuthModeStore,
-  setInitialConvexSessionId,
-  setConvexSessionIdFromCode,
-  setValidAccessCode,
-} from '~/lib/stores/convex';
+import { flexAuthModeStore, setValidAccessCode } from '~/lib/stores/convex';
+import { sessionIdStore, setInitialConvexSessionId, setConvexSessionIdFromCode } from '~/lib/stores/sessionId';
 
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { classNames } from '~/utils/classNames';
 import { Loading } from '~/components/Loading';
+import type { loader } from '~/routes/_index';
 
 export function FlexAuthWrapper({ children }: { children: React.ReactNode }) {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
-  const { code: codeFromLoader, flexAuthMode } = useLoaderData<{
-    code?: string;
-    flexAuthMode: 'InviteCode' | 'ConvexOAuth';
-  }>();
+  const { code: codeFromLoader, flexAuthMode } = useLoaderData<typeof loader>();
   const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
   useEffect(() => {
     flexAuthModeStore.set(flexAuthMode);
@@ -66,13 +59,16 @@ export function FlexAuthWrapper({ children }: { children: React.ReactNode }) {
     });
   }, [codeFromLoader]);
 
-  const isLoading = sessionId === undefined || flexAuthMode === undefined;
+  const isLoading =
+    sessionId === undefined || flexAuthMode === undefined || (flexAuthMode === 'ConvexOAuth' && isConvexAuthLoading);
 
   if (isLoading) {
     return <Loading />;
   }
 
-  if (sessionId === null) {
+  const isUnauthenticated = sessionId === null || (flexAuthMode === 'ConvexOAuth' && !isAuthenticated);
+
+  if (isUnauthenticated) {
     return <UnauthenticatedPrompt flexAuthMode={flexAuthMode} />;
   }
   if (!hasValidCode && flexAuthMode !== 'InviteCode') {
@@ -192,7 +188,11 @@ function ConvexSignInForm() {
       <button
         className="px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
         onClick={() => {
-          loginWithRedirect();
+          loginWithRedirect({
+            authorizationParams: {
+              connection: 'github',
+            },
+          });
         }}
       >
         <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />

@@ -12,7 +12,8 @@ import { ScreenshotStateManager } from './ScreenshotStateManager';
 import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
-import { useFlexAuthMode, useSelectedTeamSlug } from '~/lib/stores/convex';
+import { useFlexAuthMode } from '~/lib/stores/convex';
+import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { SuggestionButtons } from './SuggestionButtons';
 import { KeyboardShortcut } from '~/components/ui/KeyboardShortcut';
 import StreamingIndicator from './StreamingIndicator';
@@ -91,6 +92,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       const canSendMessage = flexAuthMode !== 'ConvexOAuth' || selectedTeamSlug !== null;
       if (sendMessage && canSendMessage) {
         sendMessage(event, selectedTeamSlug, messageInput);
+        handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
       }
     };
 

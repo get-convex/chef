@@ -6,10 +6,12 @@ export enum ContainerBootState {
 
   STARTING = 0,
   LOADING_SNAPSHOT = 1,
-  SETTING_UP_CONVEX_PROJECT = 2,
-  SETTING_UP_CONVEX_ENV_VARS = 3,
-  CONFIGURING_CONVEX_AUTH = 4,
-  READY = 5,
+  DOWNLOADING_DEPENDENCIES = 2,
+  SETTING_UP_CONVEX_PROJECT = 3,
+  SETTING_UP_CONVEX_ENV_VARS = 4,
+  CONFIGURING_CONVEX_AUTH = 5,
+  STARTING_BACKUP = 6,
+  READY = 7,
 }
 
 const containerBootStore = atom<{ state: ContainerBootState; startTime: number; errorToLog?: Error }>({
@@ -31,15 +33,6 @@ export function setContainerBootState(state: ContainerBootState, error?: Error) 
   }
   error = error ?? existing.errorToLog;
   containerBootStore.set({ ...existing, state, errorToLog: error });
-}
-
-export function takeContainerBootError() {
-  const existing = containerBootStore.get();
-  if (existing.state !== ContainerBootState.ERROR) {
-    throw new Error('Container boot state is not in error');
-  }
-  const { errorToLog: _, ...rest } = existing;
-  containerBootStore.set(rest);
 }
 
 export function waitForBootStepCompleted(step: ContainerBootState) {

@@ -57,7 +57,7 @@ export class EditorStore {
     );
   }
 
-  setSelectedFile(filePath: string | undefined) {
+  setSelectedFile(filePath: AbsolutePath | undefined) {
     this.selectedFile.set(filePath);
   }
 

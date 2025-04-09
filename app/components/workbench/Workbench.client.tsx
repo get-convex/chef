@@ -18,9 +18,9 @@ import { EditorPanel } from './EditorPanel';
 import { Preview } from './Preview';
 import useViewport from '~/lib/hooks';
 import { Dashboard } from './Dashboard';
-import { convexStore } from '~/lib/stores/convex';
 import { Allotment } from 'allotment';
-import { SaveStatusIndicator } from '~/components/SaveStatusIndicator';
+import { convexProjectStore } from '~/lib/stores/convexProject';
+import { BackupStatusIndicator } from '~/components/BackupStatusIndicator';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { getAbsolutePath } from '~/lib/stores/files';
 
@@ -105,7 +105,8 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
 
   const onFileSelect = useCallback((filePath: string | undefined) => {
     workbenchStore.followingStreamedCode.set(false);
-    workbenchStore.setSelectedFile(filePath);
+    const absPath = filePath ? getAbsolutePath(filePath) : undefined;
+    workbenchStore.setSelectedFile(absPath);
   }, []);
 
   const onFileSave = useCallback(() => {
@@ -118,7 +119,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
     workbenchStore.resetCurrentDocument();
   }, []);
 
-  const showDashboard = useStore(convexStore) !== null;
+  const showDashboard = useStore(convexProjectStore) !== null;
 
   const sliderOptions: SliderOptions<WorkbenchViewType> = useMemo(
     () => ({
@@ -176,7 +177,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                   <div className="ml-auto" />
                   {selectedView === 'code' && (
                     <div className="flex overflow-y-auto">
-                      <SaveStatusIndicator />
+                      <BackupStatusIndicator />
                       <div className="w-4" />
                       <PanelHeaderButton
                         className="mr-1 text-sm"
