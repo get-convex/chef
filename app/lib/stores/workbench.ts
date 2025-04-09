@@ -48,7 +48,7 @@ type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard';
 
-type BackupState = {
+export type BackupState = {
   started: boolean;
   numFailures: number;
   savedUpdateCounter: number | null;
@@ -575,7 +575,10 @@ async function backupWorker(backupState: WritableAtom<BackupState>) {
         numFailures: currentState.numFailures + 1,
       });
       const sleepTime = backoffTime(currentState.numFailures);
-      console.error(`Failed to upload snapshot, sleeping for ${sleepTime.toFixed(2)}ms`, error);
+      console.error(
+        `Failed to upload snapshot (num failures: ${currentState.numFailures}), sleeping for ${sleepTime.toFixed(2)}ms`,
+        error,
+      );
       await new Promise((resolve) => setTimeout(resolve, sleepTime));
       continue;
     }
@@ -583,6 +586,7 @@ async function backupWorker(backupState: WritableAtom<BackupState>) {
       ...currentState,
       savedUpdateCounter: nextUpdateCounter,
       lastSync: now,
+      numFailures: 0,
     });
   }
 }

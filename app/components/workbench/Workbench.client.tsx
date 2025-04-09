@@ -19,7 +19,7 @@ import { Preview } from './Preview';
 import useViewport from '~/lib/hooks';
 import { Dashboard } from './Dashboard';
 import { convexProjectStore } from '~/lib/stores/convexProject';
-import { SaveStatusIndicator } from '~/components/SaveStatusIndicator';
+import { BackupStatusIndicator } from '~/components/BackupStatusIndicator';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { getAbsolutePath } from '~/lib/stores/files';
 
@@ -174,7 +174,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                   <div className="ml-auto" />
                   {selectedView === 'code' && (
                     <div className="flex overflow-y-auto">
-                      <SaveStatusIndicator />
+                      <BackupStatusIndicator />
                       <div className="w-4" />
                       <PanelHeaderButton
                         className="mr-1 text-sm"
