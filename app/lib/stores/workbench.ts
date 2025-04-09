@@ -359,7 +359,19 @@ export class WorkbenchStore {
   }
 
   abortAllActions() {
-    // TODO: what do we wanna do and how do we wanna recover from this?
+    // Update all running tools to aborted status
+    const artifacts = this.artifacts.get();
+    Object.values(artifacts).forEach((artifact) => {
+      const actions = artifact.runner.actions.get();
+      Object.entries(actions).forEach(([actionId, action]) => {
+        if (action.status === 'running' || action.status === 'pending') {
+          artifact.runner.updateAction(actionId, {
+            ...action,
+            status: 'aborted',
+          });
+        }
+      });
+    });
   }
 
   addReloadedPart(partId: PartId) {
