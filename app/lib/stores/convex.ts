@@ -62,5 +62,3 @@ export async function setValidAccessCode(convex: ConvexReactClient, code: string
   setLocalStorage(VALID_ACCESS_CODE_KEY, null);
   return false;
 }
-
-

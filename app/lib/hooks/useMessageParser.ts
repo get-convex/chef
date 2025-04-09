@@ -31,7 +31,7 @@ const messageParser = new StreamingMessageParser({
   },
 });
 
-type PartCache = Map<PartId, { original: Part; parsed: Part }>;
+export type PartCache = Map<PartId, { original: Part; parsed: Part }>;
 
 function isPartMaybeEqual(a: Part, b: Part): boolean {
   if (a.type === 'text' && b.type === 'text') {
@@ -45,7 +45,10 @@ function isPartMaybeEqual(a: Part, b: Part): boolean {
   return false;
 }
 
-function processMessage(message: Message, previousParts: PartCache): { message: Message; hitRate: [number, number] } {
+export function processMessage(
+  message: Message,
+  previousParts: PartCache,
+): { message: Message; hitRate: [number, number] } {
   if (message.role === 'user') {
     return { message, hitRate: [0, 0] };
   }

@@ -1,6 +1,5 @@
 import { atom } from 'nanostores';
 
-
 export type ConvexProject = {
   token: string;
   deploymentName: string;

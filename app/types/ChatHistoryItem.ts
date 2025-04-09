@@ -1,4 +1,3 @@
-
 export interface ChatHistoryItem {
   /*
    * ID should be the urlId (if it's set) or the initialId, and callers should be able

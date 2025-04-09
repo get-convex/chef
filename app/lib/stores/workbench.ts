@@ -96,35 +96,6 @@ export class WorkbenchStore {
     this._lastChangedFile = Date.now();
   }
 
-  async snapshotUrl(id?: string) {
-    const templateUrl = '/template-snapshot-351f4521.bin';
-    if (!id) {
-      console.log('No chat id yet, downloading base template');
-      return templateUrl;
-    }
-    const sessionId = sessionIdStore.get();
-    if (!sessionId) {
-      throw new Error('No session ID found');
-    }
-    const maybeSnapshotUrl = await this.#convexClient.query(api.snapshot.getSnapshotUrl, { chatId: id, sessionId });
-    if (!maybeSnapshotUrl) {
-      console.log('No snapshot URL found, downloading base template');
-      return templateUrl;
-    }
-    console.log('Snapshot URL found, downloading from Convex');
-    return maybeSnapshotUrl;
-  }
-
-  async downloadSnapshot(id?: string) {
-    const snapshotUrl = await this.snapshotUrl(id);
-    // Download the snapshot from Convex
-    const resp = await fetch(snapshotUrl);
-    if (!resp.ok) {
-      throw new Error(`Failed to download snapshot (${resp.statusText}): ${resp.statusText}`);
-    }
-    return await resp.arrayBuffer();
-  }
-
   async startBackup() {
     let isUploading = false;
     let pendingUpload = false;
@@ -246,12 +217,6 @@ export class WorkbenchStore {
   markInitialSnapshotLoaded() {
     console.log('[WorkbenchStore] Marking initial snapshot as loaded');
     this.#initialSnapshotLoaded = true;
-    console.log('[WorkbenchStore] Initial snapshot loaded state:', this.#initialSnapshotLoaded);
-  }
-
-  markInitialSnapshotNotLoaded() {
-    console.log('[WorkbenchStore] Marking initial snapshot as not loaded');
-    this.#initialSnapshotLoaded = false;
     console.log('[WorkbenchStore] Initial snapshot loaded state:', this.#initialSnapshotLoaded);
   }
 
@@ -467,8 +432,8 @@ export class WorkbenchStore {
     // TODO: what do we wanna do and how do we wanna recover from this?
   }
 
-  setReloadedParts(partIds: PartId[]) {
-    this.#reloadedParts = new Set(partIds);
+  addReloadedPart(partId: PartId) {
+    this.#reloadedParts.add(partId);
   }
 
   isReloadedPart(partId: PartId) {

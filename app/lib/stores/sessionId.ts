@@ -3,8 +3,8 @@ import type { Id } from '@convex/_generated/dataModel';
 import { useStore } from '@nanostores/react';
 import type { ConvexReactClient } from 'convex/react';
 import { atom } from 'nanostores';
-import { setLocalStorage, getLocalStorage } from '../persistence';
-import { removeCodeFromUrl } from './convex';
+import { setLocalStorage, getLocalStorage } from '~/lib/persistence';
+import { removeCodeFromUrl } from '~/lib/stores/convex';
 
 export function useConvexSessionIdOrNullOrLoading(): Id<'sessions'> | null | undefined {
   const sessionId = useStore(sessionIdStore);
@@ -24,6 +24,7 @@ export async function waitForConvexSessionId(caller?: string): Promise<Id<'sessi
     const sessionId = sessionIdStore.get();
     if (sessionId !== null && sessionId !== undefined) {
       resolve(sessionId);
+      return;
     }
     if (caller) {
       console.log(`[${caller}] Waiting for session ID...`);
@@ -44,7 +45,7 @@ export function setInitialConvexSessionId(
   args: {
     codeFromLoader: string | undefined;
     flexAuthMode: 'InviteCode' | 'ConvexOAuth';
-  }
+  },
 ) {
   function setSessionId(sessionId: Id<'sessions'> | null) {
     setLocalStorage(SESSION_ID_KEY, sessionId);
@@ -98,7 +99,7 @@ export function setInitialConvexSessionId(
 export async function setConvexSessionIdFromCode(
   convex: ConvexReactClient,
   code: string,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
 ) {
   convex
     .mutation(api.sessions.getSession, { code })

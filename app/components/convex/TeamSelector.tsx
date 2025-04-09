@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import * as Select from '@radix-ui/react-select';
 import { classNames } from '~/utils/classNames';
-import {
-  setSelectedTeamSlug,
-  useSelectedTeamSlug
-} from '~/lib/stores/convexTeams';
+import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { useStore } from '@nanostores/react';
 

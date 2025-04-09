@@ -6,14 +6,8 @@ import { useConvexAuth } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import {
-  flexAuthModeStore,
-  setValidAccessCode,
-} from '~/lib/stores/convex';
-import {
-  sessionIdStore, setInitialConvexSessionId,
-  setConvexSessionIdFromCode
-} from '~/lib/stores/sessionId';
+import { flexAuthModeStore, setValidAccessCode } from '~/lib/stores/convex';
+import { sessionIdStore, setInitialConvexSessionId, setConvexSessionIdFromCode } from '~/lib/stores/sessionId';
 
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { classNames } from '~/utils/classNames';
