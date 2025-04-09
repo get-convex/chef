@@ -3,7 +3,6 @@ import { atom, type WritableAtom } from 'nanostores';
 import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
 import { newBoltShellProcess, newShellProcess } from '~/utils/shell';
 import { coloredText } from '~/utils/terminal';
-import { sessionIdStore } from './convex';
 
 export class TerminalStore {
   #webcontainer: Promise<WebContainer>;
