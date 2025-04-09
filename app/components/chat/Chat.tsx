@@ -210,15 +210,6 @@ export const Chat = memo(
       },
     });
 
-    const containerBootState = useContainerBootState();
-    useEffect(() => {
-      if (containerBootState.state === ContainerBootState.ERROR && containerBootState.errorToLog) {
-        captureException(containerBootState.errorToLog);
-        toast.error('Failed to initialize the Chef environment. Please reload the page.');
-        takeContainerBootError();
-      }
-    }, [containerBootState]);
-
     useEffect(() => {
       // an empty string code is confusing, consider it no code
       const prompt = searchParams.get('prompt') || null;
