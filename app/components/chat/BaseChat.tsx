@@ -92,6 +92,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       const canSendMessage = flexAuthMode !== 'ConvexOAuth' || selectedTeamSlug !== null;
       if (sendMessage && canSendMessage) {
         sendMessage(event, selectedTeamSlug, messageInput);
+        handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
       }
     };
 
