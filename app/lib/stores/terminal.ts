@@ -44,7 +44,6 @@ export class TerminalStore {
   }
 
   async deployFunctionsAndRunDevServer(shouldDeployConvexFunctions: boolean) {
-    console.log('deployFunctionsAndRunDevServer', shouldDeployConvexFunctions);
     if (shouldDeployConvexFunctions) {
       const result = await this.#deployTerminal.executeCommand('npx convex dev --once');
       console.log('deployFunctionsAndRunDevServer result', result);
