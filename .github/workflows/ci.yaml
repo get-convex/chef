@@ -6,6 +6,7 @@ on:
       - staging
       - release
   pull_request:
+  merge_group:
 
 jobs:
   test:
