@@ -15,7 +15,7 @@ import {
   CONVEX_DEPLOY_TAB_INDEX,
 } from '~/lib/stores/terminalTabs';
 
-const MAX_TERMINALS = 3;
+const MAX_TERMINALS = 5;
 export const DEFAULT_TERMINAL_SIZE = 25;
 
 export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitializationOptions) => {
@@ -34,7 +34,7 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
   const addTerminal = () => {
     if (terminalCount < MAX_TERMINALS) {
       setTerminalCount(terminalCount + 1);
-      activeTerminalTabStore.set(terminalCount);
+      activeTerminalTabStore.set(terminalCount + 1);
     }
   };
 
@@ -118,7 +118,7 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
                     ? 'Dev Server'
                     : index === CONVEX_DEPLOY_TAB_INDEX
                       ? 'Convex Deploy'
-                      : `Terminal ${terminalCount > 1 && index}`}
+                      : `Terminal ${terminalCount > 2 ? index - 1 : ''}`}
                 </button>
               );
             })}
