@@ -89,44 +89,25 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
               const isActive = activeTerminal === index;
 
               return (
-                <React.Fragment key={index}>
-                  {index == 0 ? (
-                    <button
-                      key={index}
-                      className={classNames(
-                        'flex items-center text-sm cursor-pointer gap-1.5 px-3 py-2 h-full whitespace-nowrap rounded-full',
-                        {
-                          'bg-bolt-elements-terminals-buttonBackground text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary':
-                            isActive,
-                          'bg-bolt-elements-background-depth-2 text-bolt-elements-textSecondary hover:bg-bolt-elements-terminals-buttonBackground':
-                            !isActive,
-                        },
-                      )}
-                      onClick={() => setActiveTerminal(index)}
-                    >
-                      <div className="i-ph:terminal-window-duotone text-lg" />
-                      Dev Server
-                    </button>
-                  ) : (
-                    <React.Fragment>
-                      <button
-                        key={index}
-                        className={classNames(
-                          'flex items-center text-sm cursor-pointer gap-1.5 px-3 py-2 h-full whitespace-nowrap rounded-full',
-                          {
-                            'bg-bolt-elements-terminals-buttonBackground text-bolt-elements-textPrimary': isActive,
-                            'bg-bolt-elements-background-depth-2 text-bolt-elements-textSecondary hover:bg-bolt-elements-terminals-buttonBackground':
-                              !isActive,
-                          },
-                        )}
-                        onClick={() => setActiveTerminal(index)}
-                      >
-                        <div className="i-ph:terminal-window-duotone text-lg" />
-                        {index === 1 ? 'Convex Deploy' : `Terminal ${terminalCount > 1 && index}`}
-                      </button>
-                    </React.Fragment>
+                <button
+                  key={index}
+                  className={classNames(
+                    'flex items-center text-sm cursor-pointer gap-1.5 px-3 py-2 h-full whitespace-nowrap rounded-full',
+                    {
+                      'bg-bolt-elements-terminals-buttonBackground text-bolt-elements-textPrimary': isActive,
+                      'bg-bolt-elements-background-depth-2 text-bolt-elements-textSecondary hover:bg-bolt-elements-terminals-buttonBackground':
+                        !isActive,
+                    },
                   )}
-                </React.Fragment>
+                  onClick={() => setActiveTerminal(index)}
+                >
+                  <div className="i-ph:terminal-window-duotone text-lg" />
+                  {index === 0
+                    ? 'Dev Server'
+                    : index === 1
+                      ? 'Convex Deploy'
+                      : `Terminal ${terminalCount > 1 && index}`}
+                </button>
               );
             })}
             {terminalCount < MAX_TERMINALS && <IconButton icon="i-ph:plus" size="md" onClick={addTerminal} />}
