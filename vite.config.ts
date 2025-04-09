@@ -120,6 +120,8 @@ export default defineConfig((config) => {
         authToken: process.env.SENTRY_VITE_PLUGIN_AUTH_TOKEN,
         org: 'convex-dev',
         project: '4509097600811008',
+        // Only upload source maps for production
+        disable: process.env.VERCEL_ENV !== 'production',
       }),
     ],
     envPrefix: ['VITE_'],
