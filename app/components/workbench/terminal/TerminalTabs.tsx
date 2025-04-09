@@ -8,7 +8,11 @@ import { workbenchStore } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
 import { Terminal, type TerminalRef } from './Terminal';
 import type { TerminalInitializationOptions } from '~/types/terminal';
-import { CONVEX_DEPLOY_TAB_INDEX } from '~/lib/stores/terminalTabs';
+import {
+  activeTerminalTabStore,
+  CONVEX_DEPLOY_TAB_INDEX,
+  isConvexDeployTerminalVisibleStore,
+} from '~/lib/stores/terminalTabs';
 
 const MAX_TERMINALS = 3;
 export const DEFAULT_TERMINAL_SIZE = 25;
@@ -21,13 +25,15 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
   const terminalPanelRef = useRef<ImperativePanelHandle>(null);
   const terminalToggledByShortcut = useRef(false);
 
-  const [activeTerminal, setActiveTerminal] = useState(0);
+  const activeTerminal = useStore(activeTerminalTabStore);
   const [terminalCount, setTerminalCount] = useState(2);
+
+  const isConvexDeployTerminalVisible = useStore(isConvexDeployTerminalVisibleStore);
 
   const addTerminal = () => {
     if (terminalCount < MAX_TERMINALS) {
       setTerminalCount(terminalCount + 1);
-      setActiveTerminal(terminalCount);
+      activeTerminalTabStore.set(terminalCount);
     }
   };
 
@@ -89,6 +95,10 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
             {Array.from({ length: terminalCount + 1 }, (_, index) => {
               const isActive = activeTerminal === index;
 
+              if (index === CONVEX_DEPLOY_TAB_INDEX && !isConvexDeployTerminalVisible) {
+                return null;
+              }
+
               return (
                 <button
                   key={index}
@@ -100,7 +110,7 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
                         !isActive,
                     },
                   )}
-                  onClick={() => setActiveTerminal(index)}
+                  onClick={() => activeTerminalTabStore.set(index)}
                 >
                   <div className="i-ph:terminal-window-duotone text-lg" />
                   {index === 0

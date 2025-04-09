@@ -4,6 +4,12 @@ import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal'
 import { newBoltShellProcess, newShellProcess } from '~/utils/shell';
 import { coloredText } from '~/utils/terminal';
 import { workbenchStore } from './workbench';
+import {
+  activeTerminalTabStore,
+  CONVEX_DEPLOY_TAB_INDEX,
+  isConvexDeployTerminalVisibleStore,
+  VITE_TAB_INDEX,
+} from './terminalTabs';
 
 export class TerminalStore {
   #webcontainer: Promise<WebContainer>;
@@ -45,9 +51,14 @@ export class TerminalStore {
 
   async deployFunctionsAndRunDevServer(shouldDeployConvexFunctions: boolean) {
     if (shouldDeployConvexFunctions) {
+      isConvexDeployTerminalVisibleStore.set(true);
+      activeTerminalTabStore.set(CONVEX_DEPLOY_TAB_INDEX);
       const result = await this.#deployTerminal.executeCommand('npx convex dev --once');
       if (result?.exitCode !== 0) {
         throw new Error('Failed to deploy convex functions');
+      } else {
+        isConvexDeployTerminalVisibleStore.set(false);
+        activeTerminalTabStore.set(VITE_TAB_INDEX);
       }
     }
 
