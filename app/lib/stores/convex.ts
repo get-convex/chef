@@ -63,6 +63,24 @@ export function useConvexSessionId(): Id<'sessions'> {
   return sessionId;
 }
 
+export async function waitForConvexSessionId(caller?: string): Promise<Id<'sessions'>> {
+  return new Promise((resolve) => {
+    const sessionId = sessionIdStore.get();
+    if (sessionId !== null && sessionId !== undefined) {
+      resolve(sessionId);
+    }
+    if (caller) {
+      console.log(`[${caller}] Waiting for session ID...`);
+    }
+    const unsubscribe = sessionIdStore.subscribe((sessionId) => {
+      if (sessionId !== null && sessionId !== undefined) {
+        unsubscribe();
+        resolve(sessionId);
+      }
+    });
+  });
+}
+
 const SESSION_ID_KEY = 'sessionIdForConvex';
 export const sessionIdStore = atom<Id<'sessions'> | null | undefined>(undefined);
 
@@ -217,4 +235,23 @@ export function setSelectedTeamSlug(teamSlug: string | null) {
 export function useSelectedTeamSlug(): string | null {
   const selectedTeamSlug = useStore(selectedTeamSlugStore);
   return selectedTeamSlug;
+}
+
+export async function waitForSelectedTeamSlug(caller?: string): Promise<string> {
+  return new Promise((resolve) => {
+    const selectedTeamSlug = selectedTeamSlugStore.get();
+    if (selectedTeamSlug !== null) {
+      resolve(selectedTeamSlug);
+      return;
+    }
+    if (caller) {
+      console.log(`[${caller}] Waiting for selected team slug...`);
+    }
+    const unsubscribe = selectedTeamSlugStore.subscribe((selectedTeamSlug) => {
+      if (selectedTeamSlug !== null) {
+        unsubscribe();
+        resolve(selectedTeamSlug);
+      }
+    });
+  });
 }

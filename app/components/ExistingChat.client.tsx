@@ -2,7 +2,7 @@ import { api } from '@convex/_generated/api';
 import { convexStore, setSelectedTeamSlug } from '~/lib/stores/convex';
 import { useQuery } from 'convex/react';
 import { useEffect } from 'react';
-import { chatIdStore, useChatHistoryConvex } from '~/lib/persistence';
+import { chatIdStore, useConvexChatExisting } from '~/lib/persistence';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/convex';
 import { Chat } from './chat/Chat';
 import { Toaster } from 'sonner';
@@ -20,7 +20,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
     }
   }, [chatId, storedChatId]);
 
-  const { ready, initialMessages, storeMessageHistory, initializeChat } = useChatHistoryConvex();
+  const { ready, initialMessages, storeMessageHistory, initializeChat } = useConvexChatExisting(chatId);
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const projectInfo = useQuery(
     api.convexProjects.loadConnectedConvexProjectCredentials,
