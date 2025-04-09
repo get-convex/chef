@@ -63,7 +63,7 @@ export class BoltShell {
   #webcontainer: WebContainer | undefined;
   #terminal: ITerminal | undefined;
   #process: WebContainerProcess | undefined;
-  #executionState: { active: boolean; executionPrms?: Promise<any>; abort?: () => void } | undefined;
+  #executionState: { active: boolean; executionPrms?: Promise<any> } | undefined;
   #outputStream: ReadableStreamDefaultReader<string> | undefined;
   #shellInputStream: WritableStreamDefaultWriter<string> | undefined;
 
@@ -101,11 +101,6 @@ export class BoltShell {
       return;
     }
 
-    const state = this.#executionState;
-    if (state?.active && state.abort) {
-      state.abort();
-    }
-
     // Interrupt the current execution
     this.terminal.input('\x03');
     await this.waitTillOscCode('prompt');
@@ -113,12 +108,12 @@ export class BoltShell {
     this.terminal.input(command.trim() + '\n');
   }
 
-  async executeCommand(command: string, abort?: () => void): Promise<ExecutionResult> {
+  async executeCommand(command: string): Promise<ExecutionResult> {
     await this.startCommand(command);
 
     // Wait for the execution to finish
     const executionPromise = this.getCurrentExecutionResult();
-    this.#executionState = { active: true, executionPrms: executionPromise, abort };
+    this.#executionState = { active: true, executionPrms: executionPromise };
 
     const resp = await executionPromise;
     this.#executionState = { active: false };
