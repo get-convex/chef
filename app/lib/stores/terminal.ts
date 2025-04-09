@@ -62,7 +62,7 @@ export class TerminalStore {
       } else {
         isConvexDeployTerminalVisibleStore.set(false);
         activeTerminalTabStore.set(VITE_TAB_INDEX);
-        toast.success('Your Convex functions were deployed successfully');
+        toast.success('Convex functions deployed successfully');
       }
     }
 
