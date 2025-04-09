@@ -22,7 +22,10 @@ Sentry.init({
       useLocation,
       useMatches,
     }),
-    Sentry.replayIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: false,
+      blockAllMedia: false,
+    }),
   ],
 
   replaysSessionSampleRate: 0.1,
