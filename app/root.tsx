@@ -14,11 +14,7 @@ import { ClientOnly } from 'remix-utils/client-only';
 import { Auth0Provider } from '@auth0/auth0-react';
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
 import { ConvexReactClient } from 'convex/react';
-import {
-  getFlexAuthModeInLoader,
-  getConvexUrlInLoader,
-  getConvexOAuthClientIdInLoader,
-} from './lib/persistence/convex';
+import { getConvexUrlInLoader, getConvexOAuthClientIdInLoader } from './lib/persistence/convex';
 import globalStyles from './styles/index.scss?url';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 
@@ -28,10 +24,9 @@ import { ErrorDisplay } from './components/ErrorComponent';
 export async function loader() {
   const convexUrl = getConvexUrlInLoader();
   const convexOauthClientId = getConvexOAuthClientIdInLoader();
-  const authMode = getFlexAuthModeInLoader();
   // These environment variables are available in the client (they aren't secret).
   return json({
-    ENV: { CONVEX_URL: convexUrl, FLEX_AUTH_MODE: authMode, CONVEX_OAUTH_CLIENT_ID: convexOauthClientId },
+    ENV: { CONVEX_URL: convexUrl, CONVEX_OAUTH_CLIENT_ID: convexOauthClientId },
   });
 }
 

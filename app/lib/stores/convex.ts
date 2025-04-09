@@ -1,20 +1,8 @@
 import type { Id } from '@convex/_generated/dataModel';
-import { atom } from 'nanostores';
-import { useStore } from '@nanostores/react';
 import { getLocalStorage, setLocalStorage } from '~/lib/persistence';
 import { type ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { CONVEX_INVITE_CODE_QUERY_PARAM } from '~/lib/persistence/convex';
-
-export const flexAuthModeStore = atom<'InviteCode' | 'ConvexOAuth' | null>(null);
-
-export function useFlexAuthMode(): 'InviteCode' | 'ConvexOAuth' {
-  const flexAuthMode = useStore(flexAuthModeStore);
-  if (flexAuthMode === null) {
-    throw new Error('Flex auth mode is not set');
-  }
-  return flexAuthMode;
-}
 
 export function removeCodeFromUrl() {
   const url = new URL(window.location.href);

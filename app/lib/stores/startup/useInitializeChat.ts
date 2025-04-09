@@ -1,4 +1,3 @@
-import { flexAuthModeStore } from '~/lib/stores/convex';
 import { waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
 
 import { useConvex } from 'convex/react';
@@ -13,10 +12,6 @@ export function useInitializeChat(chatId: string) {
   return useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const flexAuthMode = flexAuthModeStore.get();
-    if (flexAuthMode !== 'ConvexOAuth') {
-      throw new Error('Flex auth mode is not ConvexOAuth');
-    }
     const response = await getAccessTokenSilently({ detailedResponse: true });
     const projectInitParams = {
       teamSlug,

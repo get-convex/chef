@@ -6,7 +6,7 @@ import { useConvexAuth } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { flexAuthModeStore, setValidAccessCode } from '~/lib/stores/convex';
+import { setValidAccessCode } from '~/lib/stores/convex';
 import { sessionIdStore, setInitialConvexSessionId, setConvexSessionIdFromCode } from '~/lib/stores/sessionId';
 
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
@@ -17,11 +17,8 @@ import type { loader } from '~/routes/_index';
 export function FlexAuthWrapper({ children }: { children: React.ReactNode }) {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
-  const { code: codeFromLoader, flexAuthMode } = useLoaderData<typeof loader>();
+  const { code: codeFromLoader } = useLoaderData<typeof loader>();
   const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
-  useEffect(() => {
-    flexAuthModeStore.set(flexAuthMode);
-  }, [flexAuthMode]);
 
   // We're gating access to Chef before general adoption. As a hack, we're reusing
   // the invite codes, but just no longer using the sessions they point to.
@@ -29,25 +26,14 @@ export function FlexAuthWrapper({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (sessionId === undefined) {
-      if (flexAuthMode === 'ConvexOAuth') {
-        const isUnauthenticated = !isAuthenticated && !isConvexAuthLoading;
-        if (isUnauthenticated) {
-          sessionIdStore.set(null);
-        } else if (isAuthenticated) {
-          setInitialConvexSessionId(convex, {
-            codeFromLoader,
-            flexAuthMode,
-          });
-        }
-      }
-      if (flexAuthMode === 'InviteCode') {
-        setInitialConvexSessionId(convex, {
-          codeFromLoader,
-          flexAuthMode,
-        });
+      const isUnauthenticated = !isAuthenticated && !isConvexAuthLoading;
+      if (isUnauthenticated) {
+        sessionIdStore.set(null);
+      } else if (isAuthenticated) {
+        setInitialConvexSessionId(convex);
       }
     }
-  }, [sessionId, isAuthenticated, flexAuthMode, isConvexAuthLoading]);
+  }, [sessionId, isAuthenticated, isConvexAuthLoading]);
 
   useEffect(() => {
     setValidAccessCode(convex, codeFromLoader ?? null).then((isValid) => {
@@ -59,30 +45,22 @@ export function FlexAuthWrapper({ children }: { children: React.ReactNode }) {
     });
   }, [codeFromLoader]);
 
-  const isLoading =
-    sessionId === undefined || flexAuthMode === undefined || (flexAuthMode === 'ConvexOAuth' && isConvexAuthLoading);
+  const isLoading = sessionId === undefined || isConvexAuthLoading;
 
   if (isLoading) {
     return <Loading />;
   }
 
-  const isUnauthenticated = sessionId === null || (flexAuthMode === 'ConvexOAuth' && !isAuthenticated);
+  const isUnauthenticated = sessionId === null || !isAuthenticated;
 
   if (isUnauthenticated) {
-    return <UnauthenticatedPrompt flexAuthMode={flexAuthMode} />;
+    return <ConvexSignInForm />;
   }
-  if (!hasValidCode && flexAuthMode !== 'InviteCode') {
+  if (!hasValidCode) {
     return <AccessGateForm setHasValidCode={setHasValidCode} />;
   }
 
-  return sessionId === null ? <UnauthenticatedPrompt flexAuthMode={flexAuthMode} /> : children;
-}
-
-function UnauthenticatedPrompt({ flexAuthMode }: { flexAuthMode: 'InviteCode' | 'ConvexOAuth' }) {
-  if (flexAuthMode === 'InviteCode') {
-    return <InviteCodeForm />;
-  }
-  return <ConvexSignInForm />;
+  return sessionId === null ? <ConvexSignInForm /> : children;
 }
 
 function AccessGateForm({ setHasValidCode }: { setHasValidCode: (hasValidCode: boolean) => void }) {

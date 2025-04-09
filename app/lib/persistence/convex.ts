@@ -9,17 +9,4 @@ export function getConvexOAuthClientIdInLoader(): string {
   return convexUrl;
 }
 
-export function getFlexAuthModeInLoader(): 'InviteCode' | 'ConvexOAuth' {
-  const authMode = globalThis.process.env.FLEX_AUTH_MODE;
-
-  if (authMode === 'InviteCode') {
-    return 'InviteCode';
-  }
-  if (authMode === 'ConvexOAuth') {
-    return 'ConvexOAuth';
-  }
-  console.error(`FLEX_AUTH_MODE has unexpected value: ${authMode}, defaulting to ConvexOAuth`);
-  return 'ConvexOAuth';
-}
-
 export const CONVEX_INVITE_CODE_QUERY_PARAM = 'cvx-code';

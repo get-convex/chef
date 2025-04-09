@@ -5,7 +5,6 @@ import { ClientOnly } from 'remix-utils/client-only';
 import { Header } from '~/components/header/Header';
 import { Homepage } from '~/components/Homepage.client';
 import { SafariWarning } from '~/components/SafariWarning';
-import { getFlexAuthModeInLoader } from '~/lib/persistence/convex';
 
 export const meta: MetaFunction = () => {
   return [
@@ -23,8 +22,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   if (state) {
     code = null;
   }
-  const flexAuthMode = getFlexAuthModeInLoader();
-  return json({ code, flexAuthMode });
+  return json({ code });
 };
 
 // Home page that asks the user to login and provide an initial prompt. After

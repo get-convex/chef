@@ -12,7 +12,6 @@ import { ScreenshotStateManager } from './ScreenshotStateManager';
 import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
-import { useFlexAuthMode } from '~/lib/stores/convex';
 import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { SuggestionButtons } from './SuggestionButtons';
 import { KeyboardShortcut } from '~/components/ui/KeyboardShortcut';
@@ -83,14 +82,13 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     },
     ref,
   ) => {
-    const flexAuthMode = useFlexAuthMode();
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
     const selectedTeamSlug = useSelectedTeamSlug();
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
 
     const handleSendMessage = (event: React.UIEvent, messageInput?: string) => {
-      const canSendMessage = flexAuthMode !== 'ConvexOAuth' || selectedTeamSlug !== null;
+      const canSendMessage = selectedTeamSlug !== null;
       if (sendMessage && canSendMessage) {
         sendMessage(event, selectedTeamSlug, messageInput);
         handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
@@ -272,8 +270,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           for new line
                         </div>
                       ) : null}
-                      {chatStarted && flexAuthMode === 'ConvexOAuth' && <ConvexConnection />}
-                      {!chatStarted && flexAuthMode === 'ConvexOAuth' && <TeamSelector />}
+                      {chatStarted && <ConvexConnection />}
+                      {!chatStarted && <TeamSelector />}
                     </div>
                   </div>
                 </div>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Dialog, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { classNames } from '~/utils/classNames';
-import { useFlexAuthMode } from '~/lib/stores/convex';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { useChatId } from '~/lib/stores/chatId';
@@ -87,7 +86,6 @@ function ConnectedDialogContent({
   const convexClient = useConvex();
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chatId = useChatId();
-  const flexAuthMode = useFlexAuthMode();
 
   const handleDisconnect = async () => {
     convexProjectStore.set(null);
@@ -106,16 +104,14 @@ function ConnectedDialogContent({
       <div className="flex flex-col gap-1">
         <p className="text-sm font-medium text-bolt-elements-textPrimary">Project: {projectInfo.projectSlug}</p>
         <p className="text-sm font-medium text-bolt-elements-textPrimary">Team: {projectInfo.teamSlug}</p>
-        {flexAuthMode === 'ConvexOAuth' && (
-          <a
-            className="flex gap-1 items-center text-sm hover:underline text-bolt-elements-textSecondary"
-            href={`https://dashboard.convex.dev/p/${projectInfo.projectSlug}/settings`}
-            target="_blank"
-          >
-            View in Convex Dashboard
-            <div className="i-ph:arrow-square-out w-4 h-4" />
-          </a>
-        )}
+        <a
+          className="flex gap-1 items-center text-sm hover:underline text-bolt-elements-textSecondary"
+          href={`https://dashboard.convex.dev/d/${projectInfo.deploymentName}`}
+          target="_blank"
+        >
+          View in Convex Dashboard
+          <div className="i-ph:arrow-square-out w-4 h-4" />
+        </a>
         {projectInfo.warningMessage && (
           <p className="text-sm text-bolt-elements-textSecondary">{projectInfo.warningMessage}</p>
         )}
