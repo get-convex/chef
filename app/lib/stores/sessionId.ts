@@ -4,7 +4,6 @@ import { useStore } from '@nanostores/react';
 import type { ConvexReactClient } from 'convex/react';
 import { atom } from 'nanostores';
 import { setLocalStorage, getLocalStorage } from '~/lib/persistence';
-import { removeCodeFromUrl } from '~/lib/stores/convex';
 
 export function useConvexSessionIdOrNullOrLoading(): Id<'sessions'> | null | undefined {
   const sessionId = useStore(sessionIdStore);
@@ -72,24 +71,4 @@ export function setInitialConvexSessionId(convex: ConvexReactClient) {
       console.error('Error starting session', error);
     });
   return;
-
-  // If there's not a sessionId in local storage or from the loader, set it to null
-  sessionIdStore.set(null);
-}
-
-export async function setConvexSessionIdFromCode(
-  convex: ConvexReactClient,
-  code: string,
-  onError: (error: Error) => void,
-) {
-  convex
-    .mutation(api.sessions.getSession, { code })
-    .then((sessionId) => {
-      sessionIdStore.set(sessionId);
-      setLocalStorage(SESSION_ID_KEY, sessionId);
-    })
-    .catch((error) => {
-      sessionIdStore.set(null);
-      onError(error);
-    });
 }
