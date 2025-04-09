@@ -114,31 +114,9 @@ export class BoltShell {
   }
 
   async executeCommand(command: string, abort?: () => void): Promise<ExecutionResult> {
-    if (!this.process || !this.terminal) {
-      return undefined;
-    }
+    await this.startCommand(command);
 
-    const state = this.#executionState;
-
-    if (state?.active && state.abort) {
-      state.abort();
-    }
-
-    /*
-     * interrupt the current execution
-     *  this.#shellInputStream?.write('\x03');
-     */
-    this.terminal.input('\x03');
-    await this.waitTillOscCode('prompt');
-
-    if (state && state.executionPrms) {
-      await state.executionPrms;
-    }
-
-    //start a new execution
-    this.terminal.input(command.trim() + '\n');
-
-    //wait for the execution to finish
+    // Wait for the execution to finish
     const executionPromise = this.getCurrentExecutionResult();
     this.#executionState = { active: true, executionPrms: executionPromise, abort };
 
