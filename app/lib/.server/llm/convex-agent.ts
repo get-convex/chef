@@ -13,7 +13,7 @@ import { deployTool } from '~/lib/runtime/deployTool';
 import { viewTool } from '~/lib/runtime/viewTool';
 import type { ConvexToolSet } from '~/lib/common/types';
 import { npmInstallTool } from '~/lib/runtime/npmInstallTool';
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI, openai } from '@ai-sdk/openai';
 import type { Tracer } from '~/lib/.server/chat';
 import { editTool } from '~/lib/runtime/editTool';
 import { captureException } from '@sentry/remix';
@@ -60,6 +60,9 @@ export async function convexAgent(
   switch (modelProvider) {
     case 'OpenAI': {
       model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4o-2024-11-20';
+      const openai = createOpenAI({
+        fetch,
+      });
       provider = {
         model: openai(model),
         maxTokens: 8192,
@@ -77,6 +80,7 @@ export async function convexAgent(
         credentialProvider: awsCredentialsProvider({
           roleArn: getEnv(env, 'AWS_ROLE_ARN')!,
         }),
+        fetch,
       });
       provider = {
         model: bedrock(model),
