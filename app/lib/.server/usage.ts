@@ -68,6 +68,6 @@ export async function recordUsage(
     logger.error(await response.json());
   }
 
-  let { tokensUsed, tokensQuota } = await response.json();
+  const { tokensUsed, tokensQuota } = await response.json();
   logger.info(`${teamSlug}/${deploymentName}: Tokens used: ${tokensUsed} / ${tokensQuota}`);
 }
