@@ -1,5 +1,6 @@
 import { useStore } from '@nanostores/react';
 import { atom } from 'nanostores';
+import { IGNORED_PATHS } from '~/utils/constants';
 
 const fileUpdateCounter = atom(0);
 
@@ -28,8 +29,6 @@ export async function waitForFileUpdateCounterChanged(counter: number) {
     });
   });
 }
-
-const IGNORED_PATHS = ['/home/project/dist/', '/home/project/node_modules/'];
 
 export function incrementFileUpdateCounter(path: string) {
   if (IGNORED_PATHS.some((p) => path.startsWith(p))) {

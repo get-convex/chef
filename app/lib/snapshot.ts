@@ -1,3 +1,4 @@
+import { IGNORED_RELATIVE_PATHS } from '~/utils/constants';
 import { webcontainer } from './webcontainer';
 import { formatSize } from '~/utils/formatSize';
 
@@ -5,7 +6,7 @@ export async function buildUncompressedSnapshot(): Promise<Uint8Array> {
   const container = await webcontainer;
   const start = Date.now();
   const snapshot = await container.export('.', {
-    excludes: ['.env.local', 'node_modules'],
+    excludes: IGNORED_RELATIVE_PATHS,
     format: 'binary',
   });
   const end = Date.now();
