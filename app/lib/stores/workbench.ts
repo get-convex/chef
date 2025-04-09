@@ -556,6 +556,12 @@ export class WorkbenchStore {
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `${uniqueProjectName}.zip`);
   }
+
+  isDefaultPreviewRunning() {
+    const DEFAULT_PREVIEW_PORT = 5173;
+    const previews = this.previews.get();
+    return previews.some((preview) => preview.port === DEFAULT_PREVIEW_PORT);
+  }
 }
 
 export const workbenchStore = new WorkbenchStore();
