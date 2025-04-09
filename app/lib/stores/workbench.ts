@@ -580,22 +580,25 @@ async function backupWorker(convexClient: ConvexHttpClient, backupState: Writabl
 }
 
 async function performBackup(sessionId: Id<'sessions'>, convexClient: ConvexHttpClient) {
+  let convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
+  if (!convexSiteUrl) {
+    const convexUrl: string = import.meta.env.VITE_CONVEX_URL;
+    if (convexUrl.endsWith('.convex.cloud')) {
+      convexSiteUrl = convexUrl.replace('.convex.cloud', '.convex.site');
+    }
+  }
+  if (!convexSiteUrl) {
+    throw new Error('VITE_CONVEX_SITE_URL is not set');
+  }
   const chatId = chatIdStore.get();
   const binarySnapshot = await buildUncompressedSnapshot();
   const compressed = await compressSnapshot(binarySnapshot);
-  const uploadUrl = await convexClient.mutation(api.snapshot.generateUploadUrl);
+
+  const uploadUrl = `${convexSiteUrl}/upload_snapshot?sessionId=${sessionId}&chatId=${chatId}`;
   const result = await fetch(uploadUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/octet-stream' },
     body: compressed,
   });
-  const response = (await result.json()) as { storageId: Id<'_storage'> };
-  if (!response || typeof response.storageId !== 'string') {
-    throw new Error('Invalid response from server');
-  }
-  await convexClient.mutation(api.snapshot.saveSnapshot, {
-    storageId: response.storageId,
-    chatId,
-    sessionId,
-  });
+  console.log('Uploaded snapshot', result);
 }
