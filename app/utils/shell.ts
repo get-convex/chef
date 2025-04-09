@@ -97,7 +97,7 @@ export class BoltShell {
 
   async startCommand(command: string) {
     if (!this.process || !this.terminal) {
-      return;
+      throw new Error('Terminal not initialized');
     }
 
     // Interrupt the current execution
