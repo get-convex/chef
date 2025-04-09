@@ -13,8 +13,7 @@ export const meta = IndexMeta;
 export async function loader(args: LoaderFunctionArgs) {
   const flexAuthMode = getFlexAuthModeInLoader();
   const url = new URL(args.request.url);
-  // an empty string code is confusing, consider it no code
-  const code = url.searchParams.get('code') || null;
+  const code = url.searchParams.get('code');
   return json({ id: args.params.id, flexAuthMode, code });
 }
 

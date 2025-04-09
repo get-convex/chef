@@ -43,7 +43,7 @@ export const sessionIdStore = atom<Id<'sessions'> | null | undefined>(undefined)
 export function setInitialConvexSessionId(
   convex: ConvexReactClient,
   args: {
-    codeFromLoader: string | undefined;
+    codeFromLoader: string | null;
     flexAuthMode: 'InviteCode' | 'ConvexOAuth';
   },
 ) {
