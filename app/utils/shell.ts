@@ -1,5 +1,5 @@
 import type { WebContainer, WebContainerProcess } from '@webcontainer/api';
-import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
+import type { ITerminal } from '~/types/terminal';
 import { withResolvers } from './promises';
 import { ContainerBootState, waitForContainerBootState } from '~/lib/stores/containerBootState';
 
@@ -100,11 +100,17 @@ export class BoltShell {
       throw new Error('Terminal not initialized');
     }
 
-    // Interrupt the current execution
-    this.terminal.input('\x03');
+    // For terminals that might be readonly, use write method directly for sending commands
+    const shellInput = this.#shellInputStream;
+    if (!shellInput) {
+      throw new Error('Shell input stream not initialized');
+    }
+
+    // Interrupt the current execution with Ctrl+C
+    shellInput.write('\x03');
     await this.waitTillOscCode('prompt');
 
-    this.terminal.input(command.trim() + '\n');
+    shellInput.write(command.trim() + '\n');
   }
 
   async executeCommand(command: string): Promise<ExecutionResult> {
