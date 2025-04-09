@@ -111,19 +111,16 @@ export class BoltShell {
     await this.startCommand(command);
 
     // Wait for the execution to finish
-    const executionPromise = this.getCurrentExecutionResult();
+    const { output, exitCode } = await this.waitTillOscCode('exit');
 
-    const resp = await executionPromise;
-
-    if (resp) {
-      try {
-        resp.output = cleanTerminalOutput(resp.output);
-      } catch (error) {
-        console.log('failed to format terminal output', error);
-      }
+    let cleanedOutput = output;
+    try {
+      cleanedOutput = cleanTerminalOutput(output);
+    } catch (error) {
+      console.log('failed to format terminal output', error);
     }
 
-    return resp;
+    return { output: cleanedOutput, exitCode };
   }
 
   async newBoltShellProcess(webcontainer: WebContainer, terminal: ITerminal) {
@@ -178,11 +175,6 @@ export class BoltShell {
     await jshReady.promise;
 
     return { process, output: internalOutput };
-  }
-
-  async getCurrentExecutionResult(): Promise<ExecutionResult> {
-    const { output, exitCode } = await this.waitTillOscCode('exit');
-    return { output, exitCode };
   }
 
   async waitTillOscCode(waitCode: string) {
