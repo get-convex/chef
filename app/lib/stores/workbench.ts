@@ -273,14 +273,6 @@ export class WorkbenchStore {
     return this.#previewsStore.previews;
   }
 
-  async startProxy(sourcePort: number) {
-    return this.#previewsStore.startProxy(sourcePort);
-  }
-
-  stopProxy(proxyPort: number) {
-    return this.#previewsStore.stopProxy(proxyPort);
-  }
-
   get files() {
     return this.#filesStore.files;
   }

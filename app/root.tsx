@@ -22,8 +22,6 @@ import {
 import globalStyles from './styles/index.scss?url';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 
-import 'allotment/dist/style.css';
-
 import 'virtual:uno.css';
 import { ErrorDisplay } from './components/ErrorComponent';
 
