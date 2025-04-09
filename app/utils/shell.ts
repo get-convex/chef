@@ -64,9 +64,7 @@ export class BoltShell {
   #webcontainer: WebContainer | undefined;
   #terminal: ITerminal | undefined;
   #process: WebContainerProcess | undefined;
-  executionState = atom<
-    { sessionId: string; active: boolean; executionPrms?: Promise<any>; abort?: () => void } | undefined
-  >();
+  #executionState: { sessionId: string; active: boolean; executionPrms?: Promise<any>; abort?: () => void } | undefined;
   #outputStream: ReadableStreamDefaultReader<string> | undefined;
   #shellInputStream: WritableStreamDefaultWriter<string> | undefined;
 
@@ -103,12 +101,16 @@ export class BoltShell {
     if (!this.process || !this.terminal) {
       return;
     }
-    const state = this.executionState.get();
+
+    const state = this.#executionState;
     if (state?.active && state.abort) {
       state.abort();
     }
+
+    // Interrupt the current execution
     this.terminal.input('\x03');
     await this.waitTillOscCode('prompt');
+
     this.terminal.input(command.trim() + '\n');
   }
 
@@ -117,7 +119,7 @@ export class BoltShell {
       return undefined;
     }
 
-    const state = this.executionState.get();
+    const state = this.#executionState;
 
     if (state?.active && state.abort) {
       state.abort();
@@ -139,10 +141,10 @@ export class BoltShell {
 
     //wait for the execution to finish
     const executionPromise = this.getCurrentExecutionResult();
-    this.executionState.set({ sessionId, active: true, executionPrms: executionPromise, abort });
+    this.#executionState = { sessionId, active: true, executionPrms: executionPromise, abort };
 
     const resp = await executionPromise;
-    this.executionState.set({ sessionId, active: false });
+    this.#executionState = { sessionId, active: false };
 
     if (resp) {
       try {
