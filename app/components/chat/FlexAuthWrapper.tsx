@@ -66,7 +66,8 @@ export function FlexAuthWrapper({ children }: { children: React.ReactNode }) {
     });
   }, [codeFromLoader]);
 
-  const isLoading = sessionId === undefined || flexAuthMode === undefined;
+  const isLoading =
+    sessionId === undefined || flexAuthMode === undefined || (flexAuthMode === 'ConvexOAuth' && isConvexAuthLoading);
 
   if (isLoading) {
     return <Loading />;
