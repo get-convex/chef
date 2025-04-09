@@ -97,12 +97,12 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
     return () => clearInterval(resetInterval);
   }, []);
 
-  const useAnthropicFraction = Number(globalThis.process.env.USE_ANTHROPIC_FRACTION) || 1.0;
-
-  let modelProviders: ModelProvider[] = ['Bedrock', 'Anthropic'];
-  if (Math.random() < useAnthropicFraction) {
-    modelProviders = ['Anthropic', 'Bedrock'];
+  let USE_ANTHROPIC_FRACTION = 1.0;
+  if (import.meta.env.VITE_USE_ANTHROPIC_FRACTION) {
+    USE_ANTHROPIC_FRACTION = Number(import.meta.env.VITE_USE_ANTHROPIC_FRACTION);
   }
+
+  let modelProviders: ModelProvider[] = USE_ANTHROPIC_FRACTION === 1.0 ? ['Anthropic'] : ['Anthropic', 'Bedrock'];
 
   const chatContextManager = useRef(new ChatContextManager());
   const { getAccessTokenSilently } = useAuth0();
@@ -135,6 +135,11 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
         throw new Error('No team slug');
       }
 
+      let modelProvider = Math.random() < USE_ANTHROPIC_FRACTION ? 'Anthropic' : 'Bedrock';
+      if (retries.numFailures > 0) {
+        modelProvider = modelProviders[retries.numFailures % modelProviders.length];
+      }
+
       return {
         messages: chatContextManager.current.prepareContext(messages),
         firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
@@ -142,7 +147,10 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
         token,
         teamSlug,
         deploymentName: convex?.deploymentName,
-        modelProvider: modelProviders[retries.numFailures % modelProviders.length],
+        modelProvider:
+          modelProviders[
+            (Math.floor(Math.random() * modelProviders.length) + retries.numFailures) % modelProviders.length
+          ],
       };
     },
     maxSteps: 64,
@@ -181,7 +189,9 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
       logger.error('Request failed\n\n', e, error);
       setRetries((prevRetries) => {
         const newRetries = prevRetries.numFailures + 1;
-        const retryTime = error?.message.includes('Too Many Requests') ? Date.now() + 5 * 1000 : Date.now();
+        const retryTime = error?.message.includes('Too Many Requests')
+          ? Date.now() + exponentialBackoff(newRetries)
+          : Date.now();
         return { numFailures: newRetries, nextRetry: retryTime };
       });
       if (error?.message.includes('Too Many Requests')) {
@@ -192,6 +202,9 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
       const usage = response.usage;
       if (usage) {
         console.log('Token usage:', usage);
+      }
+      if (response.finishReason == 'stop') {
+        setRetries({ numFailures: 0, nextRetry: Date.now() });
       }
       logger.debug('Finished streaming');
     },
@@ -515,4 +528,10 @@ export function SentryUserProvider({ children }: { children: React.ReactNode }) 
   }, [user]);
 
   return children;
+}
+
+function exponentialBackoff(numFailures: number) {
+  const jitter = Math.random() + 0.5;
+  const delay = 1000 * Math.pow(2, numFailures) * jitter;
+  return delay;
 }
