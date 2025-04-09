@@ -3,7 +3,12 @@ import { useInitializeChat } from './useInitializeChat';
 import { useInitialMessages } from './useInitialMessages';
 import { useProjectInitializer } from './useProjectInitializer';
 import { useTeamsInitializer } from './useTeamsInitializer';
-import { useExistingChatContainerSetup, useNewChatContainerSetup } from './useContainerSetup';
+import {
+  useExistingChatContainerSetup,
+  useNewChatContainerSetup,
+  useSharedChatContainerSetup,
+} from './useContainerSetup';
+import type { Id } from '@convex/_generated/dataModel';
 
 export function useConvexChatHomepage(chatId: string) {
   useTeamsInitializer();
@@ -24,6 +29,20 @@ export function useConvexChatExisting(chatId: string) {
   const initialMessages = useInitialMessages(chatId);
   const storeMessageHistory = useStoreMessageHistory(chatId, initialMessages?.serialized);
   useExistingChatContainerSetup(initialMessages?.loadedChatId);
+  return {
+    initialMessages: initialMessages?.deserialized,
+    initializeChat,
+    storeMessageHistory,
+  };
+}
+export function useConvexChatShared(snapshotId: Id<'_storage'>) {
+  const chatId = 'shared-' + snapshotId;
+  useTeamsInitializer();
+  useProjectInitializer(chatId);
+  const initializeChat = useInitializeChat(chatId);
+  const initialMessages = useInitialMessages(chatId);
+  const storeMessageHistory = useStoreMessageHistory(chatId, initialMessages?.serialized);
+  useSharedChatContainerSetup(snapshotId);
   return {
     initialMessages: initialMessages?.deserialized,
     initializeChat,
