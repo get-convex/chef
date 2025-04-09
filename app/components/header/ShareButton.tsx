@@ -1,20 +1,25 @@
 import { useState } from 'react';
 import { useStore } from '@nanostores/react';
 import { classNames } from '~/utils/classNames';
-import { Dialog, DialogRoot } from '~/components/ui/Dialog';
 import { toast } from 'sonner';
 import { convexStore } from '~/lib/stores/convex';
+import * as Popover from '@radix-ui/react-popover';
 
-interface ButtonProps {
+function Button({
+  active = false,
+  disabled = false,
+  children,
+  onClick,
+  className,
+  title,
+}: {
   active?: boolean;
   disabled?: boolean;
   children?: any;
   onClick?: VoidFunction;
   className?: string;
   title?: string;
-}
-
-function Button({ active = false, disabled = false, children, onClick, className, title }: ButtonProps) {
+}) {
   return (
     <button
       className={classNames(
@@ -72,27 +77,33 @@ export function ShareButton() {
     toast.success('Link copied to clipboard!');
   };
 
-  const closeDialog = () => {
-    setIsOpen(false);
-    // Reset status after dialog closes
-    setTimeout(() => {
-      if (!isOpen) {
+  // Reset status when popover closes
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      setTimeout(() => {
         setStatus('idle');
-      }
-    }, 300);
+      }, 200);
+    }
   };
 
   return (
-    <>
-      <Button onClick={() => setIsOpen(true)}>
-        <div className="i-ph:share-network w-4 h-4" />
-        <span>Share</span>
-      </Button>
+    <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>
+      <Popover.Trigger asChild>
+        <Button active={isOpen}>
+          <div className="i-ph:share-network w-4 h-4" />
+          <span>Share</span>
+        </Button>
+      </Popover.Trigger>
 
-      <DialogRoot open={isOpen} onOpenChange={setIsOpen}>
-        <Dialog className="w-[420px] p-5" onClose={closeDialog}>
-          <div className="flex flex-col">
-            <h2 className="text-lg font-semibold mb-4 text-bolt-elements-textPrimary">Share Project</h2>
+      <Popover.Portal>
+        <Popover.Content
+          className="z-50 bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor rounded-md shadow-lg w-[320px] animate-in fade-in-0 zoom-in-95"
+          sideOffset={5}
+          align="end"
+        >
+          <div className="p-4">
+            <h2 className="text-base font-medium mb-4 text-bolt-elements-textPrimary">Share Project</h2>
 
             {status === 'idle' && (
               <>
@@ -102,7 +113,7 @@ export function ShareButton() {
                 </p>
                 <div className="flex justify-end">
                   <button
-                    className="px-4 py-2 bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent rounded-md"
+                    className="px-3 py-1.5 bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent rounded-md text-sm"
                     onClick={handleShare}
                   >
                     Generate Link
@@ -128,28 +139,22 @@ export function ShareButton() {
                     type="text"
                     readOnly
                     value={shareUrl}
-                    className="flex-1 px-3 py-2 rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary"
+                    className="flex-1 px-3 py-1.5 rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 text-bolt-elements-textPrimary text-sm"
                   />
                   <button
                     onClick={copyToClipboard}
-                    className="px-3 py-2 bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textPrimary rounded-md border border-bolt-elements-borderColor"
+                    className="p-1.5 bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textPrimary rounded-md border border-bolt-elements-borderColor"
                   >
                     <div className="i-ph:clipboard-text-duotone w-5 h-5" />
-                  </button>
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    className="px-4 py-2 text-bolt-elements-textPrimary bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive rounded-md border border-bolt-elements-borderColor"
-                    onClick={closeDialog}
-                  >
-                    Close
                   </button>
                 </div>
               </>
             )}
           </div>
-        </Dialog>
-      </DialogRoot>
-    </>
+
+          <Popover.Arrow className="fill-bolt-elements-borderColor" />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }
