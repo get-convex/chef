@@ -14,7 +14,7 @@ import { classNames } from '~/utils/classNames';
 import { Loading } from '~/components/Loading';
 import type { loader } from '~/routes/_index';
 
-export function FlexAuthWrapper({ children }: { children: React.ReactNode }) {
+export function ChefAuthWrapper({ children }: { children: React.ReactNode }) {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
   const { code: codeFromLoader } = useLoaderData<typeof loader>();

@@ -1,5 +1,5 @@
 import { Chat, SentryUserProvider } from './chat/Chat';
-import { FlexAuthWrapper } from './chat/FlexAuthWrapper';
+import { ChefAuthWrapper } from './chat/ChefAuthWrapper';
 import { useRef } from 'react';
 import { useConvexChatHomepage } from '~/lib/stores/startup';
 import { Toaster } from 'sonner';
@@ -21,7 +21,7 @@ export function Homepage() {
   // NB: On this path, we render `ChatImpl` immediately.
   return (
     <>
-      <FlexAuthWrapper>
+      <ChefAuthWrapper>
         <SentryUserProvider>
           <Chat
             initialMessages={emptyList}
@@ -32,7 +32,7 @@ export function Homepage() {
             hadSuccessfulDeploy={false}
           />
         </SentryUserProvider>
-      </FlexAuthWrapper>
+      </ChefAuthWrapper>
       <Toaster position="bottom-right" closeButton richColors />
     </>
   );

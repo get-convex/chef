@@ -1,7 +1,7 @@
 import { useConvexChatExisting } from '~/lib/stores/startup';
 import { Chat } from './chat/Chat';
 import { Toaster } from 'sonner';
-import { FlexAuthWrapper } from './chat/FlexAuthWrapper';
+import { ChefAuthWrapper } from './chat/ChefAuthWrapper';
 import { SentryUserProvider } from './chat/Chat';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
 import { sessionIdStore } from '~/lib/stores/sessionId';
@@ -65,7 +65,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
   const easterEgg = useSplines(!isError && !!loading);
   return (
     <>
-      <FlexAuthWrapper>
+      <ChefAuthWrapper>
         <SentryUserProvider>
           {loading && <Loading message={easterEgg ?? loading} />}
           {!loading && (
@@ -79,7 +79,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
             />
           )}
         </SentryUserProvider>
-      </FlexAuthWrapper>
+      </ChefAuthWrapper>
       <Toaster position="bottom-right" closeButton richColors />
     </>
   );
