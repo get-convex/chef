@@ -110,6 +110,7 @@ export const Chat = memo(
     const modelProviders: ModelProvider[] = USE_ANTHROPIC_FRACTION === 1.0 ? ['Anthropic'] : ['Anthropic', 'Bedrock'];
 
     const chatContextManager = useRef(new ChatContextManager());
+    const [overQuota, setOverQuota] = useState(false);
 
     const { messages, status, input, handleInputChange, setInput, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
@@ -200,6 +201,38 @@ export const Chat = memo(
         logger.debug('Finished streaming');
       },
     });
+
+    useEffect(() => {
+      async function checkQuota() {
+        const teamSlug = selectedTeamSlugStore.get();
+        const deploymentName = convexProjectStore.get()?.deploymentName;
+        if (!teamSlug) {
+          throw new Error('No team slug');
+        }
+        const convexAny = convex as any;
+        const token = convexAny?.sync?.state?.auth?.value;
+        if (!token) {
+          throw new Error('No token');
+        }
+
+        const response = await fetch('/api/usage', {
+          method: 'POST',
+          body: JSON.stringify({
+            token,
+            teamSlug,
+            deploymentName,
+          }),
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          console.error('Failed to check quota', text);
+          throw new Error('Failed to check quota: ' + text);
+        }
+        const { tokensUsed, maxTokens } = await response.json();
+        setOverQuota(tokensUsed > maxTokens);
+      }
+      checkQuota();
+    }, [convex, messages]);
 
     useEffect(() => {
       const prompt = searchParams.get('prompt');
@@ -429,6 +462,7 @@ export const Chat = memo(
           isReload,
           shouldDeployConvexFunctions: hadSuccessfulDeploy,
         }}
+        overQuota={overQuota}
       />
     );
   },

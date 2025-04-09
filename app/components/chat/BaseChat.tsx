@@ -51,7 +51,7 @@ interface BaseChatProps {
   toolStatus: ToolStatus;
   messages: Message[];
   terminalInitializationOptions: TerminalInitializationOptions | undefined;
-
+  overQuota: boolean;
   // Alert related props
   actionAlert: ActionAlert | undefined;
   clearAlert: () => void;
@@ -79,6 +79,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       clearAlert,
       toolStatus,
       terminalInitializationOptions,
+      overQuota,
     },
     ref,
   ) => {
