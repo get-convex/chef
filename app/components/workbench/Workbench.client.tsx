@@ -183,7 +183,10 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                       <PanelHeaderButton
                         className="mr-1 text-sm"
                         onClick={() => {
-                          workbenchStore.downloadZip();
+                          const convexProject = convexProjectStore.get();
+                          workbenchStore.downloadZip({
+                            convexDeploymentName: convexProject?.deploymentName ?? null,
+                          });
                         }}
                       >
                         <div className="i-ph:code" />

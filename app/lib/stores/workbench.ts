@@ -31,6 +31,7 @@ import type { Artifacts, PartId } from './artifacts';
 import { backoffTime, WORK_DIR } from '~/utils/constants';
 import { chatIdStore } from '~/lib/stores/chatId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from './fileUpdateCounter';
+import { generateReadmeContent } from '../readmeContent';
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
@@ -522,7 +523,7 @@ export class WorkbenchStore {
     return artifacts[partId];
   }
 
-  async downloadZip() {
+  async downloadZip(args: { convexDeploymentName: string | null }) {
     const zip = new JSZip();
     const files = this.files.get();
 
@@ -532,6 +533,8 @@ export class WorkbenchStore {
     // Generate a simple 6-character hash based on the current timestamp
     const timestampHash = Date.now().toString(36).slice(-6);
     const uniqueProjectName = `${projectName}_${timestampHash}`;
+
+    let hasReadme = false;
 
     for (const [filePath, dirent] of Object.entries(files)) {
       if (dirent?.type === 'file' && !dirent.isBinary) {
@@ -551,10 +554,17 @@ export class WorkbenchStore {
         } else {
           // if there's only one segment, it's a file in the root
           zip.file(relativePath, dirent.content);
+          if (relativePath.toLowerCase() === 'readme.md') {
+            hasReadme = true;
+          }
         }
       }
     }
 
+    // Add a README.md file specific to Chef here, but don't clobber an existing one
+    const readmeContent = generateReadmeContent(description.value ?? 'project', args.convexDeploymentName);
+    const readmePath = hasReadme ? `CHEF_README_${timestampHash}.md` : 'README.md';
+    zip.file(readmePath, readmeContent);
     // Generate the zip file and save it
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `${uniqueProjectName}.zip`);
