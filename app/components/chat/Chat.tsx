@@ -234,6 +234,7 @@ export const Chat = memo(
         }
         const { tokensUsed, maxTokens } = await response.json();
         if (tokensUsed !== undefined && maxTokens !== undefined) {
+          console.log(`Tokens used: ${tokensUsed} / ${maxTokens}`);
           setOverQuota(tokensUsed > maxTokens);
         }
       }

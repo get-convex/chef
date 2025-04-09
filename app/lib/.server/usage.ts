@@ -68,6 +68,6 @@ export async function recordUsage(
     logger.error(await response.json());
   }
 
-  // Just for the logline (TODO(nipunn) - remove this after recordUsage returns a response)
-  await checkTokenUsage(provisionHost, token, teamSlug, deploymentName);
+  let { tokensUsed, tokensQuota } = await response.json();
+  logger.info(`${teamSlug}/${deploymentName}: Tokens used: ${tokensUsed} / ${tokensQuota}`);
 }
