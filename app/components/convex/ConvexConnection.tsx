@@ -86,12 +86,12 @@ function ConnectedDialogContent({
 }) {
   const convexClient = useConvex();
   const sessionId = useConvexSessionIdOrNullOrLoading();
-  const chatId = useChatIdOrNull();
+  const chatId = useChatId();
   const flexAuthMode = useFlexAuthMode();
 
   const handleDisconnect = async () => {
     convexProjectStore.set(null);
-    if (sessionId && chatId) {
+    if (sessionId) {
       void convexClient.mutation(api.convexProjects.disconnectConvexProject, {
         sessionId,
         chatId,
@@ -132,12 +132,11 @@ function ConnectedDialogContent({
 
 function ErrorDialogContent({ errorMessage }: { errorMessage: string }) {
   const sessionId = useConvexSessionIdOrNullOrLoading();
-  const chatId = useChatIdOrNull();
   return (
     <div className="flex items-center justify-between rounded-lg mx-3">
       <div className="flex flex-col gap-4">
         <p className="text-sm font-medium text-bolt-elements-textPrimary">Error: {errorMessage}</p>
-        <div className="flex justify-end gap-2">{sessionId && chatId ? <ConvexConnectButton /> : null}</div>
+        <div className="flex justify-end gap-2">{sessionId ? <ConvexConnectButton /> : null}</div>
       </div>
     </div>
   );
