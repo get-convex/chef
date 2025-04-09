@@ -97,7 +97,7 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
     return () => clearInterval(resetInterval);
   }, []);
 
-  const useAnthropicFraction = Number(globalThis.process.env.USE_ANTHROPIC_FRACTION) || 0.5;
+  const useAnthropicFraction = Number(globalThis.process.env.USE_ANTHROPIC_FRACTION) || 1.0;
 
   let modelProviders: ModelProvider[] = ['Bedrock', 'Anthropic'];
   if (Math.random() < useAnthropicFraction) {
