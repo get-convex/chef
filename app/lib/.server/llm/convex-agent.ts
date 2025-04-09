@@ -41,6 +41,8 @@ const tools: ConvexToolSet = {
 
 export type ModelProvider = 'Anthropic' | 'Bedrock' | 'OpenAI';
 
+const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
+
 export async function convexAgent(
   chatId: string,
   env: Record<string, string | undefined>,
@@ -66,7 +68,10 @@ export async function convexAgent(
     }
     case 'Bedrock': {
       model = getEnv(env, 'AMAZON_BEDROCK_MODEL') || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
-      const region = getEnv(env, 'AWS_REGION') || 'us-west-2';
+      let region = getEnv(env, 'AWS_REGION');
+      if (!region || !ALLOWED_AWS_REGIONS.includes(region)) {
+        region = 'us-west-2';
+      }
       const bedrock = createAmazonBedrock({
         region,
         credentialProvider: awsCredentialsProvider({
