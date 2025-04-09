@@ -52,3 +52,16 @@ export const getSnapshotUrl = query({
     return snapshot;
   },
 });
+
+export const getPublicSnapshotUrl = query({
+  args: {
+    snapshotId: v.id('_storage'),
+  },
+  handler: async (ctx, { snapshotId }) => {
+    const snapshot = await ctx.storage.getUrl(snapshotId);
+    if (!snapshot) {
+      throw new Error(`Expected to find a storageUrl for snapshot with id ${snapshotId}`);
+    }
+    return snapshot;
+  },
+});
