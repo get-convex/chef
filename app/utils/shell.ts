@@ -272,6 +272,6 @@ export function cleanTerminalOutput(input: string): string {
     .replace(/\u0000/g, ''); // Remove null characters
 }
 
-export function newBoltShellProcess(options?: TerminalInitializationOptions) {
-  return new BoltShell(options);
+export function newBoltShellProcess() {
+  return new BoltShell();
 }
