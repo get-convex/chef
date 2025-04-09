@@ -32,8 +32,13 @@ import { setExtra, setUser } from '@sentry/remix';
 import { useAuth0 } from '@auth0/auth0-react';
 import { setProfile } from '~/lib/stores/profile';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
+import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 
 const logger = createScopedLogger('Chat');
+
+const MAX_RETRIES = 3;
+
+const CHEF_TOO_BUSY_ERROR = 'Chef is too busy cooking right now. Please try again in a moment.';
 
 const processSampledMessages = createSampler(
   (options: {
@@ -74,6 +79,30 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
   const { showChat } = useStore(chatStore);
 
   const [animationScope, animate] = useAnimate();
+
+  const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number }>({
+    numFailures: 0,
+    nextRetry: Date.now(),
+  });
+
+  // Reset retries counter every 10 minutes
+  useEffect(() => {
+    const resetInterval = setInterval(
+      () => {
+        setRetries({ numFailures: 0, nextRetry: Date.now() });
+      },
+      10 * 60 * 1000,
+    );
+
+    return () => clearInterval(resetInterval);
+  }, []);
+
+  let useAnthropicFraction = import.meta.env.USE_ANTHROPIC_FRACTION || 1.0;
+
+  let modelProviders: ModelProvider[] = ['Bedrock', 'Anthropic'];
+  if (Math.random() < useAnthropicFraction) {
+    modelProviders = ['Anthropic', 'Bedrock'];
+  }
 
   const chatContextManager = useRef(new ChatContextManager());
   const { getAccessTokenSilently } = useAuth0();
@@ -122,18 +151,41 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
       console.log('Tool call finished', result);
       return result;
     },
-    onError: (e) => {
+    onError: (e: Error) => {
+      // Clean up the last message if it's an assistant message
+      setMessages((prevMessages) => {
+        const updatedMessages = [...prevMessages];
+        const lastMessage = updatedMessages[updatedMessages.length - 1];
+
+        if (lastMessage?.role === 'assistant' && Array.isArray(lastMessage.parts)) {
+          const updatedParts = [...lastMessage.parts.slice(0, -1)];
+          if (updatedParts.length > 0) {
+            updatedMessages[updatedMessages.length - 1] = {
+              ...lastMessage,
+              parts: updatedParts,
+            };
+          } else {
+            updatedMessages.pop();
+          }
+        }
+
+        return updatedMessages;
+      });
       captureException('Failed to process chat request: ' + e.message, {
         level: 'error',
         extra: {
           error: e,
         },
       });
-      console.log('Error', e);
       logger.error('Request failed\n\n', e, error);
-      toast.error(
-        'There was an error processing your request: ' + (e.message ? e.message : 'No details were returned'),
-      );
+      setRetries((prevRetries) => {
+        const newRetries = prevRetries.numFailures + 1;
+        const retryTime = error?.message.includes('Too Many Requests') ? Date.now() + 5 * 1000 : Date.now();
+        return { numFailures: newRetries, nextRetry: retryTime };
+      });
+      if (error?.message.includes('Too Many Requests')) {
+        toast.error(CHEF_TOO_BUSY_ERROR);
+      }
     },
     onFinish: (message, response) => {
       const usage = response.usage;
@@ -225,6 +277,11 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
   };
 
   const sendMessage = async (_event: React.UIEvent, teamSlug: string | null, messageInput?: string) => {
+    if (retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) {
+      toast.error(CHEF_TOO_BUSY_ERROR);
+      return;
+    }
+
     const messageContent = messageInput || input;
 
     if (!messageContent?.trim()) {
