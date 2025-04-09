@@ -35,7 +35,6 @@ export class TerminalStore {
         if (!sessionId) {
           throw new Error('No session id found when trying to run terminal commands');
         }
-        await this.#boltTerminal.executeCommand(sessionId, 'npm install');
         if (options?.shouldDeployConvexFunctions) {
           const result = await this.#boltTerminal.executeCommand(sessionId, 'npx convex dev --once');
           // Only run preview if convex functions were deployed successfully
