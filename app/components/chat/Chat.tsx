@@ -229,7 +229,9 @@ export const Chat = memo(
           throw new Error('Failed to check quota: ' + text);
         }
         const { tokensUsed, maxTokens } = await response.json();
-        setOverQuota(tokensUsed > maxTokens);
+        if (tokensUsed !== undefined && maxTokens !== undefined) {
+          setOverQuota(tokensUsed > maxTokens);
+        }
       }
       checkQuota();
     }, [convex, messages]);
