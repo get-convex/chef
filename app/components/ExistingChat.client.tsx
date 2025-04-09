@@ -18,9 +18,6 @@ export function ExistingChat({ chatId }: { chatId: string }) {
       chatIdStore.set(chatId);
       return;
     }
-    if (storedChatId !== chatId) {
-      throw new Error(`Chat ID mismatch: ${storedChatId} !== ${chatId}`);
-    }
   }, [chatId, storedChatId]);
 
   const { ready, initialMessages, storeMessageHistory, initializeChat } = useChatHistoryConvex();
