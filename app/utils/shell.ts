@@ -1,5 +1,5 @@
 import type { WebContainer, WebContainerProcess } from '@webcontainer/api';
-import type { ITerminal } from '~/types/terminal';
+import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
 import { withResolvers } from './promises';
 import { ContainerBootState, waitForContainerBootState } from '~/lib/stores/containerBootState';
 
@@ -272,6 +272,6 @@ export function cleanTerminalOutput(input: string): string {
     .replace(/\u0000/g, ''); // Remove null characters
 }
 
-export function newBoltShellProcess() {
-  return new BoltShell();
+export function newBoltShellProcess(options?: TerminalInitializationOptions) {
+  return new BoltShell(options);
 }

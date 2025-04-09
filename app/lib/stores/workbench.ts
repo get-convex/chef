@@ -223,8 +223,11 @@ export class WorkbenchStore {
   attachTerminal(terminal: ITerminal) {
     this.#terminalStore.attachTerminal(terminal);
   }
-  attachBoltTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
-    this.#terminalStore.attachBoltTerminal(terminal, options);
+  attachBoltTerminal(terminal: ITerminal, isReload: boolean) {
+    this.#terminalStore.attachBoltTerminal(terminal, isReload);
+  }
+  attachDeployTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
+    this.#terminalStore.attachDeployTerminal(terminal, options);
   }
 
   onTerminalResize(cols: number, rows: number) {

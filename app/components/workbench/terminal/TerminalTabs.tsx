@@ -24,7 +24,7 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
   const terminalToggledByShortcut = useRef(false);
 
   const [activeTerminal, setActiveTerminal] = useState(0);
-  const [terminalCount, setTerminalCount] = useState(1);
+  const [terminalCount, setTerminalCount] = useState(2);
 
   const addTerminal = () => {
     if (terminalCount < MAX_TERMINALS) {
@@ -125,7 +125,7 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
                         onClick={() => setActiveTerminal(index)}
                       >
                         <div className="i-ph:terminal-window-duotone text-lg" />
-                        Terminal {terminalCount > 1 && index}
+                        {index === 1 ? 'Convex Deploy' : `Terminal ${terminalCount > 1 && index}`}
                       </button>
                     </React.Fragment>
                   )}
@@ -158,7 +158,27 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
                     terminalRefs.current.push(ref);
                   }}
                   onTerminalReady={(terminal) =>
-                    workbenchStore.attachBoltTerminal(terminal, terminalInitializationOptions)
+                    workbenchStore.attachBoltTerminal(terminal, terminalInitializationOptions?.isReload ?? false)
+                  }
+                  onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
+                  theme={theme}
+                />
+              );
+            } else if (index == 1) {
+              return (
+                <Terminal
+                  key={index}
+                  id={`terminal_${index}`}
+                  className={classNames('h-full overflow-hidden', {
+                    hidden: !isActive,
+                  })}
+                  ref={(ref) => {
+                    terminalRefs.current.push(ref);
+                  }}
+                  onTerminalReady={(terminal) =>
+                    workbenchStore.attachDeployTerminal(terminal, {
+                      ...terminalInitializationOptions,
+                    })
                   }
                   onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
                   theme={theme}

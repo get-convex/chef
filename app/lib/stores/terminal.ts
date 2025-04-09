@@ -8,6 +8,7 @@ export class TerminalStore {
   #webcontainer: Promise<WebContainer>;
   #terminals: Array<{ terminal: ITerminal; process: WebContainerProcess }> = [];
   #boltTerminal = newBoltShellProcess();
+  #deployTerminal = newBoltShellProcess();
   showTerminal: WritableAtom<boolean> = import.meta.hot?.data.showTerminal ?? atom(true);
 
   startDevServerOnAttach = false;
@@ -27,12 +28,13 @@ export class TerminalStore {
     this.showTerminal.set(value !== undefined ? value : !this.showTerminal.get());
   }
 
-  async attachBoltTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
+  async attachBoltTerminal(terminal: ITerminal, isReload: boolean) {
     try {
       const wc = await this.#webcontainer;
       await this.#boltTerminal.init(wc, terminal);
-      if (options?.isReload) {
-        await this.deployFunctionsAndRunDevServer(options.shouldDeployConvexFunctions ?? false);
+      console.log('isReload', isReload);
+      if (isReload) {
+        await this.#boltTerminal.executeCommand('npx vite --open');
       }
     } catch (error: any) {
       console.error('Failed to initialize bolt terminal:', error);
@@ -42,14 +44,30 @@ export class TerminalStore {
   }
 
   async deployFunctionsAndRunDevServer(shouldDeployConvexFunctions: boolean) {
+    console.log('deployFunctionsAndRunDevServer', shouldDeployConvexFunctions);
     if (shouldDeployConvexFunctions) {
-      const result = await this.#boltTerminal.executeCommand('npx convex dev --once');
-      // Only run preview if convex functions were deployed successfully
+      const result = await this.#deployTerminal.executeCommand('npx convex dev --once');
+      console.log('deployFunctionsAndRunDevServer result', result);
       if (result?.exitCode !== 0) {
         throw new Error('Failed to deploy convex functions');
       }
     }
-    await this.#boltTerminal.executeCommand('npx vite --open');
+  }
+
+  async attachDeployTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
+    console.log('attachDeployTerminal', options);
+    try {
+      const wc = await this.#webcontainer;
+      await this.#deployTerminal.init(wc, terminal);
+      if (options?.isReload) {
+        await this.deployFunctionsAndRunDevServer(options.shouldDeployConvexFunctions ?? false);
+      }
+      console.log('attachDeployTerminal done');
+    } catch (error: any) {
+      console.error('Failed to initialize deploy terminal:', error);
+      terminal.write(coloredText.red('Failed to spawn dev server shell\n\n') + error.message);
+      return;
+    }
   }
 
   async attachTerminal(terminal: ITerminal) {
