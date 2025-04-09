@@ -7,6 +7,7 @@ import { ChatDescription } from '~/components/header/ChatDescription.client';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { DeployButton } from './DeployButton';
 import { FeedbackButton } from './FeedbackButton';
+import { ShareButton } from './ShareButton';
 
 export function Header() {
   const chat = useStore(chatStore);
@@ -54,6 +55,7 @@ export function Header() {
             {() => (
               <div className="flex items-center gap-2 flex-wrap">
                 <FeedbackButton />
+                <ShareButton />
                 <DeployButton />
                 <div className="mr-1">
                   <HeaderActionButtons />
