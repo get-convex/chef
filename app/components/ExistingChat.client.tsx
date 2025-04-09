@@ -1,5 +1,5 @@
 import { api } from '@convex/_generated/api';
-import { convexStore } from '~/lib/stores/convex';
+import { convexStore, setSelectedTeamSlug } from '~/lib/stores/convex';
 import { useQuery } from 'convex/react';
 import { useEffect } from 'react';
 import { chatIdStore, useChatHistoryConvex } from '~/lib/persistence';
@@ -43,6 +43,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
         projectSlug: projectInfo.projectSlug,
         teamSlug: projectInfo.teamSlug,
       });
+      setSelectedTeamSlug(projectInfo.teamSlug);
     }
   }, [projectInfo]);
 
