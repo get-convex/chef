@@ -90,7 +90,7 @@ function UnauthenticatedPrompt({ flexAuthMode }: { flexAuthMode: 'InviteCode' | 
 }
 
 function AccessGateForm({ setHasValidCode }: { setHasValidCode: (hasValidCode: boolean) => void }) {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState<string | null>(null);
   const convex = useConvex();
   return (
     <div className="flex flex-col items-center justify-center h-full gap-4">
@@ -113,7 +113,7 @@ function AccessGateForm({ setHasValidCode }: { setHasValidCode: (hasValidCode: b
       >
         <input
           type="text"
-          value={code}
+          value={code || ''}
           onChange={(e) => setCode(e.target.value)}
           placeholder="Enter your invite code"
           className={classNames(

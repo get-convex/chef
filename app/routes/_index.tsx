@@ -16,7 +16,8 @@ export const meta: MetaFunction = () => {
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
-  const code = url.searchParams.get('code');
+  // an empty string code is confusing, consider it no code
+  const code = url.searchParams.get('code') || null;
   const flexAuthMode = getFlexAuthModeInLoader();
   return json({ code, flexAuthMode });
 };

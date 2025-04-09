@@ -154,7 +154,8 @@ export const Chat = memo(({ initialMessages, storeMessageHistory, initializeChat
   }, [containerBootState]);
 
   useEffect(() => {
-    const prompt = searchParams.get('prompt');
+    // an empty string code is confusing, consider it no code
+    const prompt = searchParams.get('prompt') || null;
 
     if (!prompt) {
       return;
