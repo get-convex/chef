@@ -3,6 +3,7 @@ import { atom, type WritableAtom } from 'nanostores';
 import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
 import { newBoltShellProcess, newShellProcess } from '~/utils/shell';
 import { coloredText } from '~/utils/terminal';
+import { workbenchStore } from './workbench';
 
 export class TerminalStore {
   #webcontainer: Promise<WebContainer>;
@@ -45,10 +46,13 @@ export class TerminalStore {
   async deployFunctionsAndRunDevServer(shouldDeployConvexFunctions: boolean) {
     if (shouldDeployConvexFunctions) {
       const result = await this.#deployTerminal.executeCommand('npx convex dev --once');
-      console.log('deployFunctionsAndRunDevServer result', result);
       if (result?.exitCode !== 0) {
         throw new Error('Failed to deploy convex functions');
       }
+    }
+
+    if (!workbenchStore.isDefaultPreviewRunning()) {
+      await this.#boltTerminal.executeCommand('npx vite --open');
     }
   }
 
@@ -59,7 +63,6 @@ export class TerminalStore {
       if (options?.isReload) {
         await this.deployFunctionsAndRunDevServer(options.shouldDeployConvexFunctions ?? false);
       }
-      console.log('attachDeployTerminal done');
     } catch (error: any) {
       console.error('Failed to initialize deploy terminal:', error);
       terminal.write(coloredText.red('Failed to spawn dev server shell\n\n') + error.message);
