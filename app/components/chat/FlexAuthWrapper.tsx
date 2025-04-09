@@ -72,7 +72,9 @@ export function FlexAuthWrapper({ children }: { children: React.ReactNode }) {
     return <Loading />;
   }
 
-  if (sessionId === null) {
+  const isUnauthenticated = sessionId === null || (flexAuthMode === 'ConvexOAuth' && !isAuthenticated);
+
+  if (isUnauthenticated) {
     return <UnauthenticatedPrompt flexAuthMode={flexAuthMode} />;
   }
   if (!hasValidCode && flexAuthMode !== 'InviteCode') {
