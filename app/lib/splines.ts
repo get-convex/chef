@@ -16,19 +16,21 @@ const SPLINES_DURATION = 2000;
 export function useSplines(loading: boolean) {
   const [message, setMessage] = useState<string | null>(null);
   useEffect(() => {
-    if (!loading) {
-      return () => {};
+    let timer: NodeJS.Timeout | null = null;
+    if (loading) {
+      timer = setInterval(() => {
+        let newMessage = null;
+        if (Math.random() < SPLINES_PROBABILITY) {
+          const randomIndex = Math.floor(Math.random() * SPLINES_MESSAGES.length);
+          newMessage = SPLINES_MESSAGES[randomIndex];
+        }
+        setMessage(newMessage);
+      }, SPLINES_DURATION);
     }
-    const timer = setInterval(() => {
-      let newMessage = null;
-      if (Math.random() < SPLINES_PROBABILITY) {
-        const randomIndex = Math.floor(Math.random() * SPLINES_MESSAGES.length);
-        newMessage = SPLINES_MESSAGES[randomIndex];
-      }
-      setMessage(newMessage);
-    }, SPLINES_DURATION);
     return () => {
-      clearInterval(timer);
+      if (timer) {
+        clearInterval(timer);
+      }
     };
   }, [loading]);
   return message;
