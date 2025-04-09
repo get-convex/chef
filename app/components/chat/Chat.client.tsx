@@ -139,13 +139,16 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
 
   const chatContextManager = useRef(new ChatContextManager());
 
-  const [retries, setRetries] = useState<[number, number]>([0, Date.now()]);
+  const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number }>({
+    numFailures: 0,
+    nextRetry: Date.now(),
+  });
 
   // Reset retries counter every 10 minutes
   useEffect(() => {
     const resetInterval = setInterval(
       () => {
-        setRetries([0, Date.now()]);
+        setRetries({ numFailures: 0, nextRetry: Date.now() });
       },
       10 * 60 * 1000,
     );
@@ -209,7 +212,7 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
         token,
         teamSlug,
         deploymentName: convex?.deploymentName,
-        modelProvider: modelProviders[retries[0] % modelProviders.length],
+        modelProvider: modelProviders[retries.numFailures % modelProviders.length],
       };
     },
     maxSteps: 64,
@@ -247,9 +250,9 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
       });
       logger.error('Request failed\n\n', e, error);
       setRetries((prevRetries) => {
-        const newRetries = prevRetries[0] + 1;
+        const newRetries = prevRetries.numFailures + 1;
         const retryTime = error?.message.includes('Too Many Requests') ? Date.now() + 5 * 1000 : Date.now();
-        return [newRetries, retryTime];
+        return { numFailures: newRetries, nextRetry: retryTime };
       });
       if (error?.message.includes('Too Many Requests')) {
         toast.error(CHEF_TOO_BUSY_ERROR);
@@ -347,7 +350,7 @@ const ChatImpl = memo(({ description, initialMessages, storeMessageHistory, init
   };
 
   const sendMessage = async (_event: React.UIEvent, teamSlug: string | null, messageInput?: string) => {
-    if (retries[0] >= MAX_RETRIES || Date.now() < retries[1]) {
+    if (retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) {
       toast.error(CHEF_TOO_BUSY_ERROR);
       return;
     }
