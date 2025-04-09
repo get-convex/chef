@@ -56,14 +56,15 @@ export async function convexAgent(
   // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
   const fetch = undiciFetch as unknown as Fetch;
   switch (modelProvider) {
-    case 'OpenAI':
+    case 'OpenAI': {
       model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4o-2024-11-20';
       provider = {
         model: openai(model),
         maxTokens: 8192,
       };
       break;
-    case 'Bedrock':
+    }
+    case 'Bedrock': {
       model = getEnv(env, 'AMAZON_BEDROCK_MODEL') || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
       const region = getEnv(env, 'AWS_REGION') || 'us-west-2';
       const bedrock = createAmazonBedrock({
@@ -77,7 +78,8 @@ export async function convexAgent(
         maxTokens: 8192,
       };
       break;
-    case 'Anthropic':
+    }
+    case 'Anthropic': {
       model = getEnv(env, 'ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
       // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
       const rateLimitAwareFetch = () => {
@@ -119,6 +121,7 @@ export async function convexAgent(
         maxTokens: 8192,
       };
       break;
+    }
   }
 
   const opts: SystemPromptOptions = {
