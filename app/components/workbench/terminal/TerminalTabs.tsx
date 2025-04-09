@@ -7,10 +7,7 @@ import { themeStore } from '~/lib/stores/theme';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
 import { Terminal, type TerminalRef } from './Terminal';
-import { createScopedLogger } from '~/utils/logger';
 import type { TerminalInitializationOptions } from '~/types/terminal';
-
-const logger = createScopedLogger('Terminal');
 
 const MAX_TERMINALS = 3;
 export const DEFAULT_TERMINAL_SIZE = 25;
@@ -141,67 +138,31 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
               onClick={() => workbenchStore.toggleTerminal(false)}
             />
           </div>
-          {Array.from({ length: terminalCount + 1 }, (_, index) => {
-            const isActive = activeTerminal === index;
-
-            logger.debug(`Starting bolt terminal [${index}]`);
-
-            if (index == 0) {
-              return (
-                <Terminal
-                  key={index}
-                  id={`terminal_${index}`}
-                  className={classNames('h-full overflow-hidden', {
-                    hidden: !isActive,
-                  })}
-                  ref={(ref) => {
-                    terminalRefs.current.push(ref);
-                  }}
-                  onTerminalReady={(terminal) =>
-                    workbenchStore.attachBoltTerminal(terminal, terminalInitializationOptions?.isReload ?? false)
-                  }
-                  onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
-                  theme={theme}
-                />
-              );
-            } else if (index == 1) {
-              return (
-                <Terminal
-                  key={index}
-                  id={`terminal_${index}`}
-                  className={classNames('h-full overflow-hidden', {
-                    hidden: !isActive,
-                  })}
-                  ref={(ref) => {
-                    terminalRefs.current.push(ref);
-                  }}
-                  onTerminalReady={(terminal) =>
-                    workbenchStore.attachDeployTerminal(terminal, {
-                      ...terminalInitializationOptions,
-                    })
-                  }
-                  onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
-                  theme={theme}
-                />
-              );
-            } else {
-              return (
-                <Terminal
-                  key={index}
-                  id={`terminal_${index}`}
-                  className={classNames('h-full overflow-hidden', {
-                    hidden: !isActive,
-                  })}
-                  ref={(ref) => {
-                    terminalRefs.current.push(ref);
-                  }}
-                  onTerminalReady={(terminal) => workbenchStore.attachTerminal(terminal)}
-                  onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
-                  theme={theme}
-                />
-              );
-            }
-          })}
+          {Array.from({ length: terminalCount + 1 }, (_, index) => (
+            <Terminal
+              key={index}
+              id={`terminal_${index}`}
+              className={classNames('h-full overflow-hidden', {
+                hidden: activeTerminal !== index,
+              })}
+              ref={(ref) => {
+                terminalRefs.current.push(ref);
+              }}
+              onTerminalReady={(terminal) => {
+                if (index === 0) {
+                  workbenchStore.attachBoltTerminal(terminal, terminalInitializationOptions?.isReload ?? false);
+                } else if (index === 1) {
+                  workbenchStore.attachDeployTerminal(terminal, {
+                    ...terminalInitializationOptions,
+                  });
+                } else {
+                  workbenchStore.attachTerminal(terminal);
+                }
+              }}
+              onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
+              theme={theme}
+            />
+          ))}
         </div>
       </div>
     </Panel>
