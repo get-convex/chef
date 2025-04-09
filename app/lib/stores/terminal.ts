@@ -32,7 +32,6 @@ export class TerminalStore {
     try {
       const wc = await this.#webcontainer;
       await this.#boltTerminal.init(wc, terminal);
-      console.log('isReload', isReload);
       if (isReload) {
         await this.#boltTerminal.executeCommand('npx vite --open');
       }
@@ -54,7 +53,6 @@ export class TerminalStore {
   }
 
   async attachDeployTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
-    console.log('attachDeployTerminal', options);
     try {
       const wc = await this.#webcontainer;
       await this.#deployTerminal.init(wc, terminal);
