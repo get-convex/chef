@@ -35,7 +35,6 @@ if (!import.meta.env.SSR) {
         });
       })
       .then(async (webcontainer) => {
-        console.log('webcontainer booted');
         const { workbenchStore } = await import('~/lib/stores/workbench');
 
         // Listen for preview errors

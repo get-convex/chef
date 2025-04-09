@@ -8,7 +8,7 @@ const SPLINES_MESSAGES = [
   'Booking a Hot Pockets gig...',
   'Consulting Chef Goyardee...',
   'Going base jumping...',
-  'Painting sneakers...'
+  'Painting sneakers...',
 ];
 const SPLINES_PROBABILITY = 0.2;
 const SPLINES_DURATION = 2000;
