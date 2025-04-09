@@ -389,10 +389,9 @@ export class ActionRunner {
           }
           result = cleanedOutput;
 
-          const shell = this.#shellTerminal();
-
           // Start the default preview if it’s not already running
           if (!workbenchStore.isDefaultPreviewRunning()) {
+            const shell = this.#shellTerminal();
             await shell.startCommand('npx vite --open');
             result += '\n\nDev server started successfully!';
           }
