@@ -25,8 +25,8 @@ export function useInitializeChat(chatId: string) {
     if (selectedTeamSlug === null) {
       toast.info('Please select a team first!');
     }
-    const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
     const response = await getAccessTokenSilently({ detailedResponse: true });
+    const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
     const projectInitParams = {
       teamSlug,
       auth0AccessToken: response.id_token,
