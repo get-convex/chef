@@ -116,9 +116,30 @@ function findMessagesToUpdate(
   };
 }
 
-function serializeMessageForConvex(message: Message) {
+export function serializeMessageForConvex(message: Message) {
+  // `content` is a legacy field that is duplicated in `parts`.
+  // We should avoid storing it since we already store `parts`.
+  const { content: _content, ...rest } = message;
+
+  // Process parts to remove file content from bolt actions
+  const processedParts = message.parts?.map((part) => {
+    if (part.type === 'text') {
+      // Remove content between <boltAction type="file"> tags while preserving the tags
+      return {
+        ...part,
+        text: part.text.replace(/<boltAction type="file"[^>]*>[\s\S]*?<\/boltAction>/g, (match) => {
+          // Extract the opening tag and return it with an empty content
+          const openingTag = match.match(/<boltAction[^>]*>/)?.[0] ?? '';
+          return `${openingTag}</boltAction>`;
+        }),
+      };
+    }
+    return part;
+  });
+
   return {
-    ...message,
+    ...rest,
+    parts: processedParts,
     createdAt: message.createdAt?.getTime() ?? undefined,
   };
 }

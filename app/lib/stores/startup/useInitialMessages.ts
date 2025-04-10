@@ -84,8 +84,17 @@ export function useInitialMessages(chatId: string):
 }
 
 function deserializeMessageForConvex(message: SerializedMessage): Message {
+  const content =
+    message.content ??
+    message.parts
+      ?.filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+      .map((part) => part.text)
+      .join('') ??
+    '';
+
   return {
     ...message,
     createdAt: message.createdAt ? new Date(message.createdAt) : undefined,
+    content,
   };
 }
