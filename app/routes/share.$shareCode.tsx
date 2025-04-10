@@ -14,6 +14,21 @@ import { ChefAuthProvider, useChefAuth } from '~/components/chat/ChefAuthWrapper
 import { useParams } from '@remix-run/react';
 import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Loading } from '~/components/Loading';
+import type { MetaFunction } from '@vercel/remix';
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: 'Cooked with Chef' },
+    {
+      name: 'description',
+      content: 'Someone shared with you a project cooked with Chef, the full-stack AI coding agent from Convex',
+    },
+    {
+      property: 'og:image',
+      content: '/social_preview_share.jpg',
+    },
+  ];
+};
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);

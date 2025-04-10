@@ -8,8 +8,12 @@ import { Header } from '~/components/header/Header';
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'Chef - Sign In' },
+    { title: 'Sign In | Chef' },
     { name: 'description', content: 'Sign in to Chef, the full-stack AI coding agent from Convex' },
+    {
+      property: 'og:image',
+      content: '/social_preview_index.jpg',
+    },
   ];
 };
 

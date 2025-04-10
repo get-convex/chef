@@ -14,8 +14,12 @@ import { TeamSelector } from '~/components/convex/TeamSelector';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider } from '~/components/chat/ChefAuthWrapper';
 import { json } from '@vercel/remix';
-import type { LoaderFunctionArgs } from '@vercel/remix';
+import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
 import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
+
+export const meta: MetaFunction = () => {
+  return [{ title: 'Settings | Chef' }];
+};
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);

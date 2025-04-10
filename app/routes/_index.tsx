@@ -8,8 +8,12 @@ import { SafariWarning } from '~/components/SafariWarning';
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'Chef' },
+    { title: 'Chef by Convex | Generate realtime full‑stack apps' },
     { name: 'description', content: 'Cook up something hot with Chef, the full-stack AI coding agent from Convex' },
+    {
+      property: 'og:image',
+      content: '/social_preview_index.jpg',
+    },
   ];
 };
 
