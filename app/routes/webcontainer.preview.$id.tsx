@@ -84,7 +84,7 @@ export default function WebContainerPreview() {
         title="WebContainer Preview"
         className="w-full h-full border-none"
         sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-        allow="cross-origin-isolated clipboard-write"
+        allow="cross-origin-isolated; clipboard-write"
         loading="eager"
         onLoad={notifyPreviewReady}
       />

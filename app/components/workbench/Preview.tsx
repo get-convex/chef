@@ -378,7 +378,7 @@ export const Preview = memo(() => {
                 className="border-none w-full h-full bg-bolt-elements-background-depth-1"
                 src={iframeUrl}
                 sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                allow="cross-origin-isolated clipboard-write"
+                allow="cross-origin-isolated; clipboard-write"
               />
               <ScreenshotSelector
                 isSelectionMode={isSelectionMode}
