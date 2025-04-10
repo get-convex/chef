@@ -121,8 +121,7 @@ export const Chat = memo(
         console.error('No team slug');
         throw new Error('No team slug');
       }
-      const convexAny = convex as any;
-      const token = convexAny?.sync?.state?.auth?.value;
+      const token = getConvexAuthToken(convex);
       if (!token) {
         console.error('No token');
         throw new Error('No token');
