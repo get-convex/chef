@@ -55,14 +55,15 @@ http.route({
     }
 
     const blob = await request.blob();
-    const storageId = await ctx.storage.store(blob);
+    const snapshotId = await ctx.storage.store(blob);
 
-    const snapshotId = await ctx.runMutation(internal.share.create, {
+    const { code } = await ctx.runMutation(internal.share.create, {
+      sessionId: sessionId as Id<'sessions'>,
       chatId: chatId as Id<'chats'>,
-      storageId,
+      snapshotId,
     });
 
-    return new Response(JSON.stringify({ snapshotId }), {
+    return new Response(JSON.stringify({ code }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
