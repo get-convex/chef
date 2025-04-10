@@ -1,13 +1,12 @@
 import { Chat } from './chat/Chat';
-import { ChefAuthProvider, useChefAuth } from './chat/ChefAuthWrapper';
-import { useCallback, useRef } from 'react';
+import { ChefAuthProvider } from './chat/ChefAuthWrapper';
+import { useRef } from 'react';
 import { useConvexChatHomepage } from '~/lib/stores/startup';
 import { Toaster } from 'sonner';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
 import type { Message } from '@ai-sdk/react';
 import type { PartCache } from '~/lib/hooks';
 import { UserProvider } from '~/components/UserProvider';
-import { openSignInWindow } from './ChefSignInPage';
 
 export function Homepage() {
   // Set up a temporary chat ID early in app initialization. We'll
