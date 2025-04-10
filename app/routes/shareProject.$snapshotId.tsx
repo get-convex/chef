@@ -14,6 +14,7 @@ import type { Id } from '@convex/_generated/dataModel';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
 import { getFlexAuthModeInLoader } from '~/lib/persistence/convex';
+import { chatIdStore, setPageLoadChatId } from '~/lib/stores/chatId';
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
@@ -32,17 +33,25 @@ export default function ShareProject() {
   const { snapshotId } = useParams();
   const navigate = useNavigate();
 
+  // FIXME: save a chatId and mutation to add chat later
+  const chatId = 'shared-' + snapshotId;
+  setPageLoadChatId(chatId);
+
   if (!snapshotId) {
     throw new Error('snapshotId is required');
   }
 
-  const { initialMessages, storeMessageHistory, initializeChat } = useConvexChatShared(snapshotId as Id<'_storage'>);
+  const { initialMessages, storeMessageHistory, initializeChat } = useConvexChatShared(
+    snapshotId as Id<'_storage'>,
+    chatId,
+  );
   const bootState = useContainerBootState();
 
   let loading: null | string = null;
 
   // First, we need to be logged in and have a session ID.
   const sessionId = useStore(sessionIdStore);
+  console.log('sessionId', sessionId);
   if (!sessionId) {
     loading = 'Logging in...';
   }

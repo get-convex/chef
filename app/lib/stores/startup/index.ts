@@ -35,8 +35,7 @@ export function useConvexChatExisting(chatId: string) {
     storeMessageHistory,
   };
 }
-export function useConvexChatShared(snapshotId: Id<'_storage'>) {
-  const chatId = 'shared-' + snapshotId;
+export function useConvexChatShared(snapshotId: Id<'_storage'>, chatId: string) {
   useTeamsInitializer();
   useProjectInitializer(chatId);
   const initializeChat = useInitializeChat(chatId);
