@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { useStore } from '@nanostores/react';
 import { classNames } from '~/utils/classNames';
 import { toast } from 'sonner';
-import { convexStore } from '~/lib/stores/convex';
 import * as Popover from '@radix-ui/react-popover';
 
 function Button({
@@ -48,7 +46,6 @@ export function ShareButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<ShareStatus>('idle');
   const [shareUrl, setShareUrl] = useState('');
-  const convex = useStore(convexStore);
 
   const handleShare = async () => {
     try {
@@ -59,9 +56,7 @@ export function ShareButton() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Create a share URL based on the current deployment
-      const url = convex
-        ? `https://${convex.deploymentName}.convex.app/shared/${Date.now()}`
-        : `${window.location.origin}/shared/${Date.now()}`;
+      const url = `${window.location.origin}/shared/${Date.now()}`;
 
       setShareUrl(url);
       setStatus('success');
@@ -108,8 +103,7 @@ export function ShareButton() {
             {status === 'idle' && (
               <>
                 <p className="text-sm mb-4 text-bolt-elements-textSecondary">
-                  This will create a shareable link to your project that anyone can access. The link will remain active
-                  until you delete it.
+                  This will create a shareable link to your code and chat history that anyone can access.
                 </p>
                 <div className="flex justify-end">
                   <button
@@ -125,15 +119,13 @@ export function ShareButton() {
             {status === 'loading' && (
               <div className="flex flex-col items-center justify-center py-6">
                 <div className="i-ph:spinner-gap animate-spin w-8 h-8 mb-4 text-bolt-elements-textSecondary" />
-                <p className="text-bolt-elements-textSecondary">Generating share link...</p>
+                <p className="text-bolt-elements-textSecondary">Generating share link…</p>
               </div>
             )}
 
             {status === 'success' && (
               <>
-                <p className="text-sm mb-4 text-bolt-elements-textSecondary">
-                  Your project is now shared! Use this link to share with others:
-                </p>
+                <p className="text-sm mb-4 text-bolt-elements-textSecondary">Use this link to share with others:</p>
                 <div className="flex items-center gap-2 mb-4">
                   <input
                     type="text"
