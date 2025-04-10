@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { setExtra, setUser } from '@sentry/remix';
 import { useConvex } from 'convex/react';
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { useConvexSessionIdOrNullOrLoading, getConvexAuthToken } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
 import { setProfile } from '~/lib/stores/profile';
 import { getConvexProfile } from '~/lib/convexProfile';
@@ -34,8 +34,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
         // Get additional profile info from Convex
         try {
-          const convexAny = convex as any;
-          const token = convexAny?.sync?.state?.auth?.value;
+          const token = getConvexAuthToken(convex);
           if (token) {
             const convexProfile = await getConvexProfile(token);
             setProfile({

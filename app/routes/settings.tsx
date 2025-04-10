@@ -16,6 +16,7 @@ import { ChefAuthProvider } from '~/components/chat/ChefAuthWrapper';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
 import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
+import { getConvexAuthToken } from '~/lib/stores/sessionId';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Settings | Chef' }];
@@ -55,7 +56,7 @@ export function SettingsContent() {
   const [alwaysUseKey, setAlwaysUseKey] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
-  const { getAccessTokenSilently, logout } = useAuth0();
+  const { logout } = useAuth0();
 
   const teams = useStore(convexTeamsStore);
 
@@ -73,9 +74,9 @@ export function SettingsContent() {
       }
       setIsLoadingUsage(true);
       try {
-        const token = await getAccessTokenSilently({ detailedResponse: true });
+        const token = getConvexAuthToken(convex);
         if (token) {
-          const usage = await getTokenUsage(VITE_PROVISION_HOST, token.id_token, selectedTeamSlug);
+          const usage = await getTokenUsage(VITE_PROVISION_HOST, token, selectedTeamSlug);
           if (usage.status === 'success') {
             setTokenUsage(usage);
           } else {
