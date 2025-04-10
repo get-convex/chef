@@ -5,7 +5,10 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { toast } from 'sonner';
 import { Link } from '@remix-run/react';
 import { classNames } from '~/utils/classNames';
-
+import { getConvexAuthToken } from '~/lib/stores/sessionId';
+import type { ConvexReactClient } from 'convex/react';
+import { useConvex, useConvexAuth } from 'convex/react';
+import { fetchOptIns } from '~/lib/convexOptins';
 export const ChefSignInPage = () => {
   const chefAuth = useChefAuthContext();
 
@@ -59,7 +62,8 @@ type OptInToAccept = {
 };
 
 function OptInsScreen() {
-  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const convex = useConvex();
+  const { isAuthenticated } = useConvexAuth();
   const [optIns, setOptIns] = useState<
     | {
         kind: 'loading';
@@ -81,51 +85,39 @@ function OptInsScreen() {
       // We can't fetch the opt ins if the user is not authenticated
       return;
     }
-    const fetchOptIns = async () => {
-      let tokenResponse: { id_token: string };
-      try {
-        tokenResponse = await getAccessTokenSilently({
-          detailedResponse: true,
-        });
-      } catch (error) {
-        console.error('Error fetching opt ins:', error);
-        return;
+    fetchOptIns(convex).then((result) => {
+      switch (result.kind) {
+        case 'loaded':
+          setOptIns({
+            kind: 'loaded',
+            optIns: result.optIns,
+          });
+          break;
+        case 'error':
+          setOptIns({
+            kind: 'error',
+            error: result.error,
+          });
+          break;
+        case 'missingAuth':
+          // Do nothing, stay loading
+          break;
       }
-      const response = await fetch(`${VITE_PROVISION_HOST}/api/dashboard/optins`, {
-        headers: {
-          Authorization: `Bearer ${tokenResponse.id_token}`,
-        },
-      });
-      if (!response.ok) {
-        // We cannot fetch the opt ins, which means we probably failed to create an account
-        // dynamically (which we can't do from Chef)
-        setOptIns({
-          kind: 'error',
-          error: 'Failed to fetch opt ins',
-        });
-        return;
-      }
-      const optInsData: {
-        optInsToAccept: OptInToAccept[];
-      } = await response.json();
-      setOptIns({
-        kind: 'loaded',
-        optIns: optInsData.optInsToAccept,
-      });
-    };
-    void fetchOptIns();
-  }, [getAccessTokenSilently]);
+    });
+  }, [isAuthenticated, convex]);
 
   const acceptOptIns = useCallback(
     async (optInsToAccept: OptInToAccept[]) => {
-      const tokenResponse = await getAccessTokenSilently({
-        detailedResponse: true,
-      });
+      const token = getConvexAuthToken(convex);
+      if (!token) {
+        toast.error('Unexpected error accepting opt ins.');
+        return;
+      }
       const response = await fetch(`${VITE_PROVISION_HOST}/api/dashboard/optins`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenResponse.id_token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(optInsToAccept.map((optIn) => optIn.optIn)),
       });
@@ -138,7 +130,7 @@ function OptInsScreen() {
         });
       }
     },
-    [getAccessTokenSilently],
+    [convex],
   );
 
   if (optIns.kind === 'loading') {
