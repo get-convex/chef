@@ -113,7 +113,3 @@ function openaiProxyEnabled() {
     const fromEnv = process.env.OPENAI_PROXY_ENABLED;
     return fromEnv && fromEnv == "1";
 }
-
-
-
-
