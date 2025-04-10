@@ -1,4 +1,3 @@
-import { useNavigate, useParams } from '@remix-run/react';
 import { useStore } from '@nanostores/react';
 import { sessionIdStore, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import type { Id } from '@convex/_generated/dataModel';
@@ -37,7 +36,6 @@ export default function ShareProject() {
 
 function ShareProjectContent() {
   const { shareId } = useParams();
-  const navigate = useNavigate();
 
   if (!shareId) {
     throw new Error('shareId is required');
