@@ -114,6 +114,7 @@ export const Chat = memo(
 
     const chatContextManager = useRef(new ChatContextManager());
     const [disableChatMessage, setDisableChatMessage] = useState<string | null>(null);
+    const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     async function checkTokenUsage() {
       const teamSlug = selectedTeamSlugStore.get();
@@ -314,7 +315,7 @@ export const Chat = memo(
       setChatStarted(true);
     };
 
-    const sendMessage = async (_event: React.UIEvent, messageInput?: string) => {
+    const sendMessage = useCallback(async (_event: React.UIEvent, messageInput?: string) => {
       if (retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) {
         toast.error(CHEF_TOO_BUSY_ERROR);
         return;
@@ -327,20 +328,68 @@ export const Chat = memo(
       }
 
       if (status === 'streaming' || status === 'submitted') {
+        console.log("Aborting current message.")
         abort();
         return;
       }
-      await initializeChat();
 
-      runAnimation();
+      if (sendMessageInProgress) {
+        console.log("sendMessage already in progress, returning.")
+        return;
+      }
+      try {
+        setSendMessageInProgress(true);
 
-      // Wait for the WebContainer to have its snapshot loaded before sending a message.
-      await waitForBootStepCompleted(ContainerBootState.LOADING_SNAPSHOT);
+        await initializeChat();
+        runAnimation();
 
-      if (!chatStarted) {
-        setMessages([
-          {
-            id: `${new Date().getTime()}`,
+        if (!chatStarted) {
+          setMessages([
+            {
+              id: `${new Date().getTime()}`,
+              role: 'user',
+              content: messageContent,
+              parts: [
+                {
+                  type: 'text',
+                  text: messageContent,
+                },
+                ...imageDataList.map((imageData) => ({
+                  type: 'file' as const,
+                  mimeType: 'image/png',
+                  data: imageData,
+                })),
+              ],
+            },
+          ]);
+          reload();
+          return;
+        }
+
+        const modifiedFiles = workbenchStore.getModifiedFiles();
+        chatStore.setKey('aborted', false);
+
+        if (modifiedFiles !== undefined) {
+          const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
+          append({
+            role: 'user',
+            content: messageContent,
+            parts: [
+              {
+                type: 'text',
+                text: `${userUpdateArtifact}${messageContent}`,
+              },
+              ...imageDataList.map((imageData) => ({
+                type: 'file' as const,
+                mimeType: 'image/png',
+                data: imageData,
+              })),
+            ],
+          });
+
+          workbenchStore.resetAllFileModifications();
+        } else {
+          append({
             role: 'user',
             content: messageContent,
             parts: [
@@ -354,62 +403,21 @@ export const Chat = memo(
                 data: imageData,
               })),
             ],
-          },
-        ]);
-        reload();
+          });
+        }
 
-        return;
+        setInput('');
+        Cookies.remove(PROMPT_COOKIE_KEY);
+
+        setUploadedFiles([]);
+        setImageDataList([]);
+
+        textareaRef.current?.blur();
+
+      } finally {
+        setSendMessageInProgress(false);
       }
-
-      const modifiedFiles = workbenchStore.getModifiedFiles();
-
-      chatStore.setKey('aborted', false);
-
-      if (modifiedFiles !== undefined) {
-        const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
-        append({
-          role: 'user',
-          content: messageContent,
-          parts: [
-            {
-              type: 'text',
-              text: `${userUpdateArtifact}${messageContent}`,
-            },
-            ...imageDataList.map((imageData) => ({
-              type: 'file' as const,
-              mimeType: 'image/png',
-              data: imageData,
-            })),
-          ],
-        });
-
-        workbenchStore.resetAllFileModifications();
-      } else {
-        append({
-          role: 'user',
-          content: messageContent,
-          parts: [
-            {
-              type: 'text',
-              text: messageContent,
-            },
-            ...imageDataList.map((imageData) => ({
-              type: 'file' as const,
-              mimeType: 'image/png',
-              data: imageData,
-            })),
-          ],
-        });
-      }
-
-      setInput('');
-      Cookies.remove(PROMPT_COOKIE_KEY);
-
-      setUploadedFiles([]);
-      setImageDataList([]);
-
-      textareaRef.current?.blur();
-    };
+    }, [retries, input, status, sendMessageInProgress, chatStarted, append, textareaRef.current]);
 
     /**
      * Handles the change event for the textarea and updates the input state.
@@ -473,6 +481,7 @@ export const Chat = memo(
           shouldDeployConvexFunctions: hadSuccessfulDeploy,
         }}
         disableChatMessage={disableChatMessage}
+        sendMessageInProgress={sendMessageInProgress}
       />
     );
   },

@@ -45,6 +45,7 @@ interface BaseChatProps {
   handleInputChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleStop: () => void;
   sendMessage: (event: React.UIEvent, messageInput?: string) => Promise<void>;
+  sendMessageInProgress: boolean;
 
   // Current chat history props
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
@@ -72,6 +73,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       currentError,
       handleInputChange,
       sendMessage,
+      sendMessageInProgress,
       handleStop,
       uploadedFiles = [],
       setUploadedFiles,
@@ -252,9 +254,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       translate="no"
                     />
                     <SendButton
-                      show={input.length > 0 || isStreaming || uploadedFiles.length > 0}
+                      show={input.length > 0 || isStreaming || uploadedFiles.length > 0 || sendMessageInProgress}
                       isStreaming={isStreaming}
-                      disabled={chefAuthState.kind === 'loading'}
+                      disabled={chefAuthState.kind === 'loading' || sendMessageInProgress}
                       onClick={(event) => {
                         if (isStreaming) {
                           handleStop?.();

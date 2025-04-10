@@ -8,6 +8,7 @@ import { api } from '@convex/_generated/api';
 import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { toast } from 'sonner';
 import { openSignInWindow } from '~/components/ChefSignInPage';
+import { ContainerBootState, waitForBootStepCompleted } from '../containerBootState';
 
 export function useHomepageInitializeChat(chatId: string) {
   const { getAccessTokenSilently } = useAuth0();
@@ -24,6 +25,7 @@ export function useHomepageInitializeChat(chatId: string) {
     if (selectedTeamSlug === null) {
       toast.info('Please select a team first!');
     }
+
     const response = await getAccessTokenSilently({ detailedResponse: true });
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
     const projectInitParams = {
@@ -35,6 +37,10 @@ export function useHomepageInitializeChat(chatId: string) {
       sessionId,
       projectInitParams,
     });
+
+    // Wait for the WebContainer to have its snapshot loaded before sending a message.
+    await waitForBootStepCompleted(ContainerBootState.LOADING_SNAPSHOT);
+
   }, [convex, chatId, getAccessTokenSilently, isFullyLoggedIn]);
 }
 
@@ -56,5 +62,9 @@ export function useExistingInitializeChat(chatId: string) {
       sessionId,
       projectInitParams,
     });
+
+    // We don't need to wait for container boot here since we don't mount
+    // the UI until it's fully ready.
+
   }, [convex, chatId, getAccessTokenSilently, isFullyLoggedIn]);
 }
