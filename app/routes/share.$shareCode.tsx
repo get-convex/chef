@@ -1,6 +1,5 @@
 import { useStore } from '@nanostores/react';
 import { sessionIdStore, waitForConvexSessionId } from '~/lib/stores/sessionId';
-import type { Id } from '@convex/_generated/dataModel';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
 import { useMutation } from 'convex/react';
