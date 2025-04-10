@@ -51,5 +51,5 @@ export async function getTokenUsage(
     tokensQuota,
     isTeamDisabled,
   }: { tokensUsed: number; tokensQuota: number; isTeamDisabled: boolean } = await response.json();
-  return { status: 'success', tokensUsed, tokensQuota: tokensQuota / 1000, isTeamDisabled };
+  return { status: 'success', tokensUsed, tokensQuota, isTeamDisabled };
 }
