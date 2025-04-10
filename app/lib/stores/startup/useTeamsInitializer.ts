@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { convexTeamsStore, type ConvexTeam } from '~/lib/stores/convexTeams';
 import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { getStoredTeamSlug, setSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { toast } from 'sonner';
 
 const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
@@ -32,6 +33,7 @@ async function fetchTeams(getAccessTokenSilently: ReturnType<typeof useAuth0>['g
     teams = await response.json();
   } catch (error) {
     console.error('Error fetching teams:', error);
+    toast.error("Failed to load user. Try logging in at dashboard.convex.dev?")
     return;
   }
   convexTeamsStore.set(teams);
