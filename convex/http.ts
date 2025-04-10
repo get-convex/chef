@@ -58,7 +58,7 @@ async function uploadSnapshot(ctx: ActionCtx, request: Request): Promise<Id<'_st
 http.route({
   path: '/upload_snapshot',
   method: 'OPTIONS',
-  handler: httpAction(async (ctx, request) => {
+  handler: httpAction(async () => {
     return new Response(null, {
       status: 200,
       headers: {
