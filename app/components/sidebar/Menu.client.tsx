@@ -120,6 +120,11 @@ export const Menu = memo(() => {
     navigate('/settings');
   };
 
+  // Don’t show the menu at all when logged out
+  if (sessionId === null) {
+    return null;
+  }
+
   return (
     <>
       <motion.div
