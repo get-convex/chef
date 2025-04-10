@@ -6,7 +6,7 @@ import { useMutation } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useCallback } from 'react';
 import { Toaster } from 'sonner';
-import { waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { setSelectedTeamSlug, useSelectedTeamSlug, waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useAuth0 } from '@auth0/auth0-react';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
@@ -79,6 +79,8 @@ function ShareProjectContent() {
     openSignInWindow();
   }, []);
 
+  const selectedTeamSlug = useSelectedTeamSlug();
+
   if (chefAuthState.kind === 'loading') {
     return <Loading />;
   }
@@ -105,7 +107,9 @@ function ShareProjectContent() {
       <div className="max-w-md w-full space-y-4">
         <h1 className="text-2xl font-bold text-center">Select a Team</h1>
         <p className="text-sm text-center text-gray-500">Choose the team where you want to clone this project</p>
-        {chefAuthState.kind === 'fullyLoggedIn' && <TeamSelector />}
+        {chefAuthState.kind === 'fullyLoggedIn' && (
+          <TeamSelector selectedTeamSlug={selectedTeamSlug} setSelectedTeamSlug={setSelectedTeamSlug} />
+        )}
         <button
           className="mx-auto px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
           onClick={handleCloneChat}
