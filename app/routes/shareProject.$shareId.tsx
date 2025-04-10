@@ -4,17 +4,15 @@ import { sessionIdStore, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import type { Id } from '@convex/_generated/dataModel';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
-import { getFlexAuthModeInLoader } from '~/lib/persistence/convex';
 import { useMutation } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useEffect } from 'react';
-import { FlexAuthWrapper } from '~/components/chat/FlexAuthWrapper';
 import { Toaster } from 'sonner';
 import { waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
-import { flexAuthModeStore } from '~/lib/stores/convex';
 import { useAuth0 } from '@auth0/auth0-react';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
+import { ChefAuthWrapper } from '~/components/chat/ChefAuthWrapper';
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
@@ -23,16 +21,15 @@ export const loader = async (args: LoaderFunctionArgs) => {
   if (state) {
     code = null;
   }
-  const flexAuthMode = getFlexAuthModeInLoader();
-  return json({ code, flexAuthMode });
+  return json({ code });
 };
 
 export default function ShareProject() {
   return (
     <>
-      <FlexAuthWrapper>
+      <ChefAuthWrapper>
         <ShareProjectContent />
-      </FlexAuthWrapper>
+      </ChefAuthWrapper>
       <Toaster position="bottom-right" closeButton richColors />
     </>
   );
@@ -55,18 +52,14 @@ function ShareProjectContent() {
     const f = async () => {
       const sessionId = await waitForConvexSessionId('useInitializeChat');
       const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-      const flexAuthMode = flexAuthModeStore.get();
-      if (flexAuthMode !== 'ConvexOAuth') {
-        throw new Error('Flex auth mode is not ConvexOAuth');
-      }
       const response = await getAccessTokenSilently({ detailedResponse: true });
       const projectInitParams = {
         teamSlug,
         auth0AccessToken: response.id_token,
       };
       const { id: chatId } = await cloneChat({ id: shareId as Id<'shares'>, sessionId, projectInitParams });
-      console.log('chatId', chatId);
       navigate(`/chat/${chatId}`);
+      // window.location.href = '/chat/${chatId}';
     };
     f();
   }, [sessionId, getAccessTokenSilently]);
