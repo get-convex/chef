@@ -42,7 +42,7 @@ export function useChefAuthContext() {
   return state;
 }
 
-const SESSION_ID_KEY = 'sessionIdForConvex';
+export const SESSION_ID_KEY = 'sessionIdForConvex';
 
 export const ChefAuthProvider = ({
   children,

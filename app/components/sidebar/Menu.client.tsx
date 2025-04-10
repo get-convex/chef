@@ -18,7 +18,7 @@ import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { getKnownInitialId } from '~/lib/stores/chatId';
 import { profileStore } from '~/lib/stores/profile';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useNavigate } from '@remix-run/react';
+import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
 
 const menuVariants = {
   closed: {
@@ -47,7 +47,6 @@ export const Menu = memo(() => {
   const menuRef = useRef<HTMLDivElement>(null);
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
-  const navigate = useNavigate();
   const list = useQuery(api.messages.getAll, sessionId ? { sessionId } : 'skip') ?? [];
   const [open, setOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState<DialogContent>(null);
@@ -109,6 +108,7 @@ export const Menu = memo(() => {
   }, []);
 
   const handleLogout = () => {
+    window.localStorage.removeItem(SESSION_ID_KEY);
     logout({
       logoutParams: {
         returnTo: window.location.origin,
@@ -117,7 +117,7 @@ export const Menu = memo(() => {
   };
 
   const handleSettingsClick = () => {
-    navigate('/settings');
+    window.location.pathname = '/settings';
   };
 
   // Don’t show the menu at all when logged out
