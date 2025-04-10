@@ -131,9 +131,13 @@ export const Chat = memo(
       if (tokenUsage.status === 'error') {
         console.error('Failed to check for token usage', tokenUsage.httpStatus, tokenUsage.httpBody);
       } else {
-        const { tokensUsed, tokensQuota, isTeamDisabled } = tokenUsage;
+        let { tokensUsed, tokensQuota, isTeamDisabled } = tokenUsage;
         if (tokensUsed !== undefined && tokensQuota !== undefined) {
           console.log(`Convex tokens used/quota: ${tokensUsed} / ${tokensQuota}`);
+          if (tokensQuota === 50000000) {
+            // TODO(nipunn) Hack for launch day
+            tokensQuota = tokensQuota * 100;
+          }
           if (isTeamDisabled) {
             setDisableChatMessage(disabledText);
           } else if (tokensUsed > tokensQuota) {
