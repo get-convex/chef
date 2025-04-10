@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    name: Typecheck and Lint
+    name: Typecheck, lint, and test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,3 +24,6 @@ jobs:
 
       - name: Run lint
         run: pnpm run lint
+
+      - name: Run tests
+        run: pnpm run test
