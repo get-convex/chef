@@ -175,8 +175,18 @@ export const g = query({
 ### Function references
 
 - Function references are pointers to registered Convex functions.
-- Use the \`api\` object defined by the framework in \`convex/_generated/api.ts\` to call public functions registered with \`query\`, \`mutation\`, or \`action\`.
-- Use the \`internal\` object defined by the framework in \`convex/_generated/api.ts\` to call internal (or private) functions registered with \`internalQuery\`, \`internalMutation\`, or \`internalAction\`.
+- ALWAYS use the \`api\` object defined by the framework in \`convex/_generated/api.ts\` to call public functions registered with \`query\`, \`mutation\`, or \`action\`. Importing the \`api\` object looks like:
+
+\`\`\`
+import { api } from "./\_generated/api";
+\`\`\`
+
+- ALWAYS use the \`internal\` object defined by the framework in \`convex/_generated/api.ts\` to call internal (or private) functions registered with \`internalQuery\`, \`internalMutation\`, or \`internalAction\`. Importing the \`internal\` object looks like:
+
+\`\`\`
+import { internal } from "./\_generated/api";
+\`\`\`
+
 - Convex uses file-based routing, so a public function defined in \`convex/example.ts\` named \`f\` has a function reference of \`api.example.f\`.
 - A private function defined in \`convex/example.ts\` named \`g\` has a function reference of \`internal.example.g\`.
 - Functions can also registered within directories nested within the \`convex/\` folder. For example, a public function \`h\` defined in \`convex/messages/access.ts\` has a function reference of \`api.messages.access.h\`.
@@ -287,8 +297,8 @@ Note: \`paginationOpts\` is an object with the following properties:
   schema definition of a table! They're automatic and adding them to will be an error. You cannot
   use either of these names for your own indexes. \`.index("by_creation_time", ["_creationTime"])\`
   is ALWAYS wrong.
-- Convex automatically includes \`_creationTime\` as the final column in all indexes. Do NOT include
-  \`_creationTime\` as the last column in any index you define.
+- Convex automatically includes \`_creationTime\` as the final column in all indexes.
+- Do NOT under any circumstances include \`_creationTime\` as the last column in any index you define. This will result in an error.
   \`.index("by_author_and_creation_time", ["author", "_creationTime"])\` is ALWAYS wrong.
 - Always include all index fields in the index name. For example, if an index is defined as
   \`["field1", "field2"]\`, the index name should be "by_field1_and_field2".

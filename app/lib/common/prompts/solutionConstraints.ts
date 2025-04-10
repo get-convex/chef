@@ -107,6 +107,14 @@ export function solutionConstraints(options: SystemPromptOptions) {
         perfect fix for collaborative, live-updating websites.
 
         If you want to use a UI element, you MUST create it. DO NOT use external libraries like Shadcn/UI.
+
+        When writing a UI component and you want to use a Convex function, you MUST import the \`api\` object. For example:
+        
+        \`\`\`tsx
+        import { api } from "../convex/_generated/api";
+        \`\`\`
+
+        You can use the \`api\` object to call any public Convex function.
       </client_guidelines>
     </convex_guidelines>
   </solution_constraints>
