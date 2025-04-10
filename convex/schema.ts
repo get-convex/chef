@@ -92,6 +92,6 @@ export default defineSchema({
     .index('bySessionId', ['sessionId']),
   shares: defineTable({
     chatId: v.id('chats'),
-    snapshotId: v.optional(v.id('_storage')),
+    snapshotId: v.id('_storage'),
   }),
 });

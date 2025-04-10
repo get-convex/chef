@@ -169,6 +169,9 @@ export const createShareFromChat = internalMutation({
     if (!chat) {
       throw new Error('Chat not found');
     }
+    if (!chat.snapshotId) {
+      throw new Error('Chat has no snapshot');
+    }
     const shareId = await ctx.db.insert('shares', {
       chatId,
       snapshotId: chat.snapshotId,
