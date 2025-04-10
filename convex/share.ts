@@ -88,7 +88,7 @@ export const clone = mutation({
       initialId: chatId,
       description: parentChat.description,
       timestamp: new Date().toISOString(),
-      snapshotId: parentChat.snapshotId,
+      snapshotId: getShare.snapshotId,
     };
     const clonedChatId = await ctx.db.insert('chats', clonedChat);
 
