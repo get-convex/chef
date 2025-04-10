@@ -93,6 +93,12 @@ export default defineSchema({
     chatId: v.id('chats'),
     snapshotId: v.optional(v.id('_storage')),
     code: v.string(),
+
+    // Shares are created at one point in time, so this makes sure
+    // people using the link don’t see newer messages.
     lastMessageRank: v.number(),
+
+    // The description of the chat at the time the share was created.
+    description: v.optional(v.string()),
   }).index('byCode', ['code']),
 });

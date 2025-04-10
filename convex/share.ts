@@ -35,6 +35,8 @@ export const create = mutation({
 
       code,
       lastMessageRank: lastMessage ? lastMessage.rank : 0,
+
+      description: chat.description,
     });
 
     return { code };
