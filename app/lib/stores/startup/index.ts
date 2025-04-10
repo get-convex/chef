@@ -39,11 +39,9 @@ export function useConvexChatShared(snapshotId: Id<'_storage'>, chatId: string) 
   useTeamsInitializer();
   useProjectInitializer(chatId);
   const initializeChat = useInitializeChat(chatId);
-  const initialMessages = useInitialMessages(chatId);
-  const storeMessageHistory = useStoreMessageHistory(chatId, initialMessages?.serialized);
+  const storeMessageHistory = useStoreMessageHistory(chatId);
   useSharedChatContainerSetup(snapshotId);
   return {
-    initialMessages: initialMessages?.deserialized,
     initializeChat,
     storeMessageHistory,
   };

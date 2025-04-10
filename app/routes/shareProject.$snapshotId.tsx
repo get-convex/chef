@@ -41,10 +41,7 @@ export default function ShareProject() {
     throw new Error('snapshotId is required');
   }
 
-  const { initialMessages, storeMessageHistory, initializeChat } = useConvexChatShared(
-    snapshotId as Id<'_storage'>,
-    chatId,
-  );
+  const { storeMessageHistory, initializeChat } = useConvexChatShared(snapshotId as Id<'_storage'>, chatId);
   const bootState = useContainerBootState();
 
   let loading: null | string = null;
@@ -85,7 +82,7 @@ export default function ShareProject() {
           {loading && <Loading message={easterEgg ?? loading} />}
           {!loading && (
             <Chat
-              initialMessages={initialMessages!}
+              initialMessages={[]}
               partCache={partCache.current}
               storeMessageHistory={storeMessageHistory}
               initializeChat={initializeChat}
