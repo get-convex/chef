@@ -23,6 +23,7 @@ import { awsCredentialsProvider } from '@vercel/functions/oidc';
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch as undiciFetch } from 'undici';
+import { logger } from '~/utils/logger';
 type Fetch = typeof fetch;
 
 type Messages = Message[];
@@ -92,31 +93,45 @@ export async function convexAgent(
       const rateLimitAwareFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {
           const enrichedOptions = anthropicInjectCacheControl(init);
-          try {
-            const response = await fetch(input, enrichedOptions);
-            if (response.status == 429) {
-              captureException('Rate limited by Anthropic, switching to low QoS API key', {
-                level: 'warning',
-                extra: {
-                  response,
-                },
-              });
-              const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
-              if (!lowQosKey) {
-                return response;
-              }
-              if (enrichedOptions && enrichedOptions.headers) {
-                const headers = new Headers(enrichedOptions.headers);
-                headers.set('x-api-key', lowQosKey);
-                enrichedOptions.headers = headers;
-              }
-              return fetch(input, enrichedOptions);
-            }
 
-            return response;
-          } catch (error) {
-            throw error;
+          const throwIfBad = async (response: Response) => {
+            if (response.ok) {
+              return response;
+            }
+            const text = await response.text();
+            captureException('Anthropic returned an error', {
+              level: 'error',
+              extra: {
+                response,
+                text,
+              },
+            });
+            logger.error('Anthropic returned an error:', text);
+            throw new Error(JSON.stringify({ error: 'The model hit an error. Try sending your message again?' }));
+          };
+          const response = await fetch(input, enrichedOptions);
+          if (response.status == 429) {
+            const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
+            if (!lowQosKey) {
+              captureException('Anthropic low qos api key not set', { level: 'error' });
+              console.error('Anthropic low qos api key not set');
+              return throwIfBad(response);
+            }
+            captureException('Rate limited by Anthropic, switching to low QoS API key', {
+              level: 'warning',
+              extra: {
+                response,
+              },
+            });
+            if (enrichedOptions && enrichedOptions.headers) {
+              const headers = new Headers(enrichedOptions.headers);
+              headers.set('x-api-key', lowQosKey);
+              enrichedOptions.headers = headers;
+            }
+            return throwIfBad(await fetch(input, enrichedOptions));
           }
+
+          return throwIfBad(response);
         };
       };
       const userKeyApiFetch = () => {
