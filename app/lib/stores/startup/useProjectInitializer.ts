@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 
 export function useProjectInitializer(chatId: string) {
   const sessionId = useConvexSessionIdOrNullOrLoading();
-  console.log('sessionId inside initializer', sessionId);
   const projectInfo = useQuery(
     api.convexProjects.loadConnectedConvexProjectCredentials,
     sessionId
@@ -19,7 +18,6 @@ export function useProjectInitializer(chatId: string) {
         }
       : 'skip',
   );
-  console.log('projectInfo', projectInfo);
   useEffect(() => {
     if (projectInfo?.kind === 'connected') {
       convexProjectStore.set({

@@ -20,8 +20,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
   let code: string | null = url.searchParams.get('code');
   const state = url.searchParams.get('state');
-  // If state is also set, this is probably the GitHub OAuth login flow finishing.
-  // The code is probably not for us.
   if (state) {
     code = null;
   }
@@ -30,8 +28,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
 };
 
 export default function ShareProject() {
-  // const { initialMessages, storeMessageHistory, initializeChat } = useConvexChatExisting(chatId);
-
   return (
     <>
       <FlexAuthWrapper>
