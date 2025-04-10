@@ -6,6 +6,7 @@ import { useConvex } from 'convex/react';
 import { validateAccessCode } from '~/lib/stores/convex';
 import { toast } from 'sonner';
 import { classNames } from '~/utils/classNames';
+import type { Id } from '@convex/_generated/dataModel';
 
 export const ChefSignInPage = () => {
   const chefAuth = useChefAuthContext();
