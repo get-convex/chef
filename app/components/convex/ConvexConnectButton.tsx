@@ -1,7 +1,7 @@
 import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { useConvexSessionId } from '~/lib/stores/sessionId';
-import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
@@ -47,7 +47,7 @@ export function ConvexConnectButton() {
     <div className="flex flex-col gap-2">
       <p className="text-sm">Select a Convex team to connect your Chef app to.</p>
       <div className="flex gap-2">
-        <TeamSelector />
+        <TeamSelector selectedTeamSlug={selectedTeamSlug} setSelectedTeamSlug={setSelectedTeamSlug} />
         <button
           onClick={handleClick}
           disabled={isLoading || !selectedTeamSlug}

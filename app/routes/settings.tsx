@@ -5,7 +5,7 @@ import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useEffect, useState } from 'react';
 import { getTokenUsage } from '~/lib/convexUsage';
-import { selectedTeamSlugStore } from '~/lib/stores/convexTeams';
+import { convexTeamsStore, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { toast } from 'sonner';
 import { useAuth0 } from '@auth0/auth0-react';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
@@ -54,21 +54,28 @@ export function SettingsContent() {
   const [isDirty, setIsDirty] = useState(false);
   const [alwaysUseKey, setAlwaysUseKey] = useState(false);
   const [showKey, setShowKey] = useState(false);
-  const teamSlug = useStore(selectedTeamSlugStore);
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
   const { getAccessTokenSilently, logout } = useAuth0();
 
+  const teams = useStore(convexTeamsStore);
+
+  useEffect(() => {
+    if (teams && !selectedTeamSlug) {
+      setSelectedTeamSlug(teams[0]?.slug);
+    }
+  }, [teams]);
+  const [selectedTeamSlug, setSelectedTeamSlug] = useState(useSelectedTeamSlug() ?? teams?.[0]?.slug ?? null);
+
   useEffect(() => {
     async function fetchTokenUsage() {
-      if (!teamSlug) {
+      if (!selectedTeamSlug) {
         return;
       }
       setIsLoadingUsage(true);
       try {
         const token = await getAccessTokenSilently({ detailedResponse: true });
-        console.log('token', token);
         if (token) {
-          const usage = await getTokenUsage(VITE_PROVISION_HOST, token.id_token, teamSlug);
+          const usage = await getTokenUsage(VITE_PROVISION_HOST, token.id_token, selectedTeamSlug);
           if (usage.status === 'success') {
             setTokenUsage(usage);
           } else {
@@ -82,7 +89,7 @@ export function SettingsContent() {
       }
     }
     void fetchTokenUsage();
-  }, [teamSlug, convex]);
+  }, [selectedTeamSlug, convex]);
 
   useEffect(() => {
     if (apiKey) {
@@ -194,7 +201,7 @@ export function SettingsContent() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-bolt-elements-textPrimary">Chef Usage</h2>
                 <div className="ml-auto">
-                  <TeamSelector />
+                  <TeamSelector selectedTeamSlug={selectedTeamSlug} setSelectedTeamSlug={setSelectedTeamSlug} />
                 </div>
               </div>
               <p className="text-sm text-bolt-elements-textSecondary mb-1">
@@ -218,7 +225,7 @@ export function SettingsContent() {
                         className="bg-blue-500 h-4 rounded-full transition-all duration-300"
                         style={{ width: tokenUsage.tokensQuota ? `${Math.min(100, usagePercentage)}%` : '0%' }}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium text-white">
+                      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium text-bolt-elements-textPrimary">
                         {Math.round(usagePercentage)}%
                       </div>
                     </div>
