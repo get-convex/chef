@@ -1,9 +1,6 @@
-import { api } from '@convex/_generated/api';
 import type { Id } from '@convex/_generated/dataModel';
 import { useStore } from '@nanostores/react';
-import type { ConvexReactClient } from 'convex/react';
 import { atom } from 'nanostores';
-import { setLocalStorage, getLocalStorage } from '~/lib/persistence';
 
 export function useConvexSessionIdOrNullOrLoading(): Id<'sessions'> | null | undefined {
   const sessionId = useStore(sessionIdStore);
@@ -36,5 +33,5 @@ export async function waitForConvexSessionId(caller?: string): Promise<Id<'sessi
     });
   });
 }
-export const SESSION_ID_KEY = 'sessionIdForConvex';
+
 export const sessionIdStore = atom<Id<'sessions'> | null | undefined>(undefined);

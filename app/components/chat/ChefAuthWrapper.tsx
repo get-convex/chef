@@ -8,7 +8,6 @@ import { sessionIdStore } from '~/lib/stores/sessionId';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import type { Id } from '@convex/_generated/dataModel';
 import { useLocalStorage } from '@uidotdev/usehooks';
-import { SESSION_ID_KEY } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
 
@@ -35,6 +34,8 @@ export function useChefAuth() {
   }
   return state.state;
 }
+
+const SESSION_ID_KEY = 'sessionIdForConvex';
 
 export const ChefAuthProvider = ({
   children,
