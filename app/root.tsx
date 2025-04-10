@@ -17,6 +17,7 @@ import { ConvexReactClient } from 'convex/react';
 import { getConvexUrlInLoader, getConvexOAuthClientIdInLoader } from './lib/persistence/convex';
 import globalStyles from './styles/index.scss?url';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
+import posthog from 'posthog-js';
 
 import 'allotment/dist/style.css';
 
@@ -102,6 +103,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.querySelector('html')?.setAttribute('data-theme', theme);
   }, [theme]);
+
+  // Initialize PostHog.
+  useEffect(() => {
+    // Note that this the the 'Project API Key' from PostHog, which is
+    // write-only and PostHog says is safe to use in public apps.
+    const key = import.meta.env.VITE_POSTHOG_KEY || '';
+    const apiHost = import.meta.env.VITE_POSTHOG_HOST || '';
+
+    // See https://posthog.com/docs/libraries/js#config
+    posthog.init(key, {
+      api_host: apiHost,
+      ui_host: 'https://us.posthog.com/',
+      // Set to true to log PostHog events to the console.
+      debug: false,
+      capture_pageview: true,
+      // By default, we use 'cookieless' tracking
+      // (https://posthog.com/tutorials/cookieless-tracking) and may change this
+      // later if we add a cookie banner.
+      persistence: 'memory',
+    });
+  });
 
   return (
     <>
