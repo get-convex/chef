@@ -19,8 +19,6 @@ import type { ToolStatus } from '~/lib/common/types';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
-import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
-import { toast } from 'sonner';
 import { useChefAuth } from './ChefAuthWrapper';
 
 const TEXTAREA_MIN_HEIGHT = 76;

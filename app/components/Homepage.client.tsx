@@ -12,7 +12,7 @@ export function Homepage() {
   // NB: On this path, we render `ChatImpl` immediately.
   return (
     <>
-      <ChefAuthProvider>
+      <ChefAuthProvider redirectIfUnauthenticated={false}>
         <UserProvider>
           <ChatWrapper />
         </UserProvider>

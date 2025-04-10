@@ -12,7 +12,7 @@ import { TooltipProvider } from '@radix-ui/react-tooltip';
 import WithTooltip from '~/components/ui/Tooltip';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
-import { ChefAuthWrapper } from '~/components/chat/ChefAuthWrapper';
+import { ChefAuthProvider } from '~/components/chat/ChefAuthWrapper';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
 import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
@@ -33,9 +33,9 @@ export default function Settings() {
   useTeamsInitializer();
 
   return (
-    <ChefAuthWrapper>
+    <ChefAuthProvider redirectIfUnauthenticated={true}>
       <SettingsContent />
-    </ChefAuthWrapper>
+    </ChefAuthProvider>
   );
 }
 

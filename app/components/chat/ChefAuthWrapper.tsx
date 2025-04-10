@@ -2,7 +2,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useConvex } from 'convex/react';
 
 import { useConvexAuth } from 'convex/react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 
 import { sessionIdStore } from '~/lib/stores/sessionId';
 
@@ -11,7 +11,7 @@ import type { Id } from '@convex/_generated/dataModel';
 import { useLocalStorage } from '@uidotdev/usehooks';
 import { SESSION_ID_KEY } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
-import { getLocalStorage, setLocalStorage } from '~/lib/persistence';
+import { setLocalStorage } from '~/lib/persistence';
 
 type ChefAuthState =
   | {
@@ -37,26 +37,24 @@ export function useChefAuth() {
   return state.state;
 }
 
-export const ChefAuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const ChefAuthProvider = ({
+  children,
+  redirectIfUnauthenticated,
+}: {
+  children: React.ReactNode;
+  redirectIfUnauthenticated: boolean;
+}) => {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
   const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
-  const [sessionIdFromLocalStorage, setSessionIdFromLocalStorage] = useState<Id<'sessions'> | null>(null);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const freshSessionIdFromLocalStorage = getLocalStorage(SESSION_ID_KEY);
-      if (freshSessionIdFromLocalStorage !== sessionIdFromLocalStorage) {
-        setSessionIdFromLocalStorage(freshSessionIdFromLocalStorage as Id<'sessions'>);
-      }
-    }, 500);
-    return () => clearInterval(interval);
-  }, [sessionIdFromLocalStorage]);
+  const [sessionIdFromLocalStorage, setSessionIdFromLocalStorage] = useLocalStorage<Id<'sessions'> | null>(
+    SESSION_ID_KEY,
+    null,
+  );
 
   useEffect(() => {
     function setSessionId(sessionId: Id<'sessions'> | null) {
       setSessionIdFromLocalStorage(sessionId);
-      setLocalStorage(SESSION_ID_KEY, sessionId);
       sessionIdStore.set(sessionId);
     }
 
@@ -106,6 +104,11 @@ export const ChefAuthProvider = ({ children }: { children: React.ReactNode }) =>
     : isUnauthenticated
       ? { kind: 'unauthenticated' }
       : { kind: 'fullyLoggedIn', sessionId: sessionId as Id<'sessions'> };
+
+  if (redirectIfUnauthenticated && isUnauthenticated) {
+    // Hard navigate to avoid any potential state leakage
+    window.location.href = '/';
+  }
 
   return <ChefAuthContext.Provider value={{ state }}>{children}</ChefAuthContext.Provider>;
 };

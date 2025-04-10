@@ -8,8 +8,8 @@ import { Loading } from '~/components/Loading';
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'Chef' },
-    { name: 'description', content: 'Cook up something hot with Chef, the full-stack AI coding agent from Convex' },
+    { title: 'Chef - Sign In' },
+    { name: 'description', content: 'Sign in to Chef, the full-stack AI coding agent from Convex' },
   ];
 };
 
@@ -40,8 +40,8 @@ export default function Index() {
       <ClientOnly>
         {() => (
           <>
-            <ChefAuthProvider>
-              <Modal />
+            <ChefAuthProvider redirectIfUnauthenticated={false}>
+              <SignInPage />
             </ChefAuthProvider>
           </>
         )}
@@ -50,8 +50,8 @@ export default function Index() {
   );
 }
 
-const Modal = () => {
-  const { state: chefAuthState } = useChefAuth();
+const SignInPage = () => {
+  const chefAuthState = useChefAuth();
   switch (chefAuthState.kind) {
     case 'loading':
       return <Loading />;
@@ -61,7 +61,7 @@ const Modal = () => {
       return (
         <div className="h-full w-full flex flex-col items-center justify-center">
           <div className="text-2xl font-bold">Done logging in!</div>
-          <div className="text-sm text-gray-500">You can now close this window and return to your chat.</div>
+          <div className="text-sm text-gray-500">You can now close this window and return to your project.</div>
         </div>
       );
     default:

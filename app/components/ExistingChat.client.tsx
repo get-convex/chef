@@ -65,7 +65,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
   const easterEgg = useSplines(!isError && !!loading);
   return (
     <>
-      <ChefAuthProvider>
+      <ChefAuthProvider redirectIfUnauthenticated={true}>
         <UserProvider>
           {loading && <Loading message={easterEgg ?? loading} />}
           {!loading && (
