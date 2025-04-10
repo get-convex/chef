@@ -4,7 +4,8 @@ import { webcontainer } from '~/lib/webcontainer';
 import { useStore } from '@nanostores/react';
 import { sessionIdStore } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
-import { ConvexReactClient, useConvex } from 'convex/react';
+import type { ConvexReactClient } from 'convex/react';
+import { useConvex } from 'convex/react';
 import { decompressSnapshot } from '~/lib/snapshot';
 import { streamOutput } from '~/utils/process';
 import { cleanTerminalOutput } from '~/utils/shell';
@@ -135,13 +136,15 @@ async function setupConvexEnvVars(webcontainer: WebContainer, convexProject: Con
 }
 
 async function setupOpenAIToken(convex: ConvexReactClient, project: ConvexProject) {
-  const existing = await queryEnvVariable(project, "CONVEX_OPENAI_API_KEY")
+  const existing = await queryEnvVariable(project, 'CONVEX_OPENAI_API_KEY');
   if (existing) {
     return;
   }
-  const token = await convex.mutation(api.openaiProxy.getOpenAIToken);
-  await setEnvVariables(project, {
-    "CONVEX_OPENAI_API_KEY": token,
-    "CONVEX_OPENAI_BASE_URL": getConvexSiteUrl() + "/openai-proxy",
-  });
+  const token = await convex.mutation(api.openaiProxy.issueOpenAIToken);
+  if (token) {
+    await setEnvVariables(project, {
+      CONVEX_OPENAI_API_KEY: token,
+      CONVEX_OPENAI_BASE_URL: getConvexSiteUrl() + '/openai-proxy',
+    });
+  }
 }

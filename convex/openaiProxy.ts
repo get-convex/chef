@@ -4,6 +4,9 @@ import { getCurrentMember } from "./sessions";
 import { internal } from "./_generated/api";
 
 export const openaiProxy = httpAction(async (ctx, req) => {
+    if (!openaiProxyEnabled()) {
+        return new Response("Convex OpenAI proxy is disabled", { status: 400 });
+    }
     if (!process.env.OPENAI_API_KEY) {
         throw new Error("OPENAI_API_KEY is not set");
     }
@@ -42,11 +45,15 @@ export const openaiProxy = httpAction(async (ctx, req) => {
     return response;
 });
 
-export const getOpenAIToken = mutation({
+export const issueOpenAIToken = mutation({
     handler: async (ctx) => {
+        if (!openaiProxyEnabled()) {
+            return null;
+        }
         const member = await getCurrentMember(ctx);
         if (!member) {
-            throw new ConvexError("Not authorized");
+            console.error("Not authorized", member)
+            return null;
         }
         const existing = await ctx.db.query('memberOpenAITokens')
             .withIndex('byMemberId', (q) => q.eq('memberId', member._id))
@@ -58,11 +65,10 @@ export const getOpenAIToken = mutation({
         await ctx.db.insert('memberOpenAITokens', {
             memberId: member._id,
             token,
-            requestsRemaining: REQUESTS_PER_MEMBER,
+            requestsRemaining: included4oMiniRequests(),
             lastUsedTime: 0,
         });
         return token;
-
     }
 })
 
@@ -71,6 +77,9 @@ export const decrementToken = internalMutation({
         token: v.string(),
     },
     handler: async (ctx, args) => {
+        if (!openaiProxyEnabled()) {
+            return { success: false, error: "Convex OpenAI proxy is disabled."};
+        }
         const token = await ctx.db.query('memberOpenAITokens')
             .withIndex('byToken', (q) => q.eq('token', args.token))
             .unique();
@@ -92,6 +101,19 @@ export const decrementToken = internalMutation({
 // 16384 max output tokens @ $0.6/1M
 // 128K max input tokens @ $0.15/1M
 // => ~$0.03 per request.
-const REQUESTS_PER_MEMBER = 100;
+function included4oMiniRequests() {
+    const fromEnv = process.env.OPENAI_PROXY_INCLUDED_REQUESTS;
+    if (!fromEnv) {
+        return 100;
+    }
+    return Number(fromEnv);
+}
+
+function openaiProxyEnabled() {
+    const fromEnv = process.env.OPENAI_PROXY_ENABLED;
+    return fromEnv && fromEnv == "1";
+}
+
+
 
 

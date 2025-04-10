@@ -40,4 +40,3 @@ async function generateKeys() {
     JWKS: jwks,
   };
 }
-

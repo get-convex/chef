@@ -1,7 +1,10 @@
 import { stripIndents } from '~/utils/stripIndent';
 import type { SystemPromptOptions } from './types';
 
-export function bundledOpenAIGuidelines(_options: SystemPromptOptions) {
+export function openaiProxyGuidelines(options: SystemPromptOptions) {
+  if (!options.openaiProxyEnabled) {
+    return '';
+  }
   return stripIndents`
   <bundled_openai_guidelines>
     Apps in the Chef environment come with a small amount of gpt-4o-mini

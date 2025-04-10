@@ -136,6 +136,7 @@ export async function convexAgent(
     enableBulkEdits: true,
     enablePreciseEdits: false,
     includeTemplate: true,
+    openaiProxyEnabled: getEnv(env, 'OPENAI_PROXY_ENABLED') == '1',
   };
   const tools: ConvexToolSet = {
     deploy: deployTool,

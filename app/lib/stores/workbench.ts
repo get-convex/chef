@@ -32,7 +32,7 @@ import { backoffTime, WORK_DIR } from '~/utils/constants';
 import { chatIdStore } from '~/lib/stores/chatId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from './fileUpdateCounter';
 import { generateReadmeContent } from '~/lib/readmeContent';
-import { getConvexSiteUrl } from '../convexSiteUrl';
+import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
