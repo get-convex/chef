@@ -68,7 +68,6 @@ export const loadConnectedConvexProjectCredentials = query({
       .withIndex('bySlugs', (q) => q.eq('teamSlug', project.teamSlug).eq('projectSlug', project.projectSlug))
       .first();
     if (!credentials) {
-      console.log('no credentials found');
       return null;
     }
     return {

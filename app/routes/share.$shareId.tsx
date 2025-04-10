@@ -45,6 +45,7 @@ function ShareProjectContent() {
   }
 
   useTeamsInitializer();
+  const chefAuthState = useChefAuth();
 
   const sessionId = useStore(sessionIdStore);
   const cloneChat = useMutation(api.messages.clone);
@@ -63,8 +64,6 @@ function ShareProjectContent() {
   const signIn = useCallback(() => {
     openSignInWindow();
   }, []);
-
-  const chefAuthState = useChefAuth();
 
   if (chefAuthState.kind === 'loading') {
     return <Loading />;
