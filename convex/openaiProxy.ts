@@ -5,7 +5,7 @@ import { internal } from "./_generated/api";
 
 export const openaiProxy = httpAction(async (ctx, req) => {
     if (!openaiProxyEnabled()) {
-        return new Response("Convex OpenAI proxy is disabled", { status: 400 });
+        return new Response("Convex OpenAI proxy is disabled.", { status: 400 });
     }
     if (!process.env.OPENAI_API_KEY) {
         throw new Error("OPENAI_API_KEY is not set");
