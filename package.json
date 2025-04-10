@@ -122,6 +122,7 @@
   },
   "devDependencies": {
     "@blitz/eslint-plugin": "0.1.0",
+    "@edge-runtime/vm": "^5.0.0",
     "@iconify-json/ph": "^1.2.1",
     "@remix-run/dev": "2.15.3",
     "@sentry/vite-plugin": "^3.3.1",
@@ -134,6 +135,7 @@
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",
     "buffer": "^6.0.3",
+    "convex-test": "^0.0.36",
     "eslint": "9.20.1",
     "events": "^3.3.0",
     "fast-glob": "^3.3.2",
@@ -152,7 +154,7 @@
     "vite-plugin-node-polyfills": "^0.22.0",
     "vite-plugin-optimize-css-modules": "^1.1.0",
     "vite-tsconfig-paths": "^4.3.2",
-    "vitest": "^2.1.7",
+    "vitest": "^2.1.9",
     "zod": "^3.24.1"
   },
   "resolutions": {
