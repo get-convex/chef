@@ -21,7 +21,9 @@ export const ChefSignInPage = () => {
       return (
         <div className="h-full w-full flex flex-col items-center justify-center">
           <div className="text-2xl font-bold">Done logging in!</div>
-          <div className="text-sm text-gray-500">You can now close this window and return to your project.</div>
+          <div className="text-sm text-bolt-elements-textSecondary">
+            You can now close this window and return to your project.
+          </div>
         </div>
       );
     default:
