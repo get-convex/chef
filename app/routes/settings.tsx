@@ -8,8 +8,6 @@ import { getTokenUsage } from '~/lib/convexUsage';
 import { selectedTeamSlugStore } from '~/lib/stores/convexTeams';
 import { toast } from 'sonner';
 import { useAuth0 } from '@auth0/auth0-react';
-import { IconButton } from '~/components/ui/IconButton';
-import { useNavigate } from '@remix-run/react';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
 import WithTooltip from '~/components/ui/Tooltip';
 import { TeamSelector } from '~/components/convex/TeamSelector';
@@ -53,7 +51,6 @@ export function SettingsContent() {
   const [showKey, setShowKey] = useState(false);
   const teamSlug = useStore(selectedTeamSlugStore);
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
-  const navigate = useNavigate();
   const { getAccessTokenSilently, logout } = useAuth0();
 
   useEffect(() => {
@@ -105,6 +102,18 @@ export function SettingsContent() {
     }
   };
 
+  const handleDeleteApiKey = async () => {
+    try {
+      await convex.mutation(api.apiKeys.deleteApiKeyForCurrentMember);
+      toast.success('API key removed successfully');
+      setAnthropicKey('');
+      setIsDirty(false);
+    } catch (error) {
+      console.error('Failed to remove API key:', error);
+      toast.error('Failed to remove API key');
+    }
+  };
+
   const usagePercentage = tokenUsage.tokensQuota ? ((tokenUsage.tokensUsed || 0) / tokenUsage.tokensQuota) * 100 : 0;
 
   const handleLogout = () => {
@@ -119,7 +128,9 @@ export function SettingsContent() {
     <div className="min-h-screen bg-bolt-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <IconButton icon="i-ph:arrow-left" onClick={() => navigate('/')} title="Back to Chat" />
+          <a href="/" className="inline-flex" title="Back to Chat">
+            <div className="i-ph:arrow-left" />
+          </a>
           <h1 className="text-3xl font-bold text-bolt-elements-textPrimary">Settings</h1>
         </div>
 
@@ -178,7 +189,7 @@ export function SettingsContent() {
                 </div>
               </div>
               <p className="text-sm text-bolt-elements-textSecondary mb-1">
-                Your Convex plan comes with tokens included for Chef.
+                Your Convex team comes with tokens included for Chef.
               </p>
               <p className="text-sm text-bolt-elements-textSecondary mb-1">
                 On paid Convex subscriptions, additional usage will be subject to metered billing.
@@ -316,7 +327,7 @@ export function SettingsContent() {
                           </WithTooltip>
                         </TooltipProvider>
                       </div>
-                      <div className="mt-4">
+                      <div className="mt-4 flex items-center gap-2">
                         <button
                           onClick={handleSaveApiKey}
                           disabled={isSaving || !isDirty}
@@ -324,6 +335,14 @@ export function SettingsContent() {
                         >
                           {isSaving ? 'Saving...' : 'Save'}
                         </button>
+                        {apiKey?.value && (
+                          <button
+                            onClick={handleDeleteApiKey}
+                            className="px-2 py-1.5 bg-bolt-elements-button-danger-background hover:bg-bolt-elements-button-danger-backgroundHover text-bolt-elements-button-danger-text rounded-md transition-colors w-fit"
+                          >
+                            Remove key
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}

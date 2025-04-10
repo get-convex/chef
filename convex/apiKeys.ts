@@ -42,3 +42,25 @@ export const setApiKeyForCurrentMember = mutation({
     await ctx.db.patch(existingMember._id, { apiKey: args.apiKey });
   },
 });
+
+export const deleteApiKeyForCurrentMember = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+    }
+
+    const existingMember = await ctx.db
+      .query('convexMembers')
+      .withIndex('byTokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .unique();
+
+    if (!existingMember) {
+      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+    }
+
+    await ctx.db.patch(existingMember._id, { apiKey: undefined });
+  },
+});
