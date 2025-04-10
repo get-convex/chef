@@ -2,7 +2,6 @@ import { useConvexChatExisting } from '~/lib/stores/startup';
 import { Chat } from './chat/Chat';
 import { Toaster } from 'sonner';
 import { ChefAuthWrapper } from './chat/ChefAuthWrapper';
-import { SentryUserProvider } from './chat/Chat';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
 import { sessionIdStore } from '~/lib/stores/sessionId';
 import { Loading } from './Loading';
@@ -10,6 +9,7 @@ import { useStore } from '@nanostores/react';
 import { ContainerBootState, useContainerBootState } from '~/lib/stores/containerBootState';
 import { useReloadMessages } from '~/lib/stores/startup/reloadMessages';
 import { useSplines } from '~/lib/splines';
+import { UserProvider } from '~/components/UserProvider';
 
 export function ExistingChat({ chatId }: { chatId: string }) {
   // Fill in the chatID store from props early in app initialization. If this
@@ -66,7 +66,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
   return (
     <>
       <ChefAuthWrapper>
-        <SentryUserProvider>
+        <UserProvider>
           {loading && <Loading message={easterEgg ?? loading} />}
           {!loading && (
             <Chat
@@ -78,7 +78,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
               hadSuccessfulDeploy={!!hadSuccessfulDeploy}
             />
           )}
-        </SentryUserProvider>
+        </UserProvider>
       </ChefAuthWrapper>
       <Toaster position="bottom-right" closeButton richColors />
     </>

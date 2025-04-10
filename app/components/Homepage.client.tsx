@@ -1,4 +1,4 @@
-import { Chat, SentryUserProvider } from './chat/Chat';
+import { Chat } from './chat/Chat';
 import { ChefAuthWrapper } from './chat/ChefAuthWrapper';
 import { useRef } from 'react';
 import { useConvexChatHomepage } from '~/lib/stores/startup';
@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
 import type { Message } from '@ai-sdk/react';
 import type { PartCache } from '~/lib/hooks';
+import { UserProvider } from '~/components/UserProvider';
 
 export function Homepage() {
   // Set up a temporary chat ID early in app initialization. We'll
@@ -22,7 +23,7 @@ export function Homepage() {
   return (
     <>
       <ChefAuthWrapper>
-        <SentryUserProvider>
+        <UserProvider>
           <Chat
             initialMessages={emptyList}
             partCache={partCache.current}
@@ -31,7 +32,7 @@ export function Homepage() {
             isReload={false}
             hadSuccessfulDeploy={false}
           />
-        </SentryUserProvider>
+        </UserProvider>
       </ChefAuthWrapper>
       <Toaster position="bottom-right" closeButton richColors />
     </>

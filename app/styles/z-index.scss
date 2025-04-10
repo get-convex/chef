@@ -4,6 +4,10 @@ $zIndexMax: 999;
   z-index: $zIndexMax - 1;
 }
 
+.z-menu {
+  z-index: $zIndexMax - 1;
+}
+
 .z-sidebar {
   z-index: $zIndexMax - 2;
 }
