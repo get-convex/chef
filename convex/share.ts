@@ -1,20 +1,22 @@
 import { ConvexError, v } from 'convex/values';
-import { internalMutation, type DatabaseReader } from './_generated/server';
+import { mutation, type DatabaseReader } from './_generated/server';
 import { getChatByIdOrUrlIdEnsuringAccess } from './messages';
+import type { Id } from './_generated/dataModel';
 
-export const create = internalMutation({
+export const create = mutation({
   args: {
     sessionId: v.id('sessions'),
     chatId: v.id('chats'),
-    snapshotId: v.id('_storage'),
   },
-  handler: async (ctx, { sessionId, chatId, snapshotId }) => {
+  handler: async (ctx, { sessionId, chatId }) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
       throw new ConvexError('Chat not found');
     }
 
     const code = await generateUniqueCode(ctx.db);
+
+    const snapshotId = '' as Id<'_storage'>; // TODO Fix this
 
     await ctx.db.insert('shareLinks', { chatId, snapshotId, code });
 

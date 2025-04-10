@@ -2,6 +2,8 @@ import { useState, forwardRef } from 'react';
 import { classNames } from '~/utils/classNames';
 import { toast } from 'sonner';
 import * as Popover from '@radix-ui/react-popover';
+import { useMutation } from 'convex/react';
+import { api } from '@convex/_generated/api';
 
 const Button = forwardRef<
   HTMLButtonElement,
@@ -44,16 +46,18 @@ export function ShareButton() {
   const [status, setStatus] = useState<ShareStatus>('idle');
   const [shareUrl, setShareUrl] = useState('');
 
+  const createShare = useMutation(api.share.create);
+
   const handleShare = async () => {
     try {
       setStatus('loading');
 
-      // Simulate sharing process with a delay
-      // In a real implementation, you would make an API call to generate the share link
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const { code } = await createShare({
+        sessionId: TODO,
+        chatId: TODO,
+      });
 
-      // Create a share URL based on the current deployment
-      const url = `${window.location.origin}/shared/${Date.now()}`;
+      const url = `${window.location.origin}/share/${code}`;
 
       setShareUrl(url);
       setStatus('success');
