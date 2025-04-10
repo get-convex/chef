@@ -42,7 +42,9 @@ export function Header() {
                 fill="#EB2E29"
               />
             </svg>
-            chef
+            <span className="flex items-baseline gap-2">
+              chef <span className="text-sm align-baseline font-medium">by convex</span>
+            </span>
           </div>
         </a>
       </div>
