@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from '@remix-run/react';
-import { Loading } from '~/components/Loading';
 import { useStore } from '@nanostores/react';
 import { sessionIdStore, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import type { Id } from '@convex/_generated/dataModel';
@@ -11,7 +10,6 @@ import { api } from '@convex/_generated/api';
 import { useEffect } from 'react';
 import { FlexAuthWrapper } from '~/components/chat/FlexAuthWrapper';
 import { Toaster } from 'sonner';
-import { useConvexChatExisting } from '~/lib/stores/startup';
 import { waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { flexAuthModeStore } from '~/lib/stores/convex';
 import { useAuth0 } from '@auth0/auth0-react';

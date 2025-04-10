@@ -18,7 +18,6 @@ export function waitForConvexProjectConnection(): Promise<ConvexProject> {
     }
 
     const unsubscribe = convexProjectStore.subscribe((project) => {
-      console.log('convexProjectStore', project);
       if (project !== null) {
         unsubscribe();
         resolve(project);

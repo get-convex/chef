@@ -11,7 +11,6 @@ import { cleanTerminalOutput } from '~/utils/shell';
 import { toast } from 'sonner';
 import { waitForConvexProjectConnection, type ConvexProject } from '~/lib/stores/convexProject';
 import type { WebContainer } from '@webcontainer/api';
-import type { Id } from '@convex/_generated/dataModel';
 
 const TEMPLATE_URL = '/template-snapshot-ba3672ee.bin';
 
@@ -56,31 +55,6 @@ export function useExistingChatContainerSetup(loadedChatId: string | undefined) 
     };
     void runSetup();
   }, [loadedChatId, sessionId]);
-}
-
-export function useSharedChatContainerSetup(snapshotId: Id<'_storage'>) {
-  const sessionId = useStore(sessionIdStore);
-  const convex = useConvex();
-  useEffect(() => {
-    if (!sessionId) {
-      return;
-    }
-    const runSetup = async () => {
-      try {
-        await waitForBootStepCompleted(ContainerBootState.STARTING);
-        let snapshotUrl = await convex.query(api.snapshot.getPublicSnapshotUrl, { snapshotId });
-        if (!snapshotUrl) {
-          console.warn(`Shared snapshot ${snapshotId} not found. Loading the base template.`);
-          snapshotUrl = TEMPLATE_URL;
-        }
-        await setupContainer(snapshotUrl);
-      } catch (error: any) {
-        toast.error('Failed to setup Chef environment. Try reloading the page?');
-        setContainerBootState(ContainerBootState.ERROR, error);
-      }
-    };
-    void runSetup();
-  }, [sessionId, snapshotId]);
 }
 
 async function setupContainer(snapshotUrl: string) {

@@ -1,4 +1,4 @@
-import { mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
+import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
 import type { Message as AIMessage } from 'ai';
 import { ConvexError, v } from 'convex/values';
 import type { VAny } from 'convex/values';
@@ -155,7 +155,8 @@ export const clone = mutation({
   },
 });
 
-export const createShareFromChat = mutation({
+// This is just for testing. We can update it to be auth protected later if we want to generate shares from UI.
+export const createShareFromChat = internalMutation({
   args: {
     chatId: v.id('chats'),
   },
