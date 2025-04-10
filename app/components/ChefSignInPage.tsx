@@ -1,16 +1,9 @@
-import { useEffect } from 'react';
 import { useChefAuthContext } from './chat/ChefAuthWrapper';
 import { Loading } from './Loading';
 import { useAuth0 } from '@auth0/auth0-react';
 
 export const ChefSignInPage = () => {
   const chefAuth = useChefAuthContext();
-
-  useEffect(() => {
-    if (chefAuth.state.kind === 'fullyLoggedIn') {
-      window.close();
-    }
-  }, [chefAuth.state.kind]);
 
   switch (chefAuth.state.kind) {
     case 'loading':
