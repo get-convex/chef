@@ -12,13 +12,14 @@ import { ScreenshotStateManager } from './ScreenshotStateManager';
 import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
-import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { SuggestionButtons } from './SuggestionButtons';
 import { KeyboardShortcut } from '~/components/ui/KeyboardShortcut';
 import StreamingIndicator from './StreamingIndicator';
 import type { ToolStatus } from '~/lib/common/types';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import type { TerminalInitializationOptions } from '~/types/terminal';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+
 const TEXTAREA_MIN_HEIGHT = 76;
 
 interface BaseChatProps {
@@ -42,7 +43,7 @@ interface BaseChatProps {
   // Chat user interactions
   handleInputChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleStop: () => void;
-  sendMessage: (event: React.UIEvent, teamSlug: string | null, messageInput?: string) => void;
+  sendMessage: (event: React.UIEvent, messageInput?: string) => Promise<void>;
 
   // Current chat history props
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
@@ -85,17 +86,17 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     ref,
   ) => {
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
-    const selectedTeamSlug = useSelectedTeamSlug();
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
 
     const handleSendMessage = (event: React.UIEvent, messageInput?: string) => {
-      const canSendMessage = selectedTeamSlug !== null;
-      if (sendMessage && canSendMessage) {
-        sendMessage(event, selectedTeamSlug, messageInput);
-        handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
+      if (sendMessage) {
+        sendMessage(event, messageInput).then(() => {
+          handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
+        });
       }
     };
+    const sessionId = useConvexSessionIdOrNullOrLoading();
 
     const baseChat = (
       <div
@@ -251,7 +252,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     <SendButton
                       show={input.length > 0 || isStreaming || uploadedFiles.length > 0}
                       isStreaming={isStreaming}
-                      disabled={!selectedTeamSlug}
                       onClick={(event) => {
                         if (isStreaming) {
                           handleStop?.();
@@ -273,7 +273,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         </div>
                       ) : null}
                       {chatStarted && <ConvexConnection />}
-                      {!chatStarted && <TeamSelector />}
+                      {!chatStarted && sessionId && <TeamSelector />}
                     </div>
                   </div>
                 </div>

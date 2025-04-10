@@ -1,5 +1,5 @@
 import { Chat } from './chat/Chat';
-import { ChefAuthWrapper } from './chat/ChefAuthWrapper';
+import { ChefAuthProvider } from './chat/ChefAuthWrapper';
 import { useRef } from 'react';
 import { useConvexChatHomepage } from '~/lib/stores/startup';
 import { Toaster } from 'sonner';
@@ -22,7 +22,7 @@ export function Homepage() {
   // NB: On this path, we render `ChatImpl` immediately.
   return (
     <>
-      <ChefAuthWrapper>
+      <ChefAuthProvider>
         <UserProvider>
           <Chat
             initialMessages={emptyList}
@@ -33,7 +33,7 @@ export function Homepage() {
             hadSuccessfulDeploy={false}
           />
         </UserProvider>
-      </ChefAuthWrapper>
+      </ChefAuthProvider>
       <Toaster position="bottom-right" closeButton richColors />
     </>
   );

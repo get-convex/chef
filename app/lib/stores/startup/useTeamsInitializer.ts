@@ -43,10 +43,10 @@ async function fetchTeams(getAccessTokenSilently: ReturnType<typeof useAuth0>['g
       return;
     }
   }
-  if (teams.length > 0) {
+  if (teams.length === 1) {
     setSelectedTeamSlug(teams[0].slug);
     return;
   }
-  console.error('Unexpected state -- no teams found');
+  // Force the user to select a team.
   setSelectedTeamSlug(null);
 }

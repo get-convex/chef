@@ -1,7 +1,7 @@
 import { useConvexChatExisting } from '~/lib/stores/startup';
 import { Chat } from './chat/Chat';
 import { Toaster } from 'sonner';
-import { ChefAuthWrapper } from './chat/ChefAuthWrapper';
+import { ChefAuthProvider } from './chat/ChefAuthWrapper';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
 import { sessionIdStore } from '~/lib/stores/sessionId';
 import { Loading } from './Loading';
@@ -65,7 +65,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
   const easterEgg = useSplines(!isError && !!loading);
   return (
     <>
-      <ChefAuthWrapper>
+      <ChefAuthProvider>
         <UserProvider>
           {loading && <Loading message={easterEgg ?? loading} />}
           {!loading && (
@@ -79,7 +79,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
             />
           )}
         </UserProvider>
-      </ChefAuthWrapper>
+      </ChefAuthProvider>
       <Toaster position="bottom-right" closeButton richColors />
     </>
   );

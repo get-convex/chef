@@ -60,7 +60,7 @@ interface ChatProps {
   initialMessages: Message[];
   partCache: PartCache;
   storeMessageHistory: (messages: Message[]) => Promise<void>;
-  initializeChat: (teamSlug: string | null) => Promise<void>;
+  initializeChat: () => Promise<void>;
   description?: string;
 
   isReload: boolean;
@@ -309,7 +309,7 @@ export const Chat = memo(
       setChatStarted(true);
     };
 
-    const sendMessage = async (_event: React.UIEvent, teamSlug: string | null, messageInput?: string) => {
+    const sendMessage = async (_event: React.UIEvent, messageInput?: string) => {
       if (retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) {
         toast.error(CHEF_TOO_BUSY_ERROR);
         return;
@@ -325,7 +325,7 @@ export const Chat = memo(
         abort();
         return;
       }
-      await initializeChat(teamSlug);
+      await initializeChat();
 
       runAnimation();
 

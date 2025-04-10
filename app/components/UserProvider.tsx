@@ -2,19 +2,21 @@ import { useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { setExtra, setUser } from '@sentry/remix';
 import { useConvex } from 'convex/react';
-import { useConvexSessionId } from '~/lib/stores/sessionId';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
 import { setProfile } from '~/lib/stores/profile';
 import { getConvexProfile } from '~/lib/convexProfile';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth0();
-  const sessionId = useConvexSessionId();
+  const sessionId = useConvexSessionIdOrNullOrLoading();
   const chatId = useChatId();
   const convex = useConvex();
 
   useEffect(() => {
-    setExtra('sessionId', sessionId);
+    if (sessionId) {
+      setExtra('sessionId', sessionId);
+    }
   }, [sessionId]);
 
   useEffect(() => {

@@ -36,7 +36,7 @@ export async function waitForConvexSessionId(caller?: string): Promise<Id<'sessi
     });
   });
 }
-const SESSION_ID_KEY = 'sessionIdForConvex';
+export const SESSION_ID_KEY = 'sessionIdForConvex';
 export const sessionIdStore = atom<Id<'sessions'> | null | undefined>(undefined);
 
 export function setInitialConvexSessionId(convex: ConvexReactClient) {
