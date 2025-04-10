@@ -13,7 +13,7 @@ import { TeamSelector } from '~/components/convex/TeamSelector';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider, useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { useParams } from '@remix-run/react';
-import { ChefSignInPage, openSignInWindow } from '~/components/ChefSignInPage';
+import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Loading } from '~/components/Loading';
 
 export const loader = async (args: LoaderFunctionArgs) => {
