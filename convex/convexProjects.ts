@@ -51,7 +51,6 @@ export const loadConnectedConvexProjectCredentials = query({
   handler: async (ctx, args) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
     if (!chat) {
-      console.log('chat not found');
       return null;
     }
     const project = chat.convexProject;

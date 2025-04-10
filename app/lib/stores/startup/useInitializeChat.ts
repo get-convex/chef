@@ -13,7 +13,6 @@ const SIGNIN_WINDOW_HEIGHT = 600;
 
 export function useInitializeChat(chatId: string) {
   const { getAccessTokenSilently } = useAuth0();
-  console.log('got access token', chatId);
   const convex = useConvex();
   const chefAuthState = useChefAuth();
   const isFullyLoggedIn = chefAuthState.kind === 'fullyLoggedIn';
