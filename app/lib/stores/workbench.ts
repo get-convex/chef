@@ -32,6 +32,7 @@ import { backoffTime, WORK_DIR } from '~/utils/constants';
 import { chatIdStore } from '~/lib/stores/chatId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from './fileUpdateCounter';
 import { generateReadmeContent } from '~/lib/readmeContent';
+import { getConvexSiteUrl } from '../convexSiteUrl';
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
@@ -613,16 +614,7 @@ async function backupWorker(backupState: WritableAtom<BackupState>) {
 }
 
 async function performBackup(sessionId: Id<'sessions'>) {
-  let convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
-  if (!convexSiteUrl) {
-    const convexUrl: string = import.meta.env.VITE_CONVEX_URL;
-    if (convexUrl.endsWith('.convex.cloud')) {
-      convexSiteUrl = convexUrl.replace('.convex.cloud', '.convex.site');
-    }
-  }
-  if (!convexSiteUrl) {
-    throw new Error('VITE_CONVEX_SITE_URL is not set');
-  }
+  const convexSiteUrl = getConvexSiteUrl();
   const chatId = chatIdStore.get();
   const binarySnapshot = await buildUncompressedSnapshot();
   const compressed = await compressSnapshot(binarySnapshot);
