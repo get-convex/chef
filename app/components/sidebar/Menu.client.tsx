@@ -216,14 +216,14 @@ export const Menu = memo(() => {
           </div>
           <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 px-4 py-3">
             <ThemeSwitch />
-            {open && (
+            {profile && open && (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <button className="flex items-center justify-center w-[40px] h-[40px] overflow-hidden bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-500 rounded-full shrink-0 hover:ring-2 hover:ring-gray-200 dark:hover:ring-gray-700 transition-all">
-                    {profile?.avatar ? (
+                    {profile.avatar ? (
                       <img
                         src={profile.avatar}
-                        alt={profile?.username || 'User'}
+                        alt={profile.username || 'User'}
                         className="w-full h-full object-cover"
                         loading="eager"
                         decoding="sync"
