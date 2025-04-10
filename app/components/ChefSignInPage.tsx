@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { Link } from '@remix-run/react';
 import { classNames } from '~/utils/classNames';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
-import type { ConvexReactClient } from 'convex/react';
 import { useConvex, useConvexAuth } from 'convex/react';
 import { fetchOptIns } from '~/lib/convexOptins';
 export const ChefSignInPage = () => {
