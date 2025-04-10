@@ -10,7 +10,7 @@ import {
 import { IconButton } from '~/components/ui/IconButton';
 import { PanelHeaderButton } from '~/components/ui/PanelHeaderButton';
 import { Slider, type SliderOptions } from '~/components/ui/Slider';
-import { workbenchStore, type WorkbenchViewType } from '~/lib/stores/workbench';
+import { workbenchStore, type WorkbenchViewType } from '~/lib/stores/workbench.client';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
 import { renderLogger } from '~/utils/logger';

@@ -6,7 +6,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useMessageParser, useShortcuts, useSnapScroll, type PartCache } from '~/lib/hooks';
 import { description } from '~/lib/stores/description';
 import { chatStore } from '~/lib/stores/chatId';
-import { workbenchStore } from '~/lib/stores/workbench';
+import { workbenchStore } from '~/lib/stores/workbench.client';
 import { PROMPT_COOKIE_KEY } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger } from '~/utils/logger';

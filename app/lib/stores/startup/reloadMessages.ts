@@ -2,7 +2,7 @@ import type { Message } from 'ai';
 import { useEffect, useState } from 'react';
 import { makePartId } from '~/lib/stores/artifacts';
 import { toast } from 'sonner';
-import { workbenchStore } from '~/lib/stores/workbench';
+import { workbenchStore } from '~/lib/stores/workbench.client';
 import { processMessage, type PartCache } from '~/lib/hooks';
 
 export type ReloadedMessages = {

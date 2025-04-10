@@ -20,7 +20,7 @@ import { isMobile } from '~/utils/mobile';
 import { FileBreadcrumb } from './FileBreadcrumb';
 import { FileTree } from './FileTree';
 import { DEFAULT_TERMINAL_SIZE, TerminalTabs } from './terminal/TerminalTabs';
-import { workbenchStore } from '~/lib/stores/workbench';
+import { workbenchStore } from '~/lib/stores/workbench.client';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 
 interface EditorPanelProps {

@@ -1,7 +1,7 @@
 import type { Message, UIMessage } from 'ai';
 import { useCallback, useRef, useState } from 'react';
 import { StreamingMessageParser } from '~/lib/runtime/message-parser';
-import { workbenchStore } from '~/lib/stores/workbench';
+import { workbenchStore } from '~/lib/stores/workbench.client';
 import { makePartId, type PartId } from '~/lib/stores/artifacts';
 
 const messageParser = new StreamingMessageParser({

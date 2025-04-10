@@ -12,7 +12,7 @@ import { viewParameters } from './viewTool';
 import { readPath, renderDirectory, renderFile, workDirRelative } from '~/utils/fileUtils';
 import { ContainerBootState, waitForContainerBootState } from '~/lib/stores/containerBootState';
 import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
-import { workbenchStore } from '~/lib/stores/workbench';
+import { workbenchStore } from '~/lib/stores/workbench.client';
 import { z } from 'zod';
 import { editToolParameters } from './editTool';
 import { getAbsolutePath } from '~/lib/stores/files';

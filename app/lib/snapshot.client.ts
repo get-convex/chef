@@ -1,6 +1,6 @@
 import { IGNORED_RELATIVE_PATHS } from '~/utils/constants';
 import { webcontainer } from './webcontainer';
-import * as lz4 from "lz4-wasm";
+import * as lz4 from 'lz4-wasm';
 
 export async function buildUncompressedSnapshot(): Promise<Uint8Array> {
   const container = await webcontainer;

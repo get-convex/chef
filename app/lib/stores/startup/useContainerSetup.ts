@@ -14,6 +14,8 @@ import { waitForConvexProjectConnection, type ConvexProject } from '~/lib/stores
 import type { WebContainer } from '@webcontainer/api';
 import { queryEnvVariable, setEnvVariables } from '~/lib/convexEnvVariables';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
+import { workbenchStore } from '~/lib/stores/workbench.client';
+import { initializeConvexAuth } from '~/lib/convexAuth';
 
 const TEMPLATE_URL = '/template-snapshot-cb4ccf96.bin';
 
@@ -74,7 +76,6 @@ async function setupContainer(convex: ConvexReactClient, snapshotUrl: string) {
 
   // After loading the snapshot, we need to load the files into the FilesStore since
   // we won't receive file events for snapshot files.
-  const { workbenchStore } = await import('~/lib/stores/workbench');
   await workbenchStore.prewarmWorkdir(container);
 
   setContainerBootState(ContainerBootState.DOWNLOADING_DEPENDENCIES);
@@ -94,7 +95,6 @@ async function setupContainer(convex: ConvexReactClient, snapshotUrl: string) {
   await setupOpenAIToken(convex, convexProject);
 
   setContainerBootState(ContainerBootState.CONFIGURING_CONVEX_AUTH);
-  const { initializeConvexAuth } = await import('~/lib/convexAuth');
   await initializeConvexAuth(convexProject);
 
   setContainerBootState(ContainerBootState.STARTING_BACKUP);

@@ -3,7 +3,7 @@ import { atom, type WritableAtom } from 'nanostores';
 import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
 import { newBoltShellProcess, newShellProcess } from '~/utils/shell';
 import { coloredText } from '~/utils/terminal';
-import { workbenchStore } from './workbench';
+import { workbenchStore } from './workbench.client';
 import {
   activeTerminalTabStore,
   CONVEX_DEPLOY_TAB_INDEX,

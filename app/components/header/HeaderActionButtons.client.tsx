@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react';
 import useViewport from '~/lib/hooks';
 import { chatStore } from '~/lib/stores/chatId';
-import { workbenchStore } from '~/lib/stores/workbench';
+import { workbenchStore } from '~/lib/stores/workbench.client';
 import { classNames } from '~/utils/classNames';
 
 interface HeaderActionButtonsProps {}

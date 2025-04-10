@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
-import { workbenchStore } from '~/lib/stores/workbench';
+import { workbenchStore } from '~/lib/stores/workbench.client';
 
 type ToastState = { type: 'idle'; lastCompleted: number } | { type: 'loading'; toastId: string };
 

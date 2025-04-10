@@ -4,7 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import type { ActionState } from '~/lib/runtime/action-runner';
-import { workbenchStore, type ArtifactState } from '~/lib/stores/workbench';
+import { workbenchStore, type ArtifactState } from '~/lib/stores/workbench.client';
 import { type PartId } from '~/lib/stores/artifacts';
 import { cubicEasingFn } from '~/utils/easings';
 import { classNames } from '~/utils/classNames';

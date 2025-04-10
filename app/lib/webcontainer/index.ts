@@ -3,6 +3,7 @@ import { WORK_DIR_NAME } from '~/utils/constants';
 import { cleanStackTrace } from '~/utils/stacktrace';
 import { createScopedLogger } from '~/utils/logger';
 import { setContainerBootState, ContainerBootState } from '~/lib/stores/containerBootState';
+import { workbenchStore } from '~/lib/stores/workbench.client';
 
 interface WebContainerContext {
   loaded: boolean;
@@ -35,8 +36,6 @@ if (!import.meta.env.SSR) {
         });
       })
       .then(async (webcontainer) => {
-        const { workbenchStore } = await import('~/lib/stores/workbench');
-
         // Listen for preview errors
         webcontainer.on('preview-message', (message) => {
           logger.info('WebContainer preview message:', message);
