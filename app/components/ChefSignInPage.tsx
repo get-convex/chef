@@ -75,6 +75,7 @@ function OptInsScreen() {
   >({
     kind: 'loading',
   });
+  const [isChecked, setIsChecked] = useState(false);
   useEffect(() => {
     if (!isAuthenticated) {
       // We can't fetch the opt ins if the user is not authenticated
@@ -177,25 +178,36 @@ function OptInsScreen() {
     // Note: As of 2025-04-11, we have a single opt in type, so we're hardcoding the UI for that.
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
-        <div className="mb-4 text-sm text-content-primary">
+        <div className="text-md text-content-primary text-center">
           Welcome to Convex! We need you to take a look at these before we continue.
         </div>
-        <div>
-          <span>
-            I've read and accept the{' '}
-            <a href="https://www.convex.dev/legal/tos" target="_blank" rel="noopener noreferrer">
-              Terms of Service
-            </a>
-          </span>
+        <div className="flex items-center gap-2">
+          <input type="checkbox" checked={isChecked} onChange={(e) => setIsChecked(e.target.checked)} />
+          <div className="text-sm text-content-primary">
+            <span>
+              I've read and accept the{' '}
+              <a
+                href="https://www.convex.dev/legal/tos"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-bolt-elements-button-primary underline"
+              >
+                Terms of Service
+              </a>
+              .
+            </span>
+          </div>
         </div>
         <button
           className={classNames(
-            'flex items-center gap-2 p-1.5 w-full rounded-md text-left text-bolt-elements-textPrimary bg-bolt-elements-button-secondary-background',
-            'hover:bg-bolt-elements-item-backgroundAccent/90',
+            'flex items-center gap-2 p-1.5 rounded-md text-left text-bolt-elements-textPrimary bg-bolt-elements-button-primary',
+            'hover:bg-bolt-elements-button-primaryHover',
+            !isChecked ? 'opacity-50 cursor-not-allowed' : '',
           )}
+          disabled={!isChecked}
           onClick={() => acceptOptIns(optIns.optIns)}
         >
-          Accept
+          Continue
         </button>
       </div>
     );
