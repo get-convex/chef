@@ -15,9 +15,12 @@ export interface InitialMessages {
   deserialized: Message[];
 }
 
-export function useInitialMessages(chatId: string): InitialMessages | undefined {
+export function useInitialMessages(chatId: string):
+  | InitialMessages
+  | null // not found
+  | undefined {
   const convex = useConvex();
-  const [initialMessages, setInitialMessages] = useState<InitialMessages | undefined>();
+  const [initialMessages, setInitialMessages] = useState<InitialMessages | null | undefined>();
   useEffect(() => {
     const loadInitialMessages = async () => {
       const sessionId = await waitForConvexSessionId('loadInitialMessages');
@@ -28,6 +31,7 @@ export function useInitialMessages(chatId: string): InitialMessages | undefined 
           rewindToMessageId: null,
         });
         if (rawMessages === null) {
+          setInitialMessages(null);
           return;
         }
         setKnownInitialId(rawMessages.initialId);

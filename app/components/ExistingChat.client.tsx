@@ -10,6 +10,7 @@ import { ContainerBootState, useContainerBootState } from '~/lib/stores/containe
 import { useReloadMessages } from '~/lib/stores/startup/reloadMessages';
 import { useSplines } from '~/lib/splines';
 import { UserProvider } from '~/components/UserProvider';
+import { NotFound } from './NotFound';
 
 export function ExistingChat({ chatId }: { chatId: string }) {
   // Fill in the chatID store from props early in app initialization. If this
@@ -33,7 +34,7 @@ function ExistingChatWrapper({ chatId }: { chatId: string }) {
   const sessionId = useStore(sessionIdStore);
   const { initialMessages, storeMessageHistory, initializeChat } = useConvexChatExisting(chatId);
 
-  const reloadState = useReloadMessages(initialMessages);
+  const reloadState = useReloadMessages(initialMessages ?? undefined);
   const bootState = useContainerBootState();
 
   let loading: null | string = null;
@@ -76,6 +77,10 @@ function ExistingChatWrapper({ chatId }: { chatId: string }) {
       message.role === 'assistant' &&
       message.parts?.some((part) => part.type === 'tool-invocation' && part.toolInvocation.toolName === 'deploy'),
   );
+
+  if (initialMessages === null) {
+    return <NotFound />;
+  }
 
   return (
     <>

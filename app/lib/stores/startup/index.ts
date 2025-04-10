@@ -25,7 +25,7 @@ export function useConvexChatExisting(chatId: string) {
   const storeMessageHistory = useStoreMessageHistory(chatId, initialMessages?.serialized);
   useExistingChatContainerSetup(initialMessages?.loadedChatId);
   return {
-    initialMessages: initialMessages?.deserialized,
+    initialMessages: !initialMessages ? initialMessages : initialMessages?.deserialized,
     initializeChat,
     storeMessageHistory,
   };
