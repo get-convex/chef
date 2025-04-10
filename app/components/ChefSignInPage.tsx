@@ -7,9 +7,17 @@ import { validateAccessCode } from '~/lib/stores/convex';
 import { toast } from 'sonner';
 import { classNames } from '~/utils/classNames';
 import type { Id } from '@convex/_generated/dataModel';
+import { useEffect } from 'react';
 
 export const ChefSignInPage = () => {
   const chefAuth = useChefAuthContext();
+
+  useEffect(() => {
+    if (chefAuth.state.kind === 'fullyLoggedIn') {
+      window.close();
+    }
+  }, [chefAuth.state.kind]);
+
   switch (chefAuth.state.kind) {
     case 'loading':
       return <Loading />;
