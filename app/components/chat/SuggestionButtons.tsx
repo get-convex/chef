@@ -24,8 +24,9 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick }: Suggestion
         'Build a Todo app with two different tabs, "To Do" and "Done". Add the ability to add tags to a task when creating it and filter tasks by tag',
     },
     {
-      title: 'Build a Bluesky clone',
-      prompt: 'Build a Bluesky clone with a feed of posts, post likes, and the ability to upload images',
+      title: 'Build an Instagram clone',
+      prompt:
+        'Build an app similar to Instagram except it\'s a global shared image stream with all users. There should be a box you can drag and drop images into to upload them. There should be a "Stream" tab for viewing the global stream and a "My Photos" tab for viewing your own images. You should be able to delete your own photos in the "My Photos" tab. You should be able to click a button to like each image in the "Stream" tab and it should show the like count for each image.',
     },
   ];
 
