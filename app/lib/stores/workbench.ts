@@ -31,7 +31,7 @@ import type { Artifacts, PartId } from './artifacts';
 import { backoffTime, WORK_DIR } from '~/utils/constants';
 import { chatIdStore } from '~/lib/stores/chatId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from './fileUpdateCounter';
-import { generateReadmeContent } from '../readmeContent';
+import { generateReadmeContent } from '~/lib/readmeContent';
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
