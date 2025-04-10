@@ -33,7 +33,9 @@ import { chatIdStore } from '~/lib/stores/chatId';
 import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
+import { getTokenUsage } from '~/lib/convexUsage';
 
+const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 const logger = createScopedLogger('Chat');
 
 const MAX_RETRIES = 3;
@@ -194,52 +196,36 @@ export const Chat = memo(
           toast.error(CHEF_TOO_BUSY_ERROR);
         }
       },
-      onFinish: (message, response) => {
+      onFinish: async (message, response) => {
         const usage = response.usage;
         if (usage) {
-          console.log('Token usage:', usage);
+          console.log('Token usage in response:', usage);
         }
         if (response.finishReason == 'stop') {
           setRetries({ numFailures: 0, nextRetry: Date.now() });
         }
         logger.debug('Finished streaming');
-      },
-    });
 
-    useEffect(() => {
-      async function checkQuota() {
         const teamSlug = selectedTeamSlugStore.get();
-        const deploymentName = convexProjectStore.get()?.deploymentName;
         if (!teamSlug) {
+          console.error('No team slug');
           throw new Error('No team slug');
         }
         const convexAny = convex as any;
         const token = convexAny?.sync?.state?.auth?.value;
         if (!token) {
+          console.error('No token');
           throw new Error('No token');
         }
 
-        const response = await fetch('/api/usage', {
-          method: 'POST',
-          body: JSON.stringify({
-            token,
-            teamSlug,
-            deploymentName,
-          }),
-        });
-        if (!response.ok) {
-          const text = await response.text();
-          console.error('Failed to check quota', text);
-          throw new Error('Failed to check quota: ' + text);
+        const tokenUsage = await getTokenUsage(token, teamSlug);
+        const { tokensUsed, tokensQuota } = tokenUsage;
+        if (tokensUsed !== undefined && tokensQuota !== undefined) {
+          console.log(`Convex tokens used/quota: ${tokensUsed} / ${tokensQuota}`);
+          setOverQuota(tokensUsed > tokensQuota);
         }
-        const { tokensUsed, maxTokens } = await response.json();
-        if (tokensUsed !== undefined && maxTokens !== undefined) {
-          console.log(`Tokens used: ${tokensUsed} / ${maxTokens}`);
-          setOverQuota(tokensUsed > maxTokens);
-        }
-      }
-      checkQuota();
-    }, [convex, messages]);
+      },
+    });
 
     useEffect(() => {
       const prompt = searchParams.get('prompt');
