@@ -509,8 +509,8 @@ export const exampleQuery = query({
 # Examples
 ## Example of using Convex storage within a chat app
 
-This example creates a mutation to generate a short-lived upload URL and a mutation to save an image message to the database. Then, it uses the generated upload URL to upload an image to Convex storage on the client side.
-Then, it gets the storage id from the response of the upload and saves it to the database with the \`sendImage\` mutation. It uses the \`list\` query to get the messages from the database and display them in the UI. The
+This example creates a mutation to generate a short-lived upload URL and a mutation to save an image message to the database. This mutation is called from the client, which uses the generated upload URL to upload an image to Convex storage. Then,
+it gets the storage id from the response of the upload and saves it to the database with the \`sendImage\` mutation. On the frontend, it uses the \`list\` query to get the messages from the database and display them in the UI. In this query, the
 backend grabs the url from the storage system table and returns it to the client which shows the images in the UI. You should use this pattern for any file upload. To keep track of files, you should save the storage id in the database.
 
 Path: \`convex/messages.ts\`
