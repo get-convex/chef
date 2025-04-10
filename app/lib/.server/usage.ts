@@ -1,47 +1,23 @@
 import type { LanguageModelUsage } from 'ai';
 import { createScopedLogger } from '~/utils/logger';
+import { getTokenUsage } from '~/lib/convexUsage';
 
 const logger = createScopedLogger('usage');
-
-export type CheckTokenUsageResponse =
-  | {
-      status: 'success';
-      tokensUsed: number;
-      tokensQuota: number;
-    }
-  | {
-      status: 'error';
-      response: Response;
-    };
 
 export async function checkTokenUsage(
   provisionHost: string,
   token: string,
   teamSlug: string,
   deploymentName: string | undefined,
-): Promise<CheckTokenUsageResponse> {
-  const Authorization = `Bearer ${token}`;
-  const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/get_token_info`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Authorization,
-      'Content-Type': 'application/json',
-    },
-  });
-  if (!response.ok) {
-    const body = await response.text();
-    logger.error(`Failed to check for token usage: ${url} -> ${response.statusText}: ${body}`);
-    return {
-      status: 'error',
-      response: new Response(JSON.stringify({ error: 'Failed to check for tokens' }), {
-        status: response.status,
-      }),
-    };
+) {
+  const tokenUsage = await getTokenUsage(provisionHost, token, teamSlug);
+  if (tokenUsage.status === 'error') {
+    logger.error(`Failed to check for token usage: ${tokenUsage.httpStatus}: ${tokenUsage.httpBody}`);
   }
-  const { tokensUsed, tokensQuota }: { tokensUsed: number; tokensQuota: number } = await response.json();
-  logger.info(`${teamSlug}/${deploymentName}: Tokens used: ${tokensUsed} / ${tokensQuota}`);
-  return { status: 'success', tokensUsed, tokensQuota };
+  if (tokenUsage.status === 'success') {
+    logger.info(`${teamSlug}/${deploymentName}: Tokens used: ${tokenUsage.tokensUsed} / ${tokenUsage.tokensQuota}`);
+  }
+  return tokenUsage;
 }
 
 export async function recordUsage(

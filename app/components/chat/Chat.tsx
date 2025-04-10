@@ -40,6 +40,7 @@ const logger = createScopedLogger('Chat');
 const MAX_RETRIES = 3;
 
 const CHEF_TOO_BUSY_ERROR = 'Chef is too busy cooking right now. Please try again in a moment.';
+const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
 const processSampledMessages = createSampler(
   (options: {
@@ -217,11 +218,15 @@ export const Chat = memo(
           throw new Error('No token');
         }
 
-        const tokenUsage = await getTokenUsage(token, teamSlug);
-        const { tokensUsed, tokensQuota } = tokenUsage;
-        if (tokensUsed !== undefined && tokensQuota !== undefined) {
-          console.log(`Convex tokens used/quota: ${tokensUsed} / ${tokensQuota}`);
-          setOverQuota(tokensUsed > tokensQuota);
+        const tokenUsage = await getTokenUsage(VITE_PROVISION_HOST, token, teamSlug);
+        if (tokenUsage.status === 'error') {
+          console.error('Failed to check for token usage', tokenUsage.httpStatus, tokenUsage.httpBody);
+        } else {
+          const { tokensUsed, tokensQuota } = tokenUsage;
+          if (tokensUsed !== undefined && tokensQuota !== undefined) {
+            console.log(`Convex tokens used/quota: ${tokensUsed} / ${tokensQuota}`);
+            setOverQuota(tokensUsed > tokensQuota);
+          }
         }
       },
     });

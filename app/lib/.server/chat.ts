@@ -71,7 +71,9 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     if (!userApiKey) {
       const resp = await checkTokenUsage(PROVISION_HOST, token, teamSlug, deploymentName);
       if (resp.status === 'error') {
-        return resp.response;
+        return new Response(JSON.stringify({ error: 'Failed to check for tokens' }), {
+          status: resp.httpStatus,
+        });
       }
       if (resp.tokensUsed >= resp.tokensQuota) {
         if (body.userApiKey?.preference === 'quotaExhausted') {
