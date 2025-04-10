@@ -99,13 +99,17 @@ export const clone = mutation({
   args: {
     id: v.id('shares'),
     sessionId: v.id('sessions'),
+    projectInitParams: v.object({
+      teamSlug: v.string(),
+      auth0AccessToken: v.string(),
+    }),
   },
   returns: v.object({
     id: v.string(),
     description: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const { id, sessionId } = args;
+    const { id, sessionId, projectInitParams } = args;
     const getShare = await ctx.db.get(id);
     if (!getShare) {
       throw new Error('Share not found');
@@ -114,9 +118,10 @@ export const clone = mutation({
     if (!parentChat) {
       throw new Error('Parent chat not found');
     }
+    const chatId = crypto.randomUUID();
     const clonedChat = {
       creatorId: sessionId,
-      initialId: parentChat.initialId ?? crypto.randomUUID(),
+      initialId: chatId,
       description: parentChat.description,
       timestamp: new Date().toISOString(),
       snapshotId: parentChat.snapshotId,
@@ -126,13 +131,14 @@ export const clone = mutation({
     const messages = await ctx.db
       .query('chatMessages')
       .withIndex('byChatIdCreationTime', (q) =>
-        q.eq('chatId', parentChat._id).lt('_creationTime', parentChat._creationTime),
+        q.eq('chatId', parentChat._id).lt('_creationTime', getShare._creationTime),
       )
       .collect();
 
     await startProvisionConvexProjectHelper(ctx, {
       sessionId,
-      chatId: id,
+      chatId: clonedChat.initialId,
+      projectInitParams,
     });
     for (const message of messages) {
       await ctx.db.insert('chatMessages', {
@@ -143,7 +149,7 @@ export const clone = mutation({
     }
 
     return {
-      id: clonedChatId,
+      id: chatId,
       description: parentChat.description,
     };
   },
@@ -596,13 +602,11 @@ export async function getChatByIdOrUrlIdEnsuringAccess(
 ) {
   const isValid = await isValidSession(ctx, { sessionId });
   if (!isValid) {
-    console.log('session is not valid');
     return null;
   }
 
   const byId = await getChatByInitialId(ctx, { id, sessionId });
   if (byId !== null) {
-    console.log('chat found by id', byId);
     return byId;
   }
 
