@@ -478,6 +478,7 @@ need to do access checks.
 - Convex includes file storage for large files like images, videos, and PDFs.
 - The \`ctx.storage.getUrl()\` method returns a signed URL for a given file. It returns \`null\` if the file doesn't exist.
 - Do NOT use the deprecated \`ctx.storage.getMetadata\` call for loading a file's metadata.
+- Do NOT store file urls in the database. Instead, store the file id in the database and query the \`_storage\` system table to get the url.
 
 Instead, query the \`_storage\` system table. For example, you can use \`ctx.db.system.get\` to get an \`Id<"_storage">\`.
 
@@ -507,6 +508,10 @@ export const exampleQuery = query({
 
 # Examples
 ## Example of using Convex storage within a chat app
+
+This example creates a mutation to generate a short-lived upload URL and a mutation to save an image message to the database. This mutation is called from the client, which uses the generated upload URL to upload an image to Convex storage. Then,
+it gets the storage id from the response of the upload and saves it to the database with the \`sendImage\` mutation. On the frontend, it uses the \`list\` query to get the messages from the database and display them in the UI. In this query, the
+backend grabs the url from the storage system table and returns it to the client which shows the images in the UI. You should use this pattern for any file upload. To keep track of files, you should save the storage id in the database.
 
 Path: \`convex/messages.ts\`
 \`\`\`ts

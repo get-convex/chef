@@ -18,7 +18,7 @@ import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { getKnownInitialId } from '~/lib/stores/chatId';
 import { profileStore } from '~/lib/stores/profile';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useNavigate } from '@remix-run/react';
+import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
 
 const menuVariants = {
   closed: {
@@ -47,7 +47,6 @@ export const Menu = memo(() => {
   const menuRef = useRef<HTMLDivElement>(null);
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
-  const navigate = useNavigate();
   const list = useQuery(api.messages.getAll, sessionId ? { sessionId } : 'skip') ?? [];
   const [open, setOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState<DialogContent>(null);
@@ -109,6 +108,7 @@ export const Menu = memo(() => {
   }, []);
 
   const handleLogout = () => {
+    window.localStorage.removeItem(SESSION_ID_KEY);
     logout({
       logoutParams: {
         returnTo: window.location.origin,
@@ -117,7 +117,7 @@ export const Menu = memo(() => {
   };
 
   const handleSettingsClick = () => {
-    navigate('/settings');
+    window.location.pathname = '/settings';
   };
 
   // Don’t show the menu at all when logged out
@@ -216,14 +216,14 @@ export const Menu = memo(() => {
           </div>
           <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 px-4 py-3">
             <ThemeSwitch />
-            {open && (
+            {profile && open && (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <button className="flex items-center justify-center w-[40px] h-[40px] overflow-hidden bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-500 rounded-full shrink-0 hover:ring-2 hover:ring-gray-200 dark:hover:ring-gray-700 transition-all">
-                    {profile?.avatar ? (
+                    {profile.avatar ? (
                       <img
                         src={profile.avatar}
-                        alt={profile?.username || 'User'}
+                        alt={profile.username || 'User'}
                         className="w-full h-full object-cover"
                         loading="eager"
                         decoding="sync"

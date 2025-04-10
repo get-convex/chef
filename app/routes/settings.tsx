@@ -156,7 +156,7 @@ export function SettingsContent() {
             <div className="p-6">
               <h2 className="text-xl font-semibold text-bolt-elements-textPrimary mb-4">Profile</h2>
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+                <div className="min-w-[5rem] w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
                   {profile?.avatar ? (
                     <img
                       src={profile.avatar}
@@ -179,14 +179,14 @@ export function SettingsContent() {
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
                     >
-                      <div className="i-ph:arrow-square-out" />
+                      <div className="i-ph:arrow-square-out min-w-[1rem]" />
                       Manage your profile on the Convex Dashboard
                     </a>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 bg-transparent"
                     >
-                      <div className="i-ph:sign-out" />
+                      <div className="i-ph:sign-out min-w--[1rem]" />
                       Log out
                     </button>
                   </div>

@@ -27,7 +27,7 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
     {
       title: 'Build a Splitwise clone',
       prompt:
-        'Build a group shared expenses app that has the following features:\n\n• Has users, groups, expenses, payments, and reimbursements\n• Represents members in a group via a table rather than an array\n• Users can create groups and invite other users to join\n• Group members can add expenses to a group, which get shared among all members in the group\n• Shows a list of members in the group and a list of expenses along with who paid them\n• Show how much every member has been paid and reimbursed\n• Each member should be able to record a payment to another member, which adds to how much they have paid and adds to how much the recipient has been reimbursed\n• Members should record payments so that every member in the group has the same net balance',
+        'Build a group shared expenses app that has the following features:\n\n• Has users, groups, expenses, payments, and reimbursements\n• Represents members in a group via a table rather than an array\n• Users can create groups and invite other users to join\n• Group members can add expenses to a group, which get shared among all members in the group\n• Shows a list of members in the group and a list of expenses along with who paid them\n• Shows how much every member has been paid and reimbursed\n• Each member should be able to record a payment to another member, which adds to how much they have paid and adds to how much the recipient has been reimbursed\n• Members should record payments so that every member in the group has the same net balance',
     },
   ];
 
