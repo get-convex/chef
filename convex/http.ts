@@ -1,6 +1,6 @@
 import { httpRouter } from 'convex/server';
 import { httpAction } from './_generated/server';
-import { api } from './_generated/api';
+import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 
 const http = httpRouter();
@@ -22,7 +22,7 @@ http.route({
     const blob = await request.blob();
     const storageId = await ctx.storage.store(blob);
 
-    const snapshotId = await ctx.runMutation(api.snapshot.saveSnapshot, {
+    const snapshotId = await ctx.runMutation(internal.snapshot.saveSnapshot, {
       sessionId: sessionId as Id<'sessions'>,
       chatId: chatId as Id<'chats'>,
       storageId,
