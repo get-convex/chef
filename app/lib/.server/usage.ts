@@ -38,7 +38,7 @@ export async function recordUsage(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      tokens: usage.totalTokens,
+      tokens: chefTokens,
     }),
   });
   if (!response.ok) {
