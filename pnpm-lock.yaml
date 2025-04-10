@@ -83,9 +83,6 @@ importers:
       '@iconify-json/svg-spinners':
         specifier: ^1.2.1
         version: 1.2.2
-      '@launchdarkly/node-server-sdk':
-        specifier: ^9.8.0
-        version: 9.8.0
       '@nanostores/react':
         specifier: ^0.7.3
         version: 0.7.3(nanostores@0.10.3)(react@18.3.1)
@@ -1831,15 +1828,6 @@ packages:
 
   '@juggle/resize-observer@3.4.0':
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
-
-  '@launchdarkly/js-sdk-common@2.15.0':
-    resolution: {integrity: sha512-M5ZI8CwKrK+snz1liRVPCfB35tu3NAIRI747ENgLZaTbF23pDUHElhISND/mn1wwSwrhoacqcYNKRwASdJDeig==}
-
-  '@launchdarkly/js-server-sdk-common@2.14.0':
-    resolution: {integrity: sha512-ykcRxkLf4poppZxBu9VkJ3+fHY8AbVY2odzCb6ZEHtI7qVG2/TfIOJ/896UqKJt+AryotUBNmKJNWJdQ3JFeog==}
-
-  '@launchdarkly/node-server-sdk@9.8.0':
-    resolution: {integrity: sha512-GQwXlK3dIY9ZjYL73jz9GKSiWOUjDHIDSGUVpa+XziaomVtG8qQXXbZXTvZvPGy7VkYXmeEyayuRBHNFA3cFrw==}
 
   '@lezer/common@1.2.3':
     resolution: {integrity: sha512-w7ojc8ejBqr2REPsWxJjrMFsA/ysDCFICn8zEOR9mrqzOu2amhITYuLD8ag6XZf0CFXDrhKqw7+tW8cX66NaDA==}
@@ -5619,10 +5607,6 @@ packages:
 
   kolorist@1.8.0:
     resolution: {integrity: sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ==}
-
-  launchdarkly-eventsource@2.0.3:
-    resolution: {integrity: sha512-VhFjppK7jXlcEKaS7bxdoibB5j01NKyeDR7a8XfssdDGNWCTsbF0/5IExSmPi44eDncPhkoPNxlSZhEZvrbD5w==}
-    engines: {node: '>=0.12.0'}
 
   launchdarkly-js-client-sdk@3.5.0:
     resolution: {integrity: sha512-3dgxC9S8K2ix6qjdArjZGOJPtAytgfQTuE+vWgjWJK7725rpYbuqbHghIFr5B0+WyWyVBYANldjWd1JdtYLwsw==}
@@ -9695,21 +9679,6 @@ snapshots:
   '@jspm/core@2.0.1': {}
 
   '@juggle/resize-observer@3.4.0': {}
-
-  '@launchdarkly/js-sdk-common@2.15.0': {}
-
-  '@launchdarkly/js-server-sdk-common@2.14.0':
-    dependencies:
-      '@launchdarkly/js-sdk-common': 2.15.0
-      semver: 7.5.4
-
-  '@launchdarkly/node-server-sdk@9.8.0':
-    dependencies:
-      '@launchdarkly/js-server-sdk-common': 2.14.0
-      https-proxy-agent: 5.0.1
-      launchdarkly-eventsource: 2.0.3
-    transitivePeerDependencies:
-      - supports-color
 
   '@lezer/common@1.2.3': {}
 
@@ -14263,8 +14232,6 @@ snapshots:
       zod-validation-error: 3.4.0(zod@3.24.1)
 
   kolorist@1.8.0: {}
-
-  launchdarkly-eventsource@2.0.3: {}
 
   launchdarkly-js-client-sdk@3.5.0:
     dependencies:
