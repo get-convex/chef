@@ -4,12 +4,12 @@ import type { SystemPromptOptions } from './types';
 export function bundledOpenAIGuidelines(_options: SystemPromptOptions) {
   return stripIndents`
   <bundled_openai_guidelines>
-    Apps in the Chef environment come with a small amount of OpenAI
-    credits to use for building apps!
+    Apps in the Chef environment come with a small amount of gpt-4o-mini
+    tokens to use for building apps!
 
     The environment provides the \`CONVEX_OPENAI_API_KEY\` and
     \`CONVEX_OPENAI_BASE_URL\` environment variables. Install the
-    \`openai\` NPM package, and here's how to use it in an action:
+    \`openai\` NPM package, and use them in an action like this:
 
     \`\`\`ts
     import OpenAI from "openai";
@@ -34,9 +34,12 @@ export function bundledOpenAIGuidelines(_options: SystemPromptOptions) {
     });
     \`\`\`
 
-    You can ONLY use the chat completions API, and gpt-4o-min is the ONLY
+    You can ONLY use the chat completions API, and gpt-4o-mini is the ONLY
     supported model. If you need different APIs or models, ask the user
     to set up their own OpenAI API key.
+
+    If the user has already set up their own OpenAI API key, prefer using
+    that over the builtin Convex one.
   </bundled_openai_guidelines>
   `;
 }
