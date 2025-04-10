@@ -58,8 +58,7 @@ function ShareProjectContent() {
         auth0AccessToken: response.id_token,
       };
       const { id: chatId } = await cloneChat({ id: shareId as Id<'shares'>, sessionId, projectInitParams });
-      navigate(`/chat/${chatId}`);
-      // window.location.href = '/chat/${chatId}';
+      window.location.href = `/chat/${chatId}`;
     };
     f();
   }, [sessionId, getAccessTokenSilently]);
