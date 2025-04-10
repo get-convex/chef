@@ -18,9 +18,6 @@ type ChefAuthState =
       kind: 'unauthenticated';
     }
   | {
-      kind: 'needsAccessCode';
-    }
-  | {
       kind: 'fullyLoggedIn';
       sessionId: Id<'sessions'>;
     };

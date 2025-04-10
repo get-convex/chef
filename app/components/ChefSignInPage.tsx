@@ -1,13 +1,7 @@
+import { useEffect } from 'react';
 import { useChefAuthContext } from './chat/ChefAuthWrapper';
 import { Loading } from './Loading';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useState } from 'react';
-import { useConvex } from 'convex/react';
-import { validateAccessCode } from '~/lib/stores/convex';
-import { toast } from 'sonner';
-import { classNames } from '~/utils/classNames';
-import type { Id } from '@convex/_generated/dataModel';
-import { useEffect } from 'react';
 
 export const ChefSignInPage = () => {
   const chefAuth = useChefAuthContext();
@@ -23,8 +17,6 @@ export const ChefSignInPage = () => {
       return <Loading />;
     case 'unauthenticated':
       return <ConvexSignInForm />;
-    case 'needsAccessCode':
-      return <AccessGateForm setAccessCode={chefAuth.setAccessCode} />;
     case 'fullyLoggedIn':
       return (
         <div className="h-full w-full flex flex-col items-center justify-center">
@@ -58,53 +50,6 @@ export function ConvexSignInForm() {
         <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
         Log in with your Convex account
       </button>
-    </div>
-  );
-}
-
-function AccessGateForm({ setAccessCode }: { setAccessCode: (accessCode: Id<'sessions'> | null) => void }) {
-  const [code, setCode] = useState<string | null>(null);
-  const convex = useConvex();
-  return (
-    <div className="flex flex-col items-center justify-center h-full gap-4">
-      <h1 className="text-2xl font-bold text-bolt-elements-textPrimary font-display">
-        Please enter an invite code to continue
-      </h1>
-      <form
-        className="w-full max-w-md flex flex-wrap gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          validateAccessCode(convex, { code, localStorageEntry: null }).then((accessCode) => {
-            if (accessCode) {
-              setAccessCode(accessCode);
-            } else {
-              setAccessCode(null);
-              toast.error('Invalid invite code');
-            }
-          });
-        }}
-      >
-        <input
-          type="text"
-          value={code || ''}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="Enter your invite code"
-          className={classNames(
-            'grow px-3 py-2 rounded-lg text-sm',
-            'bg-[#F8F8F8] dark:bg-[#1A1A1A]',
-            'border border-[#E5E5E5] dark:border-[#333333]',
-            'text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary',
-            'focus:outline-none focus:ring-1 focus:ring-[var(--bolt-elements-borderColorActive)]',
-            'disabled:opacity-50',
-          )}
-        />
-        <button
-          className="px-4 py-2 rounded-lg text-sm flex items-center mr-auto gap-2 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text disabled:opacity-50 disabled:cursor-not-allowed"
-          type="submit"
-        >
-          Continue
-        </button>
-      </form>
     </div>
   );
 }
