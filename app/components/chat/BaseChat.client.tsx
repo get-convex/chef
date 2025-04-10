@@ -21,11 +21,8 @@ import type { TerminalInitializationOptions } from '~/types/terminal';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { useChefAuth } from './ChefAuthWrapper';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
-<<<<<<< HEAD:app/components/chat/BaseChat.client.tsx
 import { useFlags } from 'launchdarkly-react-client-sdk';
-=======
 import { openSignInWindow } from '~/components/ChefSignInPage';
->>>>>>> origin/staging:app/components/chat/BaseChat.tsx
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
