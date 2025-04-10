@@ -1,7 +1,7 @@
 import { useConvex } from 'convex/react';
 
 import { useConvexAuth } from 'convex/react';
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 import { sessionIdStore } from '~/lib/stores/sessionId';
 
@@ -10,7 +10,9 @@ import type { Id } from '@convex/_generated/dataModel';
 import { useLocalStorage } from '@uidotdev/usehooks';
 import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
-
+import { useLoaderData } from '@remix-run/react';
+import type { loader } from '~/routes/_index';
+import { validateAccessCode } from '~/lib/stores/convex';
 type ChefAuthState =
   | {
       kind: 'loading';
@@ -19,13 +21,17 @@ type ChefAuthState =
       kind: 'unauthenticated';
     }
   | {
+      kind: 'needsAccessCode';
+    }
+  | {
       kind: 'fullyLoggedIn';
       sessionId: Id<'sessions'>;
     };
 
 const ChefAuthContext = createContext<{
   state: ChefAuthState;
-}>(null as unknown as { state: ChefAuthState });
+  setAccessCode: (accessCode: Id<'sessions'> | null) => void;
+}>(null as unknown as { state: ChefAuthState; setAccessCode: (accessCode: Id<'sessions'> | null) => void });
 
 export function useChefAuth() {
   const state = useContext(ChefAuthContext);
@@ -35,7 +41,16 @@ export function useChefAuth() {
   return state.state;
 }
 
+export function useChefAuthContext() {
+  const state = useContext(ChefAuthContext);
+  if (state === null) {
+    throw new Error('useChefAuth must be used within a ChefAuthProvider');
+  }
+  return state;
+}
+
 const SESSION_ID_KEY = 'sessionIdForConvex';
+const VALID_ACCESS_CODE_KEY = 'validAccessCodeSessionId';
 
 export const ChefAuthProvider = ({
   children,
@@ -46,10 +61,23 @@ export const ChefAuthProvider = ({
 }) => {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
+  const { code: codeFromLoader } = useLoaderData<typeof loader>();
   const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
   const [sessionIdFromLocalStorage, setSessionIdFromLocalStorage] = useLocalStorage<Id<'sessions'> | null>(
     SESSION_ID_KEY,
     null,
+  );
+  const [localStorageEntry, setLocalStorageEntry] = useLocalStorage<Id<'sessions'> | null>(VALID_ACCESS_CODE_KEY, null);
+
+  // We're gating access to Chef before general adoption. As a hack, we're reusing
+  // the invite codes, but just no longer using the sessions they point to.
+  const [hasValidCode, setHasValidCode] = useState(false);
+  const setAccessCode = useCallback(
+    (accessCode: Id<'sessions'> | null) => {
+      setLocalStorageEntry(accessCode);
+      setHasValidCode(!!accessCode);
+    },
+    [setLocalStorageEntry, setHasValidCode],
   );
 
   useEffect(() => {
@@ -102,18 +130,30 @@ export const ChefAuthProvider = ({
     return;
   }, [sessionId, isAuthenticated, isConvexAuthLoading, sessionIdFromLocalStorage, setSessionIdFromLocalStorage]);
 
+  useEffect(() => {
+    validateAccessCode(convex, { code: codeFromLoader ?? null, localStorageEntry }).then((accessCode) => {
+      if (accessCode) {
+        setAccessCode(accessCode);
+      } else {
+        setAccessCode(null);
+      }
+    });
+  }, [codeFromLoader, localStorageEntry, setAccessCode]);
+
   const isLoading = sessionId === undefined || isConvexAuthLoading;
   const isUnauthenticated = sessionId === null || !isAuthenticated;
   const state: ChefAuthState = isLoading
     ? { kind: 'loading' }
     : isUnauthenticated
       ? { kind: 'unauthenticated' }
-      : { kind: 'fullyLoggedIn', sessionId: sessionId as Id<'sessions'> };
+      : hasValidCode
+        ? { kind: 'fullyLoggedIn', sessionId: sessionId as Id<'sessions'> }
+        : { kind: 'needsAccessCode' };
 
   if (redirectIfUnauthenticated && isUnauthenticated) {
     // Hard navigate to avoid any potential state leakage
     window.location.href = '/';
   }
 
-  return <ChefAuthContext.Provider value={{ state }}>{children}</ChefAuthContext.Provider>;
+  return <ChefAuthContext.Provider value={{ state, setAccessCode }}>{children}</ChefAuthContext.Provider>;
 };
