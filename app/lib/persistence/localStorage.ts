@@ -3,12 +3,15 @@ const isClient = typeof window !== 'undefined' && typeof localStorage !== 'undef
 
 export function getLocalStorage(key: string): any | null {
   if (!isClient) {
+    console.log('### getLocalStorage', key, null);
     return null;
   }
 
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : null;
+    const result = item ? JSON.parse(item) : null;
+    console.log('### getLocalStorage', key, result);
+    return result;
   } catch (error) {
     console.error(`Error reading from localStorage key "${key}":`, error);
     return null;

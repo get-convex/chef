@@ -19,6 +19,9 @@ import type { ToolStatus } from '~/lib/common/types';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { toast } from 'sonner';
+import { useChefAuth } from './ChefAuthWrapper';
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -97,6 +100,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       }
     };
     const sessionId = useConvexSessionIdOrNullOrLoading();
+    const chefAuthState = useChefAuth();
 
     const baseChat = (
       <div
@@ -252,6 +256,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     <SendButton
                       show={input.length > 0 || isStreaming || uploadedFiles.length > 0}
                       isStreaming={isStreaming}
+                      disabled={chefAuthState.kind === 'loading'}
                       onClick={(event) => {
                         if (isStreaming) {
                           handleStop?.();

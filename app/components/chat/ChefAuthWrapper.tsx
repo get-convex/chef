@@ -2,7 +2,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useConvex } from 'convex/react';
 
 import { useConvexAuth } from 'convex/react';
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 import { sessionIdStore } from '~/lib/stores/sessionId';
 
@@ -11,6 +11,7 @@ import type { Id } from '@convex/_generated/dataModel';
 import { useLocalStorage } from '@uidotdev/usehooks';
 import { SESSION_ID_KEY } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
+import { getLocalStorage, setLocalStorage } from '~/lib/persistence';
 
 type ChefAuthState =
   | {
@@ -26,28 +27,36 @@ type ChefAuthState =
 
 const ChefAuthContext = createContext<{
   state: ChefAuthState;
-}>({
-  state: {
-    kind: 'loading',
-  },
-});
+}>(null as unknown as { state: ChefAuthState });
 
 export function useChefAuth() {
-  return useContext(ChefAuthContext);
+  const state = useContext(ChefAuthContext);
+  if (state === null) {
+    throw new Error('useChefAuth must be used within a ChefAuthProvider');
+  }
+  return state.state;
 }
 
 export const ChefAuthProvider = ({ children }: { children: React.ReactNode }) => {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
   const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
-  const [sessionIdFromLocalStorage, setSessionIdFromLocalStorage] = useLocalStorage<Id<'sessions'> | null>(
-    SESSION_ID_KEY,
-    null,
-  );
+  const [sessionIdFromLocalStorage, setSessionIdFromLocalStorage] = useState<Id<'sessions'> | null>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const freshSessionIdFromLocalStorage = getLocalStorage(SESSION_ID_KEY);
+      if (freshSessionIdFromLocalStorage !== sessionIdFromLocalStorage) {
+        setSessionIdFromLocalStorage(freshSessionIdFromLocalStorage as Id<'sessions'>);
+      }
+    }, 500);
+    return () => clearInterval(interval);
+  }, [sessionIdFromLocalStorage]);
 
   useEffect(() => {
     function setSessionId(sessionId: Id<'sessions'> | null) {
       setSessionIdFromLocalStorage(sessionId);
+      setLocalStorage(SESSION_ID_KEY, sessionId);
       sessionIdStore.set(sessionId);
     }
 
