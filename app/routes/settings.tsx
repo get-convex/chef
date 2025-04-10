@@ -15,6 +15,7 @@ import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthWrapper } from '~/components/chat/ChefAuthWrapper';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
+import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
@@ -63,8 +64,12 @@ export function SettingsContent() {
         const token = await getAccessTokenSilently({ detailedResponse: true });
         console.log('token', token);
         if (token) {
-          const usage = await getTokenUsage(token.id_token, teamSlug);
-          setTokenUsage(usage);
+          const usage = await getTokenUsage(VITE_PROVISION_HOST, token.id_token, teamSlug);
+          if (usage.status === 'success') {
+            setTokenUsage(usage);
+          } else {
+            console.error('Failed to fetch token usage:', usage.httpStatus, usage.httpBody);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch token usage:', error);

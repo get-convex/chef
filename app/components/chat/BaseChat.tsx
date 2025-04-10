@@ -177,10 +177,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent text-sm',
                         'transition-all duration-200',
                         'hover:border-bolt-elements-focus',
-                        {
-                          'opacity-50 cursor-not-allowed': disableChatMessage !== null,
-                        },
+                        'disabled:opacity-50 disabled:cursor-not-allowed',
                       )}
+                      disabled={disableChatMessage !== null}
                       onDragEnter={(e) => {
                         e.preventDefault();
                         e.currentTarget.style.border = '2px solid #1488fc';
@@ -281,6 +280,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               </div>
             </div>
             <SuggestionButtons
+              disabled={disableChatMessage !== null}
               chatStarted={chatStarted}
               onSuggestionClick={(suggestion) => {
                 handleInputChange?.({ target: { value: suggestion } } as React.ChangeEvent<HTMLTextAreaElement>);

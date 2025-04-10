@@ -5,9 +5,10 @@ import { ArrowUp } from '@phosphor-icons/react/dist/csr/ArrowUp';
 interface SuggestionButtonsProps {
   chatStarted: boolean;
   onSuggestionClick?: (suggestion: string) => void;
+  disabled?: boolean;
 }
 
-export const SuggestionButtons = ({ chatStarted, onSuggestionClick }: SuggestionButtonsProps) => {
+export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: SuggestionButtonsProps) => {
   if (chatStarted) {
     return null;
   }
@@ -37,7 +38,8 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick }: Suggestion
           <button
             key={suggestion.title}
             onClick={() => onSuggestionClick?.(suggestion.prompt)}
-            className="flex gap-1 items-center rounded-full px-3 py-1 border border-bolt-elements-borderColor bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary"
+            className="flex gap-1 items-center rounded-full px-3 py-1 border border-bolt-elements-borderColor bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-bolt-elements-item-backgroundDefault disabled:hover:text-bolt-elements-textSecondary"
+            disabled={disabled}
           >
             <ArrowUp className="size-4" />
             {suggestion.title}
