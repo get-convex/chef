@@ -239,7 +239,10 @@ function cleanupAssistantMessages(messages: Messages) {
       return message;
     }
   });
-  processedMessages = processedMessages.filter((message) => message.content.trim() !== '');
+  // Filter out empty messages and messages with empty parts
+  processedMessages = processedMessages.filter(
+    (message) => message.content.trim() !== '' || (message.parts && message.parts.length > 0),
+  );
   return convertToCoreMessages(processedMessages);
 }
 
