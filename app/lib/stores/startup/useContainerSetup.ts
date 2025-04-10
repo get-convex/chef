@@ -6,7 +6,7 @@ import { sessionIdStore } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
 import type { ConvexReactClient } from 'convex/react';
 import { useConvex } from 'convex/react';
-import { decompressSnapshot } from '~/lib/snapshot';
+import { decompressSnapshot } from '~/lib/snapshot.client';
 import { streamOutput } from '~/utils/process';
 import { cleanTerminalOutput } from '~/utils/shell';
 import { toast } from 'sonner';

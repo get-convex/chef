@@ -24,7 +24,7 @@ import { createSampler } from '~/utils/sampler';
 import type { ActionAlert } from '~/types/actions';
 import type { WebContainer } from '@webcontainer/api';
 import type { Id } from '@convex/_generated/dataModel';
-import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot';
+import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot.client';
 import { waitForConvexSessionId } from './sessionId';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './artifacts';
