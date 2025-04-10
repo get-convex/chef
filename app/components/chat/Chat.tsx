@@ -18,7 +18,6 @@ import { createSampler } from '~/utils/sampler';
 import { filesToArtifacts } from '~/utils/fileUtils';
 import { ChatContextManager } from '~/lib/ChatContextManager';
 import { webcontainer } from '~/lib/webcontainer';
-import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
 import { selectedTeamSlugStore } from '~/lib/stores/convexTeams';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
@@ -328,13 +327,13 @@ export const Chat = memo(
       }
 
       if (status === 'streaming' || status === 'submitted') {
-        console.log("Aborting current message.")
+        console.log('Aborting current message.');
         abort();
         return;
       }
 
       if (sendMessageInProgress) {
-        console.log("sendMessage already in progress, returning.")
+        console.log('sendMessage already in progress, returning.');
         return;
       }
       try {
@@ -413,7 +412,6 @@ export const Chat = memo(
         setImageDataList([]);
 
         textareaRef.current?.blur();
-
       } finally {
         setSendMessageInProgress(false);
       }
