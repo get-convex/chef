@@ -33,7 +33,7 @@ async function fetchTeams(getAccessTokenSilently: ReturnType<typeof useAuth0>['g
     teams = await response.json();
   } catch (error) {
     console.error('Error fetching teams:', error);
-    toast.error("Failed to load user. Try logging in at dashboard.convex.dev?")
+    toast.error('Failed to load user. Try logging in at dashboard.convex.dev?');
     return;
   }
   convexTeamsStore.set(teams);
