@@ -134,7 +134,7 @@ export const Chat = memo(
       } else {
         if (tokenUsage.tokensQuota === 50000000) {
           // TODO(nipunn) Hack for launch day
-          tokenUsage.tokensQuota = tokenUsage.tokensQuota * 100;
+          tokenUsage.tokensQuota = tokenUsage.tokensQuota * 10000;
         }
         const { tokensUsed, tokensQuota, isTeamDisabled } = tokenUsage;
         if (tokensUsed !== undefined && tokensQuota !== undefined) {

@@ -78,7 +78,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     }
     if (resp.tokensQuota === 50000000) {
       // TODO(nipunn) Hack for launch day
-      resp.tokensQuota = resp.tokensQuota * 100;
+      resp.tokensQuota = resp.tokensQuota * 10000;
     }
     if (resp.tokensUsed >= resp.tokensQuota) {
       if (body.userApiKey?.preference === 'quotaExhausted') {
