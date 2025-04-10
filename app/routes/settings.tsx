@@ -52,7 +52,7 @@ export function SettingsContent() {
   const [anthropicKey, setAnthropicKey] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [alwaysUseKey, setAlwaysUseKey] = useState(true);
+  const [alwaysUseKey, setAlwaysUseKey] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const teamSlug = useStore(selectedTeamSlugStore);
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
@@ -320,6 +320,7 @@ export function SettingsContent() {
                             setAlwaysUseKey(e.target.checked);
                             setIsDirty(true);
                           }}
+                          disabled={anthropicKey === ''}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         <label htmlFor="always-use-key" className="text-sm text-bolt-elements-textSecondary">
