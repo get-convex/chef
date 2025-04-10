@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import * as Popover from '@radix-ui/react-popover';
 import { useMutation } from 'convex/react';
 import { api } from '@convex/_generated/api';
+import { waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { useChatId } from '~/lib/stores/chatId';
 
 const Button = forwardRef<
   HTMLButtonElement,
@@ -45,6 +47,7 @@ export function ShareButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<ShareStatus>('idle');
   const [shareUrl, setShareUrl] = useState('');
+  const chatId = useChatId();
 
   const createShare = useMutation(api.share.create);
 
@@ -52,9 +55,11 @@ export function ShareButton() {
     try {
       setStatus('loading');
 
+      const sessionId = await waitForConvexSessionId('ShareButton');
+
       const { code } = await createShare({
-        sessionId: TODO,
-        chatId: TODO,
+        id: chatId,
+        sessionId,
       });
 
       const url = `${window.location.origin}/share/${code}`;

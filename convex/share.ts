@@ -6,10 +6,10 @@ import type { Id } from './_generated/dataModel';
 export const create = mutation({
   args: {
     sessionId: v.id('sessions'),
-    chatId: v.id('chats'),
+    id: v.string(),
   },
-  handler: async (ctx, { sessionId, chatId }) => {
-    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+  handler: async (ctx, { sessionId, id }) => {
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
     if (!chat) {
       throw new ConvexError('Chat not found');
     }
@@ -18,7 +18,7 @@ export const create = mutation({
 
     const snapshotId = '' as Id<'_storage'>; // TODO Fix this
 
-    await ctx.db.insert('shareLinks', { chatId, snapshotId, code });
+    await ctx.db.insert('shareLinks', { chatId: chat._id, snapshotId, code });
 
     return { code };
   },
