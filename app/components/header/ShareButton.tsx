@@ -1,25 +1,22 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { classNames } from '~/utils/classNames';
 import { toast } from 'sonner';
 import * as Popover from '@radix-ui/react-popover';
 
-function Button({
-  active = false,
-  disabled = false,
-  children,
-  onClick,
-  className,
-  title,
-}: {
-  active?: boolean;
-  disabled?: boolean;
-  children?: any;
-  onClick?: VoidFunction;
-  className?: string;
-  title?: string;
-}) {
+const Button = forwardRef<
+  HTMLButtonElement,
+  {
+    active?: boolean;
+    disabled?: boolean;
+    children?: any;
+    onClick?: VoidFunction;
+    className?: string;
+    title?: string;
+  }
+>(({ active = false, disabled = false, children, onClick, className, title }, ref) => {
   return (
     <button
+      ref={ref}
       className={classNames(
         'flex items-center gap-1 p-1 text-sm border border-bolt-elements-borderColor rounded-md',
         {
@@ -38,7 +35,7 @@ function Button({
       {children}
     </button>
   );
-}
+});
 
 type ShareStatus = 'idle' | 'loading' | 'success';
 
