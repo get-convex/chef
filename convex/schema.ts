@@ -100,7 +100,9 @@ export default defineSchema({
 
     // The description of the chat at the time the share was created.
     description: v.optional(v.string()),
-  }).index('byCode', ['code']),
+  })
+    .index('byCode', ['code'])
+    .index('bySnapshotId', ['snapshotId']),
 
   memberOpenAITokens: defineTable({
     memberId: v.id('convexMembers'),

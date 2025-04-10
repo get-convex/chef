@@ -15,10 +15,24 @@ export const saveSnapshot = internalMutation({
     if (!chat) {
       throw new Error('Chat not found');
     }
-
     await ctx.db.patch(chat._id, {
       snapshotId: storageId,
     });
+
+    // Delete the prior snapshot only if it is not being used by another chat or share
+    if (chat.snapshotId) {
+      const firstShareWithSnapshot = await ctx.db
+        .query('shares')
+        .withIndex('bySnapshotId', (q) => q.eq('snapshotId', chat.snapshotId))
+        .first();
+      const firstChatWithSnapshot = await ctx.db
+        .query('chats')
+        .withIndex('bySnapshotId', (q) => q.eq('snapshotId', chat.snapshotId))
+        .first();
+      if (firstShareWithSnapshot === null && firstChatWithSnapshot === null) {
+        await ctx.storage.delete(chat.snapshotId);
+      }
+    }
   },
 });
 
