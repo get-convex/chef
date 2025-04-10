@@ -89,9 +89,10 @@ export default defineSchema({
     .index('byCode', ['code'])
     .index('bySessionId', ['sessionId']),
 
-  shareLinks: defineTable({
+  shares: defineTable({
     chatId: v.id('chats'),
     snapshotId: v.optional(v.id('_storage')),
     code: v.string(),
+    lastMessageRank: v.number(),
   }).index('byCode', ['code']),
 });

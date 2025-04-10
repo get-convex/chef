@@ -14,11 +14,28 @@ export const create = mutation({
       throw new ConvexError('Chat not found');
     }
 
+    if (!chat.snapshotId) {
+      throw new ConvexError('Your project has never been saved.');
+    }
+
+    const lastMessage = await ctx.db
+      .query('chatMessages')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .order('desc')
+      .first();
+
     const code = await generateUniqueCode(ctx.db);
 
-    const snapshotId = '' as Id<'_storage'>; // TODO Fix this
+    await ctx.db.insert('shares', {
+      chatId: chat._id,
 
-    await ctx.db.insert('shareLinks', { chatId: chat._id, snapshotId, code });
+      // It is safe to use the snapshotId from the chat because the user’s
+      // snapshot excludes .env.local.
+      snapshotId: chat.snapshotId,
+
+      code,
+      lastMessageRank: lastMessage ? lastMessage.rank : 0,
+    });
 
     return { code };
   },
