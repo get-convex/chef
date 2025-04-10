@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import React, { type RefCallback } from 'react';
+import React, { type RefCallback, useCallback, useState } from 'react';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import { classNames } from '~/utils/classNames';
@@ -21,7 +21,11 @@ import type { TerminalInitializationOptions } from '~/types/terminal';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { useChefAuth } from './ChefAuthWrapper';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
+<<<<<<< HEAD:app/components/chat/BaseChat.client.tsx
 import { useFlags } from 'launchdarkly-react-client-sdk';
+=======
+import { openSignInWindow } from '~/components/ChefSignInPage';
+>>>>>>> origin/staging:app/components/chat/BaseChat.tsx
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -301,6 +305,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         </div>
                       ) : null}
                       {chatStarted && <ConvexConnection />}
+                      {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
                       {!chatStarted && sessionId && (
                         <TeamSelector
                           description="Your project will be created in this Convex team"
@@ -401,3 +406,32 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   },
 );
 BaseChat.displayName = 'BaseChat';
+
+function SignInButton() {
+  const [started, setStarted] = useState(false);
+  const signIn = useCallback(() => {
+    setStarted(true);
+    openSignInWindow();
+  }, [setStarted]);
+  return (
+    <button
+      className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm text-bolt-elements-textPrimary bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-item-backgroundAccent/90"
+      onClick={signIn}
+    >
+      <div className="flex items-center gap-2 p-1.5 w-full">
+        {!started && (
+          <>
+            <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+            <span>Sign in</span>
+          </>
+        )}
+        {started && (
+          <>
+            <div className="i-ph:spinner-gap animate-spin" />
+            Signing in...
+          </>
+        )}
+      </div>
+    </button>
+  );
+}

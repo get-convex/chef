@@ -211,7 +211,7 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
       throw new Error('Proxy not loaded');
     }
 
-    // Start a new proxy for the new window so that the preview in the new window doesn’t share
+    // Start a new proxy for the new window so that the preview in the new window doesn't share
     // the same origin as the current preview (helpful to test multiple-user apps).
     //
     // Note that this proxy will never be stopped.
@@ -312,8 +312,9 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
                 title="preview"
                 className="border-none w-full h-full bg-bolt-elements-background-depth-1"
                 src={iframeUrl}
-                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                allow="cross-origin-isolated; clipboard-write"
+                sandbox="allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"
+                allow="*"
+                allowFullScreen={true}
               />
             ) : (
               <div className="flex w-full h-full justify-center items-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
