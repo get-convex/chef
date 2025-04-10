@@ -6,8 +6,14 @@ import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
 import { setProfile } from '~/lib/stores/profile';
 import { getConvexProfile } from '~/lib/convexProfile';
+import { useLDClient, withLDProvider } from 'launchdarkly-react-client-sdk';
 
-export function UserProvider({ children }: { children: React.ReactNode }) {
+export const UserProvider = withLDProvider<any>({
+  clientSideID: import.meta.env.VITE_LD_CLIENT_SIDE_ID,
+})(UserProviderInner);
+
+function UserProviderInner({ children }: { children: React.ReactNode }) {
+  const launchdarkly = useLDClient();
   const { user } = useAuth0();
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chatId = useChatId();
@@ -26,6 +32,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function updateProfile() {
       if (user) {
+        launchdarkly?.identify({
+          key: user.sub ?? '',
+          name: user.name ?? user.nickname ?? '',
+          email: user.email ?? '',
+        });
         setUser({
           id: user.sub ?? undefined,
           username: user.name ?? user.nickname ?? undefined,
@@ -55,6 +66,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             id: user.sub ?? '',
           });
         }
+      } else {
+        launchdarkly?.identify({
+          anonymous: true,
+        });
       }
     }
     void updateProfile();

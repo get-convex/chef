@@ -10,7 +10,7 @@ import { workbenchStore } from '~/lib/stores/workbench.client';
 import { PROMPT_COOKIE_KEY } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger } from '~/utils/logger';
-import { BaseChat } from './BaseChat';
+import { BaseChat } from './BaseChat.client';
 import Cookies from 'js-cookie';
 import { debounce } from '~/utils/debounce';
 import { useSearchParams } from '@remix-run/react';
