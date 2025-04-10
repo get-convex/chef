@@ -14,19 +14,18 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick }: Suggestion
 
   const suggestions = [
     {
-      title: 'Build a chat app',
-      prompt:
-        'Build a simple chat app with threads and reactions. There should be a nice UI to send messages, add/view threads, and react to messages. Reactions should include a heart, a thumbs up, and a thumbs down and should be shown with a number',
-    },
-    {
-      title: 'Build a todo app',
-      prompt:
-        'Build a Todo app with two different tabs, "To Do" and "Done". Add the ability to add tags to a task when creating it and filter tasks by tag',
+      title: 'Build a slack clone',
+      prompt: `Build an app similar to Slack. It should have a channels panel on the left with a button to create new channels. There should be a message pane on the right and a message posting box at the bottom. Each message should have a name and avatar next to it for the author of the message. There should be an "edit profile" tab that allows you to upload a profile photo and change your name. Make sure that the messages are the only thing that is scrollable. The message box and channel selector should stay fixed like the header. Make sure you scroll to the bottom when new messages are sent.`,
     },
     {
       title: 'Build an Instagram clone',
       prompt:
         'Build an app similar to Instagram except it\'s a global shared image stream with all users. There should be a box you can drag and drop images into to upload them. When uploading an image it should get resized to a maximum of 800x800 and be cropped to a square. There should be a "Stream" tab for viewing the global stream and a "My Photos" tab for viewing your own images. You should be able to delete your own photos in the "My Photos" tab. You should be able to click a button to like each image in the "Stream" tab and it should show the like count for each image.',
+    },
+    {
+      title: 'Build a todo app',
+      prompt:
+        'Build a Todo app with two different tabs, "To Do" and "Done". Add the ability to add tags to a task when creating it and filter tasks by tag',
     },
   ];
 
