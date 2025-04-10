@@ -62,7 +62,8 @@ export function ShareButton() {
         sessionId,
       });
 
-      const url = `${window.location.origin}/share/${code}`;
+      const { origin } = window.location;
+      const url = origin === 'https://chef.convex.dev' ? `https://chef.show/${code}` : `${origin}/share/${code}`;
 
       setShareUrl(url);
       setStatus('success');
