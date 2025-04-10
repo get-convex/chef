@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import React, { type RefCallback, useCallback } from 'react';
+import React, { type RefCallback, useCallback, useState } from 'react';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import { classNames } from '~/utils/classNames';
@@ -106,9 +106,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
 
     const selectedTeamSlug = useSelectedTeamSlug();
 
-    const signIn = useCallback(() => {
-      openSignInWindow();
-    }, []);
     const baseChat = (
       <div
         ref={ref}
@@ -300,6 +297,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         </div>
                       ) : null}
                       {chatStarted && <ConvexConnection />}
+                      {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
                       {!chatStarted && sessionId && (
                         <TeamSelector
                           description="Your project will be created in this Convex team"
@@ -319,15 +317,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 handleInputChange?.({ target: { value: suggestion } } as React.ChangeEvent<HTMLTextAreaElement>);
               }}
             />
-            {chefAuthState.kind === 'unauthenticated' && (
-              <button
-                className="mx-auto mt-6 px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
-                onClick={signIn}
-              >
-                <img className="w-4 h-4" height="20" width="20" src="/icons/Convex.svg" alt="Convex" />
-                <span>Sign in</span>
-              </button>
-            )}
           </div>
           <Workbench
             chatStarted={chatStarted}
@@ -399,3 +388,32 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   },
 );
 BaseChat.displayName = 'BaseChat';
+
+function SignInButton() {
+  const [started, setStarted] = useState(false);
+  const signIn = useCallback(() => {
+    setStarted(true);
+    openSignInWindow();
+  }, [setStarted]);
+  return (
+    <button
+      className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm"
+      onClick={signIn}
+    >
+      <div className="flex items-center gap-2 p-1.5 w-full">
+        {!started && (
+          <>
+            <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+            <span>Sign in</span>
+          </>
+        )}
+        {started && (
+          <>
+            <div className="i-ph:spinner-gap animate-spin" />
+            Signing in...
+          </>
+        )}
+      </div>
+    </button>
+  );
+}
