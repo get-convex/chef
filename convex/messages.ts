@@ -1,4 +1,4 @@
-import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
+import { mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
 import type { Message as AIMessage } from 'ai';
 import { ConvexError, v } from 'convex/values';
 import type { VAny } from 'convex/values';
@@ -92,64 +92,6 @@ export const setDescription = mutation({
     await ctx.db.patch(existing._id, {
       description,
     });
-  },
-});
-
-export const clone = mutation({
-  args: {
-    id: v.id('shares'),
-    sessionId: v.id('sessions'),
-    projectInitParams: v.object({
-      teamSlug: v.string(),
-      auth0AccessToken: v.string(),
-    }),
-  },
-  returns: v.object({
-    id: v.string(),
-    description: v.optional(v.string()),
-  }),
-  handler: async (ctx, args) => {
-    const { id, sessionId, projectInitParams } = args;
-    const getShare = await ctx.db.get(id);
-    if (!getShare) {
-      throw new Error('Share not found');
-    }
-    const parentChat = await ctx.db.get(getShare.chatId);
-    if (!parentChat) {
-      throw new Error('Parent chat not found');
-    }
-    const chatId = crypto.randomUUID();
-    const clonedChat = {
-      creatorId: sessionId,
-      initialId: chatId,
-      description: parentChat.description,
-      timestamp: new Date().toISOString(),
-      snapshotId: parentChat.snapshotId,
-    };
-    const clonedChatId = await ctx.db.insert('chats', clonedChat);
-
-    const messages = await ctx.db
-      .query('chatMessages')
-      .withIndex('byChatId', (q) => q.eq('chatId', parentChat._id).lte('rank', getShare.lastMessageRank))
-      .collect();
-
-    await startProvisionConvexProjectHelper(ctx, {
-      sessionId,
-      chatId: clonedChat.initialId,
-      projectInitParams,
-    });
-    for (const message of messages) {
-      await ctx.db.insert('chatMessages', {
-        chatId: clonedChatId,
-        content: message.content,
-        rank: message.rank,
-      });
-    }
-
-    return {
-      id: chatId,
-      description: parentChat.description,
-    };
   },
 });
 
