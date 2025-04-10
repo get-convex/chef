@@ -2,6 +2,7 @@ import { httpRouter } from 'convex/server';
 import { httpAction, type ActionCtx } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
+import { ConvexError } from 'convex/values';
 
 const http = httpRouter();
 
@@ -13,15 +14,19 @@ http.route({
     try {
       storageId = await uploadSnapshot(ctx, request);
     } catch (e) {
-      return new Response(JSON.stringify({ error: (e as Error).message }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          Vary: 'Origin',
+      return new Response(
+        JSON.stringify({ error: e instanceof ConvexError ? e.message : 'An unknown error occurred' }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            Vary: 'Origin',
+          },
         },
-      });
+      );
     }
+
     return new Response(JSON.stringify({ snapshotId: storageId }), {
       status: 200,
       headers: {
@@ -37,11 +42,11 @@ async function uploadSnapshot(ctx: ActionCtx, request: Request): Promise<Id<'_st
   const url = new URL(request.url);
   const sessionId = url.searchParams.get('sessionId');
   if (!sessionId) {
-    throw new Error('sessionId is required');
+    throw new ConvexError('sessionId is required');
   }
   const chatId = url.searchParams.get('chatId');
   if (!chatId) {
-    throw new Error('chatId is required');
+    throw new ConvexError('chatId is required');
   }
 
   const blob = await request.blob();
