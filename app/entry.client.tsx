@@ -6,9 +6,6 @@ import { hydrateRoot } from 'react-dom/client';
 Sentry.init({
   dsn: 'https://16615d9875b4630cfabeed5d376c4343@o1192621.ingest.us.sentry.io/4509097600811008',
   tracesSampleRate: 1,
-  // TODO do we need to add release and environment here?
-
-  enabled: process.env.NODE_ENV === 'production',
 
   integrations: [
     Sentry.feedbackIntegration({

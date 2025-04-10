@@ -6,7 +6,7 @@ export const convexGuidelines = `# Convex guidelines
 
 - ALWAYS use the new function syntax for Convex functions. For example:
 
-\`\`\`
+\`\`\`ts
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 export const f = query({
@@ -21,7 +21,7 @@ export const f = query({
 
 - HTTP endpoints are defined in \`convex/http.ts\` and require an \`httpAction\` decorator. For example:
 
-\`\`\`
+\`\`\`ts
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 const http = httpRouter();
@@ -68,7 +68,7 @@ e limit for Convex types.                                                     |
 - Below is an example of an array validator:
 
 \`\`\`ts
-import { mutation } from "./\_generated/server";
+import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export default mutation({
@@ -82,7 +82,7 @@ export default mutation({
 \`\`\`
 
 - Below is an example of a schema with validators that codify a discriminated union type:
-\`\`\`typescript
+\`\`\`ts
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -104,8 +104,8 @@ export default defineSchema({
 
 - ALWAYS use argument validators. For example:
 
-\`\`\`
-import { mutation } from "./\_generated/server";
+\`\`\`ts
+import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export default mutation({
@@ -120,8 +120,8 @@ export default mutation({
 
 - NEVER use return validators when getting started writing an app. For example:
 
-\`\`\`typescript
-import { mutation } from "./\_generated/server";
+\`\`\`ts
+import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export default mutation({
@@ -155,7 +155,7 @@ export default mutation({
 - All of these calls take in a \`FunctionReference\`. Do NOT try to pass the callee function directly into one of these calls.
 - When using \`ctx.runQuery\`, \`ctx.runMutation\`, or \`ctx.runAction\` to call a function in the same file, specify a type annotation on the return value to work around TypeScript circularity limitations. For example,
 
-\`\`\`
+\`\`\`ts
 export const f = query({
   args: { name: v.string() },
   handler: async (ctx, args) => {
@@ -175,8 +175,18 @@ export const g = query({
 ### Function references
 
 - Function references are pointers to registered Convex functions.
-- Use the \`api\` object defined by the framework in \`convex/_generated/api.ts\` to call public functions registered with \`query\`, \`mutation\`, or \`action\`.
-- Use the \`internal\` object defined by the framework in \`convex/_generated/api.ts\` to call internal (or private) functions registered with \`internalQuery\`, \`internalMutation\`, or \`internalAction\`.
+- ALWAYS use the \`api\` object defined by the framework in \`convex/_generated/api.ts\` to call public functions registered with \`query\`, \`mutation\`, or \`action\`. Importing the \`api\` object looks like:
+
+\`\`\`ts
+import { api } from "./_generated/api";
+\`\`\`
+
+- ALWAYS use the \`internal\` object defined by the framework in \`convex/_generated/api.ts\` to call internal (or private) functions registered with \`internalQuery\`, \`internalMutation\`, or \`internalAction\`. Importing the \`internal\` object looks like:
+
+\`\`\`ts
+import { internal } from "./_generated/api";
+\`\`\`
+
 - Convex uses file-based routing, so a public function defined in \`convex/example.ts\` named \`f\` has a function reference of \`api.example.f\`.
 - A private function defined in \`convex/example.ts\` named \`g\` has a function reference of \`internal.example.g\`.
 - Functions can also registered within directories nested within the \`convex/\` folder. For example, a public function \`h\` defined in \`convex/messages/access.ts\` has a function reference of \`api.messages.access.h\`.
@@ -224,6 +234,7 @@ variables are useful for storing secrets like API keys and other per-deployment 
 
 You can read environment variables from all functions, including queries, mutations, actions,
 and HTTP actions. For example:
+
 \`\`\`ts
 import { action } from "./_generated/server";
 import OpenAI from "openai";
@@ -287,8 +298,8 @@ Note: \`paginationOpts\` is an object with the following properties:
   schema definition of a table! They're automatic and adding them to will be an error. You cannot
   use either of these names for your own indexes. \`.index("by_creation_time", ["_creationTime"])\`
   is ALWAYS wrong.
-- Convex automatically includes \`_creationTime\` as the final column in all indexes. Do NOT include
-  \`_creationTime\` as the last column in any index you define.
+- Convex automatically includes \`_creationTime\` as the final column in all indexes.
+- Do NOT under any circumstances include \`_creationTime\` as the last column in any index you define. This will result in an error.
   \`.index("by_author_and_creation_time", ["author", "_creationTime"])\` is ALWAYS wrong.
 - Always include all index fields in the index name. For example, if an index is defined as
   \`["field1", "field2"]\`, the index name should be "by_field1_and_field2".
@@ -338,12 +349,12 @@ export const exampleQuery = query({
 
 ## Typescript guidelines
 
-- You can use the helper typescript type \`Id\` imported from './\_generated/dataModel' to get the type of the id for a given table. For example if there is a table called 'users' you can use \`Id<'users'>\` to get the type of the id for that table.
+- You can use the helper typescript type \`Id\` imported from './_generated/dataModel' to get the type of the id for a given table. For example if there is a table called 'users' you can use \`Id<'users'>\` to get the type of the id for that table.
 - If you need to define a \`Record\` make sure that you correctly provide the type of the key and value in the type. For example a validator \`v.record(v.id('users'), v.string())\` would have the type \`Record<Id<'users'>, string>\`. Below is an example of using \`Record\` with an \`Id\` type in a query:
 
-\`\`\`
-import { query } from "./\_generated/server";
-import { Doc, Id } from "./\_generated/dataModel";
+\`\`\`ts
+import { query } from "./_generated/server";
+import { Doc, Id } from "./_generated/dataModel";
 
 export const exampleQuery = query({
   args: { userIds: v.array(v.id("users")) },
@@ -371,7 +382,7 @@ export const exampleQuery = query({
 
 - A query for "10 messages in channel '#general' that best match the query 'hello hi' in their body" would look like:
 
-\`\`\`
+\`\`\`ts
 const messages = await ctx.db
   .query("messages")
   .withSearchIndex("search_body", (q) =>
@@ -404,8 +415,8 @@ const messages = await ctx.db
 - Never use \`ctx.db\` inside of an action. Actions don't have access to the database.
 - Below is an example of the syntax for an action:
 
-\`\`\`
-import { action } from "./\_generated/server";
+\`\`\`ts
+import { action } from "./_generated/server";
 
 export const exampleAction = action({
   args: {},
@@ -424,10 +435,10 @@ export const exampleAction = action({
 - Both cron methods take in a FunctionReference. Do NOT try to pass the function directly into one of these methods.
 - Define crons by declaring the top-level \`crons\` object, calling some methods on it, and then exporting it as default. For example,
 
-\`\`\`
+\`\`\`ts
 import { cronJobs } from "convex/server";
-import { internal } from "./\_generated/api";
-import { internalAction } from "./\_generated/server";
+import { internal } from "./_generated/api";
+import { internalAction } from "./_generated/server";
 
 const empty = internalAction({
   args: {},
@@ -445,7 +456,7 @@ export default crons;
 \`\`\`
 
 - You can register Convex functions within \`crons.ts\` just like any other file.
-- If a cron calls an internal function, always import the \`internal\` object from '\_generated/api\`, even if the internal function is registered in the same file.
+- If a cron calls an internal function, always import the \`internal\` object from \`_generated/api\`, even if the internal function is registered in the same file.
 
 ## File storage guidelines
 
@@ -455,7 +466,7 @@ export default crons;
 
 Instead, query the \`_storage\` system table. For example, you can use \`ctx.db.system.get\` to get an \`Id<"_storage">\`.
 
-\`\`\`
+\`\`\`ts
 import { query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
@@ -483,7 +494,7 @@ export const exampleQuery = query({
 ## Example of using Convex storage within a chat app
 
 Path: \`convex/messages.ts\`
-\`\`\`
+\`\`\`ts
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 
@@ -532,7 +543,7 @@ export const sendMessage = mutation({
 \`\`\`
 
 Path: \`src/App.tsx\`
-\`\`\`
+\`\`\`ts
 import { FormEvent, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
