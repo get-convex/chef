@@ -755,6 +755,8 @@ export const generateResponse = internalAction({
     channelId: v.id("channels"),
   },
   handler: async (ctx, args) => {
+    // IMPORTANT: Auth isn't available in \`generateResponse\` since
+    // it's called by the scheduler.
     const context = await ctx.runQuery(internal.functions.loadContext, {
       channelId: args.channelId,
     });
