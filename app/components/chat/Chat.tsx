@@ -242,7 +242,7 @@ export const Chat = memo(
     useEffect(() => {
       const prompt = searchParams.get('prompt');
 
-      if (!prompt) {
+      if (!prompt || prompt.trim() === '') {
         return;
       }
 
