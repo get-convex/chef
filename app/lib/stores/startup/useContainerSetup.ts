@@ -115,7 +115,6 @@ async function setupConvexEnvVars(webcontainer: WebContainer, convexProject: Con
   if (content === null) {
     // Create the file if it doesn't exist
     await webcontainer.fs.writeFile(envFilePath, envVarLine);
-    console.log('Created .env.local with Convex token');
   } else {
     const lines = content.split('\n');
 
@@ -126,9 +125,6 @@ async function setupConvexEnvVars(webcontainer: WebContainer, convexProject: Con
       // Add the env var to the end of the file
       const newContent = content.endsWith('\n') ? `${content}${envVarLine}` : `${content}\n${envVarLine}`;
       await webcontainer.fs.writeFile(envFilePath, newContent);
-      console.log('Added Convex token to .env.local');
-    } else {
-      console.log('Convex token already exists in .env.local');
     }
   }
 }

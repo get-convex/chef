@@ -116,8 +116,6 @@ export class WorkbenchStore {
   // after the snapshot has been loaded but before any subsequent changes are
   // made.
   async startBackup() {
-    console.log('Starting backup worker...');
-
     // This is a bit racy, but we need to flush the current file events before
     // deciding that we're synced up to the current update counter. Sleep for
     // twice the batching interval.
@@ -137,9 +135,6 @@ export class WorkbenchStore {
       const currentState = this.backupState.get();
       const currentUpdateCounter = getFileUpdateCounter();
       if (currentState.started && currentState.savedUpdateCounter !== currentUpdateCounter) {
-        console.log(
-          `Unsaved changes (${currentState.savedUpdateCounter} -> ${currentUpdateCounter}) detected, preventing navigation...`,
-        );
         // Some browsers require both preventDefault and setting returnValue
         e.preventDefault();
         e.returnValue = '';
@@ -592,7 +587,6 @@ async function backupWorker(backupState: WritableAtom<BackupState>) {
       await new Promise((resolve) => setTimeout(resolve, nextSync - now));
     }
     const nextUpdateCounter = getFileUpdateCounter();
-    console.log(`Performing backup (advancing from ${currentState.savedUpdateCounter} to ${nextUpdateCounter})...`);
     try {
       await performBackup(sessionId);
     } catch (error) {
