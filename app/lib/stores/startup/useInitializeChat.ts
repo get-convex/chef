@@ -9,13 +9,12 @@ import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { toast } from 'sonner';
 import { openSignInWindow } from '~/components/ChefSignInPage';
 
-export function useInitializeChat(chatId: string) {
+export function useHomepageInitializeChat(chatId: string) {
   const { getAccessTokenSilently } = useAuth0();
   const convex = useConvex();
   const chefAuthState = useChefAuth();
   const isFullyLoggedIn = chefAuthState.kind === 'fullyLoggedIn';
   return useCallback(async () => {
-    // Note: for existing chats, we redirect to the homepage if the user is unauthenticated
     if (!isFullyLoggedIn) {
       toast.info('Please sign in first to continue!');
       openSignInWindow();
@@ -25,6 +24,27 @@ export function useInitializeChat(chatId: string) {
     if (selectedTeamSlug === null) {
       toast.info('Please select a team first!');
     }
+    const response = await getAccessTokenSilently({ detailedResponse: true });
+    const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
+    const projectInitParams = {
+      teamSlug,
+      auth0AccessToken: response.id_token,
+    };
+    await convex.mutation(api.messages.initializeChat, {
+      id: chatId,
+      sessionId,
+      projectInitParams,
+    });
+  }, [convex, chatId, getAccessTokenSilently, isFullyLoggedIn]);
+}
+
+export function useExistingInitializeChat(chatId: string) {
+  const { getAccessTokenSilently } = useAuth0();
+  const convex = useConvex();
+  const chefAuthState = useChefAuth();
+  const isFullyLoggedIn = chefAuthState.kind === 'fullyLoggedIn';
+  return useCallback(async () => {
+    const sessionId = await waitForConvexSessionId('useInitializeChat');
     const response = await getAccessTokenSilently({ detailedResponse: true });
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
     const projectInitParams = {
