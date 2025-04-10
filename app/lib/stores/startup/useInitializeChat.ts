@@ -13,6 +13,7 @@ const SIGNIN_WINDOW_HEIGHT = 600;
 
 export function useInitializeChat(chatId: string) {
   const { getAccessTokenSilently } = useAuth0();
+  console.log('got access token', chatId);
   const convex = useConvex();
   const chefAuthState = useChefAuth();
   const isFullyLoggedIn = chefAuthState.kind === 'fullyLoggedIn';
@@ -44,5 +45,5 @@ export function useInitializeChat(chatId: string) {
       sessionId,
       projectInitParams,
     });
-  }, [convex, chatId, getAccessTokenSilently, isFullyLoggedIn, chefAuthState]);
+  }, [convex, chatId, getAccessTokenSilently, isFullyLoggedIn]);
 }

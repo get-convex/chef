@@ -562,11 +562,13 @@ export async function getChatByIdOrUrlIdEnsuringAccess(
 ) {
   const isValid = await isValidSession(ctx, { sessionId });
   if (!isValid) {
+    console.log('session is not valid');
     return null;
   }
 
   const byId = await getChatByInitialId(ctx, { id, sessionId });
   if (byId !== null) {
+    console.log('chat found by id', byId);
     return byId;
   }
 

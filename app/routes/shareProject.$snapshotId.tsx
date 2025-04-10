@@ -34,7 +34,7 @@ export default function ShareProject() {
   const navigate = useNavigate();
 
   // FIXME: save a chatId and mutation to add chat later
-  const chatId = 'shared-' + snapshotId;
+  const chatId = useRef(crypto.randomUUID()).current;
   setPageLoadChatId(chatId);
 
   if (!snapshotId) {

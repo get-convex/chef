@@ -51,6 +51,7 @@ export const loadConnectedConvexProjectCredentials = query({
   handler: async (ctx, args) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
     if (!chat) {
+      console.log('chat not found');
       return null;
     }
     const project = chat.convexProject;
@@ -68,6 +69,7 @@ export const loadConnectedConvexProjectCredentials = query({
       .withIndex('bySlugs', (q) => q.eq('teamSlug', project.teamSlug).eq('projectSlug', project.projectSlug))
       .first();
     if (!credentials) {
+      console.log('no credentials found');
       return null;
     }
     return {
