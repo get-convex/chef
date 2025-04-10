@@ -7,6 +7,7 @@ import { api } from '@convex/_generated/api';
 import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { openSignInWindow } from '~/components/ChefSignInPage';
 import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
+import { toast } from 'sonner';
 
 export function useHomepageInitializeChat(chatId: string) {
   const convex = useConvex();
