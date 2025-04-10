@@ -1,10 +1,11 @@
-import { mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
+import { action, internalMutation, mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
 import type { Message as AIMessage } from 'ai';
 import { ConvexError, v } from 'convex/values';
 import type { VAny } from 'convex/values';
 import { isValidSession } from './sessions';
 import type { Doc, Id } from './_generated/dataModel';
-import { startProvisionConvexProjectHelper } from './convexProjects';
+import { ensureEnvVar, startProvisionConvexProjectHelper } from './convexProjects';
+import { internal } from '@convex/_generated/api';
 export type SerializedMessage = Omit<AIMessage, 'createdAt'> & {
   createdAt: number | undefined;
 };
@@ -302,15 +303,70 @@ export const getAll = query({
   },
 });
 
-export const remove = mutation({
+export const remove = action({
+  args: {
+    sessionId: v.id('sessions'),
+    id: v.string(),
+    teamSlug: v.optional(v.string()),
+    projectSlug: v.optional(v.string()),
+    shouldDeleteConvexProject: v.boolean(),
+    accessToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { accessToken, id, sessionId, teamSlug, projectSlug, shouldDeleteConvexProject } = args;
+    console.log(teamSlug, projectSlug);
+    if (shouldDeleteConvexProject) {
+      if (teamSlug === undefined || projectSlug === undefined) {
+        throw new Error('Team slug and project slug are required to delete a Convex project');
+      }
+
+      const bigBrainHost = ensureEnvVar('BIG_BRAIN_HOST');
+
+      const projectsResponse = await fetch(`${bigBrainHost}/api/teams/${teamSlug}/projects`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!projectsResponse.ok) {
+        const text = await projectsResponse.text();
+        throw new Error(`Failed to fetch team projects: ${projectsResponse.statusText} ${text}`);
+      }
+
+      const projects = await projectsResponse.json();
+      const project = projects.find((p: any) => p.slug === projectSlug);
+
+      if (!project) {
+        throw new Error(`Could not find project with slug ${projectSlug}`);
+      }
+
+      const response = await fetch(`${bigBrainHost}/api/dashboard/delete_project/${project.id}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Failed to delete project: ${response.statusText} ${text}`);
+      }
+    }
+
+    await ctx.runMutation(internal.messages.removeChatInner, {
+      id,
+      sessionId,
+    });
+  },
+});
+
+export const removeChatInner = internalMutation({
   args: {
     id: v.string(),
     sessionId: v.id('sessions'),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
-    const { id, sessionId } = args;
-    const existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
+    const existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.id, sessionId: args.sessionId });
 
     if (!existing) {
       return;

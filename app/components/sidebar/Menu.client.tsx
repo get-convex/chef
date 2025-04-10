@@ -14,7 +14,7 @@ import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { classNames } from '~/utils/classNames';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { getConvexAuthToken, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { getKnownInitialId } from '~/lib/stores/chatId';
 import { profileStore } from '~/lib/stores/profile';
 import { useAuth0 } from '@auth0/auth0-react';
@@ -52,33 +52,55 @@ export const Menu = memo(() => {
   const [dialogContent, setDialogContent] = useState<DialogContent>(null);
   const profile = useStore(profileStore);
   const { logout } = useAuth0();
+  const [shouldDeleteConvexProject, setShouldDeleteConvexProject] = useState(false);
+  const convexProjectInfo = useQuery(
+    api.convexProjects.loadConnectedConvexProjectCredentials,
+    dialogContent?.type === 'delete' && sessionId
+      ? {
+          sessionId,
+          chatId: dialogContent.item.initialId,
+        }
+      : 'skip',
+  );
 
   const { filteredItems: filteredList, handleSearchChange } = useSearchFilter({
     items: list,
     searchFields: ['description'],
   });
 
-  const deleteItem = useCallback((event: React.UIEvent, item: ChatHistoryItem) => {
-    event.preventDefault();
-    if (!sessionId) {
-      return;
-    }
-    convex
-      .mutation(api.messages.remove, { id: item.id, sessionId })
-      .then(() => {
-        if (getKnownInitialId() === item.initialId) {
-          // hard page navigation to clear the stores
-          window.location.pathname = '/';
-        }
-      })
-      .catch((error) => {
-        toast.error('Failed to delete conversation');
-        logger.error(error);
-      });
-  }, []);
+  const deleteItem = useCallback(
+    (event: React.UIEvent, item: ChatHistoryItem) => {
+      event.preventDefault();
+      const accessToken = getConvexAuthToken(convex);
+      if (!sessionId || !accessToken) {
+        return;
+      }
+      convex
+        .action(api.messages.remove, {
+          id: item.id,
+          sessionId,
+          teamSlug: convexProjectInfo?.teamSlug,
+          projectSlug: convexProjectInfo?.projectSlug,
+          shouldDeleteConvexProject: shouldDeleteConvexProject && convexProjectInfo?.kind === 'connected',
+          accessToken,
+        })
+        .then(() => {
+          if (getKnownInitialId() === item.initialId) {
+            // hard page navigation to clear the stores
+            window.location.pathname = '/';
+          }
+        })
+        .catch((error) => {
+          toast.error('Failed to delete conversation');
+          logger.error(error);
+        });
+    },
+    [sessionId, shouldDeleteConvexProject, convexProjectInfo],
+  );
 
   const closeDialog = () => {
     setDialogContent(null);
+    setShouldDeleteConvexProject(false);
   };
 
   useEffect(() => {
@@ -183,19 +205,52 @@ export const Menu = memo(() => {
               <Dialog onBackdrop={closeDialog} onClose={closeDialog}>
                 {dialogContent?.type === 'delete' && (
                   <>
-                    <div className="p-6 bg-white dark:bg-gray-950 rounded-t-lg">
-                      <DialogTitle className="text-gray-900 dark:text-white">Delete Chat?</DialogTitle>
-                      <DialogDescription className="mt-2 text-gray-600 dark:text-gray-400">
+                    <div className="p-6 bg-bolt-elements-background-depth-1 rounded-t-lg">
+                      <DialogTitle className="text-bolt-elements-textPrimary">Delete Chat?</DialogTitle>
+                      <DialogDescription className="mt-2 text-bolt-elements-textSecondary">
                         <p>
                           You are about to delete{' '}
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {dialogContent.item.description}
+                          <span className="font-medium text-bolt-elements-textPrimary">
+                            {dialogContent.item.description || 'New chat...'}
                           </span>
                         </p>
                         <p className="mt-2">Are you sure you want to delete this chat?</p>
+                        {dialogContent?.type === 'delete' && sessionId && convexProjectInfo === undefined ? (
+                          <div className="mt-4 flex items-center gap-2">
+                            <div className="w-4 h-4 rounded bg-bolt-elements-background-depth-3 animate-pulse" />
+                            <div className="h-5 flex-1 max-w-[280px] rounded bg-bolt-elements-background-depth-3 animate-pulse" />
+                          </div>
+                        ) : (
+                          convexProjectInfo?.kind === 'connected' && (
+                            <div className="mt-4 flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id="delete-convex-project"
+                                checked={shouldDeleteConvexProject}
+                                onChange={(e) => setShouldDeleteConvexProject(e.target.checked)}
+                                className="rounded border-bolt-elements-borderColor text-bolt-elements-button-primary-background focus:ring-bolt-elements-borderColorActive"
+                              />
+                              <label
+                                htmlFor="delete-convex-project"
+                                className="text-bolt-elements-textSecondary text-pretty"
+                              >
+                                Also delete the associated Convex project (
+                                <a
+                                  href={`https://dashboard.convex.dev/p/${convexProjectInfo.projectSlug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                  {convexProjectInfo.projectSlug}
+                                </a>
+                                )
+                              </label>
+                            </div>
+                          )
+                        )}
                       </DialogDescription>
                     </div>
-                    <div className="rounded-b-lg flex justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+                    <div className="rounded-b-lg flex justify-end gap-3 px-6 py-4 border-t border-bolt-elements-borderColor bg-bolt-elements-background-depth-1">
                       <DialogButton type="secondary" onClick={closeDialog}>
                         Cancel
                       </DialogButton>

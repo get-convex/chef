@@ -10,7 +10,7 @@ import {
 import { ConvexError, v } from 'convex/values';
 import { getChatByIdOrUrlIdEnsuringAccess } from './messages';
 import { internal } from './_generated/api';
-import { getCurrentMember, getInviteCode } from './sessions';
+import { getInviteCode } from './sessions';
 import type { Id } from './_generated/dataModel';
 
 export const hasConnectedConvexProject = query({
@@ -458,7 +458,7 @@ export const disconnectConvexProject = mutation({
   },
 });
 
-function ensureEnvVar(name: string) {
+exoprt function ensureEnvVar(name: string) {
   if (!process.env[name]) {
     throw new Error(`Environment variable ${name} is not set`);
   }
