@@ -46,7 +46,7 @@ export const create = mutation({
 async function generateUniqueCode(db: DatabaseReader) {
   const code = crypto.randomUUID().replace(/-/g, '').substring(0, 6);
   const existing = await db
-    .query('shareLinks')
+    .query('shares')
     .withIndex('byCode', (q) => q.eq('code', code))
     .first();
   if (existing) {
