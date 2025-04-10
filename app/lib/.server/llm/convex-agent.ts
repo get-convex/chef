@@ -122,9 +122,19 @@ export async function convexAgent(
       const userKeyApiFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {
           const result = await fetch(input, init);
+          if (result.status === 413) {
+            const text = await result.text();
+            throw new Error(
+              JSON.stringify({ error: 'Request exceeds the maximum allowed number of bytes.', details: text }),
+            );
+          }
           if (result.status === 429) {
             const text = await result.text();
             throw new Error(JSON.stringify({ error: 'Rate limited by Anthropic', details: text }));
+          }
+          if (result.status === 529) {
+            const text = await result.text();
+            throw new Error(JSON.stringify({ error: "Anthropic's API is temporarily overloaded", details: text }));
           }
           return result;
         };
