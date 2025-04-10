@@ -157,6 +157,14 @@ export class WorkbenchStore {
     return this.#previewsStore.previews;
   }
 
+  async startProxy(sourcePort: number) {
+    return this.#previewsStore.startProxy(sourcePort);
+  }
+
+  stopProxy(proxyPort: number) {
+    return this.#previewsStore.stopProxy(proxyPort);
+  }
+
   get files() {
     return this.#filesStore.files;
   }
@@ -215,8 +223,11 @@ export class WorkbenchStore {
   attachTerminal(terminal: ITerminal) {
     this.#terminalStore.attachTerminal(terminal);
   }
-  attachBoltTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
-    this.#terminalStore.attachBoltTerminal(terminal, options);
+  attachBoltTerminal(terminal: ITerminal, isReload: boolean) {
+    this.#terminalStore.attachBoltTerminal(terminal, isReload);
+  }
+  attachDeployTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
+    this.#terminalStore.attachDeployTerminal(terminal, options);
   }
 
   onTerminalResize(cols: number, rows: number) {
@@ -547,6 +558,12 @@ export class WorkbenchStore {
     // Generate the zip file and save it
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `${uniqueProjectName}.zip`);
+  }
+
+  isDefaultPreviewRunning() {
+    const DEFAULT_PREVIEW_PORT = 5173;
+    const previews = this.previews.get();
+    return previews.some((preview) => preview.port === DEFAULT_PREVIEW_PORT);
   }
 }
 

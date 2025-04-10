@@ -7,12 +7,15 @@ import { themeStore } from '~/lib/stores/theme';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
 import { Terminal, type TerminalRef } from './Terminal';
-import { createScopedLogger } from '~/utils/logger';
 import type { TerminalInitializationOptions } from '~/types/terminal';
+import {
+  activeTerminalTabStore,
+  isConvexDeployTerminalVisibleStore,
+  VITE_TAB_INDEX,
+  CONVEX_DEPLOY_TAB_INDEX,
+} from '~/lib/stores/terminalTabs';
 
-const logger = createScopedLogger('Terminal');
-
-const MAX_TERMINALS = 3;
+const MAX_TERMINALS = 5;
 export const DEFAULT_TERMINAL_SIZE = 25;
 
 export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitializationOptions) => {
@@ -23,13 +26,15 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
   const terminalPanelRef = useRef<ImperativePanelHandle>(null);
   const terminalToggledByShortcut = useRef(false);
 
-  const [activeTerminal, setActiveTerminal] = useState(0);
-  const [terminalCount, setTerminalCount] = useState(1);
+  const activeTerminal = useStore(activeTerminalTabStore);
+  const [terminalCount, setTerminalCount] = useState(2);
+
+  const isConvexDeployTerminalVisible = useStore(isConvexDeployTerminalVisibleStore);
 
   const addTerminal = () => {
     if (terminalCount < MAX_TERMINALS) {
       setTerminalCount(terminalCount + 1);
-      setActiveTerminal(terminalCount);
+      activeTerminalTabStore.set(terminalCount + 1);
     }
   };
 
@@ -91,45 +96,30 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
             {Array.from({ length: terminalCount + 1 }, (_, index) => {
               const isActive = activeTerminal === index;
 
+              if (index === CONVEX_DEPLOY_TAB_INDEX && !isConvexDeployTerminalVisible) {
+                return null;
+              }
+
               return (
-                <React.Fragment key={index}>
-                  {index == 0 ? (
-                    <button
-                      key={index}
-                      className={classNames(
-                        'flex items-center text-sm cursor-pointer gap-1.5 px-3 py-2 h-full whitespace-nowrap rounded-full',
-                        {
-                          'bg-bolt-elements-terminals-buttonBackground text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary':
-                            isActive,
-                          'bg-bolt-elements-background-depth-2 text-bolt-elements-textSecondary hover:bg-bolt-elements-terminals-buttonBackground':
-                            !isActive,
-                        },
-                      )}
-                      onClick={() => setActiveTerminal(index)}
-                    >
-                      <div className="i-ph:terminal-window-duotone text-lg" />
-                      Dev Server
-                    </button>
-                  ) : (
-                    <React.Fragment>
-                      <button
-                        key={index}
-                        className={classNames(
-                          'flex items-center text-sm cursor-pointer gap-1.5 px-3 py-2 h-full whitespace-nowrap rounded-full',
-                          {
-                            'bg-bolt-elements-terminals-buttonBackground text-bolt-elements-textPrimary': isActive,
-                            'bg-bolt-elements-background-depth-2 text-bolt-elements-textSecondary hover:bg-bolt-elements-terminals-buttonBackground':
-                              !isActive,
-                          },
-                        )}
-                        onClick={() => setActiveTerminal(index)}
-                      >
-                        <div className="i-ph:terminal-window-duotone text-lg" />
-                        Terminal {terminalCount > 1 && index}
-                      </button>
-                    </React.Fragment>
+                <button
+                  key={index}
+                  className={classNames(
+                    'flex items-center text-sm cursor-pointer gap-1.5 px-3 py-2 h-full whitespace-nowrap rounded-full',
+                    {
+                      'bg-bolt-elements-terminals-buttonBackground text-bolt-elements-textPrimary': isActive,
+                      'bg-bolt-elements-background-depth-2 text-bolt-elements-textSecondary hover:bg-bolt-elements-terminals-buttonBackground':
+                        !isActive,
+                    },
                   )}
-                </React.Fragment>
+                  onClick={() => activeTerminalTabStore.set(index)}
+                >
+                  <div className="i-ph:terminal-window-duotone text-lg" />
+                  {index === VITE_TAB_INDEX
+                    ? 'Dev Server'
+                    : index === CONVEX_DEPLOY_TAB_INDEX
+                      ? 'Convex Deploy'
+                      : `Terminal ${terminalCount > 2 ? index - 1 : ''}`}
+                </button>
               );
             })}
             {terminalCount < MAX_TERMINALS && <IconButton icon="i-ph:plus" size="md" onClick={addTerminal} />}
@@ -141,47 +131,32 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
               onClick={() => workbenchStore.toggleTerminal(false)}
             />
           </div>
-          {Array.from({ length: terminalCount + 1 }, (_, index) => {
-            const isActive = activeTerminal === index;
-
-            logger.debug(`Starting bolt terminal [${index}]`);
-
-            if (index == 0) {
-              return (
-                <Terminal
-                  key={index}
-                  id={`terminal_${index}`}
-                  className={classNames('h-full overflow-hidden', {
-                    hidden: !isActive,
-                  })}
-                  ref={(ref) => {
-                    terminalRefs.current.push(ref);
-                  }}
-                  onTerminalReady={(terminal) =>
-                    workbenchStore.attachBoltTerminal(terminal, terminalInitializationOptions)
-                  }
-                  onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
-                  theme={theme}
-                />
-              );
-            } else {
-              return (
-                <Terminal
-                  key={index}
-                  id={`terminal_${index}`}
-                  className={classNames('h-full overflow-hidden', {
-                    hidden: !isActive,
-                  })}
-                  ref={(ref) => {
-                    terminalRefs.current.push(ref);
-                  }}
-                  onTerminalReady={(terminal) => workbenchStore.attachTerminal(terminal)}
-                  onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
-                  theme={theme}
-                />
-              );
-            }
-          })}
+          {Array.from({ length: terminalCount + 1 }, (_, index) => (
+            <Terminal
+              key={index}
+              id={`terminal_${index}`}
+              className={classNames('h-full overflow-hidden', {
+                hidden: activeTerminal !== index,
+              })}
+              ref={(ref) => {
+                terminalRefs.current.push(ref);
+              }}
+              onTerminalReady={(terminal) => {
+                if (index === VITE_TAB_INDEX) {
+                  workbenchStore.attachBoltTerminal(terminal, terminalInitializationOptions?.isReload ?? false);
+                } else if (index === CONVEX_DEPLOY_TAB_INDEX) {
+                  workbenchStore.attachDeployTerminal(terminal, {
+                    ...terminalInitializationOptions,
+                  });
+                } else {
+                  workbenchStore.attachTerminal(terminal);
+                }
+              }}
+              onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
+              theme={theme}
+              readonly={index === CONVEX_DEPLOY_TAB_INDEX}
+            />
+          ))}
         </div>
       </div>
     </Panel>

@@ -55,7 +55,7 @@ export async function newShellProcess(webcontainer: WebContainer, terminal: ITer
   return process;
 }
 
-type ExecutionResult = { output: string; exitCode: number } | undefined;
+type ExecutionResult = { output: string; exitCode: number };
 
 export class BoltShell {
   #initialized: (() => void) | undefined;
@@ -97,14 +97,20 @@ export class BoltShell {
 
   async startCommand(command: string) {
     if (!this.process || !this.terminal) {
-      return;
+      throw new Error('Terminal not initialized');
     }
 
-    // Interrupt the current execution
-    this.terminal.input('\x03');
+    // For terminals that might be readonly, use write method directly for sending commands
+    const shellInput = this.#shellInputStream;
+    if (!shellInput) {
+      throw new Error('Shell input stream not initialized');
+    }
+
+    // Interrupt the current execution with Ctrl+C
+    shellInput.write('\x03');
     await this.waitTillOscCode('prompt');
 
-    this.terminal.input(command.trim() + '\n');
+    shellInput.write(command.trim() + '\n');
   }
 
   async executeCommand(command: string): Promise<ExecutionResult> {
