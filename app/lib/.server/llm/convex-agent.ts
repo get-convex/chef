@@ -119,9 +119,19 @@ export async function convexAgent(
           }
         };
       };
+      const userKeyApiFetch = () => {
+        return async (input: RequestInfo | URL, init?: RequestInit) => {
+          const result = await fetch(input, init);
+          if (result.status === 429) {
+            const text = await result.text();
+            throw new Error(JSON.stringify({ error: 'Rate limited by Anthropic', details: text }));
+          }
+          return result;
+        };
+      };
       const anthropic = createAnthropic({
         apiKey: userApiKey || getEnv(env, 'ANTHROPIC_API_KEY'),
-        fetch: userApiKey ? fetch : rateLimitAwareFetch(),
+        fetch: userApiKey ? userKeyApiFetch() : rateLimitAwareFetch(),
       });
 
       provider = {
