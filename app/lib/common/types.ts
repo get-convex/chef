@@ -9,9 +9,9 @@ type EmptyArgs = z.ZodObject<Record<string, never>>;
 
 export type ConvexToolSet = {
   deploy: Tool<EmptyArgs, string>;
-  view: Tool<typeof viewParameters, string>;
   npmInstall: Tool<typeof npmInstallToolParameters, string>;
-  edit: Tool<typeof editToolParameters, string>;
+  view?: Tool<typeof viewParameters, string>;
+  edit?: Tool<typeof editToolParameters, string>;
 };
 
 type ConvexToolCall = ToolCallUnion<ConvexToolSet>;

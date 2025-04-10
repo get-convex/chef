@@ -32,13 +32,6 @@ type Provider = {
   model: LanguageModelV1;
 };
 
-const tools: ConvexToolSet = {
-  deploy: deployTool,
-  view: viewTool,
-  npmInstall: npmInstallTool,
-  edit: editTool,
-};
-
 export type ModelProvider = 'Anthropic' | 'Bedrock' | 'OpenAI';
 
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
@@ -144,6 +137,14 @@ export async function convexAgent(
     enablePreciseEdits: false,
     includeTemplate: true,
   };
+  let tools: ConvexToolSet = {
+    deploy: deployTool,
+    npmInstall: npmInstallTool,
+  };
+  if (opts.enablePreciseEdits) {
+    tools.view = viewTool;
+    tools.edit = editTool;
+  }
   const result = streamText({
     model: provider.model,
     maxTokens: provider.maxTokens,
