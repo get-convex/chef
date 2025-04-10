@@ -315,7 +315,7 @@ export const Chat = memo(
       setChatStarted(true);
     };
 
-    const sendMessage = useCallback(async (_event: React.UIEvent, messageInput?: string) => {
+    const sendMessage = async (_event: React.UIEvent, messageInput?: string) => {
       if (retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) {
         toast.error(CHEF_TOO_BUSY_ERROR);
         return;
@@ -417,7 +417,7 @@ export const Chat = memo(
       } finally {
         setSendMessageInProgress(false);
       }
-    }, [retries, input, status, sendMessageInProgress, chatStarted, append, textareaRef.current]);
+    };
 
     /**
      * Handles the change event for the textarea and updates the input state.
