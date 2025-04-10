@@ -1,8 +1,9 @@
+import { useAuth0 } from '@auth0/auth0-react';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
 import type { MetaFunction } from '@vercel/remix';
 import { ClientOnly } from 'remix-utils/client-only';
-import { ChefAuthProvider, ConvexSignInForm, useChefAuth } from '~/components/chat/ChefAuthWrapper';
+import { ChefAuthProvider, useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { Header } from '~/components/header/Header';
 import { Loading } from '~/components/Loading';
 
@@ -68,3 +69,26 @@ const SignInPage = () => {
       return <div>Unknown state</div>;
   }
 };
+
+export function ConvexSignInForm() {
+  const { loginWithRedirect } = useAuth0();
+  return (
+    <div className="flex flex-col items-center justify-center h-full gap-4">
+      <h1 className="text-2xl font-bold">Connect to Convex</h1>
+      <button
+        className="px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
+        onClick={() => {
+          loginWithRedirect({
+            authorizationParams: {
+              connection: 'github',
+              redirect_uri: `${window.location.origin}/signin`,
+            },
+          });
+        }}
+      >
+        <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+        Log in with your Convex account
+      </button>
+    </div>
+  );
+}

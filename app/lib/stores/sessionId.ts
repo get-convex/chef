@@ -38,37 +38,3 @@ export async function waitForConvexSessionId(caller?: string): Promise<Id<'sessi
 }
 export const SESSION_ID_KEY = 'sessionIdForConvex';
 export const sessionIdStore = atom<Id<'sessions'> | null | undefined>(undefined);
-
-export function setInitialConvexSessionId(convex: ConvexReactClient) {
-  function setSessionId(sessionId: Id<'sessions'> | null) {
-    setLocalStorage(SESSION_ID_KEY, sessionId);
-    sessionIdStore.set(sessionId);
-  }
-  const sessionIdFromLocalStorage = getLocalStorage(SESSION_ID_KEY);
-  if (sessionIdFromLocalStorage) {
-    convex
-      .query(api.sessions.verifySession, {
-        sessionId: sessionIdFromLocalStorage as Id<'sessions'>,
-        flexAuthMode: 'ConvexOAuth',
-      })
-      .then((validatedSessionId) => {
-        if (validatedSessionId) {
-          setSessionId(sessionIdFromLocalStorage as Id<'sessions'>);
-        } else {
-          setSessionId(null);
-        }
-      });
-    return;
-  }
-
-  convex
-    .mutation(api.sessions.startSession)
-    .then((sessionId) => {
-      setSessionId(sessionId);
-    })
-    .catch((error) => {
-      setSessionId(null);
-      console.error('Error starting session', error);
-    });
-  return;
-}

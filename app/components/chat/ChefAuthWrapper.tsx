@@ -1,4 +1,3 @@
-import { useAuth0 } from '@auth0/auth0-react';
 import { useConvex } from 'convex/react';
 
 import { useConvexAuth } from 'convex/react';
@@ -11,7 +10,7 @@ import type { Id } from '@convex/_generated/dataModel';
 import { useLocalStorage } from '@uidotdev/usehooks';
 import { SESSION_ID_KEY } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
-import { setLocalStorage } from '~/lib/persistence';
+import { toast } from 'sonner';
 
 type ChefAuthState =
   | {
@@ -72,6 +71,11 @@ export const ChefAuthProvider = ({
             // if we're authenticated.
             setSessionId(null);
           }
+        })
+        .catch((error) => {
+          console.error('Error verifying session', error);
+          toast.error('Unexpected error verifying credentials');
+          setSessionId(null);
         });
       return;
     }
@@ -112,26 +116,3 @@ export const ChefAuthProvider = ({
 
   return <ChefAuthContext.Provider value={{ state }}>{children}</ChefAuthContext.Provider>;
 };
-
-export function ConvexSignInForm() {
-  const { loginWithRedirect } = useAuth0();
-  return (
-    <div className="flex flex-col items-center justify-center h-full gap-4">
-      <h1 className="text-2xl font-bold">Connect to Convex</h1>
-      <button
-        className="px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
-        onClick={() => {
-          loginWithRedirect({
-            authorizationParams: {
-              connection: 'github',
-              redirect_uri: `${window.location.origin}/signin`,
-            },
-          });
-        }}
-      >
-        <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
-        Log in with your Convex account
-      </button>
-    </div>
-  );
-}
