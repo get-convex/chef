@@ -1,4 +1,4 @@
-import type { LanguageModelUsage } from 'ai';
+import type { LanguageModelUsage, ProviderMetadata } from 'ai';
 import { createScopedLogger } from '~/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
 
@@ -26,11 +26,18 @@ export async function recordUsage(
   teamSlug: string,
   deploymentName: string | undefined,
   usage: LanguageModelUsage,
+  providerMetadata: ProviderMetadata | undefined,
 ) {
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/record_tokens`;
   // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
-  const chefTokens = usage.promptTokens * 40 + usage.completionTokens * 200;
+  let chefTokens = usage.promptTokens * 40 + usage.completionTokens * 200;
+  if (providerMetadata?.anthropic) {
+    const anthropic = providerMetadata.anthropic;
+    const cacheCreationInputTokens = Number(anthropic.cacheCreationInputTokens ?? 0);
+    const cacheReadInputTokens = Number(anthropic.cacheReadInputTokens ?? 0);
+    chefTokens += cacheCreationInputTokens * 40 + cacheReadInputTokens * 3;
+  }
   const response = await fetch(url, {
     method: 'POST',
     headers: {

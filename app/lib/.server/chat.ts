@@ -3,7 +3,7 @@ import { createScopedLogger } from '~/utils/logger';
 import { convexAgent, getEnv, type ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
-import type { LanguageModelUsage, Message } from 'ai';
+import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { checkTokenUsage, recordUsage } from '~/lib/.server/usage';
 import { disabledText, noTokensText } from '~/lib/convexUsage';
 
@@ -92,9 +92,9 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     }
   }
 
-  const recordUsageCb = async (usage: LanguageModelUsage) => {
+  const recordUsageCb = async (usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) => {
     if (!userApiKey) {
-      await recordUsage(PROVISION_HOST, token, teamSlug, deploymentName, usage);
+      await recordUsage(PROVISION_HOST, token, teamSlug, deploymentName, usage, providerMetadata);
     }
   };
 

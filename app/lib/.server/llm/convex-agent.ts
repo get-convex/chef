@@ -4,6 +4,7 @@ import {
   type LanguageModelUsage,
   type LanguageModelV1,
   type Message,
+  type ProviderMetadata,
   type StepResult,
 } from 'ai';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
@@ -44,7 +45,7 @@ export async function convexAgent(
   tracer: Tracer | null,
   modelProvider: ModelProvider,
   userApiKey: string | undefined,
-  recordUsageCb: (usage: LanguageModelUsage) => Promise<void>,
+  recordUsageCb: (usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) => Promise<void>,
 ) {
   console.debug('Starting agent with model provider', modelProvider);
   if (userApiKey) {
@@ -271,9 +272,9 @@ async function onFinishHandler(
   result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
   tracer: Tracer | null,
   chatId: string,
-  recordUsageCb: (usage: LanguageModelUsage) => Promise<void>,
+  recordUsageCb: (usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) => Promise<void>,
 ) {
-  const { usage } = result;
+  const { usage, providerMetadata } = result;
   console.log('Finished streaming', {
     finishReason: result.finishReason,
     usage,
@@ -297,7 +298,7 @@ async function onFinishHandler(
   }
 
   // Record usage once the dataStream is closed.
-  await recordUsageCb(usage);
+  await recordUsageCb(usage, providerMetadata);
 
   await new Promise((resolve) => setTimeout(resolve, 0));
 }

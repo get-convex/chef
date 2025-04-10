@@ -232,7 +232,7 @@ export const Chat = memo(
       onFinish: async (message, response) => {
         const usage = response.usage;
         if (usage) {
-          console.log('Token usage in response:', usage);
+          console.debug('Token usage in response:', usage);
         }
         if (response.finishReason == 'stop') {
           setRetries({ numFailures: 0, nextRetry: Date.now() });
