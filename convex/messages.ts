@@ -153,38 +153,6 @@ export const clone = mutation({
   },
 });
 
-// This is just for testing. We can update it to be auth protected later if we want to generate shares from UI.
-export const createShareFromChat = internalMutation({
-  args: {
-    chatId: v.id('chats'),
-  },
-  returns: v.object({
-    id: v.id('shares'),
-  }),
-  handler: async (ctx, args) => {
-    const { chatId } = args;
-    const chat = await ctx.db.get(chatId);
-    if (!chat) {
-      throw new Error('Chat not found');
-    }
-    if (!chat.snapshotId) {
-      throw new Error('Chat has no snapshot');
-    }
-    const lastMessage = await ctx.db
-      .query('chatMessages')
-      .withIndex('byChatId', (q) => q.eq('chatId', chatId))
-      .order('desc')
-      .first();
-    const shareId = await ctx.db.insert('shares', {
-      chatId,
-      snapshotId: chat.snapshotId,
-      lastMessageRank: lastMessage ? lastMessage.rank : 0,
-    });
-    return {
-      id: shareId,
-    };
-  },
-});
 export const importChat = mutation({
   args: {
     sessionId: v.id('sessions'),
