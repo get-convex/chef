@@ -130,7 +130,7 @@ export function SettingsContent() {
   };
 
   return (
-    <div className="min-h-screen bg-bolt-background">
+    <div className="min-h-screen bg-bolt-elements-background-depth-2">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <a href="/" className="inline-flex" title="Back to Chat">
@@ -141,7 +141,7 @@ export function SettingsContent() {
 
         <div className="space-y-6">
           {/* Profile Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-bolt-elements-borderColor">
+          <div className="bg-bolt-elements-background-depth-1 rounded-lg shadow-sm border border-bolt-elements-borderColor">
             <div className="p-6">
               <h2 className="text-xl font-semibold text-bolt-elements-textPrimary mb-4">Profile</h2>
               <div className="flex items-center gap-4">
@@ -185,7 +185,7 @@ export function SettingsContent() {
           </div>
 
           {/* Usage Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-bolt-elements-borderColor">
+          <div className="bg-bolt-elements-background-depth-1 rounded-lg shadow-sm border border-bolt-elements-borderColor">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-bolt-elements-textPrimary">Chef Usage</h2>
@@ -239,7 +239,7 @@ export function SettingsContent() {
           </div>
 
           {/* API Key Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-bolt-elements-borderColor">
+          <div className="bg-bolt-elements-background-depth-1 rounded-lg shadow-sm border border-bolt-elements-borderColor">
             <div className="p-6">
               <h2 className="text-xl font-semibold text-bolt-elements-textPrimary mb-4">API Keys</h2>
 
@@ -357,7 +357,7 @@ export function SettingsContent() {
           </div>
 
           {/* Theme Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-bolt-elements-borderColor">
+          <div className="bg-bolt-elements-background-depth-1 rounded-lg shadow-sm border border-bolt-elements-borderColor">
             <div className="p-6">
               <h2 className="text-xl font-semibold text-bolt-elements-textPrimary mb-4">Appearance</h2>
               <div className="flex items-center justify-between">
