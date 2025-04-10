@@ -137,7 +137,7 @@ export async function convexAgent(
     enablePreciseEdits: false,
     includeTemplate: true,
   };
-  let tools: ConvexToolSet = {
+  const tools: ConvexToolSet = {
     deploy: deployTool,
     npmInstall: npmInstallTool,
   };

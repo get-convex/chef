@@ -10,10 +10,11 @@ import { HistoryItem } from './HistoryItem';
 import { binDates } from './date-binning';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { classNames } from '~/utils/classNames';
-import { useConvex, useQuery } from 'convex/react';
+import { Authenticated, useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { getKnownInitialId } from '~/lib/stores/chatId';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const menuVariants = {
   closed: {
@@ -191,11 +192,26 @@ export const Menu = memo(() => {
           </div>
           <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 px-4 py-3">
             <ThemeSwitch />
+            <Authenticated>
+              <LogoutButton />
+            </Authenticated>
           </div>
         </div>
       </motion.div>
     </>
   );
 });
+
+function LogoutButton() {
+  const { logout } = useAuth0();
+  return (
+    <button
+      className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+      onClick={() => logout()}
+    >
+      Logout
+    </button>
+  );
+}
 
 Menu.displayName = 'Menu';
