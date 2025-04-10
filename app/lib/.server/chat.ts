@@ -5,7 +5,7 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import type { LanguageModelUsage, Message } from 'ai';
 import { checkTokenUsage, recordUsage } from '~/lib/.server/usage';
-import { disabledText, noTokensText } from '../convexUsage';
+import { disabledText, noTokensText } from '~/lib/convexUsage';
 
 type Messages = Message[];
 
