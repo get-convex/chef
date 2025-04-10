@@ -52,6 +52,14 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
       case 'error':
         icon = <WarningIcon />;
         message = STATUS_MESSAGES.error;
+        if (props.currentError) {
+          try {
+            const { error } = JSON.parse(props.currentError?.message);
+            message = error;
+          } catch (e) {
+            console.log(props.currentError);
+          }
+        }
         break;
       case 'ready':
         icon = <CheckIcon />;

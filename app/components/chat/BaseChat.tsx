@@ -50,7 +50,8 @@ interface BaseChatProps {
   toolStatus: ToolStatus;
   messages: Message[];
   terminalInitializationOptions: TerminalInitializationOptions | undefined;
-  overQuota: boolean;
+  disableChatMessage: string | null;
+
   // Alert related props
   actionAlert: ActionAlert | undefined;
   clearAlert: () => void;
@@ -66,6 +67,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       chatStarted = false,
       streamStatus = 'ready',
       input = '',
+      currentError,
       handleInputChange,
       sendMessage,
       handleStop,
@@ -78,7 +80,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       clearAlert,
       toolStatus,
       terminalInitializationOptions,
-      overQuota,
+      disableChatMessage,
     },
     ref,
   ) => {
@@ -150,6 +152,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     streamStatus={streamStatus}
                     numMessages={messages?.length ?? 0}
                     toolStatus={toolStatus}
+                    currentError={currentError}
                   />
                 }
                 <div className="bg-bolt-elements-background-depth-2 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt">
@@ -175,7 +178,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         'transition-all duration-200',
                         'hover:border-bolt-elements-focus',
                         {
-                          'opacity-50 cursor-not-allowed': overQuota,
+                          'opacity-50 cursor-not-allowed': disableChatMessage !== null,
                         },
                       )}
                       onDragEnter={(e) => {
@@ -238,8 +241,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         maxHeight: TEXTAREA_MAX_HEIGHT,
                       }}
                       placeholder={
-                        overQuota
-                          ? 'You have reached your token limit. Please upgrade your plan to continue.'
+                        disableChatMessage
+                          ? disableChatMessage
                           : chatStarted
                             ? 'Request changes by sending another message...'
                             : 'What app do you want to serve?'

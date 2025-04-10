@@ -3,12 +3,23 @@ export type CheckTokenUsageResponse =
       status: 'success';
       tokensUsed: number;
       tokensQuota: number;
+      isTeamDisabled: boolean;
     }
   | {
       status: 'error';
       httpStatus: number;
       httpBody: string;
     };
+
+export const disabledText =
+  'You have exceeded the free plan limits, ' +
+  'so your deployments have been disabled. ' +
+  'Please upgrade to a Pro plan or reach out to us ' +
+  'at support@convex.dev for help.';
+
+export function noTokensText(tokensUsed: number, tokensQuota: number) {
+  return `No remaining tokens available. Please upgrade to a Pro plan or add an API key to continue. Used ${tokensUsed} of ${tokensQuota}.`;
+}
 
 export async function getTokenUsage(
   provisionHost: string,
@@ -35,6 +46,10 @@ export async function getTokenUsage(
       httpBody: body,
     };
   }
-  const { tokensUsed, tokensQuota }: { tokensUsed: number; tokensQuota: number } = await response.json();
-  return { status: 'success', tokensUsed, tokensQuota };
+  const {
+    tokensUsed,
+    tokensQuota,
+    isTeamDisabled,
+  }: { tokensUsed: number; tokensQuota: number; isTeamDisabled: boolean } = await response.json();
+  return { status: 'success', tokensUsed, tokensQuota: tokensQuota / 1000, isTeamDisabled };
 }

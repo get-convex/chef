@@ -5,6 +5,7 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import type { LanguageModelUsage, Message } from 'ai';
 import { checkTokenUsage, recordUsage } from '~/lib/.server/usage';
+import { disabledText, noTokensText } from '../convexUsage';
 
 type Messages = Message[];
 
@@ -75,17 +76,19 @@ export async function chatAction({ request }: ActionFunctionArgs) {
           status: resp.httpStatus,
         });
       }
+      if (resp.isTeamDisabled) {
+        return new Response(JSON.stringify({ error: disabledText }), {
+          status: 402,
+        });
+      }
       if (resp.tokensUsed >= resp.tokensQuota) {
         if (body.userApiKey?.preference === 'quotaExhausted') {
           userApiKey = body.userApiKey.value;
         } else {
           logger.error(`No tokens available for ${deploymentName}: ${resp.tokensUsed} of ${resp.tokensQuota}`);
-          return new Response(
-            JSON.stringify({ error: `No tokens available. Used ${resp.tokensUsed} of ${resp.tokensQuota}` }),
-            {
-              status: 402,
-            },
-          );
+          return new Response(JSON.stringify({ error: noTokensText(resp.tokensUsed, resp.tokensQuota) }), {
+            status: 402,
+          });
         }
       }
     }

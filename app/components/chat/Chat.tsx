@@ -33,7 +33,7 @@ import { chatIdStore } from '~/lib/stores/chatId';
 import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { getTokenUsage } from '~/lib/convexUsage';
+import { disabledText, getTokenUsage, noTokensText } from '~/lib/convexUsage';
 
 const logger = createScopedLogger('Chat');
 
@@ -115,7 +115,38 @@ export const Chat = memo(
     const modelProviders: ModelProvider[] = USE_ANTHROPIC_FRACTION === 1.0 ? ['Anthropic'] : ['Anthropic', 'Bedrock'];
 
     const chatContextManager = useRef(new ChatContextManager());
-    const [overQuota, setOverQuota] = useState(false);
+    const [disableChatMessage, setDisableChatMessage] = useState<string | null>(null);
+
+    async function checkTokenUsage() {
+      const teamSlug = selectedTeamSlugStore.get();
+      if (!teamSlug) {
+        console.error('No team slug');
+        throw new Error('No team slug');
+      }
+      const convexAny = convex as any;
+      const token = convexAny?.sync?.state?.auth?.value;
+      if (!token) {
+        console.error('No token');
+        throw new Error('No token');
+      }
+
+      const tokenUsage = await getTokenUsage(VITE_PROVISION_HOST, token, teamSlug);
+      if (tokenUsage.status === 'error') {
+        console.error('Failed to check for token usage', tokenUsage.httpStatus, tokenUsage.httpBody);
+      } else {
+        const { tokensUsed, tokensQuota, isTeamDisabled } = tokenUsage;
+        if (tokensUsed !== undefined && tokensQuota !== undefined) {
+          console.log(`Convex tokens used/quota: ${tokensUsed} / ${tokensQuota}`);
+          if (isTeamDisabled) {
+            setDisableChatMessage(disabledText);
+          } else if (tokensUsed > tokensQuota) {
+            setDisableChatMessage(noTokensText(tokensUsed, tokensQuota));
+          } else {
+            setDisableChatMessage(null);
+          }
+        }
+      }
+    }
 
     const { messages, status, input, handleInputChange, setInput, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
@@ -158,7 +189,7 @@ export const Chat = memo(
         console.log('Tool call finished', result);
         return result;
       },
-      onError: (e: Error) => {
+      onError: async (e: Error) => {
         // Clean up the last message if it's an assistant message
         setMessages((prevMessages) => {
           const updatedMessages = [...prevMessages];
@@ -195,6 +226,8 @@ export const Chat = memo(
         if (error?.message.includes('Too Many Requests')) {
           toast.error(CHEF_TOO_BUSY_ERROR);
         }
+
+        await checkTokenUsage();
       },
       onFinish: async (message, response) => {
         const usage = response.usage;
@@ -206,28 +239,7 @@ export const Chat = memo(
         }
         logger.debug('Finished streaming');
 
-        const teamSlug = selectedTeamSlugStore.get();
-        if (!teamSlug) {
-          console.error('No team slug');
-          throw new Error('No team slug');
-        }
-        const convexAny = convex as any;
-        const token = convexAny?.sync?.state?.auth?.value;
-        if (!token) {
-          console.error('No token');
-          throw new Error('No token');
-        }
-
-        const tokenUsage = await getTokenUsage(VITE_PROVISION_HOST, token, teamSlug);
-        if (tokenUsage.status === 'error') {
-          console.error('Failed to check for token usage', tokenUsage.httpStatus, tokenUsage.httpBody);
-        } else {
-          const { tokensUsed, tokensQuota } = tokenUsage;
-          if (tokensUsed !== undefined && tokensQuota !== undefined) {
-            console.log(`Convex tokens used/quota: ${tokensUsed} / ${tokensQuota}`);
-            setOverQuota(tokensUsed > tokensQuota);
-          }
-        }
+        await checkTokenUsage();
       },
     });
 
@@ -459,7 +471,7 @@ export const Chat = memo(
           isReload,
           shouldDeployConvexFunctions: hadSuccessfulDeploy,
         }}
-        overQuota={overQuota}
+        disableChatMessage={disableChatMessage}
       />
     );
   },
