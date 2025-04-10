@@ -8,10 +8,7 @@ export function openaiProxyGuidelines(options: SystemPromptOptions) {
   return stripIndents`
   <bundled_openai_guidelines>
     Apps in the Chef environment come with a small amount of gpt-4o-mini
-    tokens to use for building apps! Use this model in creative ways. For
-    example, instead of trying to write a function to parse HTML in a
-    scraper, just fetch the HTML and use the structured outputs feature
-    of gpt-4o-mini to have the LLM parse it for you.
+    tokens to use for building apps! Use this model in creative ways.
 
     The environment provides the \`CONVEX_OPENAI_API_KEY\` and
     \`CONVEX_OPENAI_BASE_URL\` environment variables. Install the

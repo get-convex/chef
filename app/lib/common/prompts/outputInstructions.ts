@@ -148,6 +148,9 @@ function toolsInstructions(options: SystemPromptOptions) {
         tags: v.optional(v.array(v.string())),
       })
       \`\`\`
+
+      If the deploy tool fails, do NOT overly apologize, be sycophantic, or repeatedly say the same message. Instead,
+      SUCCINCTLY explain the issue and how you intend to fix it in one sentence.
     </deploy_tool>
 
     <npmInstall_tool>
