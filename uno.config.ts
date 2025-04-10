@@ -113,6 +113,12 @@ export default defineConfig({
     ['b', {}],
   ],
   theme: {
+    keyframes: {
+      shimmer: {
+        '0%': { transform: 'translateX(-100%)' },
+        '100%': { transform: 'translateX(200%)' },
+      },
+    },
     colors: {
       ...COLOR_PRIMITIVES,
       bolt: {

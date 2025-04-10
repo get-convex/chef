@@ -1,13 +1,14 @@
-import type { LoaderFunctionArgs } from '@vercel/remix';
+import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
 import { json } from '@vercel/remix';
-import { meta as IndexMeta } from './_index';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Header } from '~/components/header/Header';
 import { SafariWarning } from '~/components/SafariWarning';
 import { ExistingChat } from '~/components/ExistingChat.client';
 import { redirect, useLoaderData } from '@remix-run/react';
 
-export const meta = IndexMeta;
+export const meta: MetaFunction = () => {
+  return [{ title: 'Chef' }];
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   const url = new URL(args.request.url);

@@ -1,8 +1,7 @@
 import { useConvexChatExisting } from '~/lib/stores/startup';
 import { Chat } from './chat/Chat';
 import { Toaster } from 'sonner';
-import { ChefAuthWrapper } from './chat/ChefAuthWrapper';
-import { SentryUserProvider } from './chat/Chat';
+import { ChefAuthProvider } from './chat/ChefAuthWrapper';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
 import { sessionIdStore } from '~/lib/stores/sessionId';
 import { Loading } from './Loading';
@@ -10,6 +9,7 @@ import { useStore } from '@nanostores/react';
 import { ContainerBootState, useContainerBootState } from '~/lib/stores/containerBootState';
 import { useReloadMessages } from '~/lib/stores/startup/reloadMessages';
 import { useSplines } from '~/lib/splines';
+import { UserProvider } from '~/components/UserProvider';
 
 export function ExistingChat({ chatId }: { chatId: string }) {
   // Fill in the chatID store from props early in app initialization. If this
@@ -17,6 +17,19 @@ export function ExistingChat({ chatId }: { chatId: string }) {
   // the homepage.
   setPageLoadChatId(chatId);
 
+  return (
+    <>
+      <ChefAuthProvider redirectIfUnauthenticated={true}>
+        <UserProvider>
+          <ExistingChatWrapper chatId={chatId} />
+        </UserProvider>
+      </ChefAuthProvider>
+      <Toaster position="bottom-right" closeButton richColors />
+    </>
+  );
+}
+
+function ExistingChatWrapper({ chatId }: { chatId: string }) {
   const sessionId = useStore(sessionIdStore);
   const { initialMessages, storeMessageHistory, initializeChat } = useConvexChatExisting(chatId);
 
@@ -55,32 +68,28 @@ export function ExistingChat({ chatId }: { chatId: string }) {
     loading = 'Loading Chef environment...';
   }
 
+  const isError = bootState.state === ContainerBootState.ERROR;
+  const easterEgg = useSplines(!isError && !!loading);
+
   const hadSuccessfulDeploy = initialMessages?.some(
     (message) =>
       message.role === 'assistant' &&
       message.parts?.some((part) => part.type === 'tool-invocation' && part.toolInvocation.toolName === 'deploy'),
   );
 
-  const isError = bootState.state === ContainerBootState.ERROR;
-  const easterEgg = useSplines(!isError && !!loading);
   return (
     <>
-      <ChefAuthWrapper>
-        <SentryUserProvider>
-          {loading && <Loading message={easterEgg ?? loading} />}
-          {!loading && (
-            <Chat
-              initialMessages={initialMessages!}
-              partCache={reloadState!.partCache}
-              storeMessageHistory={storeMessageHistory}
-              initializeChat={initializeChat}
-              isReload={true}
-              hadSuccessfulDeploy={!!hadSuccessfulDeploy}
-            />
-          )}
-        </SentryUserProvider>
-      </ChefAuthWrapper>
-      <Toaster position="bottom-right" closeButton richColors />
+      {loading && <Loading message={easterEgg ?? loading} />}
+      {!loading && (
+        <Chat
+          initialMessages={initialMessages!}
+          partCache={reloadState!.partCache}
+          storeMessageHistory={storeMessageHistory}
+          initializeChat={initializeChat}
+          isReload={true}
+          hadSuccessfulDeploy={!!hadSuccessfulDeploy}
+        />
+      )}
     </>
   );
 }

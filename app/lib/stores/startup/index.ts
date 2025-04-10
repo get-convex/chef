@@ -1,5 +1,5 @@
 import { useStoreMessageHistory } from './useStoreMessageHistory';
-import { useInitializeChat } from './useInitializeChat';
+import { useExistingInitializeChat, useHomepageInitializeChat } from './useInitializeChat';
 import { useInitialMessages } from './useInitialMessages';
 import { useProjectInitializer } from './useProjectInitializer';
 import { useTeamsInitializer } from './useTeamsInitializer';
@@ -8,7 +8,7 @@ import { useExistingChatContainerSetup, useNewChatContainerSetup } from './useCo
 export function useConvexChatHomepage(chatId: string) {
   useTeamsInitializer();
   useProjectInitializer(chatId);
-  const initializeChat = useInitializeChat(chatId);
+  const initializeChat = useHomepageInitializeChat(chatId);
   const storeMessageHistory = useStoreMessageHistory(chatId, []);
   useNewChatContainerSetup();
   return {
@@ -20,7 +20,7 @@ export function useConvexChatHomepage(chatId: string) {
 export function useConvexChatExisting(chatId: string) {
   useTeamsInitializer();
   useProjectInitializer(chatId);
-  const initializeChat = useInitializeChat(chatId);
+  const initializeChat = useExistingInitializeChat(chatId);
   const initialMessages = useInitialMessages(chatId);
   const storeMessageHistory = useStoreMessageHistory(chatId, initialMessages?.serialized);
   useExistingChatContainerSetup(initialMessages?.loadedChatId);

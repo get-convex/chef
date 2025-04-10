@@ -21,12 +21,12 @@ export function TeamSelector() {
     );
   }
 
-  const selectedTeam = teams.find((t) => t.slug === selectedTeamSlug) || teams[0];
+  const selectedTeam = teams.find((t) => t.slug === selectedTeamSlug) ?? null;
 
   return (
     <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
       <Select.Root
-        value={selectedTeam.slug}
+        value={selectedTeam?.slug ?? 'Select a team...'}
         onValueChange={(value: string) => {
           setSelectedTeamSlug(value);
         }}
@@ -42,7 +42,7 @@ export function TeamSelector() {
           aria-label="Select team"
         >
           <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
-          <Select.Value placeholder="Select a team...">{selectedTeam.name}</Select.Value>
+          <Select.Value placeholder="Select a team...">{selectedTeam?.name ?? 'Select a team...'}</Select.Value>
           <Select.Icon className="ml-auto">
             <div className={classNames('i-ph:caret-down-bold transition-all', open ? 'rotate-180' : '')}></div>
           </Select.Icon>

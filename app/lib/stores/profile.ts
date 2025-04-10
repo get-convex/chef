@@ -3,6 +3,8 @@ import { atom } from 'nanostores';
 interface Profile {
   username: string;
   avatar: string;
+  email: string;
+  id: string;
 }
 
 // Initialize with stored profile or defaults
@@ -12,6 +14,8 @@ const initialProfile: Profile = storedProfile
   : {
       username: '',
       avatar: '',
+      email: '',
+      id: '',
     };
 
 export const profileStore = atom<Profile>(initialProfile);

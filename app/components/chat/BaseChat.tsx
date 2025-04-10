@@ -12,13 +12,15 @@ import { ScreenshotStateManager } from './ScreenshotStateManager';
 import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
-import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { SuggestionButtons } from './SuggestionButtons';
 import { KeyboardShortcut } from '~/components/ui/KeyboardShortcut';
 import StreamingIndicator from './StreamingIndicator';
 import type { ToolStatus } from '~/lib/common/types';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import type { TerminalInitializationOptions } from '~/types/terminal';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { useChefAuth } from './ChefAuthWrapper';
+
 const TEXTAREA_MIN_HEIGHT = 76;
 
 interface BaseChatProps {
@@ -42,7 +44,8 @@ interface BaseChatProps {
   // Chat user interactions
   handleInputChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleStop: () => void;
-  sendMessage: (event: React.UIEvent, teamSlug: string | null, messageInput?: string) => void;
+  sendMessage: (event: React.UIEvent, messageInput?: string) => Promise<void>;
+  sendMessageInProgress: boolean;
 
   // Current chat history props
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
@@ -70,6 +73,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       currentError,
       handleInputChange,
       sendMessage,
+      sendMessageInProgress,
       handleStop,
       uploadedFiles = [],
       setUploadedFiles,
@@ -85,17 +89,18 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     ref,
   ) => {
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
-    const selectedTeamSlug = useSelectedTeamSlug();
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
 
     const handleSendMessage = (event: React.UIEvent, messageInput?: string) => {
-      const canSendMessage = selectedTeamSlug !== null;
-      if (sendMessage && canSendMessage) {
-        sendMessage(event, selectedTeamSlug, messageInput);
-        handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
+      if (sendMessage) {
+        sendMessage(event, messageInput).then(() => {
+          handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
+        });
       }
     };
+    const sessionId = useConvexSessionIdOrNullOrLoading();
+    const chefAuthState = useChefAuth();
 
     const baseChat = (
       <div
@@ -114,6 +119,21 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 <p className="text-md lg:text-2xl text-balance mb-8 text-bolt-elements-textSecondary animate-fade-in animation-delay-200 font-medium font-display">
                   Generate and launch realtime full‑stack apps you never thought possible
                 </p>
+              </div>
+            )}
+            {!chatStarted && (
+              <div className="max-w-chat mx-auto px-4 lg:px-0">
+                <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-8 animate-fade-in animation-delay-400">
+                  <p className="font-bold">VIP access only (you can be a VIP too!)</p>
+                  <p className="text-sm">
+                    Chef is currently only enabled for builders with existing Convex accounts. We'll be removing this
+                    restriction later today but if you want to start using Chef early, sign up at{' '}
+                    <a href="https://dashboard.convex.dev" className="text-yellow-800 hover:text-yellow-900 underline">
+                      dashboard.convex.dev
+                    </a>{' '}
+                    first and come on back!
+                  </p>
+                </div>
               </div>
             )}
             <div
@@ -177,10 +197,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent text-sm',
                         'transition-all duration-200',
                         'hover:border-bolt-elements-focus',
-                        {
-                          'opacity-50 cursor-not-allowed': disableChatMessage !== null,
-                        },
+                        'disabled:opacity-50 disabled:cursor-not-allowed',
                       )}
+                      disabled={disableChatMessage !== null}
                       onDragEnter={(e) => {
                         e.preventDefault();
                         e.currentTarget.style.border = '2px solid #1488fc';
@@ -250,9 +269,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       translate="no"
                     />
                     <SendButton
-                      show={input.length > 0 || isStreaming || uploadedFiles.length > 0}
+                      show={input.length > 0 || isStreaming || uploadedFiles.length > 0 || sendMessageInProgress}
                       isStreaming={isStreaming}
-                      disabled={!selectedTeamSlug}
+                      disabled={chefAuthState.kind === 'loading' || sendMessageInProgress}
                       onClick={(event) => {
                         if (isStreaming) {
                           handleStop?.();
@@ -274,13 +293,14 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         </div>
                       ) : null}
                       {chatStarted && <ConvexConnection />}
-                      {!chatStarted && <TeamSelector />}
+                      {!chatStarted && sessionId && <TeamSelector />}
                     </div>
                   </div>
                 </div>
               </div>
             </div>
             <SuggestionButtons
+              disabled={disableChatMessage !== null}
               chatStarted={chatStarted}
               onSuggestionClick={(suggestion) => {
                 handleInputChange?.({ target: { value: suggestion } } as React.ChangeEvent<HTMLTextAreaElement>);

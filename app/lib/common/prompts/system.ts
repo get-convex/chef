@@ -6,6 +6,7 @@ import { formattingInstructions } from './formattingInstructions';
 import { exampleDataInstructions } from './exampleDataInstructions';
 import { secretsInstructions } from './secretsInstructions';
 import { outputInstructions } from './outputInstructions';
+import { openaiProxyGuidelines } from './openaiProxyGuidelines';
 
 // This is the very first part of the system prompt that tells the model what
 // role to play.
@@ -26,6 +27,7 @@ export function generalSystemPrompt(options: SystemPromptOptions) {
   ${formattingInstructions(options)}
   ${exampleDataInstructions(options)}
   ${secretsInstructions(options)}
+  ${openaiProxyGuidelines(options)}
   ${outputInstructions(options)}
   `;
   return result;

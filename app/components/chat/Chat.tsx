@@ -5,7 +5,7 @@ import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useMessageParser, useShortcuts, useSnapScroll, type PartCache } from '~/lib/hooks';
 import { description } from '~/lib/stores/description';
-import { chatStore, useChatId } from '~/lib/stores/chatId';
+import { chatStore } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { PROMPT_COOKIE_KEY } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
@@ -18,20 +18,16 @@ import { createSampler } from '~/utils/sampler';
 import { filesToArtifacts } from '~/utils/fileUtils';
 import { ChatContextManager } from '~/lib/ChatContextManager';
 import { webcontainer } from '~/lib/webcontainer';
-import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
-import { useConvexSessionId } from '~/lib/stores/sessionId';
 import { selectedTeamSlugStore } from '~/lib/stores/convexTeams';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
 import type { PartId } from '~/lib/stores/artifacts';
 import { captureException } from '@sentry/remix';
-import { setExtra, setUser } from '@sentry/remix';
-import { useAuth0 } from '@auth0/auth0-react';
-import { setProfile } from '~/lib/stores/profile';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import { chatIdStore } from '~/lib/stores/chatId';
 import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
+import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { disabledText, getTokenUsage, noTokensText } from '~/lib/convexUsage';
 
@@ -39,8 +35,9 @@ const logger = createScopedLogger('Chat');
 
 const MAX_RETRIES = 3;
 
-const CHEF_TOO_BUSY_ERROR = 'Chef is too busy cooking right now. Please try again in a moment.';
-const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
+const CHEF_TOO_BUSY_ERROR =
+  'Chef is too busy cooking right now. Please try again in a moment or enter your own API key in settings.';
+export const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
 const processSampledMessages = createSampler(
   (options: {
@@ -64,7 +61,7 @@ interface ChatProps {
   initialMessages: Message[];
   partCache: PartCache;
   storeMessageHistory: (messages: Message[]) => Promise<void>;
-  initializeChat: (teamSlug: string | null) => Promise<void>;
+  initializeChat: () => Promise<void>;
   description?: string;
 
   isReload: boolean;
@@ -116,6 +113,7 @@ export const Chat = memo(
 
     const chatContextManager = useRef(new ChatContextManager());
     const [disableChatMessage, setDisableChatMessage] = useState<string | null>(null);
+    const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     async function checkTokenUsage() {
       const teamSlug = selectedTeamSlugStore.get();
@@ -134,6 +132,10 @@ export const Chat = memo(
       if (tokenUsage.status === 'error') {
         console.error('Failed to check for token usage', tokenUsage.httpStatus, tokenUsage.httpBody);
       } else {
+        if (tokenUsage.tokensQuota === 50000000) {
+          // TODO(nipunn) Hack for launch day
+          tokenUsage.tokensQuota = tokenUsage.tokensQuota * 10000;
+        }
         const { tokensUsed, tokensQuota, isTeamDisabled } = tokenUsage;
         if (tokensUsed !== undefined && tokensQuota !== undefined) {
           console.log(`Convex tokens used/quota: ${tokensUsed} / ${tokensQuota}`);
@@ -157,8 +159,7 @@ export const Chat = memo(
         const chatId = chatIdStore.get();
         const deploymentName = convexProjectStore.get()?.deploymentName;
         const teamSlug = selectedTeamSlugStore.get();
-        const convexAny = convex as any;
-        const token = convexAny?.sync?.state?.auth?.value;
+        const token = getConvexAuthToken(convex);
         if (!token) {
           throw new Error('No token');
         }
@@ -246,7 +247,7 @@ export const Chat = memo(
     useEffect(() => {
       const prompt = searchParams.get('prompt');
 
-      if (!prompt) {
+      if (!prompt || prompt.trim() === '') {
         return;
       }
 
@@ -313,7 +314,7 @@ export const Chat = memo(
       setChatStarted(true);
     };
 
-    const sendMessage = async (_event: React.UIEvent, teamSlug: string | null, messageInput?: string) => {
+    const sendMessage = async (_event: React.UIEvent, messageInput?: string) => {
       if (retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) {
         toast.error(CHEF_TOO_BUSY_ERROR);
         return;
@@ -326,20 +327,68 @@ export const Chat = memo(
       }
 
       if (status === 'streaming' || status === 'submitted') {
+        console.log('Aborting current message.');
         abort();
         return;
       }
-      await initializeChat(teamSlug);
 
-      runAnimation();
+      if (sendMessageInProgress) {
+        console.log('sendMessage already in progress, returning.');
+        return;
+      }
+      try {
+        setSendMessageInProgress(true);
 
-      // Wait for the WebContainer to have its snapshot loaded before sending a message.
-      await waitForBootStepCompleted(ContainerBootState.LOADING_SNAPSHOT);
+        await initializeChat();
+        runAnimation();
 
-      if (!chatStarted) {
-        setMessages([
-          {
-            id: `${new Date().getTime()}`,
+        if (!chatStarted) {
+          setMessages([
+            {
+              id: `${new Date().getTime()}`,
+              role: 'user',
+              content: messageContent,
+              parts: [
+                {
+                  type: 'text',
+                  text: messageContent,
+                },
+                ...imageDataList.map((imageData) => ({
+                  type: 'file' as const,
+                  mimeType: 'image/png',
+                  data: imageData,
+                })),
+              ],
+            },
+          ]);
+          reload();
+          return;
+        }
+
+        const modifiedFiles = workbenchStore.getModifiedFiles();
+        chatStore.setKey('aborted', false);
+
+        if (modifiedFiles !== undefined) {
+          const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
+          append({
+            role: 'user',
+            content: messageContent,
+            parts: [
+              {
+                type: 'text',
+                text: `${userUpdateArtifact}${messageContent}`,
+              },
+              ...imageDataList.map((imageData) => ({
+                type: 'file' as const,
+                mimeType: 'image/png',
+                data: imageData,
+              })),
+            ],
+          });
+
+          workbenchStore.resetAllFileModifications();
+        } else {
+          append({
             role: 'user',
             content: messageContent,
             parts: [
@@ -353,61 +402,19 @@ export const Chat = memo(
                 data: imageData,
               })),
             ],
-          },
-        ]);
-        reload();
+          });
+        }
 
-        return;
+        setInput('');
+        Cookies.remove(PROMPT_COOKIE_KEY);
+
+        setUploadedFiles([]);
+        setImageDataList([]);
+
+        textareaRef.current?.blur();
+      } finally {
+        setSendMessageInProgress(false);
       }
-
-      const modifiedFiles = workbenchStore.getModifiedFiles();
-
-      chatStore.setKey('aborted', false);
-
-      if (modifiedFiles !== undefined) {
-        const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
-        append({
-          role: 'user',
-          content: messageContent,
-          parts: [
-            {
-              type: 'text',
-              text: `${userUpdateArtifact}${messageContent}`,
-            },
-            ...imageDataList.map((imageData) => ({
-              type: 'file' as const,
-              mimeType: 'image/png',
-              data: imageData,
-            })),
-          ],
-        });
-
-        workbenchStore.resetAllFileModifications();
-      } else {
-        append({
-          role: 'user',
-          content: messageContent,
-          parts: [
-            {
-              type: 'text',
-              text: messageContent,
-            },
-            ...imageDataList.map((imageData) => ({
-              type: 'file' as const,
-              mimeType: 'image/png',
-              data: imageData,
-            })),
-          ],
-        });
-      }
-
-      setInput('');
-      Cookies.remove(PROMPT_COOKIE_KEY);
-
-      setUploadedFiles([]);
-      setImageDataList([]);
-
-      textareaRef.current?.blur();
     };
 
     /**
@@ -472,6 +479,7 @@ export const Chat = memo(
           shouldDeployConvexFunctions: hadSuccessfulDeploy,
         }}
         disableChatMessage={disableChatMessage}
+        sendMessageInProgress={sendMessageInProgress}
       />
     );
   },
@@ -520,38 +528,24 @@ function useCurrentToolStatus() {
   return toolStatus;
 }
 
-export function SentryUserProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth0();
-  const sessionId = useConvexSessionId();
-  const chatId = useChatId();
-
-  useEffect(() => {
-    setExtra('sessionId', sessionId);
-  }, [sessionId]);
-
-  useEffect(() => {
-    setExtra('chatId', chatId);
-  }, [chatId]);
-
-  useEffect(() => {
-    if (user) {
-      setUser({
-        id: user.sub ?? undefined,
-        username: user.name ?? user.nickname ?? undefined,
-        email: user.email ?? undefined,
-      });
-    }
-    setProfile({
-      username: user?.name ?? user?.nickname ?? '',
-      avatar: user?.picture ?? '',
-    });
-  }, [user]);
-
-  return children;
-}
-
 function exponentialBackoff(numFailures: number) {
   const jitter = Math.random() + 0.5;
   const delay = 1000 * Math.pow(2, numFailures) * jitter;
   return delay;
+}
+
+/**
+ * We send the auth token in big brain requests. The Convex client already makes
+ * sure it has an up-to-date auth token, so we just need to extract it.
+ *
+ * This is especially convenient in functions that are not async.
+ *
+ * Since there's not a public API for this, we internally type cast.
+ */
+function getConvexAuthToken(convex: ConvexReactClient): string | null {
+  const token = (convex as any)?.sync?.state?.auth?.value;
+  if (!token) {
+    return null;
+  }
+  return token;
 }

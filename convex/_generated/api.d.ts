@@ -18,7 +18,9 @@ import type * as convexProjects from "../convexProjects.js";
 import type * as dev from "../dev.js";
 import type * as http from "../http.js";
 import type * as messages from "../messages.js";
+import type * as openaiProxy from "../openaiProxy.js";
 import type * as sessions from "../sessions.js";
+import type * as share from "../share.js";
 import type * as snapshot from "../snapshot.js";
 
 /**
@@ -35,7 +37,9 @@ declare const fullApi: ApiFromModules<{
   dev: typeof dev;
   http: typeof http;
   messages: typeof messages;
+  openaiProxy: typeof openaiProxy;
   sessions: typeof sessions;
+  share: typeof share;
   snapshot: typeof snapshot;
 }>;
 export declare const api: FilterApi<

@@ -58,7 +58,6 @@ export class ChatContextManager {
       const absPath = path as AbsolutePath;
       const entry = cache[absPath];
       if (!entry) {
-        console.log('Missing prewarm entry', path);
         continue;
       }
       lastUsed.set(absPath, 0);
@@ -133,19 +132,10 @@ export class ChatContextManager {
       relevantFiles.push(makeSystemMessage(message));
     }
 
-    console.log(
-      `Populated ${relevantFiles.length} relevant files with size ${sizeEstimate}:\n${debugInfo.join('\n')}`,
-      allPaths,
-      relevantFiles,
-    );
     return relevantFiles;
   }
 
   private collapseMessages(messages: UIMessage[]): UIMessage[] {
-    const before = messages
-      .flatMap((m) => m.parts)
-      .map((p) => this.partSize(p))
-      .reduce((a, b) => a + b, 0);
     const [iCutoff, jCutoff] = this.messagePartCutoff(messages);
     const summaryLines = [];
     const fullMessages = [];
@@ -189,11 +179,6 @@ export class ChatContextManager {
       result.push(makeSystemMessage(`Conversation summary:\n${summaryLines.join('\n')}`));
     }
     result.push(...fullMessages);
-    const after = result
-      .flatMap((m) => m.parts)
-      .map((p) => this.partSize(p))
-      .reduce((a, b) => a + b, 0);
-    console.log(`Collapsed ${before} -> ${after} bytes in message history`, messages, result);
     return result;
   }
 

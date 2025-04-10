@@ -372,7 +372,10 @@ export class ActionRunner {
         case 'deploy': {
           const container = await this.#webcontainer;
           await waitForContainerBootState(ContainerBootState.READY);
-          const convexProc = await container.spawn('npx', ['convex', 'dev', '--once']);
+          const convexProc = await container.spawn('sh', [
+            '-c',
+            'convex dev --once && tsc --noEmit -p tsconfig.app.json',
+          ]);
           action.abortSignal.addEventListener('abort', () => {
             convexProc.kill();
           });

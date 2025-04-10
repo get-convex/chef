@@ -416,8 +416,12 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
           </div>
         );
       } else if (invocation.result?.startsWith('Error:')) {
-        // This is a hack, but `npx convex dev` prints this out when the typecheck fails
-        if (invocation.result.includes('To ignore failing typecheck')) {
+        if (
+          // This is a hack, but `npx convex dev` prints this out when the typecheck fails
+          invocation.result.includes('To ignore failing typecheck') ||
+          // this is a bigger hack! TypeScript fails with error codes like TS
+          invocation.result.includes('Error TS')
+        ) {
           return (
             <div className="flex items-center gap-2">
               <img className="w-4 h-4 mr-1" height="16" width="16" src="/icons/TypeScript.svg" alt="TypeScript" />

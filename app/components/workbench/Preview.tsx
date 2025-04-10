@@ -206,25 +206,33 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
     </div>
   );
 
-  const openInNewWindow = () => {
-    if (proxyBaseUrl) {
-      const match = proxyBaseUrl.match(/^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/);
+  const openInNewWindow = async () => {
+    if (!proxyBaseUrl) {
+      throw new Error('Proxy not loaded');
+    }
 
-      if (match) {
-        const previewId = match[1];
-        const previewUrl = `/webcontainer/preview/${previewId}`;
-        const newWindow = window.open(
-          previewUrl,
-          '_blank',
-          `noopener,noreferrer,menubar=no,toolbar=no,location=no,status=no`,
-        );
+    // Start a new proxy for the new window so that the preview in the new window doesn’t share
+    // the same origin as the current preview (helpful to test multiple-user apps).
+    //
+    // Note that this proxy will never be stopped.
+    const { proxyUrl: newWindowProxyUrl } = await workbenchStore.startProxy(activePreview.port);
 
-        if (newWindow) {
-          newWindow.focus();
-        }
-      } else {
-        console.warn('[Preview] Invalid WebContainer URL:', proxyBaseUrl);
-      }
+    const match = newWindowProxyUrl.match(/^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/);
+    if (!match) {
+      console.warn('[Preview] Invalid WebContainer URL:', proxyBaseUrl);
+      return;
+    }
+
+    const previewId = match[1];
+    const previewUrl = `/webcontainer/preview/${previewId}`;
+    const newWindow = window.open(
+      previewUrl,
+      '_blank',
+      `noopener,noreferrer,menubar=no,toolbar=no,location=no,status=no`,
+    );
+
+    if (newWindow) {
+      newWindow.focus();
     }
   };
 
@@ -279,7 +287,7 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
           />
 
           <div className="flex items-center relative">
-            <IconButton icon="i-ph:arrow-square-out" onClick={() => openInNewWindow()} title="Open Preview" />
+            <IconButton icon="i-ph:arrow-square-out" onClick={() => openInNewWindow()} title="Open in New Window" />
           </div>
 
           {showClose && <IconButton icon="i-ph:x-circle" onClick={onClose} title="Close" />}

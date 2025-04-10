@@ -29,6 +29,8 @@ export async function recordUsage(
 ) {
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/record_tokens`;
+  // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
+  const chefTokens = usage.promptTokens * 40 + usage.completionTokens * 200;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -36,7 +38,7 @@ export async function recordUsage(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      tokens: usage.totalTokens,
+      tokens: chefTokens,
     }),
   });
   if (!response.ok) {

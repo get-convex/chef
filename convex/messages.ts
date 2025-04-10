@@ -95,48 +95,6 @@ export const setDescription = mutation({
   },
 });
 
-export const duplicate = mutation({
-  args: {
-    sessionId: v.id('sessions'),
-    id: v.string(),
-  },
-  returns: v.object({
-    id: v.string(),
-    description: v.optional(v.string()),
-  }),
-  handler: async (ctx, args) => {
-    const { id } = args;
-    const existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId: args.sessionId });
-
-    if (!existing) {
-      throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
-    }
-
-    const messages = await ctx.db
-      .query('chatMessages')
-      .withIndex('byChatId', (q) => q.eq('chatId', existing._id))
-      .collect();
-
-    const chatId = await createNewChatFromMessages(ctx, {
-      id: crypto.randomUUID(),
-      sessionId: args.sessionId,
-      description: `${existing.description || 'Chat'} (copy)`,
-      snapshotId: existing.snapshotId,
-    });
-    const chat = await ctx.db.get(chatId);
-    await _appendMessages(ctx, {
-      sessionId: args.sessionId,
-      chat: chat!,
-      messages: messages.map((m) => m.content),
-    });
-
-    return {
-      id: chatId,
-      description: `${existing.description || 'Chat'} (copy)`,
-    };
-  },
-});
-
 export const importChat = mutation({
   args: {
     sessionId: v.id('sessions'),

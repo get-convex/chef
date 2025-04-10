@@ -2,14 +2,14 @@ import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
 import type { MetaFunction } from '@vercel/remix';
 import { ClientOnly } from 'remix-utils/client-only';
+import { ChefAuthProvider } from '~/components/chat/ChefAuthWrapper';
+import { ChefSignInPage } from '~/components/ChefSignInPage';
 import { Header } from '~/components/header/Header';
-import { Homepage } from '~/components/Homepage.client';
-import { SafariWarning } from '~/components/SafariWarning';
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'Chef by Convex | Generate realtime full‑stack apps' },
-    { name: 'description', content: 'Cook up something hot with Chef, the full-stack AI coding agent from Convex' },
+    { title: 'Sign In | Chef' },
+    { name: 'description', content: 'Sign in to Chef, the full-stack AI coding agent from Convex' },
     {
       property: 'og:image',
       content: '/social_preview_index.jpg',
@@ -40,12 +40,13 @@ export const loader = async (args: LoaderFunctionArgs) => {
 export default function Index() {
   return (
     <div className="flex flex-col h-full w-full bg-bolt-elements-background-depth-1">
-      <Header />
+      <Header hideSidebarIcon />
       <ClientOnly>
         {() => (
           <>
-            <Homepage />
-            <SafariWarning />
+            <ChefAuthProvider redirectIfUnauthenticated={false}>
+              <ChefSignInPage />
+            </ChefAuthProvider>
           </>
         )}
       </ClientOnly>

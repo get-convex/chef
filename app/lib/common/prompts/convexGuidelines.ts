@@ -458,6 +458,21 @@ export default crons;
 - You can register Convex functions within \`crons.ts\` just like any other file.
 - If a cron calls an internal function, always import the \`internal\` object from \`_generated/api\`, even if the internal function is registered in the same file.
 
+### Scheduler guidelines
+
+You can schedule a mutation or action to run in the future by calling
+\`ctx.scheduler.runAfter(delay, functionReference, args)\` from a
+mutation or action. Enqueuing a job to the scheduler is transactional
+from within a mutation.
+
+You MUST use a function reference for the first argument to \`runAfter\`,
+not a string or the function itself.
+
+Auth state does not propagate to scheduled jobs, so \`getAuthUserId()\` and
+\`ctx.getUserIdentity()\` will ALWAYS return \`null\` from within a scheduled
+job. Prefer using internal, privileged functions for scheduled jobs that don't
+need to do access checks.
+
 ## File storage guidelines
 
 - Convex includes file storage for large files like images, videos, and PDFs.
@@ -740,11 +755,13 @@ export const generateResponse = internalAction({
     channelId: v.id("channels"),
   },
   handler: async (ctx, args) => {
+    // IMPORTANT: Auth isn't available in \`generateResponse\` since
+    // it's called by the scheduler.
     const context = await ctx.runQuery(internal.functions.loadContext, {
       channelId: args.channelId,
     });
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: context,
     });
     const content = response.choices[0].message.content;

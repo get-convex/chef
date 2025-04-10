@@ -31,6 +31,8 @@ import type { Artifacts, PartId } from './artifacts';
 import { backoffTime, WORK_DIR } from '~/utils/constants';
 import { chatIdStore } from '~/lib/stores/chatId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from './fileUpdateCounter';
+import { generateReadmeContent } from '~/lib/readmeContent';
+import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
@@ -115,8 +117,6 @@ export class WorkbenchStore {
   // after the snapshot has been loaded but before any subsequent changes are
   // made.
   async startBackup() {
-    console.log('Starting backup worker...');
-
     // This is a bit racy, but we need to flush the current file events before
     // deciding that we're synced up to the current update counter. Sleep for
     // twice the batching interval.
@@ -136,9 +136,6 @@ export class WorkbenchStore {
       const currentState = this.backupState.get();
       const currentUpdateCounter = getFileUpdateCounter();
       if (currentState.started && currentState.savedUpdateCounter !== currentUpdateCounter) {
-        console.log(
-          `Unsaved changes (${currentState.savedUpdateCounter} -> ${currentUpdateCounter}) detected, preventing navigation...`,
-        );
         // Some browsers require both preventDefault and setting returnValue
         e.preventDefault();
         e.returnValue = '';
@@ -522,7 +519,7 @@ export class WorkbenchStore {
     return artifacts[partId];
   }
 
-  async downloadZip() {
+  async downloadZip(args: { convexDeploymentName: string | null }) {
     const zip = new JSZip();
     const files = this.files.get();
 
@@ -532,6 +529,8 @@ export class WorkbenchStore {
     // Generate a simple 6-character hash based on the current timestamp
     const timestampHash = Date.now().toString(36).slice(-6);
     const uniqueProjectName = `${projectName}_${timestampHash}`;
+
+    let hasReadme = false;
 
     for (const [filePath, dirent] of Object.entries(files)) {
       if (dirent?.type === 'file' && !dirent.isBinary) {
@@ -551,10 +550,17 @@ export class WorkbenchStore {
         } else {
           // if there's only one segment, it's a file in the root
           zip.file(relativePath, dirent.content);
+          if (relativePath.toLowerCase() === 'readme.md') {
+            hasReadme = true;
+          }
         }
       }
     }
 
+    // Add a README.md file specific to Chef here, but don't clobber an existing one
+    const readmeContent = generateReadmeContent(description.value ?? 'project', args.convexDeploymentName);
+    const readmePath = hasReadme ? `CHEF_README_${timestampHash}.md` : 'README.md';
+    zip.file(readmePath, readmeContent);
     // Generate the zip file and save it
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `${uniqueProjectName}.zip`);
@@ -582,7 +588,6 @@ async function backupWorker(backupState: WritableAtom<BackupState>) {
       await new Promise((resolve) => setTimeout(resolve, nextSync - now));
     }
     const nextUpdateCounter = getFileUpdateCounter();
-    console.log(`Performing backup (advancing from ${currentState.savedUpdateCounter} to ${nextUpdateCounter})...`);
     try {
       await performBackup(sessionId);
     } catch (error) {
@@ -609,16 +614,7 @@ async function backupWorker(backupState: WritableAtom<BackupState>) {
 }
 
 async function performBackup(sessionId: Id<'sessions'>) {
-  let convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
-  if (!convexSiteUrl) {
-    const convexUrl: string = import.meta.env.VITE_CONVEX_URL;
-    if (convexUrl.endsWith('.convex.cloud')) {
-      convexSiteUrl = convexUrl.replace('.convex.cloud', '.convex.site');
-    }
-  }
-  if (!convexSiteUrl) {
-    throw new Error('VITE_CONVEX_SITE_URL is not set');
-  }
+  const convexSiteUrl = getConvexSiteUrl();
   const chatId = chatIdStore.get();
   const binarySnapshot = await buildUncompressedSnapshot();
   const compressed = await compressSnapshot(binarySnapshot);
