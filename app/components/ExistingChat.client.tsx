@@ -17,6 +17,19 @@ export function ExistingChat({ chatId }: { chatId: string }) {
   // the homepage.
   setPageLoadChatId(chatId);
 
+  return (
+    <>
+      <ChefAuthProvider redirectIfUnauthenticated={true}>
+        <UserProvider>
+          <ExistingChatWrapper chatId={chatId} />
+        </UserProvider>
+      </ChefAuthProvider>
+      <Toaster position="bottom-right" closeButton richColors />
+    </>
+  );
+}
+
+function ExistingChatWrapper({ chatId }: { chatId: string }) {
   const sessionId = useStore(sessionIdStore);
   const { initialMessages, storeMessageHistory, initializeChat } = useConvexChatExisting(chatId);
 
@@ -55,32 +68,28 @@ export function ExistingChat({ chatId }: { chatId: string }) {
     loading = 'Loading Chef environment...';
   }
 
+  const isError = bootState.state === ContainerBootState.ERROR;
+  const easterEgg = useSplines(!isError && !!loading);
+
   const hadSuccessfulDeploy = initialMessages?.some(
     (message) =>
       message.role === 'assistant' &&
       message.parts?.some((part) => part.type === 'tool-invocation' && part.toolInvocation.toolName === 'deploy'),
   );
 
-  const isError = bootState.state === ContainerBootState.ERROR;
-  const easterEgg = useSplines(!isError && !!loading);
   return (
     <>
-      <ChefAuthProvider redirectIfUnauthenticated={true}>
-        <UserProvider>
-          {loading && <Loading message={easterEgg ?? loading} />}
-          {!loading && (
-            <Chat
-              initialMessages={initialMessages!}
-              partCache={reloadState!.partCache}
-              storeMessageHistory={storeMessageHistory}
-              initializeChat={initializeChat}
-              isReload={true}
-              hadSuccessfulDeploy={!!hadSuccessfulDeploy}
-            />
-          )}
-        </UserProvider>
-      </ChefAuthProvider>
-      <Toaster position="bottom-right" closeButton richColors />
+      {loading && <Loading message={easterEgg ?? loading} />}
+      {!loading && (
+        <Chat
+          initialMessages={initialMessages!}
+          partCache={reloadState!.partCache}
+          storeMessageHistory={storeMessageHistory}
+          initializeChat={initializeChat}
+          isReload={true}
+          hadSuccessfulDeploy={!!hadSuccessfulDeploy}
+        />
+      )}
     </>
   );
 }

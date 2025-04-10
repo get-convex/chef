@@ -150,7 +150,8 @@ export const ChefAuthProvider = ({
         ? { kind: 'fullyLoggedIn', sessionId: sessionId as Id<'sessions'> }
         : { kind: 'needsAccessCode' };
 
-  if (redirectIfUnauthenticated && isUnauthenticated) {
+  if (redirectIfUnauthenticated && state.kind === 'unauthenticated') {
+    console.log('redirecting to /');
     // Hard navigate to avoid any potential state leakage
     window.location.href = '/';
   }
