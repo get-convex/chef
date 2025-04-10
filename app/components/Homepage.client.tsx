@@ -9,12 +9,17 @@ import type { PartCache } from '~/lib/hooks';
 import { UserProvider } from '~/components/UserProvider';
 
 export function Homepage() {
+  // Set up a temporary chat ID early in app initialization. We'll
+  // eventually replace this with a slug once we receive the first
+  // artifact from the model if the user submits a prompt.
+  const initialId = useRef(crypto.randomUUID());
+  setPageLoadChatId(initialId.current);
   // NB: On this path, we render `ChatImpl` immediately.
   return (
     <>
       <ChefAuthProvider redirectIfUnauthenticated={false}>
         <UserProvider>
-          <ChatWrapper />
+          <ChatWrapper initialId={initialId.current} />
         </UserProvider>
       </ChefAuthProvider>
       <Toaster position="bottom-right" closeButton richColors />
@@ -22,15 +27,9 @@ export function Homepage() {
   );
 }
 
-const ChatWrapper = () => {
-  // Set up a temporary chat ID early in app initialization. We'll
-  // eventually replace this with a slug once we receive the first
-  // artifact from the model if the user submits a prompt.
-  const initialId = useRef(crypto.randomUUID());
-  setPageLoadChatId(initialId.current);
-
+const ChatWrapper = ({ initialId }: { initialId: string }) => {
   const partCache = useRef<PartCache>(new Map());
-  const { storeMessageHistory, initializeChat } = useConvexChatHomepage(initialId.current);
+  const { storeMessageHistory, initializeChat } = useConvexChatHomepage(initialId);
   return (
     <Chat
       initialMessages={emptyList}
