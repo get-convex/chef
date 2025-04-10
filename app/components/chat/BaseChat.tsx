@@ -293,7 +293,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         </div>
                       ) : null}
                       {chatStarted && <ConvexConnection />}
-                      {!chatStarted && sessionId && <TeamSelector />}
+                      {!chatStarted && sessionId && (
+                        <TeamSelector description="Your project will be created in this Convex team" />
+                      )}
                     </div>
                   </div>
                 </div>

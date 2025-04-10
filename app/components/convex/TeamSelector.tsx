@@ -5,7 +5,7 @@ import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTea
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { useStore } from '@nanostores/react';
 
-export function TeamSelector() {
+export function TeamSelector({ description }: { description?: string }) {
   const [open, setOpen] = useState(false);
   const teams = useStore(convexTeamsStore);
   const selectedTeamSlug = useSelectedTeamSlug();
@@ -56,9 +56,7 @@ export function TeamSelector() {
             <Select.Viewport>
               <div className="border-b border-b-bolt-elements-borderColor p-2 sticky top-0 bg-bolt-elements-button-secondary-background z-10">
                 <h3 className="text-sm font-medium">Select Team</h3>
-                <p className="mt-1 text-xs text-bolt-elements-textSecondary">
-                  Your project will be created in this Convex team
-                </p>
+                {description && <p className="mt-1 text-xs text-bolt-elements-textSecondary">{description}</p>}
               </div>
               {teams.map((team) => (
                 <Select.Item

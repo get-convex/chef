@@ -47,7 +47,7 @@ export function ConvexConnectButton() {
     <div className="flex flex-col gap-2">
       <p className="text-sm">Select a Convex team to connect your Chef app to.</p>
       <div className="flex gap-2">
-        <TeamSelector />
+        <TeamSelector description="Your project will be created in this Convex team" />
         <button
           onClick={handleClick}
           disabled={isLoading || !selectedTeamSlug}
