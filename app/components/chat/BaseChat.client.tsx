@@ -222,7 +222,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         });
                       }}
                       onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
+                        if (event.key === 'Enter' && selectedTeamSlug) {
                           if (event.shiftKey) {
                             return;
                           }
@@ -259,20 +259,40 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       }
                       translate="no"
                     />
-                    <SendButton
-                      show={input.length > 0 || isStreaming || uploadedFiles.length > 0 || sendMessageInProgress}
-                      isStreaming={isStreaming}
-                      disabled={chefAuthState.kind === 'loading' || sendMessageInProgress || maintenanceMode}
-                      onClick={(event) => {
-                        if (isStreaming) {
-                          handleStop?.();
-                          return;
-                        }
-                        if (input.length > 0 || uploadedFiles.length > 0) {
-                          handleSendMessage?.(event);
-                        }
-                      }}
-                    />
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <div>
+                          <SendButton
+                            show={input.length > 0 || isStreaming || uploadedFiles.length > 0 || sendMessageInProgress}
+                            isStreaming={isStreaming}
+                            disabled={!selectedTeamSlug || chefAuthState.kind === 'loading' || sendMessageInProgress}
+                            onClick={(event) => {
+                              if (isStreaming) {
+                                handleStop?.();
+                                return;
+                              }
+                              if (input.length > 0 || uploadedFiles.length > 0) {
+                                handleSendMessage?.(event);
+                              }
+                            }}
+                          />
+                        </div>
+                      </Tooltip.Trigger>
+                      {(chefAuthState.kind === 'unauthenticated' || !selectedTeamSlug) && (
+                        <Tooltip.Portal>
+                          <Tooltip.Content
+                            className="z-50 px-3 py-1.5 text-sm bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor rounded-md shadow-lg animate-in fade-in-0 zoom-in-95"
+                            sideOffset={5}
+                            side="right"
+                          >
+                            {chefAuthState.kind === 'unauthenticated'
+                              ? 'Please sign in to continue'
+                              : 'Please select a team to continue'}
+                            <Tooltip.Arrow className="fill-bolt-elements-borderColor" />
+                          </Tooltip.Content>
+                        </Tooltip.Portal>
+                      )}
+                    </Tooltip.Root>
                     <div className="flex justify-end gap-4 items-center text-sm p-4 pt-2">
                       {input.length > 3 ? (
                         <div className="text-xs text-bolt-elements-textTertiary">

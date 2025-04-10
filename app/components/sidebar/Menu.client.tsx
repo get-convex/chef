@@ -120,7 +120,7 @@ export const Menu = memo(() => {
     window.location.pathname = '/settings';
   };
 
-  // Don’t show the menu at all when logged out
+  // Don't show the menu at all when logged out
   if (sessionId === null) {
     return null;
   }
@@ -195,7 +195,7 @@ export const Menu = memo(() => {
                         <p className="mt-2">Are you sure you want to delete this chat?</p>
                       </DialogDescription>
                     </div>
-                    <div className="rounded-b-lg flex justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+                    <div className="rounded-b-lg flex justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
                       <DialogButton type="secondary" onClick={closeDialog}>
                         Cancel
                       </DialogButton>

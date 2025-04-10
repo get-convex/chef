@@ -5,7 +5,6 @@ import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/session
 import { useCallback } from 'react';
 import { api } from '@convex/_generated/api';
 import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
-import { toast } from 'sonner';
 import { openSignInWindow } from '~/components/ChefSignInPage';
 import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
 
@@ -15,13 +14,14 @@ export function useHomepageInitializeChat(chatId: string) {
   const isFullyLoggedIn = chefAuthState.kind === 'fullyLoggedIn';
   return useCallback(async () => {
     if (!isFullyLoggedIn) {
-      toast.info('Please sign in first to continue!');
       openSignInWindow();
+      return;
     }
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const selectedTeamSlug = selectedTeamSlugStore.get();
     if (selectedTeamSlug === null) {
-      toast.info('Please select a team first!');
+      // If the user hasn't selected a team, don't initialize the chat.
+      return;
     }
 
     const auth0AccessToken = getConvexAuthToken(convex);
