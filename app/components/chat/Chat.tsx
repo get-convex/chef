@@ -35,7 +35,6 @@ import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { getTokenUsage } from '~/lib/convexUsage';
 
-const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 const logger = createScopedLogger('Chat');
 
 const MAX_RETRIES = 3;
