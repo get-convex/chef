@@ -112,11 +112,26 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
             {!chatStarted && (
               <div id="intro" className="mt-[16vh] max-w-chat mx-auto text-center px-4 lg:px-0">
                 <h1 className="text-4xl lg:text-6xl font-black text-bolt-elements-textPrimary mb-4 animate-fade-in font-display tracking-tight">
-                  Now you’re cooking
+                  Now you're cooking
                 </h1>
                 <p className="text-md lg:text-2xl text-balance mb-8 text-bolt-elements-textSecondary animate-fade-in animation-delay-200 font-medium font-display">
                   Generate and launch realtime full‑stack apps you never thought possible
                 </p>
+              </div>
+            )}
+            {!chatStarted && (
+              <div className="max-w-chat mx-auto px-4 lg:px-0">
+                <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-8 animate-fade-in animation-delay-400">
+                  <p className="font-bold">VIP access only (you can be a VIP too!)</p>
+                  <p className="text-sm">
+                    Chef is currently only enabled for builders with existing Convex accounts. We'll be removing this
+                    restriction later today but if you want to start using Chef early, sign up at{' '}
+                    <a href="https://dashboard.convex.dev" className="text-yellow-800 hover:text-yellow-900 underline">
+                      dashboard.convex.dev
+                    </a>{' '}
+                    first and come on back!
+                  </p>
+                </div>
               </div>
             )}
             <div
