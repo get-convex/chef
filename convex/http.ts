@@ -1,5 +1,5 @@
 import { httpRouter } from 'convex/server';
-import { httpAction } from './_generated/server';
+import { httpAction, type ActionCtx } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 
@@ -9,26 +9,20 @@ http.route({
   path: '/upload_snapshot',
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
-    const url = new URL(request.url);
-    const sessionId = url.searchParams.get('sessionId');
-    if (!sessionId) {
-      throw new Error('sessionId is required');
+    let storageId: Id<'_storage'>;
+    try {
+      storageId = await uploadSnapshot(ctx, request);
+    } catch (e) {
+      return new Response(JSON.stringify({ error: (e as Error).message }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          Vary: 'Origin',
+        },
+      });
     }
-    const chatId = url.searchParams.get('chatId');
-    if (!chatId) {
-      throw new Error('chatId is required');
-    }
-
-    const blob = await request.blob();
-    const storageId = await ctx.storage.store(blob);
-
-    const snapshotId = await ctx.runMutation(internal.snapshot.saveSnapshot, {
-      sessionId: sessionId as Id<'sessions'>,
-      chatId: chatId as Id<'chats'>,
-      storageId,
-    });
-
-    return new Response(JSON.stringify({ snapshotId }), {
+    return new Response(JSON.stringify({ snapshotId: storageId }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -38,6 +32,28 @@ http.route({
     });
   }),
 });
+
+async function uploadSnapshot(ctx: ActionCtx, request: Request): Promise<Id<'_storage'>> {
+  const url = new URL(request.url);
+  const sessionId = url.searchParams.get('sessionId');
+  if (!sessionId) {
+    throw new Error('sessionId is required');
+  }
+  const chatId = url.searchParams.get('chatId');
+  if (!chatId) {
+    throw new Error('chatId is required');
+  }
+
+  const blob = await request.blob();
+  const storageId = await ctx.storage.store(blob);
+
+  await ctx.runMutation(internal.snapshot.saveSnapshot, {
+    sessionId: sessionId as Id<'sessions'>,
+    chatId: chatId as Id<'chats'>,
+    storageId,
+  });
+  return storageId;
+}
 
 http.route({
   path: '/upload_snapshot',
