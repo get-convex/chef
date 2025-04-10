@@ -165,47 +165,6 @@ export const get = query({
   },
 });
 
-export const getWithMessages = query({
-  args: {
-    id: v.string(),
-    sessionId: v.id('sessions'),
-  },
-  returns: v.union(
-    v.null(),
-    v.object({
-      id: v.string(),
-      initialId: v.string(),
-      urlId: v.optional(v.string()),
-      description: v.optional(v.string()),
-      timestamp: v.string(),
-      messages: v.array(v.any() as VAny<SerializedMessage>),
-    }),
-  ),
-  handler: async (ctx, args) => {
-    const { id, sessionId } = args;
-
-    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
-
-    if (!chat) {
-      return null;
-    }
-
-    const messages = await ctx.db
-      .query('chatMessages')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .collect();
-
-    return {
-      id: getIdentifier(chat),
-      initialId: chat.initialId,
-      urlId: chat.urlId,
-      description: chat.description,
-      timestamp: chat.timestamp,
-      messages: messages.map((m) => m.content),
-    };
-  },
-});
-
 export const getInitialMessages = mutation({
   args: {
     sessionId: v.id('sessions'),
