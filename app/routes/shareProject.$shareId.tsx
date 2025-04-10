@@ -12,6 +12,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthWrapper } from '~/components/chat/ChefAuthWrapper';
+import { useParams } from '@remix-run/react';
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);

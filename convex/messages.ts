@@ -130,9 +130,7 @@ export const clone = mutation({
 
     const messages = await ctx.db
       .query('chatMessages')
-      .withIndex('byChatIdCreationTime', (q) =>
-        q.eq('chatId', parentChat._id).lt('_creationTime', getShare._creationTime),
-      )
+      .withIndex('byChatId', (q) => q.eq('chatId', parentChat._id).lte('rank', getShare.lastMessageRank))
       .collect();
 
     await startProvisionConvexProjectHelper(ctx, {
@@ -172,9 +170,15 @@ export const createShareFromChat = internalMutation({
     if (!chat.snapshotId) {
       throw new Error('Chat has no snapshot');
     }
+    const lastMessage = await ctx.db
+      .query('chatMessages')
+      .withIndex('byChatId', (q) => q.eq('chatId', chatId))
+      .order('desc')
+      .first();
     const shareId = await ctx.db.insert('shares', {
       chatId,
       snapshotId: chat.snapshotId,
+      lastMessageRank: lastMessage ? lastMessage.rank : 0,
     });
     return {
       id: shareId,

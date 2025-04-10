@@ -78,9 +78,7 @@ export default defineSchema({
     content: v.any() as VAny<SerializedMessage>,
     rank: v.number(),
     chatId: v.id('chats'),
-  })
-    .index('byChatId', ['chatId', 'rank'])
-    .index('byChatIdCreationTime', ['chatId']),
+  }).index('byChatId', ['chatId', 'rank']),
   inviteCodes: defineTable({
     code: v.string(),
     sessionId: v.id('sessions'),
@@ -93,5 +91,6 @@ export default defineSchema({
   shares: defineTable({
     chatId: v.id('chats'),
     snapshotId: v.id('_storage'),
+    lastMessageRank: v.number(),
   }),
 });
