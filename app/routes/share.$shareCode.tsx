@@ -1,13 +1,12 @@
 import { useStore } from '@nanostores/react';
-import { sessionIdStore, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { getConvexAuthToken, sessionIdStore, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
-import { useMutation } from 'convex/react';
+import { useMutation, useConvex } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useCallback } from 'react';
-import { Toaster } from 'sonner';
+import { toast, Toaster } from 'sonner';
 import { setSelectedTeamSlug, useSelectedTeamSlug, waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
-import { useAuth0 } from '@auth0/auth0-react';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider, useChefAuth } from '~/components/chat/ChefAuthWrapper';
@@ -63,18 +62,23 @@ function ShareProjectContent() {
 
   const sessionId = useStore(sessionIdStore);
   const cloneChat = useMutation(api.share.clone);
-  const { getAccessTokenSilently } = useAuth0();
+  const convex = useConvex();
   const handleCloneChat = useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const response = await getAccessTokenSilently({ detailedResponse: true });
+    const auth0AccessToken = getConvexAuthToken(convex);
+    if (!auth0AccessToken) {
+      console.error('No auth0 access token');
+      toast.error('Unexpected error cloning chat');
+      return;
+    }
     const projectInitParams = {
       teamSlug,
-      auth0AccessToken: response.id_token,
+      auth0AccessToken,
     };
     const { id: chatId } = await cloneChat({ shareCode, sessionId, projectInitParams });
     window.location.href = `/chat/${chatId}`;
-  }, [sessionId, getAccessTokenSilently]);
+  }, [sessionId, convex]);
   const signIn = useCallback(() => {
     openSignInWindow();
   }, []);

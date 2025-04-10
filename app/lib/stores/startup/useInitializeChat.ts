@@ -1,8 +1,7 @@
 import { selectedTeamSlugStore, waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
 
 import { useConvex } from 'convex/react';
-import { waitForConvexSessionId } from '~/lib/stores/sessionId';
-import { useAuth0 } from '@auth0/auth0-react';
+import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { useCallback } from 'react';
 import { api } from '@convex/_generated/api';
 import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
@@ -11,7 +10,6 @@ import { openSignInWindow } from '~/components/ChefSignInPage';
 import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
 
 export function useHomepageInitializeChat(chatId: string) {
-  const { getAccessTokenSilently } = useAuth0();
   const convex = useConvex();
   const chefAuthState = useChefAuth();
   const isFullyLoggedIn = chefAuthState.kind === 'fullyLoggedIn';
@@ -26,11 +24,17 @@ export function useHomepageInitializeChat(chatId: string) {
       toast.info('Please select a team first!');
     }
 
-    const response = await getAccessTokenSilently({ detailedResponse: true });
+    const auth0AccessToken = getConvexAuthToken(convex);
+    if (!auth0AccessToken) {
+      console.error('No auth0 access token');
+      toast.error('Unexpected error creating chat');
+      return;
+    }
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
+
     const projectInitParams = {
       teamSlug,
-      auth0AccessToken: response.id_token,
+      auth0AccessToken,
     };
     await convex.mutation(api.messages.initializeChat, {
       id: chatId,
@@ -40,21 +44,25 @@ export function useHomepageInitializeChat(chatId: string) {
 
     // Wait for the WebContainer to have its snapshot loaded before sending a message.
     await waitForBootStepCompleted(ContainerBootState.LOADING_SNAPSHOT);
-  }, [convex, chatId, getAccessTokenSilently, isFullyLoggedIn]);
+  }, [convex, chatId, isFullyLoggedIn]);
 }
 
 export function useExistingInitializeChat(chatId: string) {
-  const { getAccessTokenSilently } = useAuth0();
   const convex = useConvex();
   const chefAuthState = useChefAuth();
   const isFullyLoggedIn = chefAuthState.kind === 'fullyLoggedIn';
   return useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
-    const response = await getAccessTokenSilently({ detailedResponse: true });
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
+    const auth0AccessToken = getConvexAuthToken(convex);
+    if (!auth0AccessToken) {
+      console.error('No auth0 access token');
+      toast.error('Unexpected error creating chat');
+      return;
+    }
     const projectInitParams = {
       teamSlug,
-      auth0AccessToken: response.id_token,
+      auth0AccessToken,
     };
     await convex.mutation(api.messages.initializeChat, {
       id: chatId,
@@ -64,5 +72,5 @@ export function useExistingInitializeChat(chatId: string) {
 
     // We don't need to wait for container boot here since we don't mount
     // the UI until it's fully ready.
-  }, [convex, chatId, getAccessTokenSilently, isFullyLoggedIn]);
+  }, [convex, chatId, isFullyLoggedIn]);
 }

@@ -1,29 +1,31 @@
-import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect } from 'react';
 import { convexTeamsStore, type ConvexTeam } from '~/lib/stores/convexTeams';
-import { waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { getStoredTeamSlug, setSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { toast } from 'sonner';
+import type { ConvexReactClient } from 'convex/react';
+import { useConvex } from 'convex/react';
 
 const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
 export function useTeamsInitializer() {
-  const { getAccessTokenSilently } = useAuth0();
+  const convex = useConvex();
   useEffect(() => {
-    void fetchTeams(getAccessTokenSilently);
-  }, [getAccessTokenSilently]);
+    void fetchTeams(convex);
+  }, [convex]);
 }
 
-async function fetchTeams(getAccessTokenSilently: ReturnType<typeof useAuth0>['getAccessTokenSilently']) {
+async function fetchTeams(convex: ConvexReactClient) {
   let teams: ConvexTeam[];
   await waitForConvexSessionId('fetchTeams');
   try {
-    const tokenResponse = await getAccessTokenSilently({
-      detailedResponse: true,
-    });
+    const token = getConvexAuthToken(convex);
+    if (!token) {
+      throw new Error('Missing auth token');
+    }
     const response = await fetch(`${VITE_PROVISION_HOST}/api/dashboard/teams`, {
       headers: {
-        Authorization: `Bearer ${tokenResponse.id_token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     if (!response.ok) {
