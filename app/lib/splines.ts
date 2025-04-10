@@ -6,7 +6,6 @@ const SPLINES_MESSAGES = [
   'Adding an "n" to Covex...',
   'Twisting knobs...',
   'Booking a Hot Pockets gig...',
-  'Consulting Chef Goyardee...',
   'Going base jumping...',
   'Painting sneakers...',
 ];
