@@ -4,18 +4,17 @@ import { chatStore } from '~/lib/stores/chatId';
 import { classNames } from '~/utils/classNames';
 import { HeaderActionButtons } from './HeaderActionButtons.client';
 import { ChatDescription } from '~/components/header/ChatDescription.client';
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { DeployButton } from './DeployButton';
 import { FeedbackButton } from './FeedbackButton';
 import { ShareButton } from './ShareButton';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 
-export function Header() {
+export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
-  const sessionId = useConvexSessionIdOrNullOrLoading();
 
-  if (sessionId === null) {
-    return null;
-  }
+  const sessionId = useConvexSessionIdOrNullOrLoading();
+  const isLoggedIn = sessionId !== null;
+  const showSidebarIcon = !hideSidebarIcon && isLoggedIn;
 
   return (
     <header
@@ -24,10 +23,10 @@ export function Header() {
         'border-bolt-elements-borderColor': chat.started,
       })}
     >
-      <div className="flex items-center gap-2 z-logo text-bolt-elements-textPrimary cursor-pointer">
-        <div className="i-ph:sidebar-simple-duotone text-xl" />
+      <div className="flex items-center gap-4 z-logo text-bolt-elements-textPrimary cursor-pointer">
+        {showSidebarIcon && <div className="i-ph:sidebar-simple-duotone text-xl" />}
         <a href="/" className="text-2xl font-semibold flex flex-col leading-tight">
-          <div className="flex items-center ml-2 font-display font-bold gap-2">
+          <div className="flex items-center font-display font-bold gap-2">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 fillRule="evenodd"
