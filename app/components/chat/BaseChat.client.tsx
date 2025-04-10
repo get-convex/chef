@@ -265,7 +265,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           <SendButton
                             show={input.length > 0 || isStreaming || uploadedFiles.length > 0 || sendMessageInProgress}
                             isStreaming={isStreaming}
-                            disabled={!selectedTeamSlug || chefAuthState.kind === 'loading' || sendMessageInProgress}
+                            disabled={
+                              !selectedTeamSlug ||
+                              chefAuthState.kind === 'loading' ||
+                              sendMessageInProgress ||
+                              maintenanceMode
+                            }
                             onClick={(event) => {
                               if (isStreaming) {
                                 handleStop?.();

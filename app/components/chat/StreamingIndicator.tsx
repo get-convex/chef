@@ -54,8 +54,11 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
         message = STATUS_MESSAGES.error;
         if (props.currentError) {
           try {
-            const { error } = JSON.parse(props.currentError?.message);
+            const { error, details } = JSON.parse(props.currentError?.message);
             message = error;
+            if (details) {
+              console.log('error details', details);
+            }
           } catch (_) {
             console.log(props.currentError);
           }

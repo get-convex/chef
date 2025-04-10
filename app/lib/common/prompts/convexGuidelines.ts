@@ -412,6 +412,7 @@ const messages = await ctx.db
 ## Action guidelines
 
 - Always add \`"use node";\` to the top of files containing actions that use Node.js built-in modules.
+- Files that contain \`"use node";\` should NEVER contain mutations or queries, only actions. Node actions can only be called from the client or from other actions.
 - Never use \`ctx.db\` inside of an action. Actions don't have access to the database.
 - Below is an example of the syntax for an action:
 
