@@ -19,9 +19,10 @@ describe('serializeMessageForConvex', () => {
 
     const serialized = serializeMessageForConvex(message);
 
-    expect(serialized.parts?.[0].text).toBe(
-      'Here is a file:\n<boltAction type="file" filePath="test.ts"></boltAction>\nAnd some more text',
-    );
+    expect(serialized.parts?.[0]).toEqual({
+      type: 'text',
+      text: 'Here is a file:\n<boltAction type="file" filePath="test.ts"></boltAction>\nAnd some more text',
+    });
   });
 
   test('preserves non-file bolt actions', () => {
@@ -40,7 +41,10 @@ describe('serializeMessageForConvex', () => {
 
     const serialized = serializeMessageForConvex(message);
 
-    expect(serialized.parts?.[0].text).toBe('<boltAction type="other">content</boltAction>');
+    expect(serialized.parts?.[0]).toEqual({
+      type: 'text',
+      text: '<boltAction type="other">content</boltAction>',
+    });
   });
 
   test('preserves non-text parts', () => {
