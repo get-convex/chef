@@ -2,7 +2,6 @@ import { selectedTeamSlugStore, waitForSelectedTeamSlug } from '~/lib/stores/con
 
 import { useConvex } from 'convex/react';
 import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
-import { useAuth0 } from '@auth0/auth0-react';
 import { useCallback } from 'react';
 import { api } from '@convex/_generated/api';
 import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
