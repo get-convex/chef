@@ -4,6 +4,7 @@ import {
   type LanguageModelUsage,
   type LanguageModelV1,
   type Message,
+  type ProviderMetadata,
   type StepResult,
 } from 'ai';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
@@ -23,6 +24,7 @@ import { awsCredentialsProvider } from '@vercel/functions/oidc';
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch as undiciFetch } from 'undici';
+import { logger } from '~/utils/logger';
 type Fetch = typeof fetch;
 
 type Messages = Message[];
@@ -44,7 +46,7 @@ export async function convexAgent(
   tracer: Tracer | null,
   modelProvider: ModelProvider,
   userApiKey: string | undefined,
-  recordUsageCb: (usage: LanguageModelUsage) => Promise<void>,
+  recordUsageCb: (usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) => Promise<void>,
 ) {
   console.debug('Starting agent with model provider', modelProvider);
   if (userApiKey) {
@@ -92,31 +94,45 @@ export async function convexAgent(
       const rateLimitAwareFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {
           const enrichedOptions = anthropicInjectCacheControl(init);
-          try {
-            const response = await fetch(input, enrichedOptions);
-            if (response.status == 429) {
-              captureException('Rate limited by Anthropic, switching to low QoS API key', {
-                level: 'warning',
-                extra: {
-                  response,
-                },
-              });
-              const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
-              if (!lowQosKey) {
-                return response;
-              }
-              if (enrichedOptions && enrichedOptions.headers) {
-                const headers = new Headers(enrichedOptions.headers);
-                headers.set('x-api-key', lowQosKey);
-                enrichedOptions.headers = headers;
-              }
-              return fetch(input, enrichedOptions);
-            }
 
-            return response;
-          } catch (error) {
-            throw error;
+          const throwIfBad = async (response: Response) => {
+            if (response.ok) {
+              return response;
+            }
+            const text = await response.text();
+            captureException('Anthropic returned an error', {
+              level: 'error',
+              extra: {
+                response,
+                text,
+              },
+            });
+            logger.error('Anthropic returned an error:', text);
+            throw new Error(JSON.stringify({ error: 'The model hit an error. Try sending your message again?' }));
+          };
+          const response = await fetch(input, enrichedOptions);
+          if (response.status == 429) {
+            const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
+            if (!lowQosKey) {
+              captureException('Anthropic low qos api key not set', { level: 'error' });
+              console.error('Anthropic low qos api key not set');
+              return throwIfBad(response);
+            }
+            captureException('Rate limited by Anthropic, switching to low QoS API key', {
+              level: 'warning',
+              extra: {
+                response,
+              },
+            });
+            if (enrichedOptions && enrichedOptions.headers) {
+              const headers = new Headers(enrichedOptions.headers);
+              headers.set('x-api-key', lowQosKey);
+              enrichedOptions.headers = headers;
+            }
+            return throwIfBad(await fetch(input, enrichedOptions));
           }
+
+          return throwIfBad(response);
         };
       };
       const userKeyApiFetch = () => {
@@ -271,9 +287,9 @@ async function onFinishHandler(
   result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
   tracer: Tracer | null,
   chatId: string,
-  recordUsageCb: (usage: LanguageModelUsage) => Promise<void>,
+  recordUsageCb: (usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) => Promise<void>,
 ) {
-  const { usage } = result;
+  const { usage, providerMetadata } = result;
   console.log('Finished streaming', {
     finishReason: result.finishReason,
     usage,
@@ -297,7 +313,7 @@ async function onFinishHandler(
   }
 
   // Record usage once the dataStream is closed.
-  await recordUsageCb(usage);
+  await recordUsageCb(usage, providerMetadata);
 
   await new Promise((resolve) => setTimeout(resolve, 0));
 }

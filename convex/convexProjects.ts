@@ -110,7 +110,7 @@ export async function startProvisionConvexProjectHelper(
       auth0AccessToken: string;
     };
   },
-) {
+): Promise<void> {
   const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
   if (!chat) {
     throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
@@ -179,6 +179,12 @@ export const recordProvisionedConvexProjectCredentials = internalMutation({
       console.error(`Chat not found: ${args.chatId}, sessionId: ${args.sessionId}`);
       return;
     }
+    if (chat.convexProject?.kind === 'connecting') {
+      const jobId = chat.convexProject.checkConnectionJobId;
+      if (jobId) {
+        await ctx.scheduler.cancel(jobId);
+      }
+    }
     await ctx.db.patch(chat._id, {
       convexProject: {
         kind: 'connected',
@@ -241,7 +247,14 @@ async function _connectConvexProjectForMember(
     accessToken: string;
     teamSlug: string;
   },
-) {
+): Promise<{
+  projectSlug: string;
+  teamSlug: string;
+  deploymentUrl: string;
+  deploymentName: string;
+  projectDeployKey: string;
+  warningMessage: string | undefined;
+}> {
   const bigBrainHost = ensureEnvVar('BIG_BRAIN_HOST');
   let projectName: string | null = null;
   let timeElapsed = 0;
@@ -353,7 +366,14 @@ export const recordFailedConvexProjectConnection = internalMutation({
   handler: async (ctx, args) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
     if (!chat) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
+      console.error(`Chat not found: ${args.chatId}, sessionId: ${args.sessionId}`);
+      return;
+    }
+    if (chat.convexProject?.kind === 'connecting') {
+      const jobId = chat.convexProject.checkConnectionJobId;
+      if (jobId) {
+        await ctx.scheduler.cancel(jobId);
+      }
     }
     await ctx.db.patch(chat._id, {
       convexProject: { kind: 'failed', errorMessage: args.errorMessage },
@@ -369,7 +389,8 @@ export const checkConnection = internalMutation({
   handler: async (ctx, args) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
     if (!chat) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
+      console.error(`Chat not found: ${args.chatId}, sessionId: ${args.sessionId}`);
+      return;
     }
     if (chat.convexProject?.kind !== 'connecting') {
       return;

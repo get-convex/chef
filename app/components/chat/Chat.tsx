@@ -36,7 +36,7 @@ const logger = createScopedLogger('Chat');
 const MAX_RETRIES = 3;
 
 const CHEF_TOO_BUSY_ERROR =
-  'Chef is too busy cooking right now. Please try again in a moment or enter your own API key in settings.';
+  'Chef is too busy cooking right now. Please try again in a moment or enter your own API key at chef.convex.dev/settings.';
 export const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
 const processSampledMessages = createSampler(
@@ -116,6 +116,10 @@ export const Chat = memo(
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     async function checkTokenUsage() {
+      if (apiKey) {
+        setDisableChatMessage(null);
+        return;
+      }
       const teamSlug = selectedTeamSlugStore.get();
       if (!teamSlug) {
         console.error('No team slug');
@@ -232,7 +236,7 @@ export const Chat = memo(
       onFinish: async (message, response) => {
         const usage = response.usage;
         if (usage) {
-          console.log('Token usage in response:', usage);
+          console.debug('Token usage in response:', usage);
         }
         if (response.finishReason == 'stop') {
           setRetries({ numFailures: 0, nextRetry: Date.now() });
