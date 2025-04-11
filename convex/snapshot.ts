@@ -83,8 +83,12 @@ export const deleteSnapshotsIfUnreferenced = internalMutation({
   args: { batchSize: v.number(), cursor: v.union(v.string(), v.null()) },
   handler: async (ctx, { batchSize, cursor }) => {
     const files = await ctx.db.system.query('_storage').paginate({ numItems: batchSize, cursor });
-    for (const { _id: storageId } of files.page) {
-      await deleteSnapshotIfUnreferenced(ctx, storageId);
+    for (const { _id: storageId, _creationTime } of files.page) {
+      // Only delete snapshots created before 2025-04-11 3pm PT -> 10pm UTC when we deployed the automatic garbage collection.
+      // This makes sure we don't accidentally delete snapshots that are uploaded but not yet saved to the database.
+      if (_creationTime < Date.UTC(2025, 4, 11, 20, 0, 0)) {
+        await deleteSnapshotIfUnreferenced(ctx, storageId);
+      }
     }
     if (files.isDone) {
       return null;
