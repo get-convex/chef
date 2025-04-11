@@ -1,11 +1,11 @@
-@use 'variables.scss';
+@use 'variables.css';
 @use 'z-index.scss';
-@use 'animations.scss';
-@use 'fonts.scss';
-@use 'components/terminal.scss';
+@use 'animations.css';
+@use 'fonts.css';
+@use 'components/terminal.css';
 @use 'components/resize-handle.scss';
-@use 'components/code.scss';
-@use 'components/editor.scss';
+@use 'components/code.css';
+@use 'components/editor.css';
 
 html,
 body {
