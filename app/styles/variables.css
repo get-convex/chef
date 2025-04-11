@@ -1,4 +1,4 @@
-// Convex Tokens
+/* Convex Tokens */
 :root {
   --cvx-red-100: rgb(252, 215, 203);
   --cvx-red-200: rgb(255, 202, 193);
@@ -53,7 +53,7 @@
   --cvx-util-warning: rgb(243, 176, 28);
 }
 
-// Convex Tokens Light Theme (from Dashboard)
+/* Convex Tokens Light Theme (from Dashboard) */
 :root,
 :root[data-theme='light'] {
   --cvx-background-brand: rgb(249, 247, 238);
@@ -78,7 +78,7 @@
   --cvx-border-selected: rgb(30, 28, 25);
 }
 
-// Convex Tokens Dark Theme (from Dashboard)
+/* Convex Tokens Dark Theme (from Dashboard) */
 :root,
 :root[data-theme='dark'] {
   --cvx-background-brand: rgb(30, 28, 26);
@@ -103,7 +103,7 @@
   --cvx-border-selected: rgb(225, 215, 205);
 }
 
-// Color Tokens
+/* Color Tokens */
 :root {
   --bolt-elements-borderColor: var(--cvx-border-transparent);
   --bolt-elements-borderColorActive: var(--cvx-border-selected);
