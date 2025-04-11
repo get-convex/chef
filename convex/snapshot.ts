@@ -67,7 +67,7 @@ export const deleteAllUnreferencedSnapshots = internalAction({
   handler: async (ctx, { batchSize }) => {
     let cursor = null;
     while (true) {
-      cursor = await ctx.runMutation(internal.snapshot.deleteUnreferencedSnapshots, {
+      cursor = await ctx.runMutation(internal.snapshot.deleteSnapshotsIfUnreferenced, {
         batchSize,
         cursor,
       });
@@ -79,7 +79,7 @@ export const deleteAllUnreferencedSnapshots = internalAction({
 });
 
 // Walk over the storage table, deleting unreferenced snapshots
-export const deleteUnreferencedSnapshots = internalMutation({
+export const deleteSnapshotsIfUnreferenced = internalMutation({
   args: { batchSize: v.number(), cursor: v.union(v.string(), v.null()) },
   handler: async (ctx, { batchSize, cursor }) => {
     const files = await ctx.db.system.query('_storage').paginate({ numItems: batchSize, cursor });
