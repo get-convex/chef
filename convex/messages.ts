@@ -5,8 +5,9 @@ import type { VAny } from 'convex/values';
 import { isValidSession } from './sessions';
 import type { Doc, Id } from './_generated/dataModel';
 import { startProvisionConvexProjectHelper } from './convexProjects';
-export type SerializedMessage = Omit<AIMessage, 'createdAt'> & {
+export type SerializedMessage = Omit<AIMessage, 'createdAt' | 'content'> & {
   createdAt: number | undefined;
+  content?: string;
 };
 
 export const initializeChat = mutation({
@@ -336,11 +337,13 @@ function extractArtifactIdAndTitle(message: SerializedMessage) {
    *
    * Example: <boltArtifact id="imported-files" title="Interactive Tic Tac Toe Game"
    */
-  if (typeof message.content !== 'string') {
-    return null;
-  }
+  const content =
+    message.parts
+      ?.filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+      .map((part) => part.text)
+      .join('') ?? '';
 
-  const match = message.content.match(/<boltArtifact id="([^"]+)" title="([^"]+)"/);
+  const match = content.match(/<boltArtifact id="([^"]+)" title="([^"]+)"/);
 
   return match ? { id: match[1], title: match[2] } : null;
 }

@@ -18,7 +18,7 @@ export const disabledText =
   'at support@convex.dev for help.';
 
 export function noTokensText(tokensUsed: number, tokensQuota: number) {
-  return `No remaining tokens available. Please upgrade to a Pro plan or add your own Anthropic API key to continue. Used ${tokensUsed.toLocaleString()} of ${tokensQuota.toLocaleString()}.`;
+  return `No remaining tokens available. Please upgrade to a Pro plan or add your own Anthropic API key at chef.convex.dev/settings to continue. Used ${tokensUsed.toLocaleString()} of ${tokensQuota.toLocaleString()}.`;
 }
 
 export async function getTokenUsage(

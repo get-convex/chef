@@ -1,0 +1,39 @@
+:root {
+  --z-index-max: 999;
+}
+
+.z-logo {
+  z-index: calc(var(--z-index-max) - 1);
+}
+
+.z-menu {
+  z-index: calc(var(--z-index-max) - 1);
+}
+
+.z-sidebar {
+  z-index: calc(var(--z-index-max) - 2);
+}
+
+.z-port-dropdown {
+  z-index: calc(var(--z-index-max) - 3);
+}
+
+.z-iframe-overlay {
+  z-index: calc(var(--z-index-max) - 4);
+}
+
+.z-prompt {
+  z-index: 2;
+}
+
+.z-workbench {
+  z-index: 3;
+}
+
+.z-file-tree-breadcrumb {
+  z-index: calc(var(--z-index-max) - 1);
+}
+
+.z-max {
+  z-index: var(--z-index-max);
+}

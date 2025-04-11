@@ -6,7 +6,7 @@ import { rehypePlugins, remarkPlugins, allowedHTMLElements } from '~/utils/markd
 import { Artifact } from './Artifact';
 import { CodeBlock } from './CodeBlock';
 
-import styles from './Markdown.module.scss';
+import styles from './Markdown.module.css';
 import type { PartId } from '~/lib/stores/artifacts';
 
 const logger = createScopedLogger('MarkdownComponent');
