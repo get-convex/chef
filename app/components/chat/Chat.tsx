@@ -116,6 +116,10 @@ export const Chat = memo(
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     async function checkTokenUsage() {
+      if (apiKey) {
+        setDisableChatMessage(null);
+        return;
+      }
       const teamSlug = selectedTeamSlugStore.get();
       if (!teamSlug) {
         console.error('No team slug');
