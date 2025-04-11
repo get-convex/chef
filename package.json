@@ -144,6 +144,7 @@
     "jsdom": "^26.0.0",
     "knip": "^5.46.5",
     "postcss": "^8.5.3",
+    "postcss-nesting": "^13.0.1",
     "prettier": "^3.4.1",
     "sass-embedded": "^1.81.0",
     "stream-browserify": "^3.0.0",
