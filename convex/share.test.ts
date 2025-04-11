@@ -4,7 +4,7 @@ import { createChat, setupTest } from './test.setup';
 
 test('sharing a chat fails if there is no snapshot', async () => {
   const t = setupTest();
-  const { sessionId, chatId } = await createChat(t);
+  const { sessionId } = await createChat(t);
   await expect(t.mutation(api.share.create, { sessionId, id: 'test' })).rejects.toThrow(
     'Your project has never been saved.',
   );
@@ -51,7 +51,7 @@ test('referenced snapshots are not deleted', async () => {
   await t.mutation(api.share.create, { sessionId, id: chatId });
   const storageId2 = await t.run((ctx) => ctx.storage.store(new Blob(['foobar'])));
   await t.mutation(internal.snapshot.saveSnapshot, { sessionId, chatId, storageId: storageId2 });
-[]
+
   // `storageId1` should not be deleted because it is referenced by the share
   const blob1 = await t.run(async (ctx) => {
     const blob = await ctx.storage.get(storageId1);
