@@ -92,9 +92,12 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     }
   }
 
-  const recordUsageCb = async (usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) => {
+  const recordUsageCb = async (
+    lastMessage: Message | undefined,
+    finalGeneration: { usage: LanguageModelUsage, providerMetadata?: ProviderMetadata },
+  ) => {
     if (!userApiKey) {
-      await recordUsage(PROVISION_HOST, token, teamSlug, deploymentName, usage, providerMetadata);
+      await recordUsage(PROVISION_HOST, token, teamSlug, deploymentName, lastMessage, finalGeneration);
     }
   };
 
