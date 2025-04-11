@@ -23,12 +23,12 @@ export const saveSnapshot = internalMutation({
 
     // Delete the prior snapshot only if it is not being used by another chat or share
     if (chat.snapshotId) {
-      await deleteUnreferencedSnapshot(ctx, chat.snapshotId);
+      await deleteSnapshotIfUnreferenced(ctx, chat.snapshotId);
     }
   },
 });
 
-async function deleteUnreferencedSnapshot(ctx: MutationCtx, snapshotId: Id<'_storage'>) {
+async function deleteSnapshotIfUnreferenced(ctx: MutationCtx, snapshotId: Id<'_storage'>) {
   const firstShareWithSnapshot = await ctx.db
     .query('shares')
     .withIndex('bySnapshotId', (q) => q.eq('snapshotId', snapshotId))
@@ -84,7 +84,7 @@ export const deleteSnapshotsIfUnreferenced = internalMutation({
   handler: async (ctx, { batchSize, cursor }) => {
     const files = await ctx.db.system.query('_storage').paginate({ numItems: batchSize, cursor });
     for (const { _id: storageId } of files.page) {
-      await deleteUnreferencedSnapshot(ctx, storageId);
+      await deleteSnapshotIfUnreferenced(ctx, storageId);
     }
     if (files.isDone) {
       return null;
