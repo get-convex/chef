@@ -1,23 +1,11 @@
-import { convexTest } from 'convex-test';
 import { expect, test } from 'vitest';
 import { api } from './_generated/api';
-import schema from './schema';
-import { modules } from './test.setup';
+import { createChat, setupTest } from './test.setup';
 
 test('sending messages', async () => {
-  const test = convexTest(schema, modules);
-  const t = test.withIdentity({ name: 'Sarah' });
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
 
-  const sessionId = await t.mutation(api.sessions.startSession);
-  const chatId = 'test';
-  await t.mutation(api.messages.initializeChat, {
-    id: chatId,
-    sessionId,
-    projectInitParams: {
-      teamSlug: 'test',
-      auth0AccessToken: 'test',
-    },
-  });
   const chats = await t.query(api.messages.getAll, {
     sessionId,
   });
