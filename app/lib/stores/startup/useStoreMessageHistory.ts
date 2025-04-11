@@ -117,9 +117,9 @@ function findMessagesToUpdate(
 }
 
 export function serializeMessageForConvex(message: Message) {
-  // `content` is a legacy field that is duplicated in `parts`.
-  // We should avoid storing it since we already store `parts`.
-  const { content: _content, ...rest } = message;
+  // `content` + `toolInvocations` are legacy fields that are duplicated in `parts`.
+  // We should avoid storing them since we already store `parts`.
+  const { content: _content, toolInvocations: _toolInvocations, ...rest } = message;
 
   // Process parts to remove file content from bolt actions
   const processedParts = message.parts?.map((part) => {

@@ -6,6 +6,7 @@ import { isValidSession } from './sessions';
 import type { Doc, Id } from './_generated/dataModel';
 import { ensureEnvVar, startProvisionConvexProjectHelper } from './convexProjects';
 import { internal } from '@convex/_generated/api';
+
 export type SerializedMessage = Omit<AIMessage, 'createdAt' | 'content'> & {
   createdAt: number | undefined;
   content?: string;
@@ -355,17 +356,12 @@ async function _appendMessages(
     .collect();
   for (let i = 0; i < messages.length; i++) {
     const existingMessage = persistedMessages.find((m) => m.rank === rank);
-    if (existingMessage) {
-      await ctx.db.patch(existingMessage._id, {
-        content: messages[i],
-      });
-    } else {
-      await ctx.db.insert('chatMessages', {
-        chatId: chat._id,
-        content: messages[i],
-        rank,
-      });
-    }
+    await upsertChatMessage(ctx, {
+      existingMessageId: existingMessage?._id ?? null,
+      chatId: chat._id,
+      rank,
+      message: messages[i],
+    });
     rank++;
   }
 
@@ -382,6 +378,41 @@ async function _appendMessages(
     urlId: chat.urlId,
     description: updatedDescription,
   };
+}
+
+async function upsertChatMessage(
+  ctx: MutationCtx,
+  args: {
+    existingMessageId: Id<'chatMessages'> | null;
+    chatId: Id<'chats'>;
+    rank: number;
+    message: SerializedMessage;
+  },
+) {
+  const { existingMessageId, chatId, rank, message } = args;
+
+  if (shouldLogMessageSize()) {
+    logMessageSize(message, 'upsertChatMessage');
+  }
+
+  try {
+    if (existingMessageId) {
+      await ctx.db.patch(existingMessageId, {
+        content: message,
+      });
+    } else {
+      await ctx.db.insert('chatMessages', {
+        chatId,
+        content: message,
+        rank,
+      });
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Value is too large')) {
+      logMessageSize(message, 'upsertChatMessage -- too large');
+    }
+    throw error;
+  }
 }
 
 function extractArtifactIdAndTitle(message: SerializedMessage) {
@@ -502,4 +533,45 @@ export async function getChatByIdOrUrlIdEnsuringAccess(
 
 function getIdentifier(chat: Doc<'chats'>): string {
   return chat.urlId ?? chat.initialId!;
+}
+
+/**
+ * Utility function to log details about the size of SerializedMessage objects
+ */
+function logMessageSize(message: SerializedMessage, context: string) {
+  const messageSize = JSON.stringify(message).length;
+  const partsSize = message.parts ? JSON.stringify(message.parts).length : 0;
+  const contentSize = message.content ? message.content.length : 0;
+
+  console.log(`[Message Size Debug] ${context}:
+    Total size: ${messageSize} bytes
+    Parts size: ${partsSize} bytes
+    Content size: ${contentSize} bytes
+    Has parts: ${!!message.parts}
+    Parts count: ${message.parts?.length || 0}
+    Role: ${message.role}
+    ID: ${message.id}
+  `);
+
+  // Log details about each part if they exist
+  if (message.parts && message.parts.length > 0) {
+    message.parts.forEach((part, index) => {
+      // For text parts, log the length of the text
+      if (part.type === 'text') {
+        console.log(`    Text length: ${part.text.length} chars`);
+      } else {
+        const partSize = JSON.stringify(part).length;
+        console.log(`  Part ${index} (${part.type}): ${partSize} bytes`);
+      }
+    });
+  }
+}
+
+function shouldLogMessageSize() {
+  const shouldLogFraction = parseFloat(process.env.SHOULD_LOG_MESSAGE_SIZE_FRACTION ?? '0.1');
+  if (Number.isNaN(shouldLogFraction)) {
+    console.error('SHOULD_LOG_MESSAGE_SIZE_FRACTION is not a number', process.env.SHOULD_LOG_MESSAGE_SIZE_FRACTION);
+    return false;
+  }
+  return Math.random() < shouldLogFraction;
 }
