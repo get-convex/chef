@@ -265,21 +265,19 @@ export const remove = action({
       const projects = await projectsResponse.json();
       const project = projects.find((p: any) => p.slug === projectSlug);
 
-      if (!project) {
-        throw new Error(`Could not find project with slug ${projectSlug}`);
-      }
+      if (project) {
+        const response = await fetch(`${bigBrainHost}/api/dashboard/delete_project/${project.id}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
 
-      const response = await fetch(`${bigBrainHost}/api/dashboard/delete_project/${project.id}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Failed to delete project: ${response.statusText} ${text}`);
-      }
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Failed to delete project: ${response.statusText} ${text}`);
+        }
+    }
     }
 
     await ctx.runMutation(internal.messages.removeChatInner, {
