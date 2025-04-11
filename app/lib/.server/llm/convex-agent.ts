@@ -1,6 +1,8 @@
 import {
   convertToCoreMessages,
+  createDataStream,
   streamText,
+  type DataStreamWriter,
   type LanguageModelUsage,
   type LanguageModelV1,
   type Message,
@@ -25,6 +27,7 @@ import { awsCredentialsProvider } from '@vercel/functions/oidc';
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch as undiciFetch } from 'undici';
 import { logger } from '~/utils/logger';
+import { encodeUsageAnnotation } from '../usage';
 type Fetch = typeof fetch;
 
 type Messages = Message[];
@@ -46,7 +49,7 @@ export async function convexAgent(
   tracer: Tracer | null,
   modelProvider: ModelProvider,
   userApiKey: string | undefined,
-  recordUsageCb: (usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) => Promise<void>,
+  recordUsageCb: (lastMessage: Message | undefined, finalGeneration: { usage: LanguageModelUsage, providerMetadata?: ProviderMetadata }) => Promise<void>,
 ) {
   console.debug('Starting agent with model provider', modelProvider);
   if (userApiKey) {
@@ -182,40 +185,47 @@ export async function convexAgent(
     tools.view = viewTool;
     tools.edit = editTool;
   }
-  const result = streamText({
-    model: provider.model,
-    maxTokens: provider.maxTokens,
-    messages: [
-      {
-        role: 'system',
-        content: ROLE_SYSTEM_PROMPT,
-      },
-      {
-        role: 'system',
-        content: generalSystemPrompt(opts),
-      },
-      ...cleanupAssistantMessages(messages),
-    ],
-    tools,
-    onFinish: (result) => onFinishHandler(result, tracer, chatId, recordUsageCb),
-    onError({ error }) {
-      console.error(error);
-    },
 
-    experimental_telemetry: {
-      isEnabled: true,
-      metadata: {
-        firstUserMessage,
-        chatId,
-        provider: modelProvider,
-      },
+  const dataStream = createDataStream({
+    execute(dataStream) {
+      const result = streamText({
+        model: provider.model,
+        maxTokens: provider.maxTokens,
+        messages: [
+          {
+            role: 'system',
+            content: ROLE_SYSTEM_PROMPT,
+          },
+          {
+            role: 'system',
+            content: generalSystemPrompt(opts),
+          },
+          ...cleanupAssistantMessages(messages),
+        ],
+        tools,
+        onFinish: (result) => {
+          onFinishHandler(dataStream, messages, result, tracer, chatId, recordUsageCb)
+        },
+        onError({ error }) {
+          console.error(error);
+        },
+
+        experimental_telemetry: {
+          isEnabled: true,
+          metadata: {
+            firstUserMessage,
+            chatId,
+            provider: modelProvider,
+          },
+        },
+      });
+      result.mergeIntoDataStream(dataStream);
     },
-  });
-  return result.toDataStream({
-    getErrorMessage: (error: any) => {
+    onError(error: any) {
       return error.message;
     },
   });
+  return dataStream;
 }
 
 // sujayakar, 2025-03-25: This is mega-hax, but I can't figure out
@@ -283,11 +293,15 @@ function cleanupAssistantMessages(messages: Messages) {
   return convertToCoreMessages(processedMessages);
 }
 
+
+
 async function onFinishHandler(
+  dataStream: DataStreamWriter,
+  messages: Messages,
   result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
   tracer: Tracer | null,
   chatId: string,
-  recordUsageCb: (usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) => Promise<void>,
+  recordUsageCb: (lastMessage: Message | undefined, finalGeneration: { usage: LanguageModelUsage, providerMetadata?: ProviderMetadata }) => Promise<void>,
 ) {
   const { usage, providerMetadata } = result;
   console.log('Finished streaming', {
@@ -312,8 +326,15 @@ async function onFinishHandler(
     span.end();
   }
 
-  // Record usage once the dataStream is closed.
-  await recordUsageCb(usage, providerMetadata);
+  // Stash this part's usage as an annotation if we're not done yet.
+  if (result.finishReason !== "stop") {
+    const annotation = encodeUsageAnnotation(usage, providerMetadata);
+    dataStream.writeMessageAnnotation({ type: "usage", usage: annotation });
+  }
+  // Record usage once we've generated the final part.
+  else {
+    await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata })
+  }
 
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
