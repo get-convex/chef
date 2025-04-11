@@ -1,5 +1,7 @@
-$font-mono: ui-monospace, 'Fira Code', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-$code-font-size: 13px;
+:root {
+  --font-mono: ui-monospace, 'Fira Code', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --code-font-size: 13px;
+}
 
 @mixin not-inside-actions {
   &:not(:has(:global(.actions)), :global(.actions *)) {
@@ -78,8 +80,8 @@ $code-font-size: 13px;
   }
 
   :not(pre) > code {
-    font-family: $font-mono;
-    font-size: $code-font-size;
+    font-family: var(--font-mono);
+    font-size: var(--code-font-size);
 
     @include not-inside-actions {
       border-radius: 6px;
@@ -95,8 +97,8 @@ $code-font-size: 13px;
   }
 
   pre:has(> code) {
-    font-family: $font-mono;
-    font-size: $code-font-size;
+    font-family: var(--font-mono);
+    font-size: var(--code-font-size);
     background: transparent;
     overflow-x: auto;
     min-width: 0;
