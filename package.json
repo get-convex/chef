@@ -11,7 +11,7 @@
     "build": "remix vite:build",
     "dev": "remix vite:dev",
     "rebuild-template": "node make-bootstrap-snapshot.js && open http://localhost:5173/admin/build-snapshot",
-    "test": "vitest --run",
+    "test": "vitest run",
     "test:watch": "vitest",
     "lint:app": "eslint --cache --cache-location ./node_modules/.cache/eslint app",
     "lint:convex": "eslint --config ./convex/eslint.config.mjs --cache --cache-location ./node_modules/.cache/eslint convex",
