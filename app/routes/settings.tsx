@@ -4,7 +4,7 @@ import { themeStore, toggleTheme } from '~/lib/stores/theme';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useEffect, useState } from 'react';
-import { getTokenUsage } from '~/lib/convexUsage';
+import { getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
 import { convexTeamsStore, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { toast } from 'sonner';
 import { useAuth0 } from '@auth0/auth0-react';
@@ -242,7 +242,7 @@ export function SettingsContent() {
                     </span>
                   ) : (
                     <span>
-                      {`${tokenUsage.tokensUsed?.toLocaleString() || 0} / ${tokenUsage.tokensQuota?.toLocaleString()} included tokens used this billing period.`}
+                      {`${renderTokenCount(tokenUsage.tokensUsed || 0)} / ${renderTokenCount(tokenUsage.tokensQuota || 0)} included tokens used this billing period.`}
                     </span>
                   )}
                 </p>
