@@ -2,7 +2,6 @@ import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { createScopedLogger } from '~/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
 import { z } from 'zod';
-import { createHmac } from 'crypto';
 
 const logger = createScopedLogger('usage');
 
@@ -22,15 +21,14 @@ export async function checkTokenUsage(
   return tokenUsage;
 }
 
-const annotationValidator = z.discriminatedUnion("type", [
+const annotationValidator = z.discriminatedUnion('type', [
   z.object({
-    type: z.literal("usage"),
+    type: z.literal('usage'),
     usage: z.object({
       payload: z.string(),
-      signature: z.string(),
     }),
   }),
-])
+]);
 
 const usageValidator = z.object({
   toolCallId: z.string().optional(),
@@ -42,18 +40,11 @@ const usageValidator = z.object({
 });
 type Usage = z.infer<typeof usageValidator>;
 
-if (!process.env.ANNOTATION_SECRET) {
-  throw new Error('ANNOTATION_SECRET is not set');
-}
-const ANNOTATION_SECRET = process.env.ANNOTATION_SECRET;
-
-function computeSignature(payload: string) {
-  const hmac = createHmac('sha256', ANNOTATION_SECRET);
-  hmac.update(payload);
-  return hmac.digest('hex');
-}
-
-export function encodeUsageAnnotation(toolCallId: string | undefined, usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) {
+export function encodeUsageAnnotation(
+  toolCallId: string | undefined,
+  usage: LanguageModelUsage,
+  providerMetadata: ProviderMetadata | undefined,
+) {
   const payload: Usage = {
     toolCallId,
     completionTokens: usage.completionTokens,
@@ -63,8 +54,7 @@ export function encodeUsageAnnotation(toolCallId: string | undefined, usage: Lan
     cacheReadInputTokens: Number(providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
   };
   const serialized = JSON.stringify(payload);
-  const signature = computeSignature(serialized);
-  return { payload: serialized, signature };
+  return { payload: serialized };
 }
 
 export async function recordUsage(
@@ -73,39 +63,34 @@ export async function recordUsage(
   teamSlug: string,
   deploymentName: string | undefined,
   lastMessage: Message | undefined,
-  finalGeneration: { usage: LanguageModelUsage, providerMetadata?: ProviderMetadata },
+  finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
 ) {
-  let totalUsage = {
+  const totalUsage = {
     completionTokens: finalGeneration.usage.completionTokens,
     promptTokens: finalGeneration.usage.promptTokens,
     totalTokens: finalGeneration.usage.totalTokens,
     cacheCreationInputTokens: Number(finalGeneration.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0),
     cacheReadInputTokens: Number(finalGeneration.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
-  }
+  };
 
   const failedToolCalls: Set<string> = new Set();
   for (const part of lastMessage?.parts ?? []) {
-    if (part.type !== "tool-invocation") {
+    if (part.type !== 'tool-invocation') {
       continue;
     }
-    if (part.toolInvocation.state === "result" && part.toolInvocation.result.startsWith("Error:")) {
+    if (part.toolInvocation.state === 'result' && part.toolInvocation.result.startsWith('Error:')) {
       failedToolCalls.add(part.toolInvocation.toolCallId);
     }
   }
 
-  if (lastMessage && lastMessage.role === "assistant") {
+  if (lastMessage && lastMessage.role === 'assistant') {
     for (const annotation of lastMessage.annotations ?? []) {
       const parsed = annotationValidator.safeParse(annotation);
       if (!parsed.success) {
         console.error('Invalid annotation', parsed.error);
         continue;
       }
-      if (parsed.data.type !== "usage") {
-        continue;
-      }
-      const signature = computeSignature(parsed.data.usage.payload);
-      if (signature !== parsed.data.usage.signature) {
-        console.error('Invalid signature', signature, parsed.data.usage.signature);
+      if (parsed.data.type !== 'usage') {
         continue;
       }
       let payload: Usage;
@@ -126,6 +111,7 @@ export async function recordUsage(
       totalUsage.cacheReadInputTokens += payload.cacheReadInputTokens;
     }
   }
+  logger.info('Logging total usage', totalUsage);
 
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/record_tokens`;

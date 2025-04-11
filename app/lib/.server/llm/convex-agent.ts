@@ -27,7 +27,7 @@ import { awsCredentialsProvider } from '@vercel/functions/oidc';
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch as undiciFetch } from 'undici';
 import { logger } from '~/utils/logger';
-import { encodeUsageAnnotation } from '../usage';
+import { encodeUsageAnnotation } from '~/lib/.server/usage';
 type Fetch = typeof fetch;
 
 type Messages = Message[];
@@ -49,7 +49,10 @@ export async function convexAgent(
   tracer: Tracer | null,
   modelProvider: ModelProvider,
   userApiKey: string | undefined,
-  recordUsageCb: (lastMessage: Message | undefined, finalGeneration: { usage: LanguageModelUsage, providerMetadata?: ProviderMetadata }) => Promise<void>,
+  recordUsageCb: (
+    lastMessage: Message | undefined,
+    finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
+  ) => Promise<void>,
 ) {
   console.debug('Starting agent with model provider', modelProvider);
   if (userApiKey) {
@@ -204,7 +207,7 @@ export async function convexAgent(
         ],
         tools,
         onFinish: (result) => {
-          onFinishHandler(dataStream, messages, result, tracer, chatId, recordUsageCb)
+          onFinishHandler(dataStream, messages, result, tracer, chatId, recordUsageCb);
         },
         onError({ error }) {
           console.error(error);
@@ -293,15 +296,16 @@ function cleanupAssistantMessages(messages: Messages) {
   return convertToCoreMessages(processedMessages);
 }
 
-
-
 async function onFinishHandler(
   dataStream: DataStreamWriter,
   messages: Messages,
   result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
   tracer: Tracer | null,
   chatId: string,
-  recordUsageCb: (lastMessage: Message | undefined, finalGeneration: { usage: LanguageModelUsage, providerMetadata?: ProviderMetadata }) => Promise<void>,
+  recordUsageCb: (
+    lastMessage: Message | undefined,
+    finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
+  ) => Promise<void>,
 ) {
   const { usage, providerMetadata } = result;
   console.log('Finished streaming', {
@@ -327,9 +331,9 @@ async function onFinishHandler(
   }
 
   // Stash this part's usage as an annotation if we're not done yet.
-  if (result.finishReason !== "stop") {
+  if (result.finishReason !== 'stop') {
     let toolCallId: string | undefined;
-    if (result.finishReason === "tool-calls") {
+    if (result.finishReason === 'tool-calls') {
       if (result.toolCalls.length === 1) {
         toolCallId = result.toolCalls[0].toolCallId;
       } else {
@@ -339,11 +343,11 @@ async function onFinishHandler(
       }
     }
     const annotation = encodeUsageAnnotation(toolCallId, usage, providerMetadata);
-    dataStream.writeMessageAnnotation({ type: "usage", usage: annotation });
+    dataStream.writeMessageAnnotation({ type: 'usage', usage: annotation });
   }
   // Otherwise, record usage once we've generated the final part.
   else {
-    await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata })
+    await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata });
   }
 
   await new Promise((resolve) => setTimeout(resolve, 0));

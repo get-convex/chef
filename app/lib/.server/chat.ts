@@ -94,7 +94,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
 
   const recordUsageCb = async (
     lastMessage: Message | undefined,
-    finalGeneration: { usage: LanguageModelUsage, providerMetadata?: ProviderMetadata },
+    finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => {
     if (!userApiKey) {
       await recordUsage(PROVISION_HOST, token, teamSlug, deploymentName, lastMessage, finalGeneration);
