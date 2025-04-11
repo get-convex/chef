@@ -3,9 +3,9 @@
   --code-font-size: 13px;
 }
 
-@mixin not-inside-actions {
+@define-mixin not-inside-actions {
   &:not(:has(:global(.actions)), :global(.actions *)) {
-    @content;
+    @mixin-content;
   }
 }
 
@@ -22,7 +22,7 @@
   }
 
   :is(h1, h2, h3, h4, h5, h6) {
-    @include not-inside-actions {
+    @mixin not-inside-actions {
       margin-block-start: 24px;
       margin-block-end: 16px;
       font-weight: 600;
@@ -83,7 +83,7 @@
     font-family: var(--font-mono);
     font-size: var(--code-font-size);
 
-    @include not-inside-actions {
+    @mixin not-inside-actions {
       border-radius: 6px;
       padding: 0.2em 0.4em;
       background-color: var(--bolt-elements-messages-inlineCode-background);
@@ -112,7 +112,7 @@
   }
 
   :is(ul, ol) {
-    @include not-inside-actions {
+    @mixin not-inside-actions {
       padding-left: 2em;
       margin-block-start: 0;
       margin-block-end: 16px;
@@ -120,19 +120,19 @@
   }
 
   ul {
-    @include not-inside-actions {
+    @mixin not-inside-actions {
       list-style-type: disc;
     }
   }
 
   ol {
-    @include not-inside-actions {
+    @mixin not-inside-actions {
       list-style-type: decimal;
     }
   }
 
   li {
-    @include not-inside-actions {
+    @mixin not-inside-actions {
       & + li {
         margin-block-start: 8px;
       }
