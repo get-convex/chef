@@ -44,13 +44,10 @@ pnpm run dev
 
 npx convex dev
 
-# you'll need to issue an invite code to use, so just once run
-npx convex run sessions:issueInviteCode '{issuedReason: "development testing locally", code: "dev-test"}'
-
 # now visit http://localhost:5173
 # make sure to use this port, it's been specifically listed in our Auth0 application.
 # Wait a few seconds, and then RELOAD THE PAGE! Unfortunately this is currently required
-# to use the hot-reloading dev server. Enter your 'dev-test' code and you're off.
+# to use the hot-reloading dev server.
 ```
 
 Probably set up an editor plugin for running prettier on save.
@@ -67,10 +64,6 @@ Test your work, we don't have automated tests!
 
 ### Auth
 
-There are two forms of auth, dictated by the `FLEX_AUTH_MODE` environment variable.
-
-#### `FLEX_AUTH_MODE=ConvexOAuth`
-
 - Users sign in with their Github account to Convex via the same Auth0 app as the dashboard.
 - Users choose a team to create a new project in for app they conconct with Chef.
   Note that this is _not_ the OAuth flow that we offer to customers; if a customer wants this,
@@ -78,18 +71,9 @@ There are two forms of auth, dictated by the `FLEX_AUTH_MODE` environment variab
 - You'll need the following env vars set in `.env.local` (values are in 1Password under `flex .env.local`)
   - `VITE_AUTH0_CLIENT_ID`
   - `VITE_AUTH0_DOMAIN`
-  - `CONVEX_OAUTH_CLIENT_ID`
-  - `CONVEX_OAUTH_CLIENT_SECRET`
 
-Additionally make sure `CHEF_OAUTH_APP_NAME` is set to the same value as `CONVEX_OAUTH_CLIENT_ID` on your Convex deployment
+Additionally make sure `CHEF_OAUTH_APP_NAME` is set on your Convex deployment
 (it'll also be in the default Convex project env vars, so you can sync via dashboard).
-
-#### `FLEX_AUTH_MODE=InviteCode`
-
-- Convex projects are provisioned automatically against one of our teams
-- The credentials are saved as default environment variables on the `bolt-diy-f612` Convex project
-- You need a "code" to access Flex. There's an internal mutation you can run to issue yourself a code (e.g. `sshader-test`).
-- Each code corresponds to a user, so if you're doing this in production, issue a code with your name in it.
 
 ### Developing against local big-brain
 
