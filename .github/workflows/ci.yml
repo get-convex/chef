@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    name: Typecheck, lint, and test
+    name: Typecheck and Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
