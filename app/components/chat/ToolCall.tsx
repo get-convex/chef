@@ -21,6 +21,7 @@ import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
 import { loggingSafeParse } from '~/lib/zodUtil';
 import { deployToolParameters } from '~/lib/runtime/deployTool';
 import type { ZodError } from 'zod';
+import { Spinner } from '~/components/ui/Spinner';
 
 export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => {
   const { partId, toolCallId } = props;
@@ -337,7 +338,7 @@ function statusIcon(status: ActionState['status'], invocation: ConvexToolInvocat
   } else {
     switch (status) {
       case 'running':
-        inner = <div className="i-svg-spinners:90-ring-with-bg" />;
+        inner = <Spinner />;
         color = 'text-bolt-elements-loader-progress';
         break;
       case 'pending':

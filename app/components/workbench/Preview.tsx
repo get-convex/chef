@@ -3,6 +3,7 @@ import { useStore } from '@nanostores/react';
 import { IconButton } from '~/components/ui/IconButton';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { PortDropdown } from './PortDropdown';
+import { Spinner } from '~/components/ui/Spinner';
 
 type ResizeSide = 'left' | 'right' | null;
 
@@ -318,7 +319,7 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
               />
             ) : (
               <div className="flex w-full h-full justify-center items-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
-                <div className="i-svg-spinners:90-ring-with-bg text-bolt-elements-loader-progress text-xl" />
+                <Spinner />
               </div>
             )
           ) : (

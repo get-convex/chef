@@ -11,6 +11,7 @@ import { cubicEasingFn } from '~/utils/easings';
 import { captureException } from '@sentry/remix';
 import type { RelativePath } from '~/lib/stores/files';
 import { getAbsolutePath } from '~/lib/stores/files';
+import { Spinner } from '~/components/ui/Spinner';
 const highlighterOptions = {
   langs: ['shell'],
   themes: ['light-plus', 'dark-plus'],
@@ -76,7 +77,7 @@ export const Artifact = memo(({ partId }: ArtifactProps) => {
                 {allActionFinished ? (
                   <div className={'i-ph:files-light'} style={{ fontSize: '2rem' }}></div>
                 ) : (
-                  <div className={'i-svg-spinners:90-ring-with-bg'} style={{ fontSize: '2rem' }}></div>
+                  <Spinner />
                 )}
               </div>
               <div className="bg-bolt-elements-artifacts-borderColor w-[1px]" />
@@ -168,7 +169,7 @@ const ActionList = memo(({ actions }: ActionListProps) => {
               <div className="flex items-center gap-1.5 text-sm">
                 <div className={classNames('text-lg', getIconColor(action.status))}>
                   {status === 'running' ? (
-                    <div className="i-svg-spinners:90-ring-with-bg"></div>
+                    <Spinner />
                   ) : status === 'pending' ? (
                     <div className="i-ph:circle-duotone"></div>
                   ) : status === 'complete' ? (

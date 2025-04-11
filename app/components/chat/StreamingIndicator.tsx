@@ -3,6 +3,7 @@ import type { ToolStatus } from '~/lib/common/types';
 import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { chatStore } from '~/lib/stores/chatId';
+import { Spinner } from '../ui/Spinner';
 
 interface StreamingIndicatorProps {
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
@@ -12,8 +13,8 @@ interface StreamingIndicatorProps {
 }
 
 // Icon components
-const LoadingIcon = () => <div className="i-svg-spinners:90-ring-with-bg" />;
 const WarningIcon = () => <div className="i-ph:warning text-yellow-500" />;
+const LoadingIcon = () => <Spinner />;
 const CheckIcon = () => <div className="i-ph:check" />;
 
 // Status messages
