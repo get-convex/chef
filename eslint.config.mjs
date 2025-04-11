@@ -8,6 +8,7 @@ export default [
   },
   ...blitzPlugin.configs.recommended(),
   {
+    files: [...tsFileExtensions, ...jsFileExtensions],
     rules: {
       '@blitz/lines-around-comment': 'off',
       '@blitz/newline-before-return': 'off',

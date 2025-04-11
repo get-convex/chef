@@ -1,7 +1,6 @@
 import { ConvexError, v } from 'convex/values';
 import { mutation, type DatabaseReader } from './_generated/server';
 import { getChatByIdOrUrlIdEnsuringAccess } from './messages';
-import type { Id } from './_generated/dataModel';
 import { startProvisionConvexProjectHelper } from './convexProjects';
 
 export const create = mutation({
