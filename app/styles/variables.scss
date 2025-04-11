@@ -267,10 +267,6 @@
   --workbench-inner-width: var(--workbench-width);
   --workbench-left: calc(100% - var(--workbench-width));
 
-  /* Toasts */
-  --toastify-color-progress-success: var(--bolt-elements-icon-success);
-  --toastify-color-progress-error: var(--bolt-elements-icon-error);
-
   /* Terminal */
   --bolt-elements-terminal-backgroundColor: var(--bolt-terminal-background);
   --bolt-elements-terminal-textColor: var(--bolt-terminal-foreground);
