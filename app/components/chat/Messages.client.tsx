@@ -8,6 +8,7 @@ import { profileStore } from '~/lib/stores/profile';
 import { forwardRef } from 'react';
 import type { ForwardedRef } from 'react';
 import { SpinnerThreeDots } from '../ui/SpinnerThreeDots';
+import { PersonIcon } from '@radix-ui/react-icons';
 
 interface MessagesProps {
   id?: string;
@@ -57,7 +58,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
                           decoding="sync"
                         />
                       ) : (
-                        <div className="i-ph:user-fill text-2xl" />
+                        <PersonIcon className="size-4" />
                       )}
                     </div>
                   )}

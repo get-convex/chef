@@ -4,6 +4,7 @@ import { classNames } from '~/utils/classNames';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { useStore } from '@nanostores/react';
 import { CaretDownIcon, CheckIcon } from '@radix-ui/react-icons';
+import { Spinner } from '~/components/ui/Spinner';
 
 export function TeamSelector({
   selectedTeamSlug,
@@ -21,7 +22,7 @@ export function TeamSelector({
     return (
       <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
         <div className="flex items-center gap-2 p-1.5 w-full">
-          <div className="i-ph:spinner-gap animate-spin" />
+          <Spinner />
           Loading teams…
         </div>
       </div>

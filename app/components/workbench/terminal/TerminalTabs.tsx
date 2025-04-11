@@ -14,6 +14,8 @@ import {
   VITE_TAB_INDEX,
   CONVEX_DEPLOY_TAB_INDEX,
 } from '~/lib/stores/terminalTabs';
+import { CommandLineIcon } from '@heroicons/react/24/outline';
+import { CaretDownIcon, PlusIcon } from '@radix-ui/react-icons';
 
 const MAX_TERMINALS = 5;
 export const DEFAULT_TERMINAL_SIZE = 25;
@@ -113,7 +115,7 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
                   )}
                   onClick={() => activeTerminalTabStore.set(index)}
                 >
-                  <div className="i-ph:terminal-window-duotone text-lg" />
+                  <CommandLineIcon className="size-4" />
                   {index === VITE_TAB_INDEX
                     ? 'Dev Server'
                     : index === CONVEX_DEPLOY_TAB_INDEX
@@ -122,10 +124,10 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
                 </button>
               );
             })}
-            {terminalCount < MAX_TERMINALS && <IconButton icon="i-ph:plus" size="md" onClick={addTerminal} />}
+            {terminalCount < MAX_TERMINALS && <IconButton icon={<PlusIcon />} size="md" onClick={addTerminal} />}
             <IconButton
               className="ml-auto"
-              icon="i-ph:caret-down"
+              icon={<CaretDownIcon />}
               title="Close"
               size="md"
               onClick={() => workbenchStore.toggleTerminal(false)}

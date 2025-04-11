@@ -1,4 +1,5 @@
 import { useStore } from '@nanostores/react';
+import { ChatBubbleIcon, CodeIcon } from '@radix-ui/react-icons';
 import useViewport from '~/lib/hooks';
 import { chatStore } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench.client';
@@ -24,7 +25,7 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
             }
           }}
         >
-          <div className="i-bolt:chat text-sm" />
+          <ChatBubbleIcon />
         </Button>
         <div className="w-[1px] bg-bolt-elements-borderColor" />
         <Button
@@ -37,7 +38,7 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
             workbenchStore.showWorkbench.set(!showWorkbench);
           }}
         >
-          <div className="i-ph:code-bold" />
+          <CodeIcon />
         </Button>
       </div>
     </div>
