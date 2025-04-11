@@ -58,8 +58,8 @@ export function encodeUsageAnnotation(
 }
 
 export async function recordUsage(
-  token: string,
   provisionHost: string,
+  token: string,
   teamSlug: string,
   deploymentName: string | undefined,
   lastMessage: Message | undefined,
@@ -111,7 +111,7 @@ export async function recordUsage(
       totalUsage.cacheReadInputTokens += payload.cacheReadInputTokens;
     }
   }
-  logger.info('Logging total usage', totalUsage);
+  logger.info('Logging total usage', JSON.stringify(totalUsage));
 
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/record_tokens`;

@@ -101,7 +101,7 @@ export async function convexAgent(
         return async (input: RequestInfo | URL, init?: RequestInit) => {
           const enrichedOptions = anthropicInjectCacheControl(init);
 
-          const throwIfBad = async (response: Response) => {
+          const throwIfBad = async (response: Response, isLowQos: boolean) => {
             if (response.ok) {
               return response;
             }
@@ -113,32 +113,37 @@ export async function convexAgent(
                 text,
               },
             });
-            logger.error('Anthropic returned an error:', text);
+            logger.error(`Anthropic${isLowQos ? ' (low QoS)' : ''} returned an error (${response.status} ${response.statusText}): ${text}`);
             throw new Error(JSON.stringify({ error: 'The model hit an error. Try sending your message again?' }));
           };
+
           const response = await fetch(input, enrichedOptions);
-          if (response.status == 429) {
-            const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
-            if (!lowQosKey) {
-              captureException('Anthropic low qos api key not set', { level: 'error' });
-              console.error('Anthropic low qos api key not set');
-              return throwIfBad(response);
-            }
-            captureException('Rate limited by Anthropic, switching to low QoS API key', {
-              level: 'warning',
-              extra: {
-                response,
-              },
-            });
-            if (enrichedOptions && enrichedOptions.headers) {
-              const headers = new Headers(enrichedOptions.headers);
-              headers.set('x-api-key', lowQosKey);
-              enrichedOptions.headers = headers;
-            }
-            return throwIfBad(await fetch(input, enrichedOptions));
+
+          if (response.status !== 429 && response.status !== 529) {
+            return throwIfBad(response, false);
           }
 
-          return throwIfBad(response);
+          const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
+          if (!lowQosKey) {
+            captureException('Anthropic low qos api key not set', { level: 'error' });
+            console.error('Anthropic low qos api key not set');
+            return throwIfBad(response, false);
+          }
+
+          logger.error(`Falling back to low QoS API key...`);
+          captureException('Rate limited by Anthropic, switching to low QoS API key', {
+            level: 'warning',
+            extra: {
+              response,
+            },
+          });
+          if (enrichedOptions && enrichedOptions.headers) {
+            const headers = new Headers(enrichedOptions.headers);
+            headers.set('x-api-key', lowQosKey);
+            enrichedOptions.headers = headers;
+          }
+          const lowQosResponse = await fetch(input, enrichedOptions);
+          return throwIfBad(lowQosResponse, true);
         };
       };
       const userKeyApiFetch = () => {
