@@ -3,7 +3,6 @@ import { useStore } from '@nanostores/react';
 import type { LinksFunction } from '@vercel/remix';
 import { json } from '@vercel/remix';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, useRouteError } from '@remix-run/react';
-import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
 import { themeStore } from './lib/stores/theme';
 import { stripIndents } from './utils/stripIndent';
 import { createHead } from 'remix-island';
@@ -21,7 +20,6 @@ import posthog from 'posthog-js';
 
 import 'allotment/dist/style.css';
 
-import 'virtual:uno.css';
 import { ErrorDisplay } from './components/ErrorComponent';
 
 export async function loader() {
@@ -39,7 +37,6 @@ export const links: LinksFunction = () => [
     href: '/favicon.svg',
     type: 'image/svg+xml',
   },
-  { rel: 'stylesheet', href: tailwindReset },
   { rel: 'stylesheet', href: globalStyles },
   { rel: 'stylesheet', href: xtermStyles },
   {
