@@ -3,7 +3,7 @@ import { bundledLanguages, codeToHtml, isSpecialLang, type BundledLanguage, type
 import { classNames } from '~/utils/classNames';
 import { createScopedLogger } from '~/utils/logger';
 
-import styles from './CodeBlock.module.scss';
+import styles from './CodeBlock.module.css';
 
 const logger = createScopedLogger('CodeBlock');
 
