@@ -239,7 +239,7 @@ export const Menu = memo(() => {
                                   href={`https://dashboard.convex.dev/p/${convexProjectInfo.projectSlug}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                                  className="text-bolt-elements-messages-linkColor"
                                 >
                                   {convexProjectInfo.projectSlug}
                                 </a>
