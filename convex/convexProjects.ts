@@ -10,7 +10,7 @@ import {
 import { ConvexError, v } from 'convex/values';
 import { getChatByIdOrUrlIdEnsuringAccess } from './messages';
 import { internal } from './_generated/api';
-import { getCurrentMember, getInviteCode } from './sessions';
+import { getInviteCode } from './sessions';
 import type { Id } from './_generated/dataModel';
 
 export const hasConnectedConvexProject = query({
@@ -110,7 +110,7 @@ export async function startProvisionConvexProjectHelper(
       auth0AccessToken: string;
     };
   },
-) {
+): Promise<void> {
   const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
   if (!chat) {
     throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
@@ -241,7 +241,14 @@ async function _connectConvexProjectForMember(
     accessToken: string;
     teamSlug: string;
   },
-) {
+): Promise<{
+  projectSlug: string;
+  teamSlug: string;
+  deploymentUrl: string;
+  deploymentName: string;
+  projectDeployKey: string;
+  warningMessage: string | undefined;
+}> {
   const bigBrainHost = ensureEnvVar('BIG_BRAIN_HOST');
   let projectName: string | null = null;
   let timeElapsed = 0;
