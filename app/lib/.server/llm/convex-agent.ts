@@ -328,10 +328,20 @@ async function onFinishHandler(
 
   // Stash this part's usage as an annotation if we're not done yet.
   if (result.finishReason !== "stop") {
-    const annotation = encodeUsageAnnotation(usage, providerMetadata);
+    let toolCallId: string | undefined;
+    if (result.finishReason === "tool-calls") {
+      if (result.toolCalls.length === 1) {
+        toolCallId = result.toolCalls[0].toolCallId;
+      } else {
+        logger.warn('Stopped with not exactly one tool call', {
+          toolCalls: result.toolCalls,
+        });
+      }
+    }
+    const annotation = encodeUsageAnnotation(toolCallId, usage, providerMetadata);
     dataStream.writeMessageAnnotation({ type: "usage", usage: annotation });
   }
-  // Record usage once we've generated the final part.
+  // Otherwise, record usage once we've generated the final part.
   else {
     await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata })
   }

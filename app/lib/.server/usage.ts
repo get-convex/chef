@@ -33,7 +33,7 @@ const annotationValidator = z.discriminatedUnion("type", [
 ])
 
 const usageValidator = z.object({
-  toolCallId: z.string(),
+  toolCallId: z.string().optional(),
   completionTokens: z.number(),
   promptTokens: z.number(),
   totalTokens: z.number(),
@@ -53,7 +53,7 @@ function computeSignature(payload: string) {
   return hmac.digest('hex');
 }
 
-export function encodeUsageAnnotation(toolCallId: string, usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) {
+export function encodeUsageAnnotation(toolCallId: string | undefined, usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) {
   const payload: Usage = {
     toolCallId,
     completionTokens: usage.completionTokens,
@@ -115,7 +115,7 @@ export async function recordUsage(
         console.error('Invalid payload', parsed.data.usage.payload, e);
         continue;
       }
-      if (failedToolCalls.has(payload.toolCallId)) {
+      if (payload.toolCallId && failedToolCalls.has(payload.toolCallId)) {
         console.warn('Skipping usage for failed tool call', payload.toolCallId);
         continue;
       }
