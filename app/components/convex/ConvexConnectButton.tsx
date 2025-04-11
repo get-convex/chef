@@ -7,6 +7,8 @@ import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useChatId } from '~/lib/stores/chatId';
 import { TeamSelector } from './TeamSelector';
+import { Spinner } from '~/components/ui/Spinner';
+import { Link1Icon } from '@radix-ui/react-icons';
 
 export function ConvexConnectButton() {
   const convexClient = useConvex();
@@ -65,12 +67,12 @@ export function ConvexConnectButton() {
         >
           {isLoading ? (
             <>
-              <div className="i-ph:spinner-gap animate-spin" />
+              <Spinner />
               Connecting...
             </>
           ) : (
             <>
-              <div className="i-ph:plug-charging w-4 h-4" />
+              <Link1Icon />
               {isConnected ? 'Connect a different project' : 'Connect'}
             </>
           )}

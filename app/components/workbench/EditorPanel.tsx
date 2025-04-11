@@ -22,6 +22,7 @@ import { FileTree } from './FileTree';
 import { DEFAULT_TERMINAL_SIZE, TerminalTabs } from './terminal/TerminalTabs';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import type { TerminalInitializationOptions } from '~/types/terminal';
+import { FileIcon, CheckIcon, ResetIcon } from '@radix-ui/react-icons';
 
 interface EditorPanelProps {
   files?: FileMap;
@@ -80,10 +81,7 @@ export const EditorPanel = memo(
           <PanelGroup direction="horizontal">
             <Panel defaultSize={20} minSize={10} collapsible>
               <div className="flex flex-col border-r border-bolt-elements-borderColor h-full">
-                <PanelHeader>
-                  <div className="i-ph:tree-structure-duotone shrink-0" />
-                  Files
-                </PanelHeader>
+                <PanelHeader>Files</PanelHeader>
                 <FileTree
                   className="h-full"
                   files={files}
@@ -105,11 +103,11 @@ export const EditorPanel = memo(
                     {activeFileUnsaved && (
                       <div className="flex gap-1 ml-auto -mr-1.5">
                         <PanelHeaderButton onClick={onFileSave}>
-                          <div className="i-ph:floppy-disk-duotone" />
+                          <CheckIcon />
                           Save
                         </PanelHeaderButton>
                         <PanelHeaderButton onClick={onFileReset}>
-                          <div className="i-ph:clock-counter-clockwise-duotone" />
+                          <ResetIcon />
                           Reset
                         </PanelHeaderButton>
                       </div>

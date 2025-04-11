@@ -17,6 +17,15 @@ import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
 import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
+import {
+  ArrowLeftIcon,
+  PersonIcon,
+  ExternalLinkIcon,
+  ExitIcon,
+  EyeOpenIcon,
+  EyeClosedIcon,
+  QuestionMarkCircledIcon,
+} from '@radix-ui/react-icons';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Settings | Chef' }];
@@ -146,7 +155,7 @@ export function SettingsContent() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <a href="/" className="inline-flex" title="Back to Chat">
-            <div className="i-ph:arrow-left" />
+            <ArrowLeftIcon />
           </a>
           <h1 className="text-3xl font-bold text-bolt-elements-textPrimary">Settings</h1>
         </div>
@@ -166,7 +175,7 @@ export function SettingsContent() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <div className="i-ph:user-fill text-4xl text-gray-400" />
+                      <PersonIcon className="text-gray-400 size-8" />
                     </div>
                   )}
                 </div>
@@ -180,14 +189,14 @@ export function SettingsContent() {
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
                     >
-                      <div className="i-ph:arrow-square-out min-w-[1rem]" />
+                      <ExternalLinkIcon />
                       Manage your profile on the Convex Dashboard
                     </a>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 bg-transparent"
                     >
-                      <div className="i-ph:sign-out min-w--[1rem]" />
+                      <ExitIcon />
                       Log out
                     </button>
                   </div>
@@ -316,7 +325,7 @@ export function SettingsContent() {
                           onClick={() => setShowKey(!showKey)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary bg-transparent"
                         >
-                          <div className={showKey ? 'i-ph:eye-slash-bold h-4 w-4' : 'i-ph:eye-bold h-4 w-4'} />
+                          {showKey ? <EyeClosedIcon /> : <EyeOpenIcon />}
                         </button>
                       </div>
                       <div className="mt-4 flex items-center gap-2">
@@ -340,7 +349,7 @@ export function SettingsContent() {
                               type="button"
                               className="text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary bg-transparent"
                             >
-                              <div className="i-ph:question-bold h-4 w-4" />
+                              <QuestionMarkCircledIcon />
                             </button>
                           </WithTooltip>
                         </TooltipProvider>

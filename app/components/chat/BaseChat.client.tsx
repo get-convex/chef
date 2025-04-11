@@ -23,6 +23,7 @@ import { useChefAuth } from './ChefAuthWrapper';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import { openSignInWindow } from '~/components/ChefSignInPage';
+import { Spinner } from '~/components/ui/Spinner';
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -431,7 +432,7 @@ function SignInButton() {
         )}
         {started && (
           <>
-            <div className="i-ph:spinner-gap animate-spin" />
+            <Spinner />
             Signing in...
           </>
         )}

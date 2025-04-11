@@ -4,6 +4,7 @@ import { IconButton } from '~/components/ui/IconButton';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { PortDropdown } from './PortDropdown';
 import { Spinner } from '~/components/ui/Spinner';
+import { UpdateIcon, MobileIcon, ExternalLinkIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 
 type ResizeSide = 'left' | 'right' | null;
 
@@ -244,7 +245,7 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
       )}
       <div className="bg-bolt-elements-background-depth-2 p-2 flex items-center gap-2">
         <div className="flex items-center gap-2">
-          <IconButton icon="i-ph:arrow-clockwise" onClick={reloadPreview} />
+          <IconButton icon={<UpdateIcon />} onClick={reloadPreview} />
         </div>
 
         <div className="flex-grow flex items-center gap-1 bg-bolt-elements-preview-addressBar-background border border-bolt-elements-borderColor text-bolt-elements-preview-addressBar-text rounded-full px-3 py-1 text-sm hover:bg-bolt-elements-preview-addressBar-backgroundHover hover:focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within-border-bolt-elements-borderColorActive focus-within:text-bolt-elements-preview-addressBar-textActive">
@@ -282,16 +283,16 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
           )}
 
           <IconButton
-            icon="i-ph:devices"
+            icon={<MobileIcon />}
             onClick={toggleDeviceMode}
             title={isDeviceModeOn ? 'Switch to Responsive Mode' : 'Switch to Device Mode'}
           />
 
           <div className="flex items-center relative">
-            <IconButton icon="i-ph:arrow-square-out" onClick={() => openInNewWindow()} title="Open in New Window" />
+            <IconButton icon={<ExternalLinkIcon />} onClick={() => openInNewWindow()} title="Open in New Window" />
           </div>
 
-          {showClose && <IconButton icon="i-ph:x-circle" onClick={onClose} title="Close" />}
+          {showClose && <IconButton icon={<CrossCircledIcon />} onClick={onClose} title="Close" />}
         </div>
       </div>
 

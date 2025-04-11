@@ -55,6 +55,7 @@
     "@codemirror/search": "^6.5.8",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.35.0",
+    "@heroicons/react": "^2.2.0",
     "@nanostores/react": "^0.7.3",
     "@octokit/rest": "^21.0.2",
     "@opentelemetry/api": "^1.9.0",

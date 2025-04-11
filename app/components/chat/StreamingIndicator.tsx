@@ -3,7 +3,8 @@ import type { ToolStatus } from '~/lib/common/types';
 import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { chatStore } from '~/lib/stores/chatId';
-import { Spinner } from '../ui/Spinner';
+import { Spinner } from '~/components/ui/Spinner';
+import { ExclamationTriangleIcon, CheckCircledIcon } from '@radix-ui/react-icons';
 
 interface StreamingIndicatorProps {
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
@@ -13,9 +14,9 @@ interface StreamingIndicatorProps {
 }
 
 // Icon components
-const WarningIcon = () => <div className="i-ph:warning text-yellow-500" />;
+const WarningIcon = () => <ExclamationTriangleIcon className="text-[var(--cvx-content-warning)]" />;
 const LoadingIcon = () => <Spinner />;
-const CheckIcon = () => <div className="i-ph:check" />;
+const CheckIcon = () => <CheckCircledIcon />;
 
 // Status messages
 const STATUS_MESSAGES = {

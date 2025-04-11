@@ -1,4 +1,5 @@
 import { AnimatePresence, cubicBezier, motion } from 'framer-motion';
+import { ArrowRightIcon, StopIcon } from '@radix-ui/react-icons';
 
 interface SendButtonProps {
   show: boolean;
@@ -29,9 +30,7 @@ export const SendButton = ({ show, isStreaming, disabled, onClick }: SendButtonP
             }
           }}
         >
-          <div className="text-lg">
-            {!isStreaming ? <div className="i-ph:arrow-right"></div> : <div className="i-ph:stop-circle-bold"></div>}
-          </div>
+          <div className="text-lg">{!isStreaming ? <ArrowRightIcon /> : <StopIcon />}</div>
         </motion.button>
       ) : null}
     </AnimatePresence>

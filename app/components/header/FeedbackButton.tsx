@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/remix';
 import { classNames } from '~/utils/classNames';
+import { ChatBubbleIcon } from '@radix-ui/react-icons';
 
 interface ButtonProps {
   active?: boolean;
@@ -45,7 +46,7 @@ export function FeedbackButton() {
 
   return (
     <Button onClick={handleFeedback}>
-      <div className="i-ph:chat-circle-dots w-4 h-4" />
+      <ChatBubbleIcon />
       <span>Submit Feedback</span>
     </Button>
   );

@@ -6,6 +6,7 @@ import * as ContextMenu from '@radix-ui/react-context-menu';
 import type { FileHistory } from '~/types/actions';
 import { diffLines, type Change } from 'diff';
 import { DEFAULT_COLLAPSED_FOLDERS } from '~/utils/constants';
+import { CaretRightIcon, CaretDownIcon, FileIcon } from '@radix-ui/react-icons';
 
 const logger = createScopedLogger('FileTree');
 
@@ -278,10 +279,7 @@ function Folder({ folder, collapsed, selected = false, onCopyPath, onCopyRelativ
           'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent': selected,
         })}
         depth={folder.depth}
-        iconClasses={classNames({
-          'i-ph:caret-right scale-98': collapsed,
-          'i-ph:caret-down scale-98': !collapsed,
-        })}
+        icon={collapsed ? <CaretRightIcon /> : <CaretDownIcon />}
         onClick={onClick}
       >
         {folder.name}
@@ -361,9 +359,13 @@ function File({
           'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent': selected,
         })}
         depth={depth}
-        iconClasses={classNames('i-ph:file-duotone scale-98', {
-          'group-hover:text-bolt-elements-item-contentActive': !selected,
-        })}
+        icon={
+          <FileIcon
+            className={classNames({
+              'group-hover:text-bolt-elements-item-contentActive': !selected,
+            })}
+          />
+        }
         onClick={onClick}
       >
         <div
@@ -379,7 +381,7 @@ function File({
                 {deletions > 0 && <span className="text-red-500">-{deletions}</span>}
               </div>
             )}
-            {unsavedChanges && <span className="i-ph:circle-fill scale-68 shrink-0 text-orange-500" />}
+            {unsavedChanges && <div className="size-1.5 rounded-full bg-orange-500" />}
           </div>
         </div>
       </NodeButton>
@@ -389,13 +391,13 @@ function File({
 
 interface ButtonProps {
   depth: number;
-  iconClasses: string;
+  icon: ReactNode;
   children: ReactNode;
   className?: string;
   onClick?: () => void;
 }
 
-function NodeButton({ depth, iconClasses, onClick, className, children }: ButtonProps) {
+function NodeButton({ depth, icon, onClick, className, children }: ButtonProps) {
   return (
     <button
       className={classNames(
@@ -405,7 +407,7 @@ function NodeButton({ depth, iconClasses, onClick, className, children }: Button
       style={{ paddingLeft: `${6 + depth * NODE_PADDING_LEFT}px` }}
       onClick={() => onClick?.()}
     >
-      <div className={classNames('scale-120 shrink-0', iconClasses)}></div>
+      <div className="shrink-0">{icon}</div>
       <div className="truncate w-full text-left">{children}</div>
     </button>
   );
