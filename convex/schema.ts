@@ -4,7 +4,9 @@ import type { SerializedMessage } from './messages';
 
 export const apiKeyValidator = v.object({
   preference: v.union(v.literal('always'), v.literal('quotaExhausted')),
-  value: v.string(),
+  // NB: This is the *Anthropic* API key.
+  value: v.optional(v.string()),
+  openai: v.optional(v.string()),
 });
 
 export default defineSchema({
