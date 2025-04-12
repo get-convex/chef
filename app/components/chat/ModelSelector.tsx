@@ -16,8 +16,8 @@ const models = {
     icon: svgIcon('/icons/claude.svg', 'Claude 3.5 Sonnet'),
   },
   'gpt-4o-optimus': {
-    name: 'GPT-4o Optimus',
-    icon: svgIcon('/icons/openai.svg', 'GPT-4o Optimus'),
+    name: 'GPT-4.1',
+    icon: svgIcon('/icons/openai.svg', 'GPT-4.1'),
   },
 } as const;
 
