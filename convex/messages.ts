@@ -309,9 +309,11 @@ export const updateStorageState = internalMutation({
       partIndex,
       compression: 'lz4',
     });
-    await ctx.scheduler.runAfter(0, internal.messages.cleanupStaleStoredFiles, {
-      storageId,
-    });
+    if (doc.storageId !== null) {
+      await ctx.scheduler.runAfter(0, internal.messages.cleanupStaleStoredFiles, {
+        storageId: doc.storageId,
+      });
+    }
   },
 });
 
@@ -350,7 +352,7 @@ export const handleStorageStateMigration = internalMutation({
       storageId,
       lastMessageRank,
       partIndex,
-      compression: 'lz4',
+      compression: 'none',
     });
     await ctx.scheduler.runAfter(0, internal.messages.cleanupChatMessages, {
       chatId: chat._id,
