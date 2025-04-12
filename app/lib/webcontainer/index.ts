@@ -4,6 +4,7 @@ import { cleanStackTrace } from '~/utils/stacktrace';
 import { createScopedLogger } from '~/utils/logger';
 import { setContainerBootState, ContainerBootState } from '~/lib/stores/containerBootState';
 import { workbenchStore } from '~/lib/stores/workbench.client';
+import { chooseExperience } from '~/utils/experienceChooser';
 
 interface WebContainerContext {
   loaded: boolean;
@@ -23,7 +24,21 @@ export let webcontainer: Promise<WebContainer> = new Promise(() => {
 
 const logger = createScopedLogger('webcontainer');
 
+let shouldBootWebcontainer = false;
 if (!import.meta.env.SSR) {
+  const experience = chooseExperience(
+    navigator.userAgent,
+    new URLSearchParams(window.location.search),
+    window.crossOriginIsolated,
+  );
+
+  shouldBootWebcontainer = experience === 'the-real-thing' || experience === 'mobile-warning';
+  if (!shouldBootWebcontainer) {
+    console.error('Not attempting to boot webcontainer because window.crossOriginIsolated is not true');
+  }
+}
+
+if (shouldBootWebcontainer) {
   webcontainer =
     import.meta.hot?.data.webcontainer ??
     Promise.resolve()

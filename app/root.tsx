@@ -1,6 +1,6 @@
 import { captureRemixErrorBoundaryError } from '@sentry/remix';
 import { useStore } from '@nanostores/react';
-import type { LinksFunction } from '@vercel/remix';
+import type { LinksFunction, LoaderFunctionArgs } from '@vercel/remix';
 import { json } from '@vercel/remix';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, useRouteError } from '@remix-run/react';
 import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
@@ -14,7 +14,6 @@ import { ClientOnly } from 'remix-utils/client-only';
 import { Auth0Provider } from '@auth0/auth0-react';
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
 import { ConvexReactClient } from 'convex/react';
-import { getConvexUrlInLoader, getConvexOAuthClientIdInLoader } from './lib/persistence/convex';
 import globalStyles from './styles/index.css?url';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 import posthog from 'posthog-js';
@@ -23,13 +22,19 @@ import 'allotment/dist/style.css';
 
 import 'virtual:uno.css';
 import { ErrorDisplay } from './components/ErrorComponent';
+import { chooseExperience } from './utils/experienceChooser';
 
-export async function loader() {
-  const convexUrl = getConvexUrlInLoader();
-  const convexOauthClientId = getConvexOAuthClientIdInLoader();
+export async function loader({ request }: LoaderFunctionArgs) {
+  const experience = chooseExperience(
+    request.headers.get('User-Agent') || '',
+    new URLSearchParams(new URL(request.url).searchParams),
+  );
+
   // These environment variables are available in the client (they aren't secret).
+  const CONVEX_URL = process.env.VITE_CONVEX_URL || globalThis.process.env.CONVEX_URL!;
+  const CONVEX_OAUTH_CLIENT_ID = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID!;
   return json({
-    ENV: { CONVEX_URL: convexUrl, CONVEX_OAUTH_CLIENT_ID: convexOauthClientId },
+    ENV: { CONVEX_URL, CONVEX_OAUTH_CLIENT_ID, experience },
   });
 }
 
@@ -123,7 +128,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       // later if we add a cookie banner.
       persistence: 'memory',
     });
-  });
+  }, []);
 
   return (
     <>
