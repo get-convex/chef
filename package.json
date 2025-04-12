@@ -87,6 +87,7 @@
     "chalk": "^5.4.1",
     "cloudflare": "^4.2.0",
     "convex": "^1.21.0",
+    "convex-helpers": "^0.1.79",
     "date-fns": "^3.6.0",
     "diff": "^5.2.0",
     "dotenv": "^16.4.7",

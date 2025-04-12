@@ -1,7 +1,7 @@
 import { action, internalMutation, mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
 import type { Message as AIMessage } from 'ai';
 import { ConvexError, v } from 'convex/values';
-import type { VAny } from 'convex/values';
+import type { Infer, VAny } from 'convex/values';
 import { isValidSession } from './sessions';
 import type { Doc, Id } from './_generated/dataModel';
 import { ensureEnvVar, startProvisionConvexProjectHelper } from './convexProjects';
@@ -28,19 +28,15 @@ export const initializeChat = mutation({
     const { id, sessionId, projectInitParams } = args;
     let existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.id, sessionId: args.sessionId });
 
-    if (!existing) {
-      await createNewChatFromMessages(ctx, {
-        id,
-        sessionId,
-        projectInitParams,
-      });
-
-      existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
-
-      if (!existing) {
-        throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
-      }
+    if (existing) {
+      return;
     }
+
+    await createNewChatFromMessages(ctx, {
+      id,
+      sessionId,
+      projectInitParams,
+    });
   },
 });
 
@@ -67,13 +63,43 @@ export const addMessages = mutation({
       throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
     }
 
-    return _appendMessages(ctx, {
+    return _appendMessagesDb(ctx, {
       sessionId,
       chat: existing,
       messages,
       startIndex,
       expectedLength,
     });
+  },
+});
+
+export const setUrlId = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    chatId: v.string(),
+    urlHint: v.string(),
+    description: v.string(),
+  },
+  returns: v.object({
+    urlId: v.string(),
+    initialId: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    const { chatId, urlHint, description } = args;
+    const existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId: args.sessionId });
+
+    if (!existing) {
+      throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
+    }
+    if (existing.urlId === undefined) {
+      const urlId = await _allocateUrlId(ctx, { urlHint, sessionId: args.sessionId });
+      await ctx.db.patch(existing._id, {
+        urlId,
+        description: existing.description ?? description,
+      });
+      return { urlId, initialId: existing.initialId };
+    }
+    return { urlId: existing.urlId, initialId: existing.initialId };
   },
 });
 
@@ -140,7 +166,8 @@ export const getInitialMessages = mutation({
   args: {
     sessionId: v.id('sessions'),
     id: v.string(),
-    rewindToMessageId: v.union(v.string(), v.null()),
+    // Remove this once clients have updated to not send rewindToMessageId
+    rewindToMessageId: v.optional(v.union(v.string(), v.null())),
   },
   returns: v.union(
     v.null(),
@@ -154,7 +181,7 @@ export const getInitialMessages = mutation({
     }),
   ),
   handler: async (ctx, args) => {
-    const { id, rewindToMessageId, sessionId } = args;
+    const { id, sessionId } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
 
     if (!chat) {
@@ -174,31 +201,84 @@ export const getInitialMessages = mutation({
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
       .collect();
 
-    if (!rewindToMessageId) {
-      return {
-        ...chatInfo,
-        messages: messages.map((m) => m.content),
-      };
-    }
-
-    const messageIndex = messages.findIndex((msg) => msg.content.id === rewindToMessageId);
-
-    if (messageIndex === -1) {
-      console.error('Message to rewind to not found', rewindToMessageId);
-      return {
-        ...chatInfo,
-        messages: messages.map((m) => m.content),
-      };
-    }
-
-    for (const message of messages.slice(messageIndex + 1)) {
-      await ctx.db.delete(message._id);
-    }
-
     return {
       ...chatInfo,
-      messages: messages.slice(0, messageIndex + 1).map((m) => m.content),
+      messages: messages.map((m) => m.content),
     };
+  },
+});
+
+const storageInfo = v.object({
+  storageId: v.union(v.id('_storage'), v.null()),
+  lastMessageRank: v.number(),
+  partIndex: v.number(),
+});
+
+type StorageInfo = Infer<typeof storageInfo>;
+
+export const getInitialMessagesStorageInfo = query({
+  args: {
+    sessionId: v.id('sessions'),
+    chatId: v.string(),
+  },
+  returns: v.union(v.null(), storageInfo),
+  handler: async (ctx, args): Promise<StorageInfo | null> => {
+    const { chatId, sessionId } = args;
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    if (!chat) {
+      return null;
+    }
+    const doc = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .unique();
+    if (!doc) {
+      return null;
+    }
+    return {
+      storageId: doc.storageId,
+      lastMessageRank: doc.lastMessageRank,
+      partIndex: doc.partIndex,
+    };
+  },
+});
+
+export const updateStorageState = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    chatId: v.string(),
+    storageId: v.id('_storage'),
+    lastMessageRank: v.number(),
+    partIndex: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { chatId, storageId, lastMessageRank, partIndex, sessionId } = args;
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    if (!chat) {
+      throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
+    }
+    const doc = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .unique();
+    if (!doc) {
+      throw new Error('Chat messages storage state not found');
+    }
+    if (doc.lastMessageRank > lastMessageRank) {
+      throw new Error(
+        `Stale update -- stored messages up to ${doc.lastMessageRank} but received update up to ${lastMessageRank}`,
+      );
+    }
+    if (doc.lastMessageRank === lastMessageRank && doc.partIndex > partIndex) {
+      throw new Error(
+        `Stale update -- stored parts in message ${doc.lastMessageRank} up to part ${doc.partIndex} but received update up to part ${partIndex}`,
+      );
+    }
+    await ctx.db.patch(doc._id, {
+      storageId,
+      lastMessageRank,
+      partIndex,
+    });
   },
 });
 
@@ -308,7 +388,7 @@ export const removeChatInner = internalMutation({
 /*
  * Update the last message in the chat (if the `id`s match), and append any new messages.
  */
-async function _appendMessages(
+async function _appendMessagesDb(
   ctx: MutationCtx,
   args: {
     sessionId: Id<'sessions'>;
@@ -340,6 +420,13 @@ async function _appendMessages(
         break;
       }
     }
+  }
+  const storageState = await ctx.db
+    .query('chatMessagesStorageState')
+    .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+    .unique();
+  if (storageState === null) {
+    throw new Error('Chat messages should be stored in storage');
   }
 
   const lastMessage = await ctx.db
@@ -488,6 +575,12 @@ export async function createNewChatFromMessages(
     description,
     timestamp: new Date().toISOString(),
     snapshotId,
+  });
+  const chatMessagesStorageState = await ctx.db.insert('chatMessagesStorageState', {
+    chatId,
+    storageId: null,
+    lastMessageRank: 0,
+    partIndex: 0,
   });
 
   await startProvisionConvexProjectHelper(ctx, {

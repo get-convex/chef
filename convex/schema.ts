@@ -79,6 +79,12 @@ export default defineSchema({
     rank: v.number(),
     chatId: v.id('chats'),
   }).index('byChatId', ['chatId', 'rank']),
+  chatMessagesStorageState: defineTable({
+    chatId: v.id('chats'),
+    storageId: v.union(v.id('_storage'), v.null()),
+    lastMessageRank: v.number(),
+    partIndex: v.number(),
+  }).index('byChatId', ['chatId']),
   inviteCodes: defineTable({
     code: v.string(),
     sessionId: v.id('sessions'),
