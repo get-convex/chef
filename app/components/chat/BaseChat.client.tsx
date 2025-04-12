@@ -23,6 +23,8 @@ import { useChefAuth } from './ChefAuthWrapper';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import { openSignInWindow } from '~/components/ChefSignInPage';
+import { ModelSelector } from './ModelSelector';
+import type { ModelSelection } from '~/utils/constants';
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -58,6 +60,10 @@ interface BaseChatProps {
   terminalInitializationOptions: TerminalInitializationOptions | undefined;
   disableChatMessage: string | null;
 
+  // Model selection props
+  modelSelection: ModelSelection;
+  setModelSelection: (modelSelection: ModelSelection) => void;
+
   // Alert related props
   actionAlert: ActionAlert | undefined;
   clearAlert: () => void;
@@ -88,6 +94,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       toolStatus,
       terminalInitializationOptions,
       disableChatMessage,
+      modelSelection,
+      setModelSelection,
     },
     ref,
   ) => {
@@ -305,6 +313,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       )}
                     </Tooltip.Root>
                     <div className="flex justify-end gap-4 items-center text-sm p-4 pt-2">
+                      <div className="text-xs text-bolt-elements-textTertiary">
+                        <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
+                      </div>
+                      <div className="flex-grow" />
                       {input.length > 3 ? (
                         <div className="text-xs text-bolt-elements-textTertiary">
                           <KeyboardShortcut

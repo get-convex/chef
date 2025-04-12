@@ -7,7 +7,7 @@ import { useMessageParser, useShortcuts, useSnapScroll, type PartCache } from '~
 import { description } from '~/lib/stores/description';
 import { chatStore } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench.client';
-import { PROMPT_COOKIE_KEY } from '~/utils/constants';
+import { PROMPT_COOKIE_KEY, type ModelSelection } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger } from '~/utils/logger';
 import { BaseChat } from './BaseChat.client';
@@ -88,6 +88,8 @@ export const Chat = memo(
 
     const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
 
+    const [modelSelection, setModelSelection] = useState<ModelSelection>('auto');
+
     const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number; seed: number }>({
       numFailures: 0,
       nextRetry: Date.now(),
@@ -102,13 +104,6 @@ export const Chat = memo(
 
       return () => clearInterval(resetInterval);
     }, []);
-
-    let USE_ANTHROPIC_FRACTION = 1.0;
-    if (import.meta.env.VITE_USE_ANTHROPIC_FRACTION) {
-      USE_ANTHROPIC_FRACTION = Number(import.meta.env.VITE_USE_ANTHROPIC_FRACTION);
-    }
-
-    const modelProviders: ModelProvider[] = USE_ANTHROPIC_FRACTION === 1.0 ? ['Anthropic'] : ['Anthropic', 'Bedrock'];
 
     const chatContextManager = useRef(new ChatContextManager());
     const [disableChatMessage, setDisableChatMessage] = useState<string | null>(null);
@@ -168,9 +163,13 @@ export const Chat = memo(
         if (!teamSlug) {
           throw new Error('No team slug');
         }
-
-        const modelProvider = modelProviders[(retries.seed + retries.numFailures) % modelProviders.length];
-
+        let modelProvider: ModelProvider;
+        if (modelSelection === "auto" || modelSelection === "claude-3.5-sonnet") {
+          const providers: ModelProvider[] = ["Anthropic", "Bedrock"];
+          modelProvider = providers[(retries.seed + retries.numFailures) % providers.length];
+        } else {
+          modelProvider = "OpenAI";
+        }
         return {
           messages: chatContextManager.current.prepareContext(messages),
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
@@ -476,6 +475,8 @@ export const Chat = memo(
         }}
         disableChatMessage={disableChatMessage}
         sendMessageInProgress={sendMessageInProgress}
+        modelSelection={modelSelection}
+        setModelSelection={setModelSelection}
       />
     );
   },

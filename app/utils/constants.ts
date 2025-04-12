@@ -21,3 +21,9 @@ export const MAX_BACKOFF = 60000;
 export function backoffTime(numFailures: number) {
   return Math.min(MIN_BACKOFF * Math.pow(2, numFailures), MAX_BACKOFF) * Math.random();
 }
+
+// These are the user facing options for the model selector, which the
+// client then maps to the model provider used by the backend. For
+// example, the user may specify "claude-3.5-sonnet", but then we'll
+// fallback between Anthropic and Bedrock.
+export type ModelSelection = 'auto' | 'claude-3.5-sonnet' | 'gpt-4o-optimus';

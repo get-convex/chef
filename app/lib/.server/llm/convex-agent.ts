@@ -66,6 +66,7 @@ export async function convexAgent(
   switch (modelProvider) {
     case 'OpenAI': {
       model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4o-2024-11-20';
+      console.log('Using OpenAI model', model);
       const openai = createOpenAI({
         fetch,
       });
@@ -356,7 +357,6 @@ async function onFinishHandler(
   else {
     await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata });
   }
-
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
