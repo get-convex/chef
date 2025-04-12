@@ -217,6 +217,7 @@ export const Chat = memo(
           level: 'error',
           extra: {
             error: e,
+            userHasOwnApiKey: !!apiKey,
           },
         });
         logger.error('Request failed\n\n', e, error);
