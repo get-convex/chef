@@ -314,7 +314,12 @@ async function onFinishHandler(
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => Promise<void>,
 ) {
-  const { usage, providerMetadata } = result;
+  const { providerMetadata } = result;
+  const usage = {
+    completionTokens: normalizeUsage(result.usage.completionTokens),
+    promptTokens: normalizeUsage(result.usage.promptTokens),
+    totalTokens: normalizeUsage(result.usage.totalTokens),
+  };
   console.log('Finished streaming', {
     finishReason: result.finishReason,
     usage,
@@ -324,9 +329,9 @@ async function onFinishHandler(
     const span = tracer.startSpan('on-finish-handler');
     span.setAttribute('chatId', chatId);
     span.setAttribute('finishReason', result.finishReason);
-    span.setAttribute('usage.completionTokens', usage?.completionTokens || 0);
-    span.setAttribute('usage.promptTokens', usage?.promptTokens || 0);
-    span.setAttribute('usage.totalTokens', usage?.totalTokens || 0);
+    span.setAttribute('usage.completionTokens', usage.completionTokens);
+    span.setAttribute('usage.promptTokens', usage.promptTokens);
+    span.setAttribute('usage.totalTokens', usage.totalTokens);
     if (result.providerMetadata) {
       const anthropic: any = result.providerMetadata.anthropic;
       if (anthropic) {
@@ -362,4 +367,8 @@ async function onFinishHandler(
 // TODO this was cool, do something to type our environment variables
 export function getEnv(env: Record<string, string | undefined>, name: string): string | undefined {
   return env[name] || globalThis.process.env[name];
+}
+
+function normalizeUsage(usage: number) {
+  return Number.isNaN(usage) ? 0 : usage;
 }
