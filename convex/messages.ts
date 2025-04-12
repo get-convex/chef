@@ -309,6 +309,18 @@ export const updateStorageState = internalMutation({
       partIndex,
       compression: 'lz4',
     });
+    await ctx.scheduler.runAfter(0, internal.messages.cleanupStaleStoredFiles, {
+      storageId,
+    });
+  },
+});
+
+export const cleanupStaleStoredFiles = internalMutation({
+  args: {
+    storageId: v.id('_storage'),
+  },
+  handler: async (ctx, args): Promise<void> => {
+    await ctx.storage.delete(args.storageId);
   },
 });
 
