@@ -16,6 +16,7 @@ import { queryEnvVariable, setEnvVariables } from '~/lib/convexEnvVariables';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { initializeConvexAuth } from '~/lib/convexAuth';
+import { appendEnvVarIfNotSet } from '~/utils/envFileUtils';
 
 const TEMPLATE_URL = '/template-snapshot-cb4ccf96.bin';
 
@@ -105,34 +106,13 @@ async function setupContainer(convex: ConvexReactClient, snapshotUrl: string) {
 
 async function setupConvexEnvVars(webcontainer: WebContainer, convexProject: ConvexProject) {
   const { token } = convexProject;
-
-  const envFilePath = '.env.local';
-  const envVarName = 'CONVEX_DEPLOY_KEY';
-  const envVarLine = `${envVarName}=${token}\n`;
-
-  let content: string | null = null;
-  try {
-    content = await webcontainer.fs.readFile(envFilePath, 'utf-8');
-  } catch (err: any) {
-    if (!err.toString().includes('ENOENT')) {
-      throw err;
-    }
-  }
-  if (content === null) {
-    // Create the file if it doesn't exist
-    await webcontainer.fs.writeFile(envFilePath, envVarLine);
-  } else {
-    const lines = content.split('\n');
-
-    // Check if the env var already exists
-    const envVarExists = lines.some((line) => line.startsWith(`${envVarName}=`));
-
-    if (!envVarExists) {
-      // Add the env var to the end of the file
-      const newContent = content.endsWith('\n') ? `${content}${envVarLine}` : `${content}\n${envVarLine}`;
-      await webcontainer.fs.writeFile(envFilePath, newContent);
-    }
-  }
+  await appendEnvVarIfNotSet({
+    envFilePath: '.env.local',
+    readFile: (path) => webcontainer.fs.readFile(path, 'utf-8'),
+    writeFile: (path, content) => webcontainer.fs.writeFile(path, content),
+    envVarName: 'CONVEX_DEPLOY_KEY',
+    value: token,
+  });
 }
 
 async function setupOpenAIToken(convex: ConvexReactClient, project: ConvexProject) {
