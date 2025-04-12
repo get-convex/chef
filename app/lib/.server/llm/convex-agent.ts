@@ -95,8 +95,7 @@ export async function convexAgent(
       break;
     }
     case 'Anthropic': {
-      model = getEnv(env, 'ANTHROPIC_MODEL') || 'claude-3-7-sonnet-20250219';
-      console.log('Using Anthropic model', model);
+      model = getEnv(env, 'ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
       // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
       const rateLimitAwareFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {

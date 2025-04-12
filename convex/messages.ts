@@ -1,11 +1,19 @@
-import { action, internalMutation, mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+  type MutationCtx,
+  type QueryCtx,
+} from './_generated/server';
 import type { Message as AIMessage } from 'ai';
 import { ConvexError, v } from 'convex/values';
 import type { Infer, VAny } from 'convex/values';
 import { isValidSession } from './sessions';
 import type { Doc, Id } from './_generated/dataModel';
 import { ensureEnvVar, startProvisionConvexProjectHelper } from './convexProjects';
-import { internal } from '@convex/_generated/api';
+import { internal } from './_generated/api';
 
 export type SerializedMessage = Omit<AIMessage, 'createdAt' | 'content'> & {
   createdAt: number | undefined;
@@ -32,7 +40,7 @@ export const initializeChat = mutation({
       return;
     }
 
-    await createNewChatFromMessages(ctx, {
+    await createNewChat(ctx, {
       id,
       sessionId,
       projectInitParams,
@@ -162,12 +170,12 @@ export const get = query({
   },
 });
 
+// This exists for compatibility with old clients
 export const getInitialMessages = mutation({
   args: {
     sessionId: v.id('sessions'),
     id: v.string(),
-    // Remove this once clients have updated to not send rewindToMessageId
-    rewindToMessageId: v.optional(v.union(v.string(), v.null())),
+    rewindToMessageId: v.optional(v.any()),
   },
   returns: v.union(
     v.null(),
@@ -181,42 +189,62 @@ export const getInitialMessages = mutation({
     }),
   ),
   handler: async (ctx, args) => {
-    const { id, sessionId } = args;
-    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
-
-    if (!chat) {
-      return null;
-    }
-
-    const chatInfo = {
-      id: getIdentifier(chat),
-      initialId: chat.initialId,
-      urlId: chat.urlId,
-      description: chat.description,
-      timestamp: chat.timestamp,
-    };
-
-    const messages = await ctx.db
-      .query('chatMessages')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .collect();
-
-    return {
-      ...chatInfo,
-      messages: messages.map((m) => m.content),
-    };
+    return await _getInitialMessages(ctx, args);
   },
 });
+
+export const getInitialMessagesInternal = internalQuery({
+  args: {
+    sessionId: v.id('sessions'),
+    id: v.string(),
+  },
+  returns: v.array(v.any() as VAny<SerializedMessage>),
+  handler: async (ctx, args) => {
+    const result = await _getInitialMessages(ctx, args);
+    if (result === null) {
+      return [];
+    }
+    return result.messages;
+  },
+});
+
+async function _getInitialMessages(ctx: QueryCtx, args: { id: string; sessionId: Id<'sessions'> }) {
+  const { id, sessionId } = args;
+  const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
+
+  if (!chat) {
+    return null;
+  }
+
+  const chatInfo = {
+    id: getIdentifier(chat),
+    initialId: chat.initialId,
+    urlId: chat.urlId,
+    description: chat.description,
+    timestamp: chat.timestamp,
+  };
+
+  const messages = await ctx.db
+    .query('chatMessages')
+    .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+    .collect();
+
+  return {
+    ...chatInfo,
+    messages: messages.map((m) => m.content),
+  };
+}
 
 const storageInfo = v.object({
   storageId: v.union(v.id('_storage'), v.null()),
   lastMessageRank: v.number(),
   partIndex: v.number(),
+  compression: v.union(v.literal('none'), v.literal('lz4')),
 });
 
 type StorageInfo = Infer<typeof storageInfo>;
 
-export const getInitialMessagesStorageInfo = query({
+export const getInitialMessagesStorageInfo = internalQuery({
   args: {
     sessionId: v.id('sessions'),
     chatId: v.string(),
@@ -239,11 +267,12 @@ export const getInitialMessagesStorageInfo = query({
       storageId: doc.storageId,
       lastMessageRank: doc.lastMessageRank,
       partIndex: doc.partIndex,
+      compression: doc.compression,
     };
   },
 });
 
-export const updateStorageState = mutation({
+export const updateStorageState = internalMutation({
   args: {
     sessionId: v.id('sessions'),
     chatId: v.string(),
@@ -251,7 +280,7 @@ export const updateStorageState = mutation({
     lastMessageRank: v.number(),
     partIndex: v.number(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<void> => {
     const { chatId, storageId, lastMessageRank, partIndex, sessionId } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
@@ -278,6 +307,38 @@ export const updateStorageState = mutation({
       storageId,
       lastMessageRank,
       partIndex,
+      compression: 'lz4',
+    });
+  },
+});
+
+export const initializeStorageState = internalMutation({
+  args: {
+    sessionId: v.id('sessions'),
+    chatId: v.string(),
+    storageId: v.id('_storage'),
+    lastMessageRank: v.number(),
+    partIndex: v.number(),
+  },
+  handler: async (ctx, args): Promise<void> => {
+    const { chatId, storageId, lastMessageRank, partIndex, sessionId } = args;
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    if (!chat) {
+      throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
+    }
+    const doc = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .unique();
+    if (doc) {
+      throw new Error('Chat messages storage state already exists');
+    }
+    await ctx.db.insert('chatMessagesStorageState', {
+      chatId: chat._id,
+      storageId,
+      lastMessageRank,
+      partIndex,
+      compression: 'lz4',
     });
   },
 });
@@ -544,20 +605,18 @@ async function _allocateUrlId(ctx: QueryCtx, { urlHint, sessionId }: { urlHint: 
   }
 }
 
-export async function createNewChatFromMessages(
+export async function createNewChat(
   ctx: MutationCtx,
   args: {
     id: string;
     sessionId: Id<'sessions'>;
-    description?: string;
-    snapshotId?: Id<'_storage'>;
     projectInitParams?: {
       teamSlug: string;
       auth0AccessToken: string;
     };
   },
 ): Promise<Id<'chats'>> {
-  const { id, sessionId, description, snapshotId, projectInitParams } = args;
+  const { id, sessionId, projectInitParams } = args;
   const existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
 
   if (existing) {
@@ -572,15 +631,14 @@ export async function createNewChatFromMessages(
   const chatId = await ctx.db.insert('chats', {
     creatorId: sessionId,
     initialId: id,
-    description,
     timestamp: new Date().toISOString(),
-    snapshotId,
   });
-  const chatMessagesStorageState = await ctx.db.insert('chatMessagesStorageState', {
+  await ctx.db.insert('chatMessagesStorageState', {
     chatId,
     storageId: null,
-    lastMessageRank: 0,
-    partIndex: 0,
+    lastMessageRank: -1,
+    partIndex: -1,
+    compression: 'lz4',
   });
 
   await startProvisionConvexProjectHelper(ctx, {

@@ -82,6 +82,7 @@ export default defineSchema({
   chatMessagesStorageState: defineTable({
     chatId: v.id('chats'),
     storageId: v.union(v.id('_storage'), v.null()),
+    compression: v.union(v.literal('none'), v.literal('lz4')),
     lastMessageRank: v.number(),
     partIndex: v.number(),
   }).index('byChatId', ['chatId']),

@@ -14,13 +14,15 @@ type MessagePart = Message['parts'] extends Array<infer P> | undefined ? P : nev
 
 export function useStoreMessageHistory(chatId: string, initialMessages: SerializedMessage[] | undefined) {
   const convex = useConvex();
-
-  const [lastPersistedMessageRank, setLastPersistedMessageRank] = useState(0);
-  const [lastPersistedPartIndex, setLastPersistedPartIndex] = useState(0);
-  const [lastPersistedPart, setLastPersistedPart] = useState<MessagePart | null>(null);
-
-  // The messages that have been persisted to the database
-  const [persistedMessages, setPersistedMessages] = useState<Message[]>([]);
+  const [persistedState, setPersistedState] = useState<{
+    lastMessageRank: number;
+    partIndex: number;
+    lastPart: MessagePart | null;
+  }>({
+    lastMessageRank: -1,
+    partIndex: 0,
+    lastPart: null,
+  });
   const persistInProgress = useRef(false);
   const siteUrl = getConvexSiteUrl();
 
@@ -37,20 +39,16 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       }
 
       const sessionId = await waitForConvexSessionId('useStoreMessageHistory');
-      const shouldUpdate = shouldUpdateMessages(messages, {
-        lastMessageRank: lastPersistedMessageRank,
-        lastPartRank: lastPersistedPartIndex,
-        lastPart: lastPersistedPart,
-      });
-      if (!shouldUpdate) {
+      const updateResult = shouldUpdateMessages(messages, persistedState);
+      if (updateResult.kind === 'noUpdate') {
         return;
       }
       const url = new URL(`${siteUrl}/store_messages`);
       const compressed = await compressMessages(messages);
       url.searchParams.set('chatId', chatId);
       url.searchParams.set('sessionId', sessionId);
-      url.searchParams.set('lastMessageRank', compressed.lastMessageRank.toString());
-      url.searchParams.set('lastPartRank', compressed.lastPartRank.toString());
+      url.searchParams.set('lastMessageRank', updateResult.lastMessageRank.toString());
+      url.searchParams.set('partIndex', updateResult.partIndex.toString());
 
       persistInProgress.current = true;
       // If there's no URL ID yet, try to extract it from the messages.
@@ -73,7 +71,7 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       try {
         response = await fetch(url, {
           method: 'POST',
-          body: compressed.compressed,
+          body: compressed,
         });
       } finally {
         persistInProgress.current = false;
@@ -82,11 +80,9 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
         toast.error('Failed to store message history');
         return;
       }
-      setLastPersistedMessageRank(compressed.lastMessageRank);
-      setLastPersistedPartIndex(compressed.lastPartRank);
-      setLastPersistedPart(messages.at(-1)?.parts?.at(-1) ?? null);
+      setPersistedState(updateResult);
     },
-    [convex, chatId, initialMessages, persistedMessages, setPersistedMessages, persistInProgress],
+    [convex, chatId, initialMessages, persistedState, persistInProgress],
   );
 }
 
@@ -145,34 +141,43 @@ function shouldUpdateMessages(
   messages: Message[],
   persisted: {
     lastMessageRank: number;
-    lastPartRank: number;
+    partIndex: number;
     lastPart: MessagePart | null;
   },
-): boolean {
+): { kind: 'update'; lastMessageRank: number; partIndex: number; lastPart: MessagePart | null } | { kind: 'noUpdate' } {
   if (messages.length > persisted.lastMessageRank) {
-    return true;
+    return {
+      kind: 'update',
+      lastMessageRank: messages.length - 1,
+      partIndex: (messages.at(-1)?.parts?.length ?? 0) - 1,
+      lastPart: messages.at(-1)?.parts?.at(-1) ?? null,
+    };
   }
   const lastMessage = messages[messages.length - 1];
   if (lastMessage.parts === undefined) {
     throw new Error('Last message has no parts');
   }
-  if (lastMessage.parts.length > persisted.lastPartRank) {
-    return true;
+  if (lastMessage.parts.length > persisted.partIndex) {
+    return {
+      kind: 'update',
+      lastMessageRank: messages.length - 1,
+      partIndex: lastMessage.parts.length - 1,
+      lastPart: lastMessage.parts.at(-1) ?? null,
+    };
   }
   if (lastMessage.parts[lastMessage.parts.length - 1] !== persisted.lastPart) {
-    return true;
+    return {
+      kind: 'update',
+      lastMessageRank: messages.length - 1,
+      partIndex: lastMessage.parts.length - 1,
+      lastPart: lastMessage.parts.at(-1) ?? null,
+    };
   }
-  return false;
+  return { kind: 'noUpdate' };
 }
 
-async function compressMessages(messages: Message[]): Promise<{
-  compressed: Uint8Array;
-  lastMessageRank: number;
-  lastPartRank: number;
-}> {
+async function compressMessages(messages: Message[]): Promise<Uint8Array> {
   const serialized = messages.map(serializeMessageForConvex);
-  const lastMessageRank = serialized.length;
-  const lastPartRank = serialized.at(-1)?.parts?.length ?? 0;
   // Dynamic import only executed on the client
   if (typeof window === 'undefined') {
     throw new Error('compressMessages can only be used in browser environments');
@@ -182,9 +187,5 @@ async function compressMessages(messages: Message[]): Promise<{
   const uint8Array = textEncoder.encode(JSON.stringify(serialized));
   // Dynamically load the module
   const compressed = lz4.compress(uint8Array);
-  return {
-    compressed,
-    lastMessageRank,
-    lastPartRank,
-  };
+  return compressed;
 }
