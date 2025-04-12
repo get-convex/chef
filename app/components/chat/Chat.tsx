@@ -164,11 +164,11 @@ export const Chat = memo(
           throw new Error('No team slug');
         }
         let modelProvider: ModelProvider;
-        if (modelSelection === "auto" || modelSelection === "claude-3.5-sonnet") {
-          const providers: ModelProvider[] = ["Anthropic", "Bedrock"];
+        if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
+          const providers: ModelProvider[] = ['Anthropic', 'Bedrock'];
           modelProvider = providers[(retries.seed + retries.numFailures) % providers.length];
         } else {
-          modelProvider = "OpenAI";
+          modelProvider = 'OpenAI';
         }
         return {
           messages: chatContextManager.current.prepareContext(messages),
