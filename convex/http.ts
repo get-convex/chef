@@ -111,7 +111,7 @@ httpWithCors.route({
       }
       const text = JSON.stringify(messages);
       const storageId = await ctx.storage.store(new Blob([text]));
-      await ctx.runMutation(internal.messages.initializeStorageState, {
+      await ctx.runMutation(internal.messages.handleStorageStateMigration, {
         sessionId,
         chatId,
         storageId,

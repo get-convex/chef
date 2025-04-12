@@ -312,7 +312,7 @@ export const updateStorageState = internalMutation({
   },
 });
 
-export const initializeStorageState = internalMutation({
+export const handleStorageStateMigration = internalMutation({
   args: {
     sessionId: v.id('sessions'),
     chatId: v.string(),
@@ -339,6 +339,9 @@ export const initializeStorageState = internalMutation({
       lastMessageRank,
       partIndex,
       compression: 'lz4',
+    });
+    await ctx.scheduler.runAfter(0, internal.messages.cleanupChatMessages, {
+      chatId: chat._id,
     });
   },
 });
@@ -443,6 +446,35 @@ export const removeChatInner = internalMutation({
     }
 
     await ctx.db.delete(existing._id);
+  },
+});
+
+export const cleanupChatMessages = internalMutation({
+  args: {
+    chatId: v.id('chats'),
+  },
+  handler: async (ctx, args) => {
+    const { chatId } = args;
+    const chat = await ctx.db.get(chatId);
+    if (!chat) {
+      return;
+    }
+    const storageState = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .unique();
+    if (storageState === null) {
+      throw new Error(
+        'Chat messages storage state not found -- should not clean up messages from DB if they are not stored',
+      );
+    }
+    const messages = await ctx.db
+      .query('chatMessages')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .collect();
+    for (const message of messages) {
+      await ctx.db.delete(message._id);
+    }
   },
 });
 
