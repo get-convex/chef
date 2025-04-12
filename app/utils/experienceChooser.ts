@@ -25,7 +25,7 @@ export type Experience =
 export function chooseExperience(
   userAgent: string,
   searchParams: URLSearchParams,
-  crossOriginIsolated: boolean | 'dunno',
+  crossOriginIsolated: boolean | 'dunno' = 'dunno',
 ): Experience {
   const parser = new UAParser(userAgent);
   const browser = parser.getBrowser();
