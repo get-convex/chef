@@ -90,52 +90,55 @@ const dialogVariants = {
 interface DialogProps {
   children: ReactNode;
   className?: string;
+  innerClassName?: string;
   showCloseButton?: boolean;
   onClose?: () => void;
   onBackdrop?: () => void;
 }
 
-export const Dialog = memo(({ children, className, showCloseButton = true, onClose, onBackdrop }: DialogProps) => {
-  return (
-    <RadixDialog.Portal>
-      <RadixDialog.Overlay asChild>
-        <motion.div
-          className={classNames('fixed inset-0 z-40', 'bg-[#FAFAFA]/80 dark:bg-[#0A0A0A]/80', 'backdrop-blur-[2px]')}
-          initial="closed"
-          animate="open"
-          exit="closed"
-          variants={dialogBackdropVariants}
-          onClick={onBackdrop}
-        />
-      </RadixDialog.Overlay>
-      <RadixDialog.Content asChild>
-        <motion.div
-          className={classNames(
-            'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
-            'bg-[#FAFAFA] dark:bg-[#0A0A0A]',
-            'rounded-lg shadow-lg',
-            'border border-[#E5E5E5] dark:border-[#1A1A1A]',
-            'z-40 w-[520px]',
-            className,
-          )}
-          initial="closed"
-          animate="open"
-          exit="closed"
-          variants={dialogVariants}
-        >
-          <div className="flex flex-col">
-            {children}
-            {showCloseButton && (
-              <RadixDialog.Close asChild onClick={onClose}>
-                <IconButton
-                  icon="i-ph:x"
-                  className="absolute top-3 right-3 text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary"
-                />
-              </RadixDialog.Close>
+export const Dialog = memo(
+  ({ children, className, innerClassName, showCloseButton = true, onClose, onBackdrop }: DialogProps) => {
+    return (
+      <RadixDialog.Portal>
+        <RadixDialog.Overlay asChild>
+          <motion.div
+            className={classNames('fixed inset-0 z-40', 'bg-[#FAFAFA]/80 dark:bg-[#0A0A0A]/80', 'backdrop-blur-[2px]')}
+            initial="closed"
+            animate="open"
+            exit="closed"
+            variants={dialogBackdropVariants}
+            onClick={onBackdrop}
+          />
+        </RadixDialog.Overlay>
+        <RadixDialog.Content asChild>
+          <motion.div
+            className={classNames(
+              'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+              'bg-[#FAFAFA] dark:bg-[#0A0A0A]',
+              'rounded-lg shadow-lg',
+              'border border-[#E5E5E5] dark:border-[#1A1A1A]',
+              'z-40 w-[520px]',
+              className,
             )}
-          </div>
-        </motion.div>
-      </RadixDialog.Content>
-    </RadixDialog.Portal>
-  );
-});
+            initial="closed"
+            animate="open"
+            exit="closed"
+            variants={dialogVariants}
+          >
+            <div className={classNames('flex flex-col', innerClassName)}>
+              {children}
+              {showCloseButton && (
+                <RadixDialog.Close asChild onClick={onClose}>
+                  <IconButton
+                    icon="i-ph:x"
+                    className="absolute top-3 right-3 text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary"
+                  />
+                </RadixDialog.Close>
+              )}
+            </div>
+          </motion.div>
+        </RadixDialog.Content>
+      </RadixDialog.Portal>
+    );
+  },
+);
