@@ -107,7 +107,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                   <div className="flex items-center gap-1.5 ">
                     <div>{icon}</div>
                     {message}
-                    {message === STATUS_MESSAGES.error && (
+                    {streamStatus === 'error' && (
                       <button onClick={props.resendMessage} className="text-blue-500">
                         Resend message
                       </button>

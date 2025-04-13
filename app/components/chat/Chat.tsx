@@ -308,7 +308,7 @@ export const Chat = memo(
       setChatStarted(true);
     };
 
-    const sendMessage = async (_event: React.UIEvent, messageInput?: string) => {
+    const sendMessage = async (messageInput?: string) => {
       if (retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) {
         toast.error(CHEF_TOO_BUSY_ERROR);
         return;

@@ -47,7 +47,7 @@ interface BaseChatProps {
   // Chat user interactions
   handleInputChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleStop: () => void;
-  sendMessage: (event: React.UIEvent, messageInput?: string) => Promise<void>;
+  sendMessage: (messageInput?: string) => Promise<void>;
   sendMessageInProgress: boolean;
 
   // Current chat history props
@@ -96,9 +96,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
 
-    const handleSendMessage = (event: React.UIEvent, messageInput?: string) => {
+    const handleSendMessage = (messageInput?: string) => {
       if (sendMessage) {
-        sendMessage(event, messageInput).then(() => {
+        sendMessage(messageInput).then(() => {
           handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
         });
       }
@@ -152,7 +152,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       alert={actionAlert}
                       clearAlert={() => clearAlert?.()}
                       postMessage={(message) => {
-                        handleSendMessage?.({} as any, message);
+                        handleSendMessage?.(message);
                         clearAlert?.();
                       }}
                     />
@@ -167,7 +167,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     resendMessage={() => {
                       const lastUserMessage = messages.toReversed().find((message) => message.role === 'user');
                       if (lastUserMessage) {
-                        handleSendMessage?.({} as any, lastUserMessage.content);
+                        handleSendMessage?.(lastUserMessage.content);
                       }
                     }}
                   />
@@ -245,7 +245,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                             return;
                           }
 
-                          handleSendMessage?.(event);
+                          handleSendMessage();
                         }
                       }}
                       value={input}
@@ -277,13 +277,13 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                               sendMessageInProgress ||
                               maintenanceMode
                             }
-                            onClick={(event) => {
+                            onClick={() => {
                               if (isStreaming) {
                                 handleStop?.();
                                 return;
                               }
                               if (input.length > 0 || uploadedFiles.length > 0) {
-                                handleSendMessage?.(event);
+                                handleSendMessage?.();
                               }
                             }}
                           />
