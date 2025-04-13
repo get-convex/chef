@@ -44,12 +44,11 @@ const processSampledMessages = createSampler(
   (options: {
     messages: Message[];
     initialMessages: Message[];
-    isLoading: boolean;
-    parseMessages: (messages: Message[], isLoading: boolean) => void;
+    parseMessages: (messages: Message[]) => void;
     storeMessageHistory: (messages: Message[]) => Promise<void>;
   }) => {
-    const { messages, initialMessages, isLoading, parseMessages, storeMessageHistory } = options;
-    parseMessages(messages, isLoading);
+    const { messages, initialMessages, parseMessages, storeMessageHistory } = options;
+    parseMessages(messages);
 
     if (messages.length > initialMessages.length) {
       storeMessageHistory(messages).catch((error) => toast.error(error.message));
@@ -273,11 +272,10 @@ export const Chat = memo(
       processSampledMessages({
         messages,
         initialMessages,
-        isLoading: status === 'streaming' || status === 'submitted',
         parseMessages,
         storeMessageHistory,
       });
-    }, [messages, status, parseMessages]);
+    }, [messages, parseMessages]);
 
     const abort = () => {
       stop();
