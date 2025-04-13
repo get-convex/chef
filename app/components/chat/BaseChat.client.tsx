@@ -164,6 +164,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     numMessages={messages?.length ?? 0}
                     toolStatus={toolStatus}
                     currentError={currentError}
+                    resendMessage={() => {
+                      const lastUserMessage = messages.toReversed().find((message) => message.role === 'user');
+                      if (lastUserMessage) {
+                        handleSendMessage?.({} as any, lastUserMessage.content);
+                      }
+                    }}
                   />
                 }
                 <div className="bg-bolt-elements-background-depth-2 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt">

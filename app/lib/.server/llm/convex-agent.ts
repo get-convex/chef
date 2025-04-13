@@ -116,7 +116,7 @@ export async function convexAgent(
             logger.error(
               `Anthropic${isLowQos ? ' (low QoS)' : ''} returned an error (${response.status} ${response.statusText}): ${text}`,
             );
-            throw new Error(JSON.stringify({ error: 'The model hit an error. Try sending your message again?' }));
+            throw new Error(JSON.stringify({ error: 'The model hit an error. Try sending your message again.' }));
           };
 
           const response = await fetch(input, enrichedOptions);

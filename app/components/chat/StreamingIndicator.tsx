@@ -9,6 +9,7 @@ interface StreamingIndicatorProps {
   numMessages: number;
   toolStatus?: ToolStatus;
   currentError?: Error;
+  resendMessage: () => void;
 }
 
 // Icon components
@@ -17,10 +18,10 @@ const WarningIcon = () => <div className="i-ph:warning text-yellow-500" />;
 const CheckIcon = () => <div className="i-ph:check" />;
 
 // Status messages
-const STATUS_MESSAGES = {
+export const STATUS_MESSAGES = {
   cooking: 'Cooking...',
   stopped: 'Generation stopped',
-  error: 'The model hit an error. Try sending your message again?',
+  error: 'The model hit an error. Try sending your message again.',
   generated: 'Response Generated',
 } as const;
 
@@ -106,6 +107,11 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                   <div className="flex items-center gap-1.5 ">
                     <div>{icon}</div>
                     {message}
+                    {message === STATUS_MESSAGES.error && (
+                      <button onClick={props.resendMessage} className="text-blue-500">
+                        Resend message
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               </motion.div>

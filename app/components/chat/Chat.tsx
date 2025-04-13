@@ -30,6 +30,7 @@ import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { disabledText, getTokenUsage, noTokensText } from '~/lib/convexUsage';
+import { STATUS_MESSAGES } from './StreamingIndicator';
 
 const logger = createScopedLogger('Chat');
 
@@ -87,19 +88,17 @@ export const Chat = memo(
 
     const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
 
-    const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number }>({
+    const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number; seed: number }>({
       numFailures: 0,
       nextRetry: Date.now(),
+      seed: Math.random() < 0.5 ? 0 : 1,
     });
 
-    // Reset retries counter every 10 minutes
+    // Reset retries counter every minute
     useEffect(() => {
-      const resetInterval = setInterval(
-        () => {
-          setRetries({ numFailures: 0, nextRetry: Date.now() });
-        },
-        10 * 60 * 1000,
-      );
+      const resetInterval = setInterval(() => {
+        setRetries((prev) => ({ ...prev, numFailures: 0, nextRetry: Date.now() }));
+      }, 60 * 1000);
 
       return () => clearInterval(resetInterval);
     }, []);
@@ -170,10 +169,7 @@ export const Chat = memo(
           throw new Error('No team slug');
         }
 
-        let modelProvider = Math.random() < USE_ANTHROPIC_FRACTION ? 'Anthropic' : 'Bedrock';
-        if (retries.numFailures > 0) {
-          modelProvider = modelProviders[retries.numFailures % modelProviders.length];
-        }
+        const modelProvider = modelProviders[(retries.seed + retries.numFailures) % modelProviders.length];
 
         return {
           messages: chatContextManager.current.prepareContext(messages),
@@ -222,14 +218,9 @@ export const Chat = memo(
         logger.error('Request failed\n\n', e, error);
         setRetries((prevRetries) => {
           const newRetries = prevRetries.numFailures + 1;
-          const retryTime = error?.message.includes('Too Many Requests')
-            ? Date.now() + exponentialBackoff(newRetries)
-            : Date.now();
-          return { numFailures: newRetries, nextRetry: retryTime };
+          const backoff = error?.message.includes(STATUS_MESSAGES.error) ? exponentialBackoff(newRetries) : 0;
+          return { ...prevRetries, numFailures: newRetries, nextRetry: Date.now() + backoff };
         });
-        if (error?.message.includes('Too Many Requests')) {
-          toast.error(CHEF_TOO_BUSY_ERROR);
-        }
 
         await checkTokenUsage();
       },
@@ -239,7 +230,7 @@ export const Chat = memo(
           console.debug('Token usage in response:', usage);
         }
         if (response.finishReason == 'stop') {
-          setRetries({ numFailures: 0, nextRetry: Date.now() });
+          setRetries((prev) => ({ ...prev, numFailures: 0, nextRetry: Date.now() }));
         }
         logger.debug('Finished streaming');
 

@@ -29,6 +29,26 @@ export function generalSystemPrompt(options: SystemPromptOptions) {
   ${secretsInstructions(options)}
   ${openaiProxyGuidelines(options)}
   ${outputInstructions(options)}
+  <important_reminders>
+    <problem_solving>
+      You MUST iterate and keep going until the problem is completely solved. Only terminate your turn when you are
+      sure that the problemis solved. NEVER end your turn without having solved the problem, and when you say you
+      are going to make a tool call, make sure you ACTUALLY make the tool call, instead of ending your turn.
+    </problem_solving>
+    <tool_calls_guidelines>
+      You MUST plan extensively before each function call, and reflect extensively on the outcomes of the previous
+      function calls. DO NOT do this entire process by making function calls only, as this can impair your ability
+      to solve the problem and think insightfully.
+    </tool_calls_guidelines>
+    <response_guidelines>
+      BEFORE YOU RESPOND, REMEMBER
+      THE FOLLOWING:
+      - The function calls you make will be used to update a UI, so pay close attention to their use, otherwise it may
+      cause user confusion. Don't mention them in your response.
+      - **ALWAYS SUGGEST USER RESPONSES** With every response, provide suggestions (even if it's just yes or no) and a
+      recommendation using set _suggestions and set recommendation to create buttons for the user to press instead of typing a response.
+    </response_guidelines>
+  </important_reminders>
   `;
   return result;
 }
