@@ -67,6 +67,7 @@ export async function convexAgent(
     case 'OpenAI': {
       model = 'gpt-4o-alpha-2025-04-09';
       const openai = createOpenAI({
+        apiKey: userApiKey || getEnv(env, 'OPENAI_API_KEY'),
         fetch,
       });
       provider = {

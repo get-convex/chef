@@ -58,13 +58,19 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     teamSlug: string;
     deploymentName: string | undefined;
     modelProvider: ModelProvider;
-    userApiKey: { preference: 'always' | 'quotaExhausted'; value: string } | undefined;
+    userApiKey: { preference: 'always' | 'quotaExhausted'; value?: string, openai?: string } | undefined;
   };
   const { messages, firstUserMessage, chatId, deploymentName, token, teamSlug } = body;
 
-  let userApiKey = body.userApiKey?.preference === 'always' ? body.userApiKey.value : undefined;
+  let useUserApiKey = false;
 
-  if (!userApiKey) {
+  // Always use the user's API key if they're set to always mode.
+  if (body.userApiKey?.preference === "always") {
+    useUserApiKey = true;
+  }
+
+  // If they're not set to always mode, check to see if the user has any Convex tokens left.
+  if (body.userApiKey?.preference !== "always") {
     const resp = await checkTokenUsage(PROVISION_HOST, token, teamSlug, deploymentName);
     if (resp.status === 'error') {
       return new Response(JSON.stringify({ error: 'Failed to check for tokens' }), {
@@ -81,14 +87,29 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       resp.tokensQuota = resp.tokensQuota * 10000;
     }
     if (resp.tokensUsed >= resp.tokensQuota) {
-      if (body.userApiKey?.preference === 'quotaExhausted') {
-        userApiKey = body.userApiKey.value;
-      } else {
+      if (body.userApiKey?.preference !== 'quotaExhausted') {
         logger.error(`No tokens available for ${deploymentName}: ${resp.tokensUsed} of ${resp.tokensQuota}`);
         return new Response(JSON.stringify({ error: noTokensText(resp.tokensUsed, resp.tokensQuota) }), {
           status: 402,
         });
       }
+      // If they're set to quotaExhausted mode, try to use the user's API key.
+      useUserApiKey = true;
+    }
+  }
+
+  let userApiKey: string | undefined;
+  if (useUserApiKey) {
+    if (body.modelProvider === "Anthropic" || body.modelProvider === "Bedrock") {
+      userApiKey = body.userApiKey?.value;
+      body.modelProvider = "Anthropic";
+    } else {
+      userApiKey = body.userApiKey?.openai;
+    }
+    if (!userApiKey) {
+      return new Response(JSON.stringify({ error: 'No API key provided' }), {
+        status: 402,
+      });
     }
   }
 
@@ -110,7 +131,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       firstUserMessage,
       messages,
       tracer,
-      userApiKey ? 'Anthropic' : body.modelProvider,
+      body.modelProvider,
       userApiKey,
       recordUsageCb,
     );
