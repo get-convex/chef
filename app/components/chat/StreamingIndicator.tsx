@@ -34,8 +34,8 @@ const COOKING_SPLINES_MESSAGES = [
   "Whisking...",
   "Practicing mise-en-place...",
 ]
-const COOKING_SPLINES_PROBABILITY = 0.4;
-const COOKING_SPLINES_DURATION = 2000;
+const COOKING_SPLINES_PROBABILITY = 0.2;
+const COOKING_SPLINES_DURATION = 4000;
 
 export default function StreamingIndicator(props: StreamingIndicatorProps) {
   const { aborted } = useStore(chatStore);
