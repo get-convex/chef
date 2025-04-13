@@ -65,7 +65,7 @@ export async function convexAgent(
   const fetch = undiciFetch as unknown as Fetch;
   switch (modelProvider) {
     case 'OpenAI': {
-      model = 'gpt-4o-alpha-2025-04-09';
+      model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4.1';
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv(env, 'OPENAI_API_KEY'),
         fetch,
