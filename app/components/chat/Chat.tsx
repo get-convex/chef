@@ -311,6 +311,7 @@ export const Chat = memo(
     const sendMessage = async (messageInput?: string) => {
       if (retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) {
         toast.error(CHEF_TOO_BUSY_ERROR);
+        captureException('User tried to send message but chef is too busy');
         return;
       }
 
