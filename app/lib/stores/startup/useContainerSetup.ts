@@ -26,7 +26,7 @@ export function useNewChatContainerSetup() {
     const runSetup = async () => {
       try {
         await waitForBootStepCompleted(ContainerBootState.STARTING);
-        await setupContainer(convex, TEMPLATE_URL);
+        await setupContainer(convex, { snapshotUrl: TEMPLATE_URL, allowNpmInstallFailure: false });
       } catch (error: any) {
         toast.error('Failed to setup Chef environment. Try reloading the page?');
         setContainerBootState(ContainerBootState.ERROR, error);
@@ -54,7 +54,7 @@ export function useExistingChatContainerSetup(loadedChatId: string | undefined) 
           console.warn(`Existing chat ${loadedChatId} has no snapshot. Loading the base template.`);
           snapshotUrl = TEMPLATE_URL;
         }
-        await setupContainer(convex, snapshotUrl);
+        await setupContainer(convex, { snapshotUrl, allowNpmInstallFailure: true });
       } catch (error: any) {
         toast.error('Failed to setup Chef environment. Try reloading the page?');
         setContainerBootState(ContainerBootState.ERROR, error);
@@ -64,8 +64,11 @@ export function useExistingChatContainerSetup(loadedChatId: string | undefined) 
   }, [convex, loadedChatId, sessionId]);
 }
 
-async function setupContainer(convex: ConvexReactClient, snapshotUrl: string) {
-  const resp = await fetch(snapshotUrl);
+async function setupContainer(
+  convex: ConvexReactClient,
+  options: { snapshotUrl: string; allowNpmInstallFailure: boolean },
+) {
+  const resp = await fetch(options.snapshotUrl);
   if (!resp.ok) {
     throw new Error(`Failed to download snapshot (${resp.statusText}): ${resp.statusText}`);
   }
@@ -85,7 +88,14 @@ async function setupContainer(convex: ConvexReactClient, snapshotUrl: string) {
   console.log('NPM output', cleanTerminalOutput(output));
 
   if (exitCode !== 0) {
-    throw new Error(`npm install failed with exit code ${exitCode}: ${output}`);
+    if (options.allowNpmInstallFailure) {
+      toast.error(`Failed to install dependencies. Fix your package.json and tell Chef to redeploy.`, {
+        duration: Infinity,
+      });
+      console.error(`npm install failed with exit code ${exitCode}: ${output}`);
+    } else {
+      throw new Error(`npm install failed with exit code ${exitCode}: ${output}`);
+    }
   }
 
   setContainerBootState(ContainerBootState.SETTING_UP_CONVEX_PROJECT);
