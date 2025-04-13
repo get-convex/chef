@@ -58,19 +58,19 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     teamSlug: string;
     deploymentName: string | undefined;
     modelProvider: ModelProvider;
-    userApiKey: { preference: 'always' | 'quotaExhausted'; value?: string, openai?: string } | undefined;
+    userApiKey: { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string } | undefined;
   };
   const { messages, firstUserMessage, chatId, deploymentName, token, teamSlug } = body;
 
   let useUserApiKey = false;
 
   // Always use the user's API key if they're set to always mode.
-  if (body.userApiKey?.preference === "always") {
+  if (body.userApiKey?.preference === 'always') {
     useUserApiKey = true;
   }
 
   // If they're not set to always mode, check to see if the user has any Convex tokens left.
-  if (body.userApiKey?.preference !== "always") {
+  if (body.userApiKey?.preference !== 'always') {
     const resp = await checkTokenUsage(PROVISION_HOST, token, teamSlug, deploymentName);
     if (resp.status === 'error') {
       return new Response(JSON.stringify({ error: 'Failed to check for tokens' }), {
@@ -100,9 +100,9 @@ export async function chatAction({ request }: ActionFunctionArgs) {
 
   let userApiKey: string | undefined;
   if (useUserApiKey) {
-    if (body.modelProvider === "Anthropic" || body.modelProvider === "Bedrock") {
+    if (body.modelProvider === 'Anthropic' || body.modelProvider === 'Bedrock') {
       userApiKey = body.userApiKey?.value;
-      body.modelProvider = "Anthropic";
+      body.modelProvider = 'Anthropic';
     } else {
       userApiKey = body.userApiKey?.openai;
     }
