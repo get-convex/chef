@@ -1,5 +1,4 @@
 import * as Select from '@radix-ui/react-select';
-import { useFlags } from 'launchdarkly-react-client-sdk';
 import { useState } from 'react';
 import { classNames } from '~/utils/classNames';
 import type { ModelSelection } from '~/utils/constants';
@@ -14,7 +13,6 @@ export interface ModelSelectorProps {
 }
 
 export function ModelSelector(props: ModelSelectorProps) {
-  const { openAiLaunch202504 } = useFlags();
   const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNode }>> = {
     auto: {
       name: 'Auto',
@@ -25,7 +23,7 @@ export function ModelSelector(props: ModelSelectorProps) {
       icon: svgIcon('/icons/claude.svg', 'Claude 3.5 Sonnet'),
     },
   };
-  if (openAiLaunch202504) {
+  if (true) {
     models['gpt-4.1'] = {
       name: 'GPT-4.1',
       icon: svgIcon('/icons/openai.svg', 'GPT-4.1'),

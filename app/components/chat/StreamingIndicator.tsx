@@ -104,12 +104,18 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.15 }}
                 >
-                  <div className="flex items-center gap-1.5 ">
+                  <div className="flex items-center gap-1.5 w-full">
                     <div>{icon}</div>
                     {message}
+                    <div className="flex-grow" />
                     {streamStatus === 'error' && (
-                      <button onClick={props.resendMessage} className="text-blue-500">
-                        Resend message
+                      <button
+                        type="button"
+                        className="flex items-center gap-1 px-2 py-1.5 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text rounded-md transition-colors"
+                        onClick={props.resendMessage}
+                      >
+                        <div className="i-ph:arrow-clockwise" />
+                        Resend
                       </button>
                     )}
                   </div>

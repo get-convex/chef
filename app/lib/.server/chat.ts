@@ -107,11 +107,13 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       userApiKey = body.userApiKey?.openai;
     }
     if (!userApiKey) {
-      return new Response(JSON.stringify({ error: 'No API key provided' }), {
+      const provider = body.modelProvider === 'OpenAI' ? 'OpenAI' : 'Anthropic';
+      return new Response(JSON.stringify({ error: `Tried to use missing ${provider} API key. Set one in Settings!` }), {
         status: 402,
       });
     }
   }
+  logger.info(`Using model provider: ${body.modelProvider} (user API key: ${useUserApiKey})`);
 
   const recordUsageCb = async (
     lastMessage: Message | undefined,
