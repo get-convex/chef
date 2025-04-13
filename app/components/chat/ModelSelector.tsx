@@ -1,4 +1,5 @@
 import * as Select from '@radix-ui/react-select';
+import { useFlags } from 'launchdarkly-react-client-sdk';
 import { useState } from 'react';
 import { classNames } from '~/utils/classNames';
 import type { ModelSelection } from '~/utils/constants';
@@ -6,20 +7,6 @@ import type { ModelSelection } from '~/utils/constants';
 function svgIcon(url: string, name: string) {
   return <img className="w-4 h-4" height="16" width="16" src={url} alt={name} />;
 }
-const models = {
-  auto: {
-    name: 'Auto',
-    icon: <i className="i-ph:robot h-4 w-4" />,
-  },
-  'claude-3.5-sonnet': {
-    name: 'Claude 3.5 Sonnet',
-    icon: svgIcon('/icons/claude.svg', 'Claude 3.5 Sonnet'),
-  },
-  'gpt-4o-optimus': {
-    name: 'GPT-4.1',
-    icon: svgIcon('/icons/openai.svg', 'GPT-4.1'),
-  },
-} as const;
 
 export interface ModelSelectorProps {
   modelSelection: ModelSelection;
@@ -27,8 +14,28 @@ export interface ModelSelectorProps {
 }
 
 export function ModelSelector(props: ModelSelectorProps) {
+  const { openAiLaunch202504 } = useFlags();
+  const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNode }>> = {
+    auto: {
+      name: 'Auto',
+      icon: <i className="i-ph:robot h-4 w-4" />,
+    },
+    'claude-3.5-sonnet': {
+      name: 'Claude 3.5 Sonnet',
+      icon: svgIcon('/icons/claude.svg', 'Claude 3.5 Sonnet'),
+    },
+  };
+  if (openAiLaunch202504) {
+    models['gpt-4.1'] = {
+      name: 'GPT-4.1',
+      icon: svgIcon('/icons/openai.svg', 'GPT-4.1'),
+    };
+  }
   const [open, setOpen] = useState(false);
   const selectedModel = models[props.modelSelection];
+  if (!selectedModel) {
+    throw new Error(`Model ${props.modelSelection} not found`);
+  }
   return (
     <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
       <Select.Root
