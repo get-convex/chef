@@ -23,7 +23,7 @@ export function ModelSelector(props: ModelSelectorProps) {
       icon: svgIcon('/icons/claude.svg', 'Claude 3.5 Sonnet'),
     },
   };
-  if (true) {
+  if (import.meta.env.VITE_ENABLE_OPENAI) {
     models['gpt-4.1'] = {
       name: 'GPT-4.1',
       icon: svgIcon('/icons/openai.svg', 'GPT-4.1'),
