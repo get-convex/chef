@@ -1,22 +1,7 @@
-import { useStore } from '@nanostores/react';
-import { profileStore } from '~/lib/stores/profile';
-import { themeStore, toggleTheme } from '~/lib/stores/theme';
-import { useConvex, useQuery } from 'convex/react';
-import { api } from '@convex/_generated/api';
-import { useEffect, useState } from 'react';
-import { getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
-import { convexTeamsStore, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
-import { toast } from 'sonner';
-import { useAuth0 } from '@auth0/auth0-react';
-import { TooltipProvider } from '@radix-ui/react-tooltip';
-import WithTooltip from '~/components/ui/Tooltip';
-import { TeamSelector } from '~/components/convex/TeamSelector';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider } from '~/components/chat/ChefAuthWrapper';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
-import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
-import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { ApiKeyCard } from '~/components/settings/ApiKeyCard';
 import { ThemeCard } from '~/components/settings/ThemeCard';
 import { ProfileCard } from '~/components/settings/ProfileCard';
@@ -69,10 +54,3 @@ export function SettingsContent() {
     </div>
   );
 }
-
-
-
-
-
-
-

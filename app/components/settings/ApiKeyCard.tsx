@@ -1,7 +1,7 @@
 import { useConvex } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
 import WithTooltip from '~/components/ui/Tooltip';
@@ -10,7 +10,6 @@ export function ApiKeyCard() {
   const convex = useConvex();
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [showKey, setShowKey] = useState(false);
   const [alwaysUseKey, setAlwaysUseKey] = useState(false);
 
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
@@ -73,87 +72,91 @@ export function ApiKeyCard() {
   return (
     <div className="bg-bolt-elements-background-depth-1 rounded-lg shadow-sm border border-bolt-elements-borderColor">
       <div className="p-6">
-        <h2 className="text-xl font-semibold text-bolt-elements-textPrimary mb-4">API Keys</h2>
+        <h2 className="text-xl font-semibold text-bolt-elements-textPrimary mb-2">API Keys</h2>
 
-        <p className="text-bolt-elements-textSecondary text-sm mb-1">
+        <p className="text-bolt-elements-textSecondary text-sm mb-4">
           Chef uses different model providers to generate code. You can use your own API keys to cook with Chef.
         </p>
         <div className="space-y-4">
           <div>
-            {apiKey === undefined && <ApiKeyLoading />}
-            {apiKey !== undefined && (
-              <div>
-                <label
-                  htmlFor="anthropic-key"
-                  className="block text-sm font-medium text-bolt-elements-textSecondary mb-2"
+            <div>
+              <label
+                htmlFor="anthropic-key"
+                className="block text-lg font-medium text-bolt-elements-textSecondary mb-1"
+              >
+                Anthropic API Key
+              </label>
+              <p className="text-bolt-elements-textSecondary text-sm mb-4">
+                See instructions for generating an Anthropic API key{' '}
+                <a
+                  href="https://docs.anthropic.com/en/api/getting-started#accessing-the-api"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
                 >
-                  Anthropic API Key
-                </label>
-                <p className="text-bolt-elements-textSecondary text-sm mb-4">
-                  See instructions for generating an Anthropic API key{' '}
-                  <a
-                    href="https://docs.anthropic.com/en/api/getting-started#accessing-the-api"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    here
-                  </a>
-                  .
-                </p>
-                <ApiKeyInput
-                  id="anthropic-key"
-                  value={anthropicKey}
-                  onChange={(value) => {
-                    setAnthropicKey(value);
-                    setIsDirty(true);
-                  }}
-                  handleDelete={handleDeleteAnthropicApiKey}
-                />
+                  here
+                </a>
+                .
+              </p>
+              <ApiKeyInput
+                isLoading={apiKey === undefined}
+                id="anthropic-key"
+                value={anthropicKey}
+                onChange={(value) => {
+                  setAnthropicKey(value);
+                  setIsDirty(true);
+                }}
+                handleDelete={handleDeleteAnthropicApiKey}
+              />
 
-                <label htmlFor="openai-key" className="block text-sm font-medium text-bolt-elements-textSecondary mb-2">
-                  OpenAI API Key
-                </label>
-                <p className="text-bolt-elements-textSecondary text-sm mb-4">
-                  See instructions for generating an OpenAI API key{' '}
-                  <a
-                    href="https://platform.openai.com/docs/api-reference/introduction"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    here
-                  </a>
-                  .
-                </p>
-                <ApiKeyInput
-                  id="openai-key"
-                  value={openaiKey}
-                  onChange={(value) => {
-                    setOpenaiKey(value);
-                    setIsDirty(true);
-                  }}
-                  handleDelete={handleDeleteOpenaiApiKey}
-                />
-                <AlwaysUseKeyCheckbox
-                  disabled={anthropicKey === ''}
-                  value={alwaysUseKey}
-                  onChange={(value) => {
-                    setAlwaysUseKey(value);
-                    setIsDirty(true);
-                  }}
-                />
-                <div className="mt-4 flex items-center gap-2">
-                  <button
-                    onClick={handleSaveApiKey}
-                    disabled={isSaving || !isDirty}
-                    className="px-2 py-1.5 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-bolt-elements-button-primary-background rounded-md transition-colors w-fit"
-                  >
-                    {isSaving ? 'Saving...' : 'Save'}
-                  </button>
-                </div>
+              <label
+                htmlFor="openai-key"
+                className="block text-lg font-medium text-bolt-elements-textSecondary mb-1 mt-4"
+              >
+                OpenAI API Key
+              </label>
+              <p className="text-bolt-elements-textSecondary text-sm mb-4">
+                See instructions for generating an OpenAI API key{' '}
+                <a
+                  href="https://platform.openai.com/docs/api-reference/introduction"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  here
+                </a>
+                .
+              </p>
+              <ApiKeyInput
+                isLoading={apiKey === undefined}
+                id="openai-key"
+                value={openaiKey}
+                onChange={(value) => {
+                  setOpenaiKey(value);
+                  setIsDirty(true);
+                }}
+                handleDelete={handleDeleteOpenaiApiKey}
+              />
+
+              <AlwaysUseKeyCheckbox
+                isLoading={apiKey === undefined}
+                disabled={anthropicKey === '' && openaiKey === ''}
+                value={alwaysUseKey}
+                onChange={(value) => {
+                  setAlwaysUseKey(value);
+                  setIsDirty(true);
+                }}
+              />
+              <div className="mt-4 flex items-center gap-2">
+                <button
+                  onClick={handleSaveApiKey}
+                  disabled={apiKey === undefined || isSaving || !isDirty}
+                  className="px-2 py-1.5 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-bolt-elements-button-primary-background rounded-md transition-colors w-fit"
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -161,59 +164,42 @@ export function ApiKeyCard() {
   );
 }
 
-function ApiKeyLoading() {
-  return (
-    <div className="space-y-4">
-      <div className="relative">
-        <div className="w-full h-[42px] animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="w-4 h-4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="h-5 w-32 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="w-4 h-4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />
-      </div>
-      <div className="mt-4">
-        <button
-          disabled
-          className="px-2 py-1.5 bg-bolt-elements-button-primary-background text-bolt-elements-button-primary-text opacity-50 cursor-not-allowed rounded-md transition-colors w-fit"
-        >
-          Save
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function ApiKeyInput(props: {
+  isLoading: boolean;
   id: string;
   value: string;
   onChange: (value: string) => void;
   handleDelete: () => void;
 }) {
   const [showKey, setShowKey] = useState(false);
+  if (props.isLoading) {
+    return <div className="w-full h-[42px] animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />;
+  }
   return (
-    <div className="relative">
-      <input
-        type={showKey ? 'text' : 'password'}
-        id={props.id}
-        value={props.value}
-        onChange={(e) => {
-          props.onChange(e.target.value);
-        }}
-        className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-bolt-elements-textPrimary pr-10"
-        placeholder="sk-..."
-      />
-      <button
-        type="button"
-        onClick={() => setShowKey(!showKey)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary bg-transparent"
-      >
-        <div className={showKey ? 'i-ph:eye-slash-bold h-4 w-4' : 'i-ph:eye-bold h-4 w-4'} />
-      </button>
+    <div className="flex items-center gap-2">
+      <div className="flex-1 relative">
+        <input
+          type={showKey ? 'text' : 'password'}
+          id={props.id}
+          value={props.value}
+          onChange={(e) => {
+            props.onChange(e.target.value);
+          }}
+          className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-bolt-elements-textPrimary pr-10"
+          placeholder="sk-..."
+        />
+        <button
+          type="button"
+          onClick={() => setShowKey(!showKey)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary bg-transparent"
+        >
+          <div className={showKey ? 'i-ph:eye-slash-bold h-4 w-4' : 'i-ph:eye-bold h-4 w-4'} />
+        </button>
+      </div>
       {props.value && (
         <button
           onClick={props.handleDelete}
-          className="px-2 py-1.5 bg-bolt-elements-button-danger-background hover:bg-bolt-elements-button-danger-backgroundHover text-bolt-elements-button-danger-text rounded-md transition-colors w-fit"
+          className="px-2 py-2 bg-bolt-elements-button-danger-background hover:bg-bolt-elements-button-danger-backgroundHover text-bolt-elements-button-danger-text rounded-md transition-colors w-fit"
         >
           Remove key
         </button>
@@ -222,7 +208,21 @@ function ApiKeyInput(props: {
   );
 }
 
-function AlwaysUseKeyCheckbox(props: { disabled: boolean; value: boolean; onChange: (value: boolean) => void }) {
+function AlwaysUseKeyCheckbox(props: {
+  isLoading: boolean;
+  disabled: boolean;
+  value: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  if (props.isLoading) {
+    return (
+      <div className="mt-4 flex items-center gap-2">
+        <div className="w-4 h-4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="h-5 w-32 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="w-4 h-4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />
+      </div>
+    );
+  }
   return (
     <div className="mt-4 flex items-center gap-2">
       <input
