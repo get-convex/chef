@@ -110,10 +110,17 @@ export const Chat = memo(
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     async function checkTokenUsage() {
-      if (apiKey) {
+      const useAnthropic = modelSelection === 'claude-3.5-sonnet' || modelSelection === 'auto';
+      const useOpenai = modelSelection === 'gpt-4.1';
+      if (useAnthropic && apiKey && apiKey.value) {
         setDisableChatMessage(null);
         return;
       }
+      if (useOpenai && apiKey && apiKey.openai) {
+        setDisableChatMessage(null);
+        return;
+      }
+
       const teamSlug = selectedTeamSlugStore.get();
       if (!teamSlug) {
         console.error('No team slug');
