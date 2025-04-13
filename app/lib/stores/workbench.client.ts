@@ -31,8 +31,10 @@ import type { Artifacts, PartId } from './artifacts';
 import { backoffTime, WORK_DIR } from '~/utils/constants';
 import { chatIdStore } from '~/lib/stores/chatId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from './fileUpdateCounter';
-import { generateReadmeContent } from '~/lib/readmeContent';
+import { generateReadmeContent } from '~/lib/download/readmeContent';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
+import { setupMjsContent } from '~/lib/download/setupMjsContent';
+import type { ConvexProject } from './convexProject';
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
@@ -519,7 +521,7 @@ export class WorkbenchStore {
     return artifacts[partId];
   }
 
-  async downloadZip(args: { convexDeploymentName: string | null }) {
+  async downloadZip(args: { convexProject: ConvexProject | null }) {
     const zip = new JSZip();
     const files = this.files.get();
 
@@ -531,6 +533,8 @@ export class WorkbenchStore {
     const uniqueProjectName = `${projectName}_${timestampHash}`;
 
     let hasReadme = false;
+    let hasSetupMjs = false;
+    let hasEnvLocalFile = false;
 
     for (const [filePath, dirent] of Object.entries(files)) {
       if (dirent?.type === 'file' && !dirent.isBinary) {
@@ -553,14 +557,30 @@ export class WorkbenchStore {
           if (relativePath.toLowerCase() === 'readme.md') {
             hasReadme = true;
           }
+          if (relativePath.toLowerCase() === 'setup.mjs') {
+            hasSetupMjs = true;
+          }
+          if (relativePath.toLowerCase() === '.env.local') {
+            hasEnvLocalFile = true;
+          }
         }
       }
     }
 
     // Add a README.md file specific to Chef here, but don't clobber an existing one
-    const readmeContent = generateReadmeContent(description.value ?? 'project', args.convexDeploymentName);
+    const readmeContent = generateReadmeContent(
+      description.value ?? 'project',
+      args.convexProject?.deploymentName ?? null,
+    );
     const readmePath = hasReadme ? `CHEF_README_${timestampHash}.md` : 'README.md';
     zip.file(readmePath, readmeContent);
+    if (!hasSetupMjs) {
+      zip.file('setup.mjs', setupMjsContent);
+    }
+    if (!hasEnvLocalFile && args.convexProject) {
+      const convexDeploymentEnvVar = `dev:${args.convexProject.deploymentName} # team: ${args.convexProject.teamSlug} project: ${args.convexProject.projectSlug}`;
+      zip.file('.env.local', `CONVEX_DEPLOYMENT=${convexDeploymentEnvVar}`);
+    }
     // Generate the zip file and save it
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `${uniqueProjectName}.zip`);
