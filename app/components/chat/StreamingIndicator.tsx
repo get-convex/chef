@@ -3,6 +3,7 @@ import type { ToolStatus } from '~/lib/common/types';
 import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { chatStore } from '~/lib/stores/chatId';
+import { useEffect, useState } from 'react';
 
 interface StreamingIndicatorProps {
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
@@ -25,14 +26,49 @@ export const STATUS_MESSAGES = {
   generated: 'Response Generated',
 } as const;
 
+const COOKING_SPLINES_MESSAGES = [
+  "Simmering... ",
+  "Sautéing...",
+  "Baking...",
+  "Grilling...",
+  "Whisking...",
+  "Practicing mise-en-place...",
+]
+const COOKING_SPLINES_PROBABILITY = 0.4;
+const COOKING_SPLINES_DURATION = 2000;
+
 export default function StreamingIndicator(props: StreamingIndicatorProps) {
   const { aborted } = useStore(chatStore);
+
   let streamStatus = props.streamStatus;
   const anyToolRunning =
     props.toolStatus && Object.values(props.toolStatus).some((status) => status === 'running' || status === 'pending');
   if (anyToolRunning) {
     streamStatus = 'streaming';
   }
+
+  const [cookingMessage, setCookingMessage] = useState<string | null>(null);
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (streamStatus === "submitted" || streamStatus === "streaming") {
+      timer = setInterval(() => {
+        let newMessage = null;
+        if (Math.random() < COOKING_SPLINES_PROBABILITY) {
+          const randomIndex = Math.floor(Math.random() * COOKING_SPLINES_MESSAGES.length);
+          newMessage = COOKING_SPLINES_MESSAGES[randomIndex];
+        }
+        setCookingMessage(newMessage);
+      }, COOKING_SPLINES_DURATION);
+    } else {
+      setCookingMessage(null);
+    }
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [streamStatus]);
+
   if (streamStatus === 'ready' && props.numMessages === 0) {
     return null;
   }
@@ -48,7 +84,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
       case 'submitted':
       case 'streaming':
         icon = <LoadingIcon />;
-        message = STATUS_MESSAGES.cooking;
+        message = cookingMessage || STATUS_MESSAGES.cooking;
         break;
       case 'error':
         icon = <WarningIcon />;
