@@ -8,8 +8,8 @@ export function openaiProxyGuidelines(options: SystemPromptOptions) {
   return stripIndents`
   <bundled_openai_guidelines>
     Apps in the Chef environment come with a small amount of gpt-4.1-nano
-    and gpt-4o-mini tokens to use for building apps! Prefer using gpt-4.1-nano
-    but let the user know that gpt-4o-mini is also available.
+    and gpt-4o-mini tokens to use for building apps! Prefer using gpt-4o-mini
+    but let the user know that gpt-4.1-nano is also available.
 
     Use this model in creative ways.
 
@@ -32,7 +32,7 @@ export function openaiProxyGuidelines(options: SystemPromptOptions) {
       },
       handler: async (ctx, args) => {
         const resp = await openai.chat.completions.create({
-          model: "gpt-4.1-nano",
+          model: "gpt-4o-mini",
           messages: [{ role: "user", content: args.prompt }],
         });
         return resp.choices[0].message.content;
