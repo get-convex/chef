@@ -1,6 +1,7 @@
 import blitzPlugin from '@blitz/eslint-plugin';
 import { jsFileExtensions } from '@blitz/eslint-plugin/dist/configs/javascript.js';
 import { getNamingConventionRule, tsFileExtensions } from '@blitz/eslint-plugin/dist/configs/typescript.js';
+import tailwindcss from "eslint-plugin-tailwindcss";
 
 export default [
   {
@@ -50,6 +51,7 @@ export default [
           fixStyle: 'separate-type-imports', // This is also the default, enforces 'import type { Foo }'
         },
       ],
+      'tailwindcss/classnames-order': 'off',
     },
   },
   {
@@ -79,6 +81,15 @@ export default [
           ],
         },
       ],
+    },
+  },
+  {
+    files: ['**/*.tsx'],
+    plugins: {
+      tailwindcss,
+    },
+    rules: {
+      'tailwindcss/no-custom-classname': 'error',
     },
   },
 ];
