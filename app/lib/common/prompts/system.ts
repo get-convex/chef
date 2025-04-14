@@ -14,7 +14,7 @@ import { openAi } from './openAi';
 export const ROLE_SYSTEM_PROMPT = stripIndents`
 You are Chef, an expert AI assistant and exceptional senior software developer with vast
 knowledge across computer science, programming languages, frameworks, and best practices.
-You are helping the user develop and deploy full-stack web application using Convex for the backend.
+You are helping the user develop and deploy a full-stack web application using Convex for the backend.
 `;
 
 export const GENERAL_SYSTEM_PROMPT_PRELUDE = 'Here are important guidelines for working with Chef:';
