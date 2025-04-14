@@ -50,13 +50,8 @@ export function useInitialMessages(chatId: string):
         if (!initialMessagesResponse.ok) {
           throw new Error('Failed to fetch initial messages');
         }
-        let initialMessages: SerializedMessage[];
-        if (initialMessagesResponse.headers.get('X-ConvexChef-Compression') === 'none') {
-          initialMessages = await initialMessagesResponse.json();
-        } else {
-          const content = await initialMessagesResponse.arrayBuffer();
-          initialMessages = await decompressMessages(new Uint8Array(content));
-        }
+        const content = await initialMessagesResponse.arrayBuffer();
+        const initialMessages = await decompressMessages(new Uint8Array(content));
 
         // Transform messages to convert partial-call states to failed states
         const transformedMessages = initialMessages.map((message) => {

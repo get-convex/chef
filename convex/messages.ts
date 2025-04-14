@@ -189,6 +189,19 @@ export const getInitialMessages = mutation({
     }),
   ),
   handler: async (ctx, args) => {
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.id, sessionId: args.sessionId });
+    if (!chat) {
+      return null;
+    }
+    const storageInfo = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .unique();
+    if (storageInfo !== null) {
+      // The data is stored in storage, but the client is on an old version, so crash instead of returning
+      // stale data.
+      throw new ConvexError({ code: 'UpdateRequired', message: 'Refresh the page to get a newer client version.' });
+    }
     return await _getInitialMessages(ctx, args);
   },
 });
@@ -239,7 +252,6 @@ const storageInfo = v.object({
   storageId: v.union(v.id('_storage'), v.null()),
   lastMessageRank: v.number(),
   partIndex: v.number(),
-  compression: v.union(v.literal('none'), v.literal('lz4')),
 });
 
 type StorageInfo = Infer<typeof storageInfo>;
@@ -267,7 +279,6 @@ export const getInitialMessagesStorageInfo = internalQuery({
       storageId: doc.storageId,
       lastMessageRank: doc.lastMessageRank,
       partIndex: doc.partIndex,
-      compression: doc.compression,
     };
   },
 });
@@ -307,7 +318,6 @@ export const updateStorageState = internalMutation({
       storageId,
       lastMessageRank,
       partIndex,
-      compression: 'lz4',
     });
     if (doc.storageId !== null) {
       await ctx.scheduler.runAfter(0, internal.messages.cleanupStaleStoredFiles, {
@@ -352,7 +362,6 @@ export const handleStorageStateMigration = internalMutation({
       storageId,
       lastMessageRank,
       partIndex,
-      compression: 'none',
     });
     await ctx.scheduler.runAfter(0, internal.messages.cleanupChatMessages, {
       chatId: chat._id,
@@ -487,7 +496,10 @@ export const cleanupChatMessages = internalMutation({
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
       .collect();
     for (const message of messages) {
-      await ctx.db.delete(message._id);
+      // Soft delete for now, and we'll follow up with hard delete later.
+      await ctx.db.patch(message._id, {
+        deletedAt: Date.now(),
+      });
     }
   },
 });
@@ -684,7 +696,6 @@ export async function createNewChat(
     storageId: null,
     lastMessageRank: -1,
     partIndex: -1,
-    compression: 'lz4',
   });
 
   await startProvisionConvexProjectHelper(ctx, {

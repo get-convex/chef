@@ -78,11 +78,11 @@ export default defineSchema({
     content: v.any() as VAny<SerializedMessage>,
     rank: v.number(),
     chatId: v.id('chats'),
+    deletedAt: v.optional(v.number()),
   }).index('byChatId', ['chatId', 'rank']),
   chatMessagesStorageState: defineTable({
     chatId: v.id('chats'),
     storageId: v.union(v.id('_storage'), v.null()),
-    compression: v.union(v.literal('none'), v.literal('lz4')),
     lastMessageRank: v.number(),
     partIndex: v.number(),
   }).index('byChatId', ['chatId']),

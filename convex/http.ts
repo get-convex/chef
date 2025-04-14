@@ -4,12 +4,11 @@ import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import { ConvexError } from 'convex/values';
 import { openaiProxy } from './openaiProxy';
-import { corsRouter, DEFAULT_EXPOSED_HEADERS } from 'convex-helpers/server/cors';
+import { corsRouter } from 'convex-helpers/server/cors';
+import { Lz4 } from './lz4';
 
 const http = httpRouter();
-const httpWithCors = corsRouter(http, {
-  exposedHeaders: [...DEFAULT_EXPOSED_HEADERS, 'X-ConvexChef-Compression'],
-});
+const httpWithCors = corsRouter(http, {});
 
 // This is particularly useful with CORS, where an unhandled error won't have CORS
 // headers applied to it.
@@ -94,9 +93,6 @@ httpWithCors.route({
       const blob = await ctx.storage.get(storageInfo.storageId);
       return new Response(blob, {
         status: 200,
-        headers: {
-          'X-ConvexChef-Compression': storageInfo.compression,
-        },
       });
     } else {
       const messages = await ctx.runQuery(internal.messages.getInitialMessagesInternal, {
@@ -109,8 +105,10 @@ httpWithCors.route({
           status: 204,
         });
       }
-      const text = JSON.stringify(messages);
-      const storageId = await ctx.storage.store(new Blob([text]));
+      const lz4 = await Lz4.initialize();
+      const compressed = lz4.compress(new TextEncoder().encode(JSON.stringify(messages)));
+      const blob = new Blob([compressed]);
+      const storageId = await ctx.storage.store(blob);
       await ctx.runMutation(internal.messages.handleStorageStateMigration, {
         sessionId,
         chatId,
@@ -118,12 +116,9 @@ httpWithCors.route({
         lastMessageRank: messages.length - 1,
         partIndex: (messages.at(-1)?.parts?.length ?? 0) - 1,
       });
-      const blob = await ctx.storage.get(storageId);
+
       return new Response(blob, {
         status: 200,
-        headers: {
-          'X-ConvexChef-Compression': 'none',
-        },
       });
     }
   }),
