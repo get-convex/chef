@@ -366,7 +366,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           />
         </div>
         {!chatStarted && (
-          <div className="fixed inset-x-0 bottom-2 flex flex-col sm:flex-row justify-between w-full px-6">
+          <div className="fixed inset-x-0 bottom-4 flex flex-col sm:flex-row justify-between w-full px-4">
             <div className="text-sm font-display font-medium text-bolt-elements-textTertiary flex items-end">
               <p>
                 <a href="https://www.convex.dev/ai-platforms">
@@ -374,7 +374,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 </a>
               </p>
             </div>
-            <div className="text-lg font-display font-medium text-bolt-elements-textTertiary flex gap-3">
+            <div className="text-lg font-display font-medium text-bolt-elements-textTertiary flex gap-3 items-end">
               <p className="flex items-center">
                 Made&nbsp;by{' '}
                 <a
