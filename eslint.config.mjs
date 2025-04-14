@@ -83,6 +83,7 @@ export default [
       ],
     },
   },
+  ...tailwindcss.configs["flat/recommended"],
   {
     files: ['**/*.tsx'],
     plugins: {
