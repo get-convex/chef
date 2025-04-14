@@ -5,7 +5,6 @@ import type { Id } from './_generated/dataModel';
 import { ConvexError } from 'convex/values';
 import { openaiProxy } from './openaiProxy';
 import { corsRouter } from 'convex-helpers/server/cors';
-import { Lz4 } from './lz4';
 import { compressMessages } from './compressMessages';
 
 const http = httpRouter();

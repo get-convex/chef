@@ -39,7 +39,7 @@ test('sharing a chat works if there is a snapshot + message', async () => {
 
 test('getShareDescription works', async () => {
   const t = setupTest();
-  const { sessionId, chatId, snapshotId } = await initializeChat(t);
+  const { sessionId, chatId } = await initializeChat(t);
   await t.mutation(api.messages.setUrlId, {
     sessionId,
     chatId,
