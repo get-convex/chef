@@ -7,7 +7,7 @@ import { api } from '@convex/_generated/api';
 import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
 import { Share2Icon, ClipboardIcon } from '@radix-ui/react-icons';
-import { Spinner } from '../ui/Spinner';
+import { Spinner } from '~/components/ui/Spinner';
 
 const Button = forwardRef<
   HTMLButtonElement,

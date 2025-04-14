@@ -7,7 +7,7 @@ import { useStore } from '@nanostores/react';
 import { profileStore } from '~/lib/stores/profile';
 import { forwardRef } from 'react';
 import type { ForwardedRef } from 'react';
-import { SpinnerThreeDots } from '../ui/SpinnerThreeDots';
+import { SpinnerThreeDots } from '~/components/ui/SpinnerThreeDots';
 import { PersonIcon } from '@radix-ui/react-icons';
 
 interface MessagesProps {

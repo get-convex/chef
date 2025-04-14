@@ -22,7 +22,7 @@ import { FileTree } from './FileTree';
 import { DEFAULT_TERMINAL_SIZE, TerminalTabs } from './terminal/TerminalTabs';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import type { TerminalInitializationOptions } from '~/types/terminal';
-import { FileIcon, CheckIcon, ResetIcon } from '@radix-ui/react-icons';
+import { CheckIcon, ResetIcon } from '@radix-ui/react-icons';
 
 interface EditorPanelProps {
   files?: FileMap;
