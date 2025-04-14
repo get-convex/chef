@@ -79,6 +79,8 @@ Additionally make sure `CHEF_OAUTH_APP_NAME` is set on your Convex deployment
 
 - Start local big-brain/usher/dashboard the traditional way
 - Switch .env.local env vars to the dev variants (from 1Password)
+- Set VITE_CONVEX_URL to 'placeholder' and remove CONVEX_URL
+- just convex-bb dev
 
 # Working on the template
 
