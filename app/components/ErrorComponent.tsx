@@ -17,7 +17,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, resetErrorBou
 
       {isError && error.stack && (
         <div className="mt-4">
-          <h3 className="text-md font-semibold text-red-800">Stack trace:</h3>
+          <h3 className="text-lg font-semibold text-red-800">Stack trace:</h3>
           <pre className="mt-2 p-3 bg-gray-100 rounded overflow-auto text-xs text-gray-800 font-mono">
             {error.stack}
           </pre>

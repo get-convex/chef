@@ -62,7 +62,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
                       )}
                     </div>
                   )}
-                  <div className="grid grid-col-1 w-full text-sm">
+                  <div className="text-sm">
                     {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
                   </div>
                 </div>

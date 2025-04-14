@@ -169,7 +169,7 @@ export const Menu = memo(() => {
           <div className="p-4 space-y-3">
             <a
               href="/"
-              className="inline-flex gap-2 items-center bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text hover:text-bolt-elements-button-primary-textHover rounded-lg px-4 py-2 transition-colors"
+              className="inline-flex gap-2 items-center bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text rounded-lg px-4 py-2 transition-colors"
             >
               <span className="text-sm font-medium">Start new project</span>
             </a>

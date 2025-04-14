@@ -89,7 +89,9 @@ export default [
       tailwindcss,
     },
     rules: {
-      'tailwindcss/no-custom-classname': 'error',
+      'tailwindcss/no-custom-classname': ['error', {
+        whitelist: ['sentry-mask']
+      }],
     },
   },
 ];

@@ -61,7 +61,7 @@ export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => 
     return null;
   }
   return (
-    <div className="artifact border border-bolt-elements-borderColor flex flex-col overflow-hidden rounded-lg w-full transition-border duration-150">
+    <div className="artifact border border-bolt-elements-borderColor flex flex-col overflow-hidden rounded-lg w-full duration-150">
       <div className="flex">
         <button
           className="flex items-stretch bg-bolt-elements-artifacts-background hover:bg-bolt-elements-artifacts-backgroundHover w-full overflow-hidden"
@@ -499,11 +499,7 @@ function ViewTool({ invocation }: { invocation: ConvexToolInvocation }) {
           const trimmed = item.replace('(dir)', '').replace('(file)', '').replace('- ', '').trim();
           return (
             <div key={i} className="flex items-center gap-2">
-              {isDir ? (
-                <FolderIcon className="size-4 text-bolt-elements-icon-folder" />
-              ) : (
-                <FileIcon className="text-bolt-elements-icon-file" />
-              )}
+              {isDir ? <FolderIcon className="size-4" /> : <FileIcon />}
               {trimmed}
             </div>
           );

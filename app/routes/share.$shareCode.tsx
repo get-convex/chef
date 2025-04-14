@@ -96,7 +96,7 @@ function ShareProjectContent() {
           <h1 className="text-2xl font-bold text-center">Sign in to Chef</h1>
           <p className="text-sm text-center text-gray-500">Please sign in to Chef to clone this project.</p>
           <button
-            className="mx-auto px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
+            className="mx-auto px-4 py-2 rounded-lg border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary-text disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
             onClick={signIn}
           >
             Sign in
@@ -115,7 +115,7 @@ function ShareProjectContent() {
           <TeamSelector selectedTeamSlug={selectedTeamSlug} setSelectedTeamSlug={setSelectedTeamSlug} />
         )}
         <button
-          className="mx-auto px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
+          className="mx-auto px-4 py-2 rounded-lg border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary-text disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
           onClick={handleCloneChat}
         >
           Clone

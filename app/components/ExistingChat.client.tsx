@@ -101,9 +101,7 @@ function ExistingChatWrapper({ chatId }: { chatId: string }) {
 function NotFound() {
   return (
     <div className="flex h-full justify-center items-center text-center flex-col p-8">
-      <h1 className="text-4xl font-bold mb-4 font-display font-600 tracking-tight text-bolt-elements-textPrimary">
-        Not found
-      </h1>
+      <h1 className="text-4xl font-bold mb-4 font-display tracking-tight text-bolt-elements-textPrimary">Not found</h1>
       <p className="text-bolt-elements-textSecondary mb-4 text-balance">
         The Chef project you’re looking for can’t be found. Maybe it was deleted or created with another account?
       </p>
