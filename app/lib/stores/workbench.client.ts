@@ -35,6 +35,7 @@ import { generateReadmeContent } from '~/lib/download/readmeContent';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { setupMjsContent } from '~/lib/download/setupMjsContent';
 import type { ConvexProject } from './convexProject';
+import { cursorRulesContent } from '~/lib/download/cursorRulesContent';
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
@@ -535,6 +536,7 @@ export class WorkbenchStore {
     let hasReadme = false;
     let hasSetupMjs = false;
     let hasEnvLocalFile = false;
+    let hasCursorRules = false;
 
     for (const [filePath, dirent] of Object.entries(files)) {
       if (dirent?.type === 'file' && !dirent.isBinary) {
@@ -551,6 +553,10 @@ export class WorkbenchStore {
             currentFolder = currentFolder.folder(pathSegments[i])!;
           }
           currentFolder.file(pathSegments[pathSegments.length - 1], dirent.content);
+
+          if (relativePath === '.cursor/rules/convex_rules.mdc') {
+            hasCursorRules = true;
+          }
         } else {
           // if there's only one segment, it's a file in the root
           zip.file(relativePath, dirent.content);
@@ -580,6 +586,9 @@ export class WorkbenchStore {
     if (!hasEnvLocalFile && args.convexProject) {
       const convexDeploymentEnvVar = `dev:${args.convexProject.deploymentName} # team: ${args.convexProject.teamSlug} project: ${args.convexProject.projectSlug}`;
       zip.file('.env.local', `CONVEX_DEPLOYMENT=${convexDeploymentEnvVar}`);
+    }
+    if (!hasCursorRules) {
+      zip.file('.cursor/rules/convex_rules.mdc', cursorRulesContent);
     }
     // Generate the zip file and save it
     const content = await zip.generateAsync({ type: 'blob' });

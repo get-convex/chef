@@ -131,7 +131,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 <h1 className="mb-4 animate-fadeIn font-display text-4xl font-black tracking-tight text-bolt-elements-textPrimary lg:text-6xl">
                   Now you&rsquo;re cooking
                 </h1>
-                <p className="mb-8 animate-fadeIn text-balance font-display text-xl font-medium text-bolt-elements-textSecondary [animation-delay:200ms] lg:text-2xl">
+                <p className="text-xl lg:text-2xl text-balance mb-8 text-bolt-elements-textSecondary animate-fadeIn [animation-delay:200ms] [animation-fill-mode:backwards] font-medium font-display">
                   Generate and launch realtime full‑stack apps you never thought possible
                 </p>
               </div>
