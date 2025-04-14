@@ -34,7 +34,7 @@ import { STATUS_MESSAGES } from './StreamingIndicator';
 
 const logger = createScopedLogger('Chat');
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 4;
 
 const CHEF_TOO_BUSY_ERROR =
   'Chef is too busy cooking right now. Please try again in a moment or enter your own API key at chef.convex.dev/settings.';
