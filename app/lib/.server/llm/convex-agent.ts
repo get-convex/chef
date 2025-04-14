@@ -68,9 +68,7 @@ export async function convexAgent(
       const result = await fetch(input, init);
       if (result.status === 401) {
         const text = await result.text();
-        throw new Error(
-          JSON.stringify({ error: 'Invalid or missing API key', details: text, userProvidedApiKey: !!userApiKey }),
-        );
+        throw new Error(JSON.stringify({ error: 'Invalid or missing API key', details: text }));
       }
       if (result.status === 413) {
         const text = await result.text();
@@ -78,7 +76,6 @@ export async function convexAgent(
           JSON.stringify({
             error: 'Request exceeds the maximum allowed number of bytes.',
             details: text,
-            userProvidedApiKey: !!userApiKey,
           }),
         );
       }
@@ -88,7 +85,6 @@ export async function convexAgent(
           JSON.stringify({
             error: `${provider} is temporarily overloaded`,
             details: text,
-            userProvidedApiKey: !!userApiKey,
           }),
         );
       }
@@ -98,14 +94,16 @@ export async function convexAgent(
           JSON.stringify({
             error: `${provider}'s API is temporarily overloaded`,
             details: text,
-            userProvidedApiKey: !!userApiKey,
           }),
         );
       }
       if (!result.ok) {
         const text = await result.text();
         throw new Error(
-          JSON.stringify({ error: `${provider} returned an error`, details: text, userProvidedApiKey: !!userApiKey }),
+          JSON.stringify({
+            error: `${provider} returned an error (${result.status} ${result.statusText}) when using your provided API key: ${text}`,
+            details: text,
+          }),
         );
       }
       return result;

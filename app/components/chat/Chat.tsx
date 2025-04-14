@@ -233,10 +233,6 @@ export const Chat = memo(
           const backoff = error?.message.includes(STATUS_MESSAGES.error) ? exponentialBackoff(newRetries) : 0;
           return { ...prevRetries, numFailures: newRetries, nextRetry: Date.now() + backoff };
         });
-        const errorMessage = JSON.parse(e.message);
-        if (errorMessage.userProvidedApiKey && errorMessage.userProvidedApiKey === true) {
-          toast.error(errorMessage.error);
-        }
 
         await checkTokenUsage();
       },
