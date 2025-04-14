@@ -151,7 +151,7 @@ const ActionList = memo(({ actions }: ActionListProps) => {
           const { status, type } = action;
           if (type !== 'file') {
             captureException(
-              `Action is not a file: ${action.type} toolName: ${action.toolName} content: ${action.content.slice(0, 1000)}`,
+              `Action is not a file: ${type} status: ${status} toolName: ${action?.toolName} content: ${action?.content?.slice(0, 1000)}`,
             );
             return null;
           }
