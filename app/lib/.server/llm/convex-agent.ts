@@ -1,6 +1,8 @@
 import {
   convertToCoreMessages,
+  createDataStream,
   streamText,
+  type DataStreamWriter,
   type LanguageModelUsage,
   type LanguageModelV1,
   type Message,
@@ -25,6 +27,7 @@ import { awsCredentialsProvider } from '@vercel/functions/oidc';
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch as undiciFetch } from 'undici';
 import { logger } from '~/utils/logger';
+import { encodeUsageAnnotation } from '~/lib/.server/usage';
 type Fetch = typeof fetch;
 
 type Messages = Message[];
@@ -46,7 +49,10 @@ export async function convexAgent(
   tracer: Tracer | null,
   modelProvider: ModelProvider,
   userApiKey: string | undefined,
-  recordUsageCb: (usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) => Promise<void>,
+  recordUsageCb: (
+    lastMessage: Message | undefined,
+    finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
+  ) => Promise<void>,
 ) {
   console.debug('Starting agent with model provider', modelProvider);
   if (userApiKey) {
@@ -59,8 +65,9 @@ export async function convexAgent(
   const fetch = undiciFetch as unknown as Fetch;
   switch (modelProvider) {
     case 'OpenAI': {
-      model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4o-2024-11-20';
+      model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4.1';
       const openai = createOpenAI({
+        apiKey: userApiKey || getEnv(env, 'OPENAI_API_KEY'),
         fetch,
       });
       provider = {
@@ -95,7 +102,7 @@ export async function convexAgent(
         return async (input: RequestInfo | URL, init?: RequestInit) => {
           const enrichedOptions = anthropicInjectCacheControl(init);
 
-          const throwIfBad = async (response: Response) => {
+          const throwIfBad = async (response: Response, isLowQos: boolean) => {
             if (response.ok) {
               return response;
             }
@@ -107,32 +114,39 @@ export async function convexAgent(
                 text,
               },
             });
-            logger.error('Anthropic returned an error:', text);
-            throw new Error(JSON.stringify({ error: 'The model hit an error. Try sending your message again?' }));
+            logger.error(
+              `Anthropic${isLowQos ? ' (low QoS)' : ''} returned an error (${response.status} ${response.statusText}): ${text}`,
+            );
+            throw new Error(JSON.stringify({ error: 'The model hit an error. Try sending your message again.' }));
           };
+
           const response = await fetch(input, enrichedOptions);
-          if (response.status == 429) {
-            const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
-            if (!lowQosKey) {
-              captureException('Anthropic low qos api key not set', { level: 'error' });
-              console.error('Anthropic low qos api key not set');
-              return throwIfBad(response);
-            }
-            captureException('Rate limited by Anthropic, switching to low QoS API key', {
-              level: 'warning',
-              extra: {
-                response,
-              },
-            });
-            if (enrichedOptions && enrichedOptions.headers) {
-              const headers = new Headers(enrichedOptions.headers);
-              headers.set('x-api-key', lowQosKey);
-              enrichedOptions.headers = headers;
-            }
-            return throwIfBad(await fetch(input, enrichedOptions));
+
+          if (response.status !== 429 && response.status !== 529) {
+            return throwIfBad(response, false);
           }
 
-          return throwIfBad(response);
+          const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
+          if (!lowQosKey) {
+            captureException('Anthropic low qos api key not set', { level: 'error' });
+            console.error('Anthropic low qos api key not set');
+            return throwIfBad(response, false);
+          }
+
+          logger.error(`Falling back to low QoS API key...`);
+          captureException('Rate limited by Anthropic, switching to low QoS API key', {
+            level: 'warning',
+            extra: {
+              response,
+            },
+          });
+          if (enrichedOptions && enrichedOptions.headers) {
+            const headers = new Headers(enrichedOptions.headers);
+            headers.set('x-api-key', lowQosKey);
+            enrichedOptions.headers = headers;
+          }
+          const lowQosResponse = await fetch(input, enrichedOptions);
+          return throwIfBad(lowQosResponse, true);
         };
       };
       const userKeyApiFetch = () => {
@@ -182,40 +196,47 @@ export async function convexAgent(
     tools.view = viewTool;
     tools.edit = editTool;
   }
-  const result = streamText({
-    model: provider.model,
-    maxTokens: provider.maxTokens,
-    messages: [
-      {
-        role: 'system',
-        content: ROLE_SYSTEM_PROMPT,
-      },
-      {
-        role: 'system',
-        content: generalSystemPrompt(opts),
-      },
-      ...cleanupAssistantMessages(messages),
-    ],
-    tools,
-    onFinish: (result) => onFinishHandler(result, tracer, chatId, recordUsageCb),
-    onError({ error }) {
-      console.error(error);
-    },
 
-    experimental_telemetry: {
-      isEnabled: true,
-      metadata: {
-        firstUserMessage,
-        chatId,
-        provider: modelProvider,
-      },
+  const dataStream = createDataStream({
+    execute(dataStream) {
+      const result = streamText({
+        model: provider.model,
+        maxTokens: provider.maxTokens,
+        messages: [
+          {
+            role: 'system',
+            content: ROLE_SYSTEM_PROMPT,
+          },
+          {
+            role: 'system',
+            content: generalSystemPrompt(opts),
+          },
+          ...cleanupAssistantMessages(messages),
+        ],
+        tools,
+        onFinish: (result) => {
+          onFinishHandler(dataStream, messages, result, tracer, chatId, recordUsageCb);
+        },
+        onError({ error }) {
+          console.error(error);
+        },
+
+        experimental_telemetry: {
+          isEnabled: true,
+          metadata: {
+            firstUserMessage,
+            chatId,
+            provider: modelProvider,
+          },
+        },
+      });
+      result.mergeIntoDataStream(dataStream);
     },
-  });
-  return result.toDataStream({
-    getErrorMessage: (error: any) => {
+    onError(error: any) {
       return error.message;
     },
   });
+  return dataStream;
 }
 
 // sujayakar, 2025-03-25: This is mega-hax, but I can't figure out
@@ -284,12 +305,22 @@ function cleanupAssistantMessages(messages: Messages) {
 }
 
 async function onFinishHandler(
+  dataStream: DataStreamWriter,
+  messages: Messages,
   result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
   tracer: Tracer | null,
   chatId: string,
-  recordUsageCb: (usage: LanguageModelUsage, providerMetadata: ProviderMetadata | undefined) => Promise<void>,
+  recordUsageCb: (
+    lastMessage: Message | undefined,
+    finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
+  ) => Promise<void>,
 ) {
-  const { usage, providerMetadata } = result;
+  const { providerMetadata } = result;
+  const usage = {
+    completionTokens: normalizeUsage(result.usage.completionTokens),
+    promptTokens: normalizeUsage(result.usage.promptTokens),
+    totalTokens: normalizeUsage(result.usage.totalTokens),
+  };
   console.log('Finished streaming', {
     finishReason: result.finishReason,
     usage,
@@ -299,9 +330,9 @@ async function onFinishHandler(
     const span = tracer.startSpan('on-finish-handler');
     span.setAttribute('chatId', chatId);
     span.setAttribute('finishReason', result.finishReason);
-    span.setAttribute('usage.completionTokens', usage?.completionTokens || 0);
-    span.setAttribute('usage.promptTokens', usage?.promptTokens || 0);
-    span.setAttribute('usage.totalTokens', usage?.totalTokens || 0);
+    span.setAttribute('usage.completionTokens', usage.completionTokens);
+    span.setAttribute('usage.promptTokens', usage.promptTokens);
+    span.setAttribute('usage.totalTokens', usage.totalTokens);
     if (result.providerMetadata) {
       const anthropic: any = result.providerMetadata.anthropic;
       if (anthropic) {
@@ -312,13 +343,33 @@ async function onFinishHandler(
     span.end();
   }
 
-  // Record usage once the dataStream is closed.
-  await recordUsageCb(usage, providerMetadata);
-
+  // Stash this part's usage as an annotation if we're not done yet.
+  if (result.finishReason !== 'stop') {
+    let toolCallId: string | undefined;
+    if (result.finishReason === 'tool-calls') {
+      if (result.toolCalls.length === 1) {
+        toolCallId = result.toolCalls[0].toolCallId;
+      } else {
+        logger.warn('Stopped with not exactly one tool call', {
+          toolCalls: result.toolCalls,
+        });
+      }
+    }
+    const annotation = encodeUsageAnnotation(toolCallId, usage, providerMetadata);
+    dataStream.writeMessageAnnotation({ type: 'usage', usage: annotation });
+  }
+  // Otherwise, record usage once we've generated the final part.
+  else {
+    await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata });
+  }
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 // TODO this was cool, do something to type our environment variables
 export function getEnv(env: Record<string, string | undefined>, name: string): string | undefined {
   return env[name] || globalThis.process.env[name];
+}
+
+function normalizeUsage(usage: number) {
+  return Number.isNaN(usage) ? 0 : usage;
 }

@@ -24,6 +24,8 @@ import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTea
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Spinner } from '~/components/ui/Spinner';
+import { ModelSelector } from './ModelSelector';
+import type { ModelSelection } from '~/utils/constants';
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -48,7 +50,7 @@ interface BaseChatProps {
   // Chat user interactions
   handleInputChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleStop: () => void;
-  sendMessage: (event: React.UIEvent, messageInput?: string) => Promise<void>;
+  sendMessage: (messageInput?: string) => Promise<void>;
   sendMessageInProgress: boolean;
 
   // Current chat history props
@@ -58,6 +60,10 @@ interface BaseChatProps {
   messages: Message[];
   terminalInitializationOptions: TerminalInitializationOptions | undefined;
   disableChatMessage: string | null;
+
+  // Model selection props
+  modelSelection: ModelSelection;
+  setModelSelection: (modelSelection: ModelSelection) => void;
 
   // Alert related props
   actionAlert: ActionAlert | undefined;
@@ -89,6 +95,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       toolStatus,
       terminalInitializationOptions,
       disableChatMessage,
+      modelSelection,
+      setModelSelection,
     },
     ref,
   ) => {
@@ -97,9 +105,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
 
-    const handleSendMessage = (event: React.UIEvent, messageInput?: string) => {
+    const handleSendMessage = (messageInput?: string) => {
       if (sendMessage) {
-        sendMessage(event, messageInput).then(() => {
+        sendMessage(messageInput).then(() => {
           handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
         });
       }
@@ -153,7 +161,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       alert={actionAlert}
                       clearAlert={() => clearAlert?.()}
                       postMessage={(message) => {
-                        handleSendMessage?.({} as any, message);
+                        handleSendMessage?.(message);
                         clearAlert?.();
                       }}
                     />
@@ -165,6 +173,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     numMessages={messages?.length ?? 0}
                     toolStatus={toolStatus}
                     currentError={currentError}
+                    resendMessage={() => {
+                      const lastUserMessage = messages.toReversed().find((message) => message.role === 'user');
+                      if (lastUserMessage) {
+                        handleSendMessage?.(lastUserMessage.content);
+                      }
+                    }}
                   />
                 }
                 <div className="bg-bolt-elements-background-depth-2 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt">
@@ -240,7 +254,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                             return;
                           }
 
-                          handleSendMessage?.(event);
+                          handleSendMessage();
                         }
                       }}
                       value={input}
@@ -272,13 +286,13 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                               sendMessageInProgress ||
                               maintenanceMode
                             }
-                            onClick={(event) => {
+                            onClick={() => {
                               if (isStreaming) {
                                 handleStop?.();
                                 return;
                               }
                               if (input.length > 0 || uploadedFiles.length > 0) {
-                                handleSendMessage?.(event);
+                                handleSendMessage?.();
                               }
                             }}
                           />
@@ -300,6 +314,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       )}
                     </Tooltip.Root>
                     <div className="flex justify-end gap-4 items-center text-sm p-4 pt-2">
+                      <div className="text-xs text-bolt-elements-textTertiary">
+                        <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
+                      </div>
+                      <div className="flex-grow" />
                       {input.length > 3 ? (
                         <div className="text-xs text-bolt-elements-textTertiary">
                           <KeyboardShortcut

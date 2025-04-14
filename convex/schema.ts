@@ -4,7 +4,9 @@ import type { SerializedMessage } from './messages';
 
 export const apiKeyValidator = v.object({
   preference: v.union(v.literal('always'), v.literal('quotaExhausted')),
-  value: v.string(),
+  // NB: This is the *Anthropic* API key.
+  value: v.optional(v.string()),
+  openai: v.optional(v.string()),
 });
 
 export default defineSchema({
@@ -100,7 +102,9 @@ export default defineSchema({
 
     // The description of the chat at the time the share was created.
     description: v.optional(v.string()),
-  }).index('byCode', ['code']),
+  })
+    .index('byCode', ['code'])
+    .index('bySnapshotId', ['snapshotId']),
 
   memberOpenAITokens: defineTable({
     memberId: v.id('convexMembers'),

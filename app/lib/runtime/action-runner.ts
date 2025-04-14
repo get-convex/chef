@@ -418,26 +418,35 @@ export class ActionRunner {
   }
 }
 
-const BANNED_LINES = [
-  'Preparing Convex functions...',
-  'Checking that documents match your schema...',
-  'transforming (',
-  'computing gzip size',
-  'Collecting TypeScript errors',
-  'idealTree buildDeps',
-  'timing reify:unpack',
-];
+const BANNED_LINES = ['transforming (', 'computing gzip size', 'idealTree buildDeps', 'timing reify:unpack'];
+
+// Taken from https://github.com/sindresorhus/cli-spinners
+const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
 // Cleaning terminal output helps the agent focus on the important parts and
 // not waste input tokens.
 function cleanConvexOutput(output: string) {
   output = cleanTerminalOutput(output);
   const normalizedNewlines = output.replace('\r\n', '\n').replace('\r', '\n');
-  const result = normalizedNewlines
-    // Remove lines that include "Preparing Convex functions..."
-    .split('\n')
-    .filter((line) => !BANNED_LINES.some((bannedLine) => line.includes(bannedLine)))
-    .join('\n');
+  const rawLines = normalizedNewlines.split('\n');
+  let lastSpinnerLine: string | null = null;
+  const lines = [];
+  for (const line of rawLines) {
+    if (BANNED_LINES.some((bannedLine) => line.includes(bannedLine))) {
+      continue;
+    }
+    if (SPINNER_FRAMES.some((spinnerFrame) => line.startsWith(spinnerFrame))) {
+      const lineWithoutSpinner = line.slice(1).trim();
+      if (lineWithoutSpinner === lastSpinnerLine) {
+        continue;
+      }
+      lastSpinnerLine = lineWithoutSpinner;
+      lines.push(lineWithoutSpinner);
+      continue;
+    }
+    lines.push(line);
+  }
+  const result = lines.join('\n');
   if (output !== result) {
     console.log(`Sanitized output: ${output.length} -> ${result.length}`);
   }

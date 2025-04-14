@@ -73,9 +73,10 @@ export function processMessage(
         if (cacheEntry && cacheEntry.parsed.type === 'text') {
           prevContent = cacheEntry.parsed.text;
         }
+        const delta = messageParser.parse(partId, part.text);
         newPart = {
           type: 'text' as const,
-          text: prevContent + messageParser.parse(partId, part.text),
+          text: prevContent + delta,
         };
         break;
       }
@@ -129,12 +130,7 @@ export function useMessageParser(partCache: PartCache) {
   const previousMessages = useRef<{ original: Message; parsed: Message }[]>([]);
   const previousParts = useRef<PartCache>(partCache);
 
-  const parseMessages = useCallback((messages: Message[], isLoading: boolean) => {
-    if (import.meta.env.DEV && !isLoading) {
-      messageParser.reset();
-      previousMessages.current = [];
-    }
-
+  const parseMessages = useCallback((messages: Message[]) => {
     const nextPrevMessages: { original: Message; parsed: Message }[] = [];
 
     for (let i = 0; i < messages.length; i++) {

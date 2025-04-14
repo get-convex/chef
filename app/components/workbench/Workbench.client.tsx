@@ -187,7 +187,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                         onClick={() => {
                           const convexProject = convexProjectStore.get();
                           workbenchStore.downloadZip({
-                            convexDeploymentName: convexProject?.deploymentName ?? null,
+                            convexProject: convexProject ?? null,
                           });
                         }}
                       >

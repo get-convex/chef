@@ -17,8 +17,15 @@ export const disabledText =
   'Please upgrade to a Pro plan or reach out to us ' +
   'at support@convex.dev for help.';
 
+// We render tokens as 100x smaller than their actual amount to get them
+// closer to user's expectations for Claude tokens.
+export function renderTokenCount(tokens: number) {
+  const renderedTokens = Math.max(1, Math.floor(tokens / 100));
+  return renderedTokens.toLocaleString();
+}
+
 export function noTokensText(tokensUsed: number, tokensQuota: number) {
-  return `No remaining tokens available. Please upgrade to a Pro plan or add your own Anthropic API key at chef.convex.dev/settings to continue. Used ${tokensUsed.toLocaleString()} of ${tokensQuota.toLocaleString()}.`;
+  return `No remaining tokens available. Please upgrade to a Pro plan or add your own Anthropic API key at chef.convex.dev/settings to continue. Used ${renderTokenCount(tokensUsed)} of ${renderTokenCount(tokensQuota)}.`;
 }
 
 export async function getTokenUsage(
