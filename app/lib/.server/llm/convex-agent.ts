@@ -152,19 +152,43 @@ export async function convexAgent(
       const userKeyApiFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {
           const result = await fetch(input, init);
+          if (result.status === 401) {
+            const text = await result.text();
+            throw new Error(
+              JSON.stringify({ error: 'Invalid or missing API key', details: text, userProvidedApiKey: !!userApiKey }),
+            );
+          }
           if (result.status === 413) {
             const text = await result.text();
             throw new Error(
-              JSON.stringify({ error: 'Request exceeds the maximum allowed number of bytes.', details: text }),
+              JSON.stringify({
+                error: 'Request exceeds the maximum allowed number of bytes.',
+                details: text,
+                userProvidedApiKey: !!userApiKey,
+              }),
             );
           }
           if (result.status === 429) {
             const text = await result.text();
-            throw new Error(JSON.stringify({ error: 'Rate limited by Anthropic', details: text }));
+            throw new Error(
+              JSON.stringify({ error: 'Rate limited by Anthropic', details: text, userProvidedApiKey: !!userApiKey }),
+            );
           }
           if (result.status === 529) {
             const text = await result.text();
-            throw new Error(JSON.stringify({ error: "Anthropic's API is temporarily overloaded", details: text }));
+            throw new Error(
+              JSON.stringify({
+                error: "Anthropic's API is temporarily overloaded",
+                details: text,
+                userProvidedApiKey: !!userApiKey,
+              }),
+            );
+          }
+          if (!result.ok) {
+            const text = await result.text();
+            throw new Error(
+              JSON.stringify({ error: 'Anthropic returned an error', details: text, userProvidedApiKey: !!userApiKey }),
+            );
           }
           return result;
         };
