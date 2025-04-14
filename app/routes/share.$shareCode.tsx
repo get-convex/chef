@@ -94,20 +94,23 @@ function ShareProjectContent() {
   if (chefAuthState.kind !== 'fullyLoggedIn') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <div className="max-w-md w-full space-y-4">
-          <h1 className="text-2xl font-bold text-center">Sign in to Chef</h1>
-          <p className="text-sm text-center text-gray-500">
-            Please sign in to Chef to clone this project
-            {getShareDescription?.description ? (
-              <>
-                : <span className="font-bold">{getShareDescription.description}</span>
-              </>
-            ) : (
-              ''
-            )}
-          </p>
+        <div className="max-w-md w-full space-y-6 bg-white rounded-xl border border-bolt-elements-borderColor p-8">
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold text-center">Sign in to Chef</h1>
+            <p className="text-base text-gray-500">
+              Please sign in to Chef to clone this project
+              {getShareDescription?.description ? (
+                <>
+                  : <span className="font-bold">{getShareDescription.description}</span>
+                </>
+              ) : (
+                ''
+              )}
+            </p>
+          </div>
+
           <button
-            className="mx-auto px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
+            className="w-full px-6 py-3 rounded-lg border border-bolt-elements-borderColor flex items-center justify-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
             onClick={signIn}
           >
             Sign in
