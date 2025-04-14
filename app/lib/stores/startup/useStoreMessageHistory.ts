@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Message } from '@ai-sdk/react';
 import { useConvex } from 'convex/react';
 import { api } from '@convex/_generated/api';
@@ -25,6 +25,26 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
   });
   const persistInProgress = useRef(false);
   const siteUrl = getConvexSiteUrl();
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return () => {
+        // No-op
+      };
+    }
+    const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
+      if (persistInProgress.current) {
+        // Some browsers require both preventDefault and setting returnValue
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+      return undefined;
+    };
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+    return () => {
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+    };
+  }, []);
 
   return useCallback(
     async (messages: Message[]) => {
