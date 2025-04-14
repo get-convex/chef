@@ -10,18 +10,14 @@ import * as lz4 from 'lz4-wasm';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { toast } from 'sonner';
 
-type MessagePart = Message['parts'] extends Array<infer P> | undefined ? P : never;
-
 export function useStoreMessageHistory(chatId: string, initialMessages: SerializedMessage[] | undefined) {
   const convex = useConvex();
   const [persistedState, setPersistedState] = useState<{
     lastMessageRank: number;
     partIndex: number;
-    lastPart: MessagePart | null;
   }>({
     lastMessageRank: -1,
     partIndex: 0,
-    lastPart: null,
   });
   const persistInProgress = useRef(false);
   const siteUrl = getConvexSiteUrl();
@@ -52,7 +48,7 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
   persistedStateRef.current = persistedState;
 
   return useCallback(
-    async (messages: Message[]) => {
+    async (messages: Message[], streamStatus: 'streaming' | 'submitted' | 'ready' | 'error') => {
       if (initialMessages === undefined) {
         throw new Error('Storing message history before initial messages are loaded');
       }
@@ -64,12 +60,12 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       }
 
       const sessionId = await waitForConvexSessionId('useStoreMessageHistory');
-      const updateResult = shouldUpdateMessages(messages, persistedStateRef.current);
+      const updateResult = shouldUpdateMessages({ messages, persisted: persistedStateRef.current, streamStatus });
       if (updateResult.kind === 'noUpdate') {
         return;
       }
       const url = new URL(`${siteUrl}/store_messages`);
-      const compressed = await compressMessages(messages);
+      const compressed = await compressMessages(messages, updateResult.lastMessageRank, updateResult.partIndex);
       url.searchParams.set('chatId', chatId);
       url.searchParams.set('sessionId', sessionId);
       url.searchParams.set('lastMessageRank', updateResult.lastMessageRank.toString());
@@ -164,47 +160,102 @@ export function serializeMessageForConvex(message: Message) {
   };
 }
 
-function shouldUpdateMessages(
+function getPreceedingPart(
   messages: Message[],
+  args: { messageIndex: number; partIndex: number },
+): { messageIndex: number; partIndex: number } | null {
+  if (messages.length === 0) {
+    return null;
+  }
+  if (args.messageIndex >= messages.length) {
+    let messageIndex = messages.length - 1;
+    while (messageIndex >= 0) {
+      const message = messages[messageIndex];
+      if (message.parts!.length > 0) {
+        return { messageIndex, partIndex: message.parts!.length - 1 };
+      }
+      messageIndex--;
+    }
+    return null;
+  }
+  const message = messages[args.messageIndex];
+  const parts = message.parts ?? [];
+  if (args.partIndex >= parts.length) {
+    return { messageIndex: args.messageIndex, partIndex: parts.length - 1 };
+  }
+  if (args.partIndex === 0) {
+    let messageIndex = messages.length - 1;
+    while (messageIndex >= 0) {
+      const message = messages[messageIndex];
+      if (message.parts!.length > 0) {
+        return { messageIndex, partIndex: message.parts!.length - 1 };
+      }
+      messageIndex--;
+    }
+    return null;
+  }
+  return { messageIndex: args.messageIndex, partIndex: args.partIndex - 1 };
+}
+
+function getLastCompletePart(
+  messages: Message[],
+  streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
+): { messageIndex: number; partIndex: number } | null {
+  if (messages.length === 0) {
+    return null;
+  }
+  const lastPartIndices = getPreceedingPart(messages, { messageIndex: messages.length, partIndex: 0 });
+  if (lastPartIndices === null) {
+    return null;
+  }
+  const lastMessage = messages[lastPartIndices.messageIndex];
+  const lastPart = lastMessage.parts![lastPartIndices.partIndex];
+  if (lastPart === null) {
+    throw new Error('Last part is null');
+  }
+  if (lastPart.type === 'tool-invocation') {
+    if (lastPart.toolInvocation.state === 'result') {
+      return { messageIndex: lastPartIndices.messageIndex, partIndex: lastPartIndices.partIndex };
+    } else {
+      return getPreceedingPart(messages, lastPartIndices);
+    }
+  }
+  if (streamStatus === 'ready') {
+    return { messageIndex: lastPartIndices.messageIndex, partIndex: lastPartIndices.partIndex };
+  } else {
+    return getPreceedingPart(messages, lastPartIndices);
+  }
+}
+
+function shouldUpdateMessages({
+  messages,
+  persisted,
+  streamStatus,
+}: {
+  messages: Message[];
   persisted: {
     lastMessageRank: number;
     partIndex: number;
-    lastPart: MessagePart | null;
-  },
-): { kind: 'update'; lastMessageRank: number; partIndex: number; lastPart: MessagePart | null } | { kind: 'noUpdate' } {
-  if (messages.length > persisted.lastMessageRank) {
-    return {
-      kind: 'update',
-      lastMessageRank: messages.length - 1,
-      partIndex: (messages.at(-1)?.parts?.length ?? 0) - 1,
-      lastPart: messages.at(-1)?.parts?.at(-1) ?? null,
-    };
+  };
+  streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
+}): { kind: 'update'; lastMessageRank: number; partIndex: number } | { kind: 'noUpdate' } {
+  const lastCompletePart = getLastCompletePart(messages, streamStatus);
+  if (lastCompletePart === null) {
+    return { kind: 'noUpdate' };
   }
-  const lastMessage = messages[messages.length - 1];
-  if (lastMessage.parts === undefined) {
-    throw new Error('Last message has no parts');
+  if (
+    lastCompletePart.messageIndex === persisted.lastMessageRank &&
+    lastCompletePart.partIndex === persisted.partIndex
+  ) {
+    return { kind: 'noUpdate' };
   }
-  if (lastMessage.parts.length > persisted.partIndex) {
-    return {
-      kind: 'update',
-      lastMessageRank: messages.length - 1,
-      partIndex: lastMessage.parts.length - 1,
-      lastPart: lastMessage.parts.at(-1) ?? null,
-    };
-  }
-  if (lastMessage.parts[lastMessage.parts.length - 1] !== persisted.lastPart) {
-    return {
-      kind: 'update',
-      lastMessageRank: messages.length - 1,
-      partIndex: lastMessage.parts.length - 1,
-      lastPart: lastMessage.parts.at(-1) ?? null,
-    };
-  }
-  return { kind: 'noUpdate' };
+  return { kind: 'update', lastMessageRank: lastCompletePart.messageIndex, partIndex: lastCompletePart.partIndex };
 }
 
-async function compressMessages(messages: Message[]): Promise<Uint8Array> {
-  const serialized = messages.map(serializeMessageForConvex);
+async function compressMessages(messages: Message[], lastMessageRank: number, partIndex: number): Promise<Uint8Array> {
+  const slicedMessages = messages.slice(0, lastMessageRank + 1);
+  slicedMessages[lastMessageRank].parts = slicedMessages[lastMessageRank].parts?.slice(0, partIndex + 1);
+  const serialized = slicedMessages.map(serializeMessageForConvex);
   // Dynamic import only executed on the client
   if (typeof window === 'undefined') {
     throw new Error('compressMessages can only be used in browser environments');

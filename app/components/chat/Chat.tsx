@@ -46,13 +46,17 @@ const processSampledMessages = createSampler(
     messages: Message[];
     initialMessages: Message[];
     parseMessages: (messages: Message[]) => void;
-    storeMessageHistory: (messages: Message[]) => Promise<void>;
+    streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
+    storeMessageHistory: (
+      messages: Message[],
+      streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
+    ) => Promise<void>;
   }) => {
-    const { messages, initialMessages, parseMessages, storeMessageHistory } = options;
+    const { messages, initialMessages, parseMessages, storeMessageHistory, streamStatus } = options;
     parseMessages(messages);
 
     if (messages.length > initialMessages.length) {
-      storeMessageHistory(messages).catch((error) => toast.error(error.message));
+      storeMessageHistory(messages, streamStatus).catch((error) => toast.error(error.message));
     }
   },
   50,
@@ -61,7 +65,10 @@ const processSampledMessages = createSampler(
 interface ChatProps {
   initialMessages: Message[];
   partCache: PartCache;
-  storeMessageHistory: (messages: Message[]) => Promise<void>;
+  storeMessageHistory: (
+    messages: Message[],
+    streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
+  ) => Promise<void>;
   initializeChat: () => Promise<void>;
   description?: string;
 
@@ -310,8 +317,9 @@ export const Chat = memo(
         initialMessages,
         parseMessages,
         storeMessageHistory,
+        streamStatus: status,
       });
-    }, [messages, parseMessages]);
+    }, [messages, parseMessages, status]);
 
     const abort = () => {
       stop();
