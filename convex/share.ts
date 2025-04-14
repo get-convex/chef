@@ -1,5 +1,5 @@
 import { ConvexError, v } from 'convex/values';
-import { mutation, type DatabaseReader } from './_generated/server';
+import { mutation, query, type DatabaseReader } from './_generated/server';
 import { getChatByIdOrUrlIdEnsuringAccess } from './messages';
 import { startProvisionConvexProjectHelper } from './convexProjects';
 
@@ -54,6 +54,27 @@ async function generateUniqueCode(db: DatabaseReader) {
   }
   return code;
 }
+
+export const getShareDescription = query({
+  args: {
+    code: v.string(),
+  },
+  returns: v.object({
+    description: v.optional(v.string()),
+  }),
+  handler: async (ctx, { code }) => {
+    const getShare = await ctx.db
+      .query('shares')
+      .withIndex('byCode', (q) => q.eq('code', code))
+      .first();
+    if (!getShare) {
+      throw new ConvexError('Invalid share link');
+    }
+    return {
+      description: getShare.description,
+    };
+  },
+});
 
 export const clone = mutation({
   args: {

@@ -23,4 +23,25 @@ test('sharing a chat works if there is a snapshot', async () => {
   expect(code).toBeDefined();
 });
 
+test('getShareDescription works', async () => {
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
+  const storageId = await t.run((ctx) => ctx.storage.store(new Blob(['Hello, world!'])));
+  await t.mutation(internal.snapshot.saveSnapshot, {
+    sessionId,
+    chatId,
+    storageId,
+  });
+  await t.mutation(api.messages.setUrlId, {
+    sessionId,
+    chatId,
+    urlHint: 'test',
+    description: 'This is a test chat',
+  });
+  const { code } = await t.mutation(api.share.create, { sessionId, id: 'test' });
+  expect(code).toBeDefined();
+  const { description } = await t.query(api.share.getShareDescription, { code });
+  expect(description).toBe('This is a test chat');
+});
+
 // TODO: Test that cloning messages does not leak a more recent snapshot or later messages
