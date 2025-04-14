@@ -9,6 +9,17 @@ export default {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(200%)' },
         },
+        fadeIn: {
+          '0%': {
+            opacity: '0',
+          },
+          '100%': {
+            opacity: '1',
+          },
+        },
+      },
+      animation: {
+        fadeIn: 'fadeIn 1s',
       },
       fontFamily: {
         display: [

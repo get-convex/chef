@@ -193,7 +193,7 @@ export const Menu = memo(() => {
             <DialogRoot open={dialogContent !== null}>
               {binDates(filteredList).map(({ category, items }) => (
                 <div key={category} className="mt-2 first:mt-0 space-y-1">
-                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 sticky top-0 z-1 bg-[var(--bolt-elements-sidebar-background)] px-3 py-1">
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 sticky top-0 z-10 bg-[var(--bolt-elements-sidebar-background)] px-3 py-1">
                     {category}
                   </div>
                   <div className="space-y-0.5 pr-1">

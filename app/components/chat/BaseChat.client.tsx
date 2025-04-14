@@ -128,10 +128,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
             {!chatStarted && (
               <div id="intro" className="mt-[16vh] max-w-chat mx-auto text-center px-4 lg:px-0">
-                <h1 className="text-4xl lg:text-6xl font-black text-bolt-elements-textPrimary mb-4 animate-fade-in font-display tracking-tight">
+                <h1 className="text-4xl lg:text-6xl font-black text-bolt-elements-textPrimary mb-4 animate-fadeIn font-display tracking-tight">
                   Now you&rsquo;re cooking
                 </h1>
-                <p className="text-md lg:text-2xl text-balance mb-8 text-bolt-elements-textSecondary animate-fade-in animation-delay-200 font-medium font-display">
+                <p className="text-xl lg:text-2xl text-balance mb-8 text-bolt-elements-textSecondary animate-fadeIn [animation-delay:200ms] font-medium font-display">
                   Generate and launch realtime full‑stack apps you never thought possible
                 </p>
               </div>
@@ -145,7 +145,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               {chatStarted ? (
                 <Messages
                   ref={messageRef}
-                  className="flex flex-col w-full flex-1 max-w-chat pb-6 mx-auto z-1"
+                  className="flex flex-col w-full flex-1 max-w-chat pb-6 mx-auto z-[1]"
                   messages={messages}
                   isStreaming={isStreaming}
                 />
@@ -301,7 +301,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       {(chefAuthState.kind === 'unauthenticated' || !selectedTeamSlug) && (
                         <Tooltip.Portal>
                           <Tooltip.Content
-                            className="z-50 px-3 py-1.5 text-sm bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor rounded-md shadow-lg animate-in fade-in-0 zoom-in-95"
+                            className="z-50 px-3 py-1.5 text-sm bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor rounded-md shadow-lg animate-fadeIn"
                             sideOffset={5}
                             side="right"
                           >

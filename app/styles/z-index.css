@@ -18,6 +18,10 @@
   z-index: calc(var(--z-index-max) - 3);
 }
 
+.z-context-menu {
+  z-index: calc(var(--z-index-max) - 3);
+}
+
 .z-iframe-overlay {
   z-index: calc(var(--z-index-max) - 4);
 }
