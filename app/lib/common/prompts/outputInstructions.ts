@@ -12,7 +12,6 @@ export function outputInstructions(options: SystemPromptOptions) {
       - Identify key components needed
       - Note potential challenges
       - Be concise (2-4 lines maximum)
-      - You MUST deploy after every turn that creates or edits files.
 
       Example responses:
 
@@ -22,7 +21,6 @@ export function outputInstructions(options: SystemPromptOptions) {
         2. Create a 'todos' table in the Convex schema.
         3. Implement queries and mutations to add, edit, list, and delete todos.
         4. Update the React app to use the Convex functions.
-        5. Deploy the changes.
 
         Let's start now.
 
@@ -68,7 +66,7 @@ function artifactInstructions(_options: SystemPromptOptions) {
 
     Use \`<boltAction type="file">\` tags to write to specific files. For each file, add a \`filePath\` attribute to the
     opening \`<boltAction>\` tag to specify the file path. The content of the file artifact is the file contents. All
-    file paths MUST BE relative to the current working directory. NEVER use \`{}\` in addition to the tags within a \`<boltAction>\` tag.
+    file paths MUST BE relative to the current working directory.
 
     CRITICAL: Always provide the FULL, updated content of the artifact. This means:
       - Include ALL code, even if parts are unchanged
