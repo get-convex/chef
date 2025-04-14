@@ -20,8 +20,8 @@ export function TeamSelector({
 
   if (!teams) {
     return (
-      <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
-        <div className="flex items-center gap-2 p-1.5 w-full">
+      <div className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor text-sm">
+        <div className="flex w-full items-center gap-2 p-1.5">
           <Spinner />
           Loading teams…
         </div>
@@ -32,7 +32,7 @@ export function TeamSelector({
   const selectedTeam = teams.find((t) => t.slug === selectedTeamSlug) ?? null;
 
   return (
-    <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
+    <div className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor text-sm">
       <Select.Root
         value={selectedTeam?.slug ?? 'Select a team...'}
         onValueChange={(value: string) => {
@@ -49,7 +49,7 @@ export function TeamSelector({
           )}
           aria-label="Select team"
         >
-          <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+          <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
           <Select.Value placeholder="Select a team...">{selectedTeam?.name ?? 'Select a team...'}</Select.Value>
           <Select.Icon className="ml-auto">
             <CaretDownIcon className={classNames('transition-all', open ? 'rotate-180' : '')} />
@@ -57,12 +57,12 @@ export function TeamSelector({
         </Select.Trigger>
         <Select.Portal>
           <Select.Content
-            className="z-50 min-w-[200px] max-h-64 overflow-y-auto bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor rounded-md shadow-lg"
+            className="z-50 max-h-64 min-w-[200px] overflow-y-auto rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-lg"
             position="popper"
             sideOffset={5}
           >
             <Select.Viewport>
-              <div className="border-b border-b-bolt-elements-borderColor p-2 sticky top-0 bg-bolt-elements-button-secondary-background z-10">
+              <div className="sticky top-0 z-10 border-b border-b-bolt-elements-borderColor bg-bolt-elements-button-secondary-background p-2">
                 <h3 className="text-sm font-medium">Select Team</h3>
                 {description && <p className="mt-1 text-xs text-bolt-elements-textSecondary">{description}</p>}
               </div>
@@ -76,7 +76,7 @@ export function TeamSelector({
                     'data-[state=checked]:text-bolt-elements-item-contentAccent',
                   )}
                 >
-                  <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+                  <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
                   <div className="max-w-48 truncate">
                     <Select.ItemText>{team.name}</Select.ItemText>
                   </div>

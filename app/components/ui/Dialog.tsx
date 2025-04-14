@@ -132,7 +132,7 @@ export const Dialog = memo(
                 <RadixDialog.Close asChild onClick={onClose}>
                   <IconButton
                     icon={<Cross2Icon />}
-                    className="absolute top-3 right-3 text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary"
+                    className="absolute right-3 top-3 text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary"
                   />
                 </RadixDialog.Close>
               )}

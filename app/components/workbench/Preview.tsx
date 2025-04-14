@@ -239,16 +239,16 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
   };
 
   return (
-    <div ref={containerRef} className="w-full h-full flex flex-col relative">
+    <div ref={containerRef} className="relative flex size-full flex-col">
       {isPortDropdownOpen && (
-        <div className="z-iframe-overlay w-full h-full absolute" onClick={() => setIsPortDropdownOpen(false)} />
+        <div className="z-iframe-overlay absolute size-full" onClick={() => setIsPortDropdownOpen(false)} />
       )}
-      <div className="bg-bolt-elements-background-depth-2 p-2 flex items-center gap-2">
+      <div className="flex items-center gap-2 bg-bolt-elements-background-depth-2 p-2">
         <div className="flex items-center gap-2">
           <IconButton icon={<UpdateIcon />} onClick={reloadPreview} />
         </div>
 
-        <div className="flex-grow flex items-center gap-1 bg-bolt-elements-preview-addressBar-background border border-bolt-elements-borderColor text-bolt-elements-preview-addressBar-text rounded-full px-3 py-1 text-sm hover:bg-bolt-elements-preview-addressBar-backgroundHover hover:focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:border-bolt-elements-borderColorActive focus-within:text-bolt-elements-preview-addressBar-textActive">
+        <div className="flex grow items-center gap-1 rounded-full border border-bolt-elements-borderColor bg-bolt-elements-preview-addressBar-background px-3 py-1 text-sm text-bolt-elements-preview-addressBar-text focus-within:border-bolt-elements-borderColorActive focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:text-bolt-elements-preview-addressBar-textActive hover:bg-bolt-elements-preview-addressBar-backgroundHover hover:focus-within:bg-bolt-elements-preview-addressBar-backgroundActive">
           <input
             title="URL"
             ref={inputRef}
@@ -288,7 +288,7 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
             title={isDeviceModeOn ? 'Switch to Responsive Mode' : 'Switch to Device Mode'}
           />
 
-          <div className="flex items-center relative">
+          <div className="relative flex items-center">
             <IconButton icon={<ExternalLinkIcon />} onClick={() => openInNewWindow()} title="Open in New Window" />
           </div>
 
@@ -296,7 +296,7 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
         </div>
       </div>
 
-      <div className="flex-1 border-t border-bolt-elements-borderColor flex justify-center items-center overflow-auto">
+      <div className="flex flex-1 items-center justify-center overflow-auto border-t border-bolt-elements-borderColor">
         <div
           style={{
             width: isDeviceModeOn ? `${widthPercent}%` : '100%',
@@ -312,19 +312,19 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
               <iframe
                 ref={iframeRef}
                 title="preview"
-                className="border-none w-full h-full bg-bolt-elements-background-depth-1"
+                className="size-full border-none bg-bolt-elements-background-depth-1"
                 src={iframeUrl}
                 sandbox="allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"
                 allow="*"
                 allowFullScreen={true}
               />
             ) : (
-              <div className="flex w-full h-full justify-center items-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
+              <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
                 <Spinner />
               </div>
             )
           ) : (
-            <div className="flex w-full h-full justify-center items-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
+            <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
               No preview available
             </div>
           )}

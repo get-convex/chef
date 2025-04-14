@@ -35,10 +35,10 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
       )}
     >
       {editing ? (
-        <form onSubmit={handleSubmit} className="flex-1 flex items-center gap-2">
+        <form onSubmit={handleSubmit} className="flex flex-1 items-center gap-2">
           <input
             type="text"
-            className="flex-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-md px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-1 focus:ring-[var(--cvx-border-selected)]"
+            className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[var(--cvx-border-selected)] dark:border-gray-800 dark:bg-gray-900 dark:text-white"
             autoFocus
             value={currentDescription}
             onChange={handleChange}
@@ -47,14 +47,14 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
           />
           <button
             type="submit"
-            className="h-4 w-4 text-gray-500 hover:text-[var(--cvx-util-accent)] transition-colors"
+            className="size-4 text-gray-500 transition-colors hover:text-[var(--cvx-util-accent)]"
             onMouseDown={handleSubmit}
           >
             <CheckIcon />
           </button>
         </form>
       ) : (
-        <a href={`/chat/${item.urlId ?? item.initialId}`} className="flex w-full relative truncate block">
+        <a href={`/chat/${item.urlId ?? item.initialId}`} className="relative block flex w-full truncate">
           <WithTooltip tooltip={description}>
             <span className="truncate pr-24">{description}</span>
           </WithTooltip>
@@ -67,7 +67,7 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
               'absolute right-0 top-0 bottom-0 flex items-center group-hover:bg-[var(--bolt-elements-sidebar-active-item-background)] px-2 transition-colors',
             )}
           >
-            <div className="flex items-center gap-2.5 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-2.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 dark:text-gray-500">
               <ChatActionButton
                 toolTipContent="Rename"
                 icon={<Pencil1Icon />}
@@ -116,7 +116,7 @@ const ChatActionButton = forwardRef(
         <button
           ref={ref}
           type="button"
-          className={`text-gray-400 dark:text-gray-500 hover:text-[var(--cvx-util-accent)] transition-colors bg-transparent ${className ? className : ''}`}
+          className={`bg-transparent text-gray-400 transition-colors hover:text-[var(--cvx-util-accent)] dark:text-gray-500 ${className ? className : ''}`}
           onClick={onClick}
         >
           {icon}

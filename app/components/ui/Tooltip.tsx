@@ -36,15 +36,15 @@ const WithTooltip = forwardRef(
             side={position}
             className={`
               z-[2000]
-              px-2.5
-              py-1.5
               max-h-[300px]
               select-none
               rounded-md
               bg-bolt-elements-background-depth-3
-              text-bolt-elements-textPrimary
+              px-2.5
+              py-1.5
               text-sm
               leading-tight
+              text-bolt-elements-textPrimary
               shadow-lg
               ${className}
             `}

@@ -83,11 +83,11 @@ export default function WebContainerPreview() {
   }, [previewId, handleRefresh, notifyPreviewReady]);
 
   return (
-    <div className="w-full h-full">
+    <div className="size-full">
       <iframe
         ref={iframeRef}
         title="WebContainer Preview"
-        className="w-full h-full border-none"
+        className="size-full border-none"
         sandbox="allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"
         allow="*"
         allowFullScreen={true}

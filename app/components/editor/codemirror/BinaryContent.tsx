@@ -1,6 +1,6 @@
 export function BinaryContent() {
   return (
-    <div className="flex items-center justify-center absolute inset-0 z-10 text-sm bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-bolt-elements-background-depth-1 text-sm text-bolt-elements-textPrimary">
       File format cannot be displayed.
     </div>
   );

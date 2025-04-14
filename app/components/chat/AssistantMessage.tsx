@@ -11,7 +11,7 @@ interface AssistantMessageProps {
 export const AssistantMessage = memo(({ message }: AssistantMessageProps) => {
   if (!message.parts) {
     return (
-      <div className="overflow-hidden w-full">
+      <div className="w-full overflow-hidden">
         <Markdown html>{message.content}</Markdown>
       </div>
     );
@@ -31,7 +31,7 @@ export const AssistantMessage = memo(({ message }: AssistantMessageProps) => {
     }
   }
   return (
-    <div className="overflow-hidden w-full">
+    <div className="w-full overflow-hidden">
       <div className="flex flex-col gap-2">{children}</div>
     </div>
   );

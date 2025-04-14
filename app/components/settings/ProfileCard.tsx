@@ -14,23 +14,23 @@ export function ProfileCard() {
     });
   };
   return (
-    <div className="bg-bolt-elements-background-depth-1 rounded-lg shadow-sm border border-bolt-elements-borderColor">
+    <div className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-sm">
       <div className="p-6">
-        <h2 className="text-xl font-semibold text-bolt-elements-textPrimary mb-4">Profile</h2>
+        <h2 className="mb-4 text-xl font-semibold text-bolt-elements-textPrimary">Profile</h2>
         <div className="flex items-center gap-4">
-          <div className="min-w-[5rem] w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+          <div className="size-20 min-w-20 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
             {profile?.avatar ? (
-              <img src={profile.avatar} alt={profile?.username || 'User'} className="w-full h-full object-cover" />
+              <img src={profile.avatar} alt={profile?.username || 'User'} className="size-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <PersonIcon className="text-gray-400 size-8" />
+              <div className="flex size-full items-center justify-center">
+                <PersonIcon className="size-8 text-gray-400" />
               </div>
             )}
           </div>
           <div>
             <h3 className="text-lg font-medium text-bolt-elements-textPrimary">{profile?.username || 'User'}</h3>
             {profile?.email && <p className="text-sm text-bolt-elements-textSecondary">{profile.email}</p>}
-            <div className="flex flex-col gap-2 mt-2">
+            <div className="mt-2 flex flex-col gap-2">
               <a
                 href="https://dashboard.convex.dev/profile"
                 target="_blank"
@@ -42,7 +42,7 @@ export function ProfileCard() {
               </a>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 bg-transparent"
+                className="flex items-center gap-1 bg-transparent text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
               >
                 <ExitIcon />
                 Log out

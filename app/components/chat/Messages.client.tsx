@@ -48,12 +48,12 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
                   })}
                 >
                   {isUserMessage && (
-                    <div className="flex items-center justify-center w-[40px] h-[40px] overflow-hidden bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-500 rounded-full shrink-0 self-start">
+                    <div className="flex size-[40px] shrink-0 items-center justify-center self-start overflow-hidden rounded-full bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-500">
                       {profile?.avatar ? (
                         <img
                           src={profile.avatar}
                           alt={profile?.username || 'User'}
-                          className="w-full h-full object-cover"
+                          className="size-full object-cover"
                           loading="eager"
                           decoding="sync"
                         />
@@ -70,7 +70,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
             })
           : null}
         {isStreaming && (
-          <div className="w-full flex justify-center text-bolt-elements-textSecondary mt-4">
+          <div className="mt-4 flex w-full justify-center text-bolt-elements-textSecondary">
             <SpinnerThreeDots className="size-9" />
           </div>
         )}

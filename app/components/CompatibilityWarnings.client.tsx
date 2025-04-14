@@ -41,9 +41,9 @@ export function CompatibilityWarnings() {
 
   return (
     <DialogRoot open={isOpen} onOpenChange={isMarketingOnly ? undefined : setIsOpen}>
-      <Dialog showCloseButton={!isMarketingOnly} className="w-full h-full flex" innerClassName="w-full">
-        <div className="h-full w-full flex">
-          <div className="m-auto w-full flex flex-col items-center gap-8 px-4 sm:px-8 max-h-[100vh] overflow-auto">
+      <Dialog showCloseButton={!isMarketingOnly} className="flex size-full" innerClassName="w-full">
+        <div className="flex size-full">
+          <div className="m-auto flex max-h-screen w-full flex-col items-center gap-8 overflow-auto px-4 sm:px-8">
             <DialogTitle className="sr-only">
               {experience === 'marketing-page-only-for-mobile'
                 ? 'Mobile Browser Compatibility Notice'
@@ -57,11 +57,11 @@ export function CompatibilityWarnings() {
             </DialogTitle>
 
             {isDebug && (
-              <div className="absolute top-4 right-4 z-50">
+              <div className="absolute right-4 top-4 z-50">
                 <select
                   value={experience}
                   onChange={(e) => setSelectedExperience(e.target.value as Experience)}
-                  className="bg-white border rounded px-2 py-1"
+                  className="rounded border bg-white px-2 py-1"
                 >
                   <option value="marketing-page-only-for-mobile">marketing-page-only-for-mobile</option>
                   <option value="marketing-page-only-for-desktop">marketing-page-only-for-desktop</option>
@@ -130,7 +130,7 @@ export function CompatibilityWarnings() {
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 flex items-center">
+            <div className="flex min-h-0 flex-1 items-center">
               <video
                 src="/Basic-Screencast.mp4"
                 controls
@@ -166,7 +166,7 @@ export function CompatibilityWarnings() {
               {isDismissable && (
                 <button
                   onClick={handleDismiss}
-                  className="mt-8 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  className="mt-8 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
                 >
                   Let me use it even though it's designed for desktop and mobile / tablets are not supported
                 </button>

@@ -102,7 +102,7 @@ export const FileBreadcrumb = memo<FileBreadcrumbProps>(({ files, pathSegments =
                   {segment}
                 </span>
               </DropdownMenu.Trigger>
-              {index > 0 && !isLast && <ChevronRightIcon className="inline-block mx-1" />}
+              {index > 0 && !isLast && <ChevronRightIcon className="mx-1 inline-block" />}
               <AnimatePresence>
                 {isActive && (
                   <DropdownMenu.Portal>
@@ -120,8 +120,8 @@ export const FileBreadcrumb = memo<FileBreadcrumbProps>(({ files, pathSegments =
                         exit="close"
                         variants={contextMenuVariants}
                       >
-                        <div className="rounded-lg overflow-hidden">
-                          <div className="max-h-[50vh] min-w-[300px] overflow-scroll bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor shadow-sm rounded-lg">
+                        <div className="overflow-hidden rounded-lg">
+                          <div className="max-h-[50vh] min-w-[300px] overflow-scroll rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-sm">
                             <FileTree
                               files={files}
                               hideRoot

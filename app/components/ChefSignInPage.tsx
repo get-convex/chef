@@ -27,10 +27,10 @@ function ConvexSignInForm() {
   const { loginWithRedirect } = useAuth0();
   const [started, setStarted] = useState(false);
   return (
-    <div className="flex flex-col items-center justify-center h-full gap-4">
+    <div className="flex h-full flex-col items-center justify-center gap-4">
       <h1 className="text-2xl font-bold">Connect to Convex</h1>
       <button
-        className="px-4 py-2 rounded-lg border border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary-text disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
+        className="flex items-center gap-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background px-4 py-2 text-bolt-elements-button-primary-text hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() => {
           if (!started) {
             setStarted(true);
@@ -44,7 +44,7 @@ function ConvexSignInForm() {
         }}
         disabled={started}
       >
-        <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+        <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
         Log in with your Convex account
       </button>
     </div>
@@ -137,7 +137,7 @@ function OptInsScreen() {
   }
   if (optIns.kind === 'error') {
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center">
+      <div className="flex size-full flex-col items-center justify-center">
         <div className="text-2xl font-bold">Finish signing up for Convex on the dashboard!</div>
         <div className="text-sm text-bolt-elements-textSecondary">
           Go to the{' '}
@@ -157,7 +157,7 @@ function OptInsScreen() {
 
   if (optIns.kind === 'loaded' && optIns.optIns.length === 0) {
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center">
+      <div className="flex size-full flex-col items-center justify-center">
         <div className="text-2xl font-bold">Done logging in!</div>
         <div className="text-sm text-bolt-elements-textSecondary">
           You can now close this window and return to your project.
@@ -168,8 +168,8 @@ function OptInsScreen() {
   if (optIns.kind === 'loaded') {
     // Note: As of 2025-04-11, we have a single opt in type, so we're hardcoding the UI for that.
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4">
-        <div className="text-lg text-bolt-elements-textPrimary text-center">
+      <div className="flex h-full flex-col items-center justify-center gap-4">
+        <div className="text-center text-lg text-bolt-elements-textPrimary">
           Welcome to Convex! We need you to take a look at these before we continue.
         </div>
         <div className="flex items-center gap-2">

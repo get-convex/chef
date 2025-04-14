@@ -72,11 +72,11 @@ export function ApiKeyCard() {
   };
 
   return (
-    <div className="bg-bolt-elements-background-depth-1 rounded-lg shadow-sm border border-bolt-elements-borderColor">
+    <div className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-sm">
       <div className="p-6">
-        <h2 className="text-xl font-semibold text-bolt-elements-textPrimary mb-2">API Keys</h2>
+        <h2 className="mb-2 text-xl font-semibold text-bolt-elements-textPrimary">API Keys</h2>
 
-        <p className="text-bolt-elements-textSecondary text-sm mb-4">
+        <p className="mb-4 text-sm text-bolt-elements-textSecondary">
           Chef uses different model providers to generate code. You can use your own API keys to cook with Chef.
         </p>
         <div className="space-y-4">
@@ -84,11 +84,11 @@ export function ApiKeyCard() {
             <div>
               <label
                 htmlFor="anthropic-key"
-                className="block text-lg font-medium text-bolt-elements-textSecondary mb-1"
+                className="mb-1 block text-lg font-medium text-bolt-elements-textSecondary"
               >
                 Anthropic API Key
               </label>
-              <p className="text-bolt-elements-textSecondary text-sm mb-4">
+              <p className="mb-4 text-sm text-bolt-elements-textSecondary">
                 See instructions for generating an Anthropic API key{' '}
                 <a
                   href="https://docs.anthropic.com/en/api/getting-started#accessing-the-api"
@@ -113,11 +113,11 @@ export function ApiKeyCard() {
 
               <label
                 htmlFor="openai-key"
-                className="block text-lg font-medium text-bolt-elements-textSecondary mb-1 mt-4"
+                className="mb-1 mt-4 block text-lg font-medium text-bolt-elements-textSecondary"
               >
                 OpenAI API Key
               </label>
-              <p className="text-bolt-elements-textSecondary text-sm mb-4">
+              <p className="mb-4 text-sm text-bolt-elements-textSecondary">
                 See instructions for generating an OpenAI API key{' '}
                 <a
                   href="https://platform.openai.com/docs/api-reference/introduction"
@@ -153,7 +153,7 @@ export function ApiKeyCard() {
                 <button
                   onClick={handleSaveApiKey}
                   disabled={apiKey === undefined || isSaving || !isDirty}
-                  className="px-2 py-1.5 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-bolt-elements-button-primary-background rounded-md transition-colors w-fit"
+                  className="w-fit rounded-md bg-bolt-elements-button-primary-background px-2 py-1.5 text-bolt-elements-button-primary-text transition-colors hover:bg-bolt-elements-button-primary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-bolt-elements-button-primary-background"
                 >
                   {isSaving ? 'Saving...' : 'Save'}
                 </button>
@@ -175,11 +175,11 @@ function ApiKeyInput(props: {
 }) {
   const [showKey, setShowKey] = useState(false);
   if (props.isLoading) {
-    return <div className="w-full h-[42px] animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg" />;
+    return <div className="h-[42px] w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />;
   }
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 relative">
+      <div className="relative flex-1">
         <input
           type={showKey ? 'text' : 'password'}
           id={props.id}
@@ -187,13 +187,13 @@ function ApiKeyInput(props: {
           onChange={(e) => {
             props.onChange(e.target.value);
           }}
-          className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-bolt-elements-textPrimary pr-10"
+          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 pr-10 text-bolt-elements-textPrimary dark:border-gray-800 dark:bg-gray-900"
           placeholder="sk-..."
         />
         <button
           type="button"
           onClick={() => setShowKey(!showKey)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary bg-transparent"
+          className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary"
         >
           {showKey ? <EyeSlashIcon /> : <EyeOpenIcon />}
         </button>
@@ -201,7 +201,7 @@ function ApiKeyInput(props: {
       {props.value && (
         <button
           onClick={props.handleDelete}
-          className="px-2 py-2 bg-bolt-elements-button-danger-background hover:bg-bolt-elements-button-danger-backgroundHover text-bolt-elements-button-danger-text rounded-md transition-colors w-fit"
+          className="w-fit rounded-md bg-bolt-elements-button-danger-background p-2 text-bolt-elements-button-danger-text transition-colors hover:bg-bolt-elements-button-danger-backgroundHover"
         >
           Remove key
         </button>
@@ -219,9 +219,9 @@ function AlwaysUseKeyCheckbox(props: {
   if (props.isLoading) {
     return (
       <div className="mt-4 flex items-center gap-2">
-        <div className="w-4 h-4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="h-5 w-32 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="w-4 h-4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        <div className="h-5 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
       </div>
     );
   }
@@ -244,7 +244,7 @@ function AlwaysUseKeyCheckbox(props: {
         <WithTooltip tooltip="When unchecked, your API key will only be used if you've run out of tokens built into your Convex plan">
           <button
             type="button"
-            className="text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary bg-transparent"
+            className="bg-transparent text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary"
           >
             <QuestionMarkCircledIcon />
           </button>

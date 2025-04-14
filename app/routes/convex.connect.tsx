@@ -19,7 +19,7 @@ export default function ConvexConnect() {
   }, [searchParams]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#f9f7ee' }}>
+    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#f9f7ee' }}>
       <Spinner />
     </div>
   );

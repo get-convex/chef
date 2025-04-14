@@ -61,23 +61,23 @@ export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => 
     return null;
   }
   return (
-    <div className="artifact border border-bolt-elements-borderColor flex flex-col overflow-hidden rounded-lg w-full duration-150">
+    <div className="artifact flex w-full flex-col overflow-hidden rounded-lg border border-bolt-elements-borderColor duration-150">
       <div className="flex">
         <button
-          className="flex items-stretch bg-bolt-elements-artifacts-background hover:bg-bolt-elements-artifacts-backgroundHover w-full overflow-hidden"
+          className="flex w-full items-stretch overflow-hidden bg-bolt-elements-artifacts-background hover:bg-bolt-elements-artifacts-backgroundHover"
           onClick={() => {
             const showWorkbench = workbenchStore.showWorkbench.get();
             workbenchStore.showWorkbench.set(!showWorkbench);
           }}
         >
-          <div className="px-5 p-3.5 w-full text-left">
+          <div className="w-full p-3.5 px-5 text-left">
             <div className="flex items-center gap-1.5">
-              <div className="w-full text-bolt-elements-textPrimary font-medium leading-5 text-sm">{title}</div>
+              <div className="w-full text-sm font-medium leading-5 text-bolt-elements-textPrimary">{title}</div>
               {icon}
             </div>
           </div>
         </button>
-        <div className="bg-bolt-elements-artifacts-borderColor w-[1px]" />
+        <div className="w-px bg-bolt-elements-artifacts-borderColor" />
         <AnimatePresence>
           {artifact.type !== 'bundled' && (
             <motion.button
@@ -105,8 +105,8 @@ export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => 
             exit={{ height: '0px' }}
             transition={{ duration: 0.15 }}
           >
-            <div className="bg-bolt-elements-artifacts-borderColor h-[1px]" />
-            <div className="p-5 text-left bg-bolt-elements-actions-background">
+            <div className="h-px bg-bolt-elements-artifacts-borderColor" />
+            <div className="bg-bolt-elements-actions-background p-5 text-left">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -142,7 +142,7 @@ const ToolUseContents = memo(
       }
       default: {
         // Fallback for other tool types
-        return <pre className="whitespace-pre-wrap overflow-x-auto">{JSON.stringify(invocation, null, 2)}</pre>;
+        return <pre className="overflow-x-auto whitespace-pre-wrap">{JSON.stringify(invocation, null, 2)}</pre>;
       }
     }
   },
@@ -156,7 +156,7 @@ function DeployTool({ artifact, invocation }: { artifact: ArtifactState; invocat
   if (invocation.state === 'call') {
     return (
       <div className="space-y-2">
-        <div className="font-mono text-sm bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor overflow-hidden text-bolt-elements-textPrimary">
+        <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-bolt-elements-textPrimary">
           <Terminal artifact={artifact} invocation={invocation} />
         </div>
       </div>
@@ -165,7 +165,7 @@ function DeployTool({ artifact, invocation }: { artifact: ArtifactState; invocat
   if (invocation.state === 'result') {
     return (
       <div className="space-y-2 ">
-        <div className="font-mono text-sm bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor overflow-hidden text-bolt-elements-textPrimary">
+        <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-bolt-elements-textPrimary">
           <Terminal artifact={artifact} invocation={invocation} />
         </div>
       </div>
@@ -250,7 +250,7 @@ function NpmInstallTool({ artifact, invocation }: { artifact: ArtifactState; inv
   if (invocation.state === 'call') {
     return (
       <div className="space-y-2">
-        <div className="font-mono text-sm bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor overflow-hidden text-bolt-elements-textPrimary">
+        <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-bolt-elements-textPrimary">
           <Terminal artifact={artifact} invocation={invocation} />
         </div>
       </div>
@@ -260,7 +260,7 @@ function NpmInstallTool({ artifact, invocation }: { artifact: ArtifactState; inv
     if (invocation.result.startsWith('Error:')) {
       return (
         <div className="space-y-2">
-          <div className="font-mono text-sm bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor overflow-hidden text-bolt-elements-textPrimary">
+          <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-bolt-elements-textPrimary">
             <Terminal artifact={artifact} invocation={invocation} />
           </div>
         </div>
@@ -422,7 +422,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
       if (invocation.state === 'partial-call' || invocation.state === 'call') {
         return (
           <div className="flex items-center gap-2">
-            <img className="w-4 h-4 mr-1" height="16" width="16" src="/icons/TypeScript.svg" alt="TypeScript" />
+            <img className="mr-1 size-4" height="16" width="16" src="/icons/TypeScript.svg" alt="TypeScript" />
             <span>Running TypeScript checks...</span>
           </div>
         );
@@ -435,7 +435,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         ) {
           return (
             <div className="flex items-center gap-2">
-              <img className="w-4 h-4 mr-1" height="16" width="16" src="/icons/TypeScript.svg" alt="TypeScript" />
+              <img className="mr-1 size-4" height="16" width="16" src="/icons/TypeScript.svg" alt="TypeScript" />
               <span>Typecheck failed</span>
             </div>
           );
@@ -450,7 +450,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
 
       return (
         <div className="flex items-center gap-2">
-          <img className="w-4 h-4 mr-1" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+          <img className="mr-1 size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
           <span>Pushed functions to Convex</span>
         </div>
       );
@@ -483,7 +483,7 @@ function ViewTool({ invocation }: { invocation: ConvexToolInvocation }) {
   }
   if (invocation.result.startsWith('Error:')) {
     return (
-      <div className="font-mono text-sm bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor overflow-hidden text-bolt-elements-textPrimary">
+      <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-bolt-elements-textPrimary">
         <pre>{invocation.result}</pre>
       </div>
     );
@@ -493,7 +493,7 @@ function ViewTool({ invocation }: { invocation: ConvexToolInvocation }) {
   if (invocation.result.startsWith('Directory:')) {
     const items = invocation.result.split('\n').slice(1);
     return (
-      <div className="space-y-1 font-mono text-sm p-4 rounded-lg border border-bolt-elements-borderColor text-bolt-elements-textPrimary">
+      <div className="space-y-1 rounded-lg border border-bolt-elements-borderColor p-4 font-mono text-sm text-bolt-elements-textPrimary">
         {items.map((item: string, i: number) => {
           const isDir = item.includes('(dir)');
           const trimmed = item.replace('(dir)', '').replace('(file)', '').replace('- ', '').trim();
@@ -562,16 +562,16 @@ const LineNumberViewer = memo(({ lines, startLineNumber = 1, language = 'typescr
   }, []);
 
   return (
-    <div className="font-mono text-sm bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor overflow-hidden text-bolt-elements-textPrimary">
-      <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
+    <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-bolt-elements-textPrimary">
+      <div className="max-h-[400px] overflow-auto">
         <table className="w-full border-collapse">
           <tbody>
             {lines.map((line: string, i: number) => (
               <tr key={i} className="group">
-                <td className="px-4 py-1 text-right select-none border-r border-bolt-elements-borderColor text-bolt-elements-textTertiary w-12 bg-bolt-elements-background-depth-1">
+                <td className="w-12 select-none border-r border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 px-4 py-1 text-right text-bolt-elements-textTertiary">
                   {i + startLineNumber}
                 </td>
-                <td className="py-1 whitespace-pre group-hover:bg-bolt-elements-background-depth-2">
+                <td className="whitespace-pre py-1 group-hover:bg-bolt-elements-background-depth-2">
                   <span
                     dangerouslySetInnerHTML={{
                       __html: highlighter
@@ -607,8 +607,8 @@ function EditTool({ invocation }: { invocation: ConvexToolInvocation }) {
     return null;
   }
   return (
-    <div className="font-mono text-sm bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor overflow-hidden text-bolt-elements-textPrimary">
-      <div className="p-4 space-y-4">
+    <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-bolt-elements-textPrimary">
+      <div className="space-y-4 p-4">
         <div className="space-y-2 overflow-x-auto">
           <div className="flex items-center gap-2">
             <pre className="text-bolt-elements-icon-error">{args.data.old}</pre>

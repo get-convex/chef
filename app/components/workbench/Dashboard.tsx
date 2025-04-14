@@ -52,11 +52,11 @@ export const Dashboard = memo(() => {
   }, [deploymentUrl, token, deploymentName]);
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="bg-bolt-elements-background-depth-2 p-2 flex items-center gap-1.5">
+    <div className="flex size-full flex-col">
+      <div className="flex items-center gap-1.5 bg-bolt-elements-background-depth-2 p-2">
         <div
-          className="flex items-center gap-1 flex-grow bg-bolt-elements-preview-addressBar-background border border-bolt-elements-borderColor text-bolt-elements-preview-addressBar-text rounded-full px-3 py-1 text-sm hover:bg-bolt-elements-preview-addressBar-backgroundHover hover:focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:bg-bolt-elements-preview-addressBar-backgroundActive
-          focus-within:border-bolt-elements-borderColorActive focus-within:text-bolt-elements-preview-addressBar-textActive"
+          className="flex grow items-center gap-1 rounded-full border border-bolt-elements-borderColor bg-bolt-elements-preview-addressBar-background px-3 py-1 text-sm text-bolt-elements-preview-addressBar-text focus-within:border-bolt-elements-borderColorActive focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:text-bolt-elements-preview-addressBar-textActive
+          hover:bg-bolt-elements-preview-addressBar-backgroundHover hover:focus-within:bg-bolt-elements-preview-addressBar-backgroundActive"
         >
           <input ref={inputRef} className="w-full bg-transparent outline-none" type="text" value={shownUrl} disabled />
         </div>
@@ -69,7 +69,7 @@ export const Dashboard = memo(() => {
         />
       </div>
       <div className="flex-1 border-t border-bolt-elements-borderColor">
-        <iframe ref={iframeRef} className="border-none w-full h-full bg-white sentry-mask" src={actualUrl} />
+        <iframe ref={iframeRef} className="sentry-mask size-full border-none bg-white" src={actualUrl} />
       </div>
     </div>
   );

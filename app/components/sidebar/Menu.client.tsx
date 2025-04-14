@@ -163,19 +163,19 @@ export const Menu = memo(() => {
           'z-sidebar',
         )}
       >
-        <div className="h-[var(--header-height)] flex items-center justify-between px-4 border-b border-bolt-elements-borderColor"></div>
+        <div className="flex h-[var(--header-height)] items-center justify-between border-b border-bolt-elements-borderColor px-4"></div>
 
-        <div className="flex-1 flex flex-col h-full w-full overflow-hidden">
-          <div className="p-4 space-y-3">
+        <div className="flex size-full flex-1 flex-col overflow-hidden">
+          <div className="space-y-3 p-4">
             <a
               href="/"
-              className="inline-flex gap-2 items-center bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text rounded-lg px-4 py-2 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-bolt-elements-button-primary-background px-4 py-2 text-bolt-elements-button-primary-text transition-colors hover:bg-bolt-elements-button-primary-backgroundHover"
             >
               <span className="text-sm font-medium">Start new project</span>
             </a>
             <div className="relative w-full">
               <input
-                className="w-full bg-gray-50 dark:bg-gray-900 relative px-3 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-bolt-elements-borderColorActive text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 border border-gray-200 dark:border-gray-800"
+                className="relative w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-bolt-elements-borderColorActive dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
                 type="search"
                 placeholder="Search projects..."
                 onChange={handleSearchChange}
@@ -183,17 +183,17 @@ export const Menu = memo(() => {
               />
             </div>
           </div>
-          <div className="text-gray-600 dark:text-gray-400 text-sm font-medium px-4 py-2">Your Projects</div>
+          <div className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400">Your Projects</div>
           <div className="flex-1 overflow-auto px-3 pb-3">
             {filteredList.length === 0 && (
-              <div className="px-4 text-gray-500 dark:text-gray-400 text-sm">
+              <div className="px-4 text-sm text-gray-500 dark:text-gray-400">
                 {list.length === 0 ? 'No previous projects' : 'No matches found'}
               </div>
             )}
             <DialogRoot open={dialogContent !== null}>
               {binDates(filteredList).map(({ category, items }) => (
-                <div key={category} className="mt-2 first:mt-0 space-y-1">
-                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 sticky top-0 z-10 bg-[var(--bolt-elements-sidebar-background)] px-3 py-1">
+                <div key={category} className="mt-2 space-y-1 first:mt-0">
+                  <div className="sticky top-0 z-10 bg-[var(--bolt-elements-sidebar-background)] px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400">
                     {category}
                   </div>
                   <div className="space-y-0.5 pr-1">
@@ -206,7 +206,7 @@ export const Menu = memo(() => {
               <Dialog onBackdrop={closeDialog} onClose={closeDialog}>
                 {dialogContent?.type === 'delete' && (
                   <>
-                    <div className="p-6 bg-bolt-elements-background-depth-1 rounded-t-lg">
+                    <div className="rounded-t-lg bg-bolt-elements-background-depth-1 p-6">
                       <DialogTitle className="text-bolt-elements-textPrimary">Delete Chat?</DialogTitle>
                       <DialogDescription className="mt-2 text-bolt-elements-textSecondary">
                         <p>
@@ -218,8 +218,8 @@ export const Menu = memo(() => {
                         <p className="mt-2">Are you sure you want to delete this chat?</p>
                         {dialogContent?.type === 'delete' && sessionId && convexProjectInfo === undefined ? (
                           <div className="mt-4 flex items-center gap-2">
-                            <div className="w-4 h-4 rounded bg-bolt-elements-background-depth-3 animate-pulse" />
-                            <div className="h-5 flex-1 max-w-[280px] rounded bg-bolt-elements-background-depth-3 animate-pulse" />
+                            <div className="size-4 animate-pulse rounded bg-bolt-elements-background-depth-3" />
+                            <div className="h-5 max-w-[280px] flex-1 animate-pulse rounded bg-bolt-elements-background-depth-3" />
                           </div>
                         ) : (
                           convexProjectInfo?.kind === 'connected' && (
@@ -233,7 +233,7 @@ export const Menu = memo(() => {
                               />
                               <label
                                 htmlFor="delete-convex-project"
-                                className="text-bolt-elements-textSecondary text-pretty"
+                                className="text-pretty text-bolt-elements-textSecondary"
                               >
                                 Also delete the associated Convex project (
                                 <a
@@ -251,7 +251,7 @@ export const Menu = memo(() => {
                         )}
                       </DialogDescription>
                     </div>
-                    <div className="rounded-b-lg flex justify-end gap-3 px-6 py-4 border-t border-bolt-elements-borderColor bg-bolt-elements-background-depth-1">
+                    <div className="flex justify-end gap-3 rounded-b-lg border-t border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 px-6 py-4">
                       <DialogButton type="secondary" onClick={closeDialog}>
                         Cancel
                       </DialogButton>
@@ -270,17 +270,17 @@ export const Menu = memo(() => {
               </Dialog>
             </DialogRoot>
           </div>
-          <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 px-4 py-3">
+          <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-gray-800">
             <ThemeSwitch />
             {profile && open && (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
-                  <button className="flex items-center justify-center w-[40px] h-[40px] overflow-hidden bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-500 rounded-full shrink-0 hover:ring-2 hover:ring-gray-200 dark:hover:ring-gray-700 transition-all">
+                  <button className="flex size-[40px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-gray-600 transition-all hover:ring-2 hover:ring-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:hover:ring-gray-700">
                     {profile.avatar ? (
                       <img
                         src={profile.avatar}
                         alt={profile.username || 'User'}
-                        className="w-full h-full object-cover"
+                        className="size-full object-cover"
                         loading="eager"
                         decoding="sync"
                       />
@@ -291,19 +291,19 @@ export const Menu = memo(() => {
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content
-                    className="z-menu min-w-[180px] bg-bolt-elements-background-depth-1 rounded-lg p-1 shadow-lg border border-bolt-elements-borderColor"
+                    className="z-menu min-w-[180px] rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 p-1 shadow-lg"
                     sideOffset={5}
                     align="end"
                   >
                     <DropdownMenu.Item
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive rounded-md cursor-pointer outline-none"
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-bolt-elements-textPrimary outline-none hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive"
                       onSelect={handleSettingsClick}
                     >
                       <GearIcon />
                       Settings
                     </DropdownMenu.Item>
                     <DropdownMenu.Item
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md cursor-pointer outline-none"
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-red-500 outline-none hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
                       onSelect={handleLogout}
                     >
                       <ExitIcon />

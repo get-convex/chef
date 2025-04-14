@@ -13,15 +13,15 @@ const FilePreview: React.FC<FilePreviewProps> = ({ files, imageDataList, onRemov
   }
 
   return (
-    <div className="flex flex-row overflow-x-auto -mt-2">
+    <div className="-mt-2 flex flex-row overflow-x-auto">
       {files.map((file, index) => (
-        <div key={file.name + file.size} className="mr-2 relative">
+        <div key={file.name + file.size} className="relative mr-2">
           {imageDataList[index] && (
-            <div className="relative pt-4 pr-4">
+            <div className="relative pr-4 pt-4">
               <img src={imageDataList[index]} alt={file.name} className="max-h-20" />
               <button
                 onClick={() => onRemove(index)}
-                className="absolute top-1 right-1 z-10 bg-black rounded-full w-5 h-5 shadow-md hover:bg-gray-900 transition-colors flex items-center justify-center text-gray-200"
+                className="absolute right-1 top-1 z-10 flex size-5 items-center justify-center rounded-full bg-black text-gray-200 shadow-md transition-colors hover:bg-gray-900"
               >
                 <Cross2Icon />
               </button>

@@ -26,7 +26,7 @@ export function ChatDescription() {
         <form onSubmit={handleSubmit} className="flex items-center justify-center">
           <input
             type="text"
-            className="bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary rounded px-2 mr-2 w-fit"
+            className="mr-2 w-fit rounded bg-bolt-elements-background-depth-1 px-2 text-bolt-elements-textPrimary"
             autoFocus
             value={currentDescription}
             onChange={handleChange}
@@ -42,7 +42,7 @@ export function ChatDescription() {
         </form>
       ) : (
         <>
-          <span className="max-w-64 truncate mr-1">{currentDescription}</span>
+          <span className="mr-1 max-w-64 truncate">{currentDescription}</span>
           <TooltipProvider>
             <WithTooltip tooltip="Rename chat">
               <IconButton icon={<Pencil1Icon />} onClick={toggleEditMode} />

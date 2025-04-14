@@ -242,7 +242,7 @@ function ContextMenuItem({ onSelect, children }: { onSelect?: () => void; childr
   return (
     <ContextMenu.Item
       onSelect={onSelect}
-      className="flex items-center gap-2 px-2 py-1.5 outline-0 text-sm cursor-pointer whitespace-nowrap text-bolt-elements-item-contentDefault hover:text-bolt-elements-item-contentActive hover:bg-bolt-elements-item-backgroundActive rounded-md"
+      className="flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-md px-2 py-1.5 text-sm text-bolt-elements-item-contentDefault outline-0 hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive"
     >
       <span className="size-4 shrink-0"></span>
       <span>{children}</span>
@@ -257,9 +257,9 @@ function FileContextMenu({ onCopyPath, onCopyRelativePath, children }: FolderCon
       <ContextMenu.Portal>
         <ContextMenu.Content
           style={{ zIndex: 998 }}
-          className="border border-bolt-elements-borderColor rounded-md z-context-menu bg-bolt-elements-background-depth-1 dark:bg-bolt-elements-background-depth-2 w-56"
+          className="z-context-menu w-56 rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 dark:bg-bolt-elements-background-depth-2"
         >
-          <ContextMenu.Group className="p-1 border-b border-bolt-elements-borderColor">
+          <ContextMenu.Group className="border-b border-bolt-elements-borderColor p-1">
             <ContextMenuItem onSelect={onCopyPath}>Copy path</ContextMenuItem>
             <ContextMenuItem onSelect={onCopyRelativePath}>Copy relative path</ContextMenuItem>
           </ContextMenu.Group>
@@ -408,7 +408,7 @@ function NodeButton({ depth, icon, onClick, className, children }: ButtonProps) 
       onClick={() => onClick?.()}
     >
       <div className="shrink-0">{icon}</div>
-      <div className="truncate w-full text-left">{children}</div>
+      <div className="w-full truncate text-left">{children}</div>
     </button>
   );
 }

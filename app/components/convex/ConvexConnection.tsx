@@ -26,7 +26,7 @@ export function ConvexConnection() {
 
   return (
     <div className="relative">
-      <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
+      <div className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor text-sm">
         <button
           onClick={() => setIsOpen(true)}
           className={classNames(
@@ -34,7 +34,7 @@ export function ConvexConnection() {
             'hover:bg-bolt-elements-item-backgroundAccent/90',
           )}
         >
-          <img className="w-4 h-4" height="20" width="20" src="/icons/Convex.svg" alt="Convex" />
+          <img className="size-4" height="20" width="20" src="/icons/Convex.svg" alt="Convex" />
           <ConnectionStatus projectInfo={projectInfo} />
         </button>
       </div>
@@ -54,7 +54,7 @@ export function ConvexConnection() {
                         : 'Connect a Convex Project'}
                 </div>
               </DialogTitle>
-              <div className="flex items-center justify-between rounded-lg mx-3">
+              <div className="mx-3 flex items-center justify-between rounded-lg">
                 {projectInfo?.kind === 'connected' ? (
                   <ConnectedDialogContent projectInfo={projectInfo} />
                 ) : projectInfo?.kind === 'failed' ? (
@@ -101,12 +101,12 @@ function ConnectedDialogContent({
   };
 
   return (
-    <div className="flex items-center justify-between rounded-lg mx-3">
+    <div className="mx-3 flex items-center justify-between rounded-lg">
       <div className="flex flex-col gap-1">
         <p className="text-sm font-medium text-bolt-elements-textPrimary">Project: {projectInfo.projectSlug}</p>
         <p className="text-sm font-medium text-bolt-elements-textPrimary">Team: {projectInfo.teamSlug}</p>
         <a
-          className="flex gap-1 items-center text-sm hover:underline text-bolt-elements-textSecondary"
+          className="flex items-center gap-1 text-sm text-bolt-elements-textSecondary hover:underline"
           href={`https://dashboard.convex.dev/d/${projectInfo.deploymentName}`}
           target="_blank"
         >
@@ -119,7 +119,7 @@ function ConnectedDialogContent({
       </div>
       <button
         onClick={handleDisconnect}
-        className="px-4 py-1.5 rounded-md bg-transparent hover:bg-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 text-sm transition-colors"
+        className="rounded-md bg-transparent px-4 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
       >
         Disconnect from Convex
       </button>
@@ -130,7 +130,7 @@ function ConnectedDialogContent({
 function ErrorDialogContent({ errorMessage }: { errorMessage: string }) {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   return (
-    <div className="flex items-center justify-between rounded-lg mx-3">
+    <div className="mx-3 flex items-center justify-between rounded-lg">
       <div className="flex flex-col gap-4">
         <p className="text-sm font-medium text-bolt-elements-textPrimary">Error: {errorMessage}</p>
         <div className="flex justify-end gap-2">{sessionId ? <ConvexConnectButton /> : null}</div>

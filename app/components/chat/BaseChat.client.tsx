@@ -124,14 +124,14 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         data-chat-visible={showChat}
       >
         <Menu />
-        <div ref={scrollRef} className="flex flex-col lg:flex-row overflow-y-auto w-full h-full">
+        <div ref={scrollRef} className="flex size-full flex-col overflow-y-auto lg:flex-row">
           <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
             {!chatStarted && (
-              <div id="intro" className="mt-[16vh] max-w-chat mx-auto text-center px-4 lg:px-0">
-                <h1 className="text-4xl lg:text-6xl font-black text-bolt-elements-textPrimary mb-4 animate-fadeIn font-display tracking-tight">
+              <div id="intro" className="mx-auto mt-[16vh] max-w-chat px-4 text-center lg:px-0">
+                <h1 className="mb-4 animate-fadeIn font-display text-4xl font-black tracking-tight text-bolt-elements-textPrimary lg:text-6xl">
                   Now you&rsquo;re cooking
                 </h1>
-                <p className="text-xl lg:text-2xl text-balance mb-8 text-bolt-elements-textSecondary animate-fadeIn [animation-delay:200ms] font-medium font-display">
+                <p className="mb-8 animate-fadeIn text-balance font-display text-xl font-medium text-bolt-elements-textSecondary [animation-delay:200ms] lg:text-2xl">
                   Generate and launch realtime full‑stack apps you never thought possible
                 </p>
               </div>
@@ -145,7 +145,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               {chatStarted ? (
                 <Messages
                   ref={messageRef}
-                  className="flex flex-col w-full flex-1 max-w-chat pb-6 mx-auto z-[1]"
+                  className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col pb-6"
                   messages={messages}
                   isStreaming={isStreaming}
                 />
@@ -181,7 +181,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     }}
                   />
                 }
-                <div className="bg-bolt-elements-background-depth-2 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt">
+                <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2">
                   <FilePreview
                     files={uploadedFiles}
                     imageDataList={imageDataList}
@@ -301,7 +301,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       {(chefAuthState.kind === 'unauthenticated' || !selectedTeamSlug) && (
                         <Tooltip.Portal>
                           <Tooltip.Content
-                            className="z-50 px-3 py-1.5 text-sm bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor rounded-md shadow-lg animate-fadeIn"
+                            className="z-50 animate-fadeIn rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 px-3 py-1.5 text-sm shadow-lg"
                             sideOffset={5}
                             side="right"
                           >
@@ -313,16 +313,16 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         </Tooltip.Portal>
                       )}
                     </Tooltip.Root>
-                    <div className="flex justify-end gap-4 items-center text-sm p-4 pt-2">
+                    <div className="flex items-center justify-end gap-4 p-4 pt-2 text-sm">
                       <div className="text-xs text-bolt-elements-textTertiary">
                         <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
                       </div>
-                      <div className="flex-grow" />
+                      <div className="grow" />
                       {input.length > 3 ? (
                         <div className="text-xs text-bolt-elements-textTertiary">
                           <KeyboardShortcut
                             value={['Shift', 'Return']}
-                            className="font-bold text-bolt-elements-textSecondary mr-0.5"
+                            className="mr-0.5 font-bold text-bolt-elements-textSecondary"
                           />{' '}
                           for new line
                         </div>
@@ -342,8 +342,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               </div>
             </div>
             {maintenanceMode && (
-              <div className="max-w-chat mx-auto mb-4">
-                <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 px-4 py-3 rounded relative">
+              <div className="mx-auto mb-4 max-w-chat">
+                <div className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700 dark:border-red-600 dark:bg-red-900 dark:text-red-200">
                   <p className="font-bold">Chef is temporarily unavailable</p>
                   <p className="text-sm">
                     We're experiencing high load and will be back soon. Thank you for your patience.
@@ -366,20 +366,20 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           />
         </div>
         {!chatStarted && (
-          <div className="fixed inset-x-0 bottom-4 flex flex-col sm:flex-row justify-between w-full px-4">
-            <div className="text-sm font-display font-medium text-bolt-elements-textTertiary flex items-end">
+          <div className="fixed inset-x-0 bottom-4 flex w-full flex-col justify-between px-4 sm:flex-row">
+            <div className="flex items-end font-display text-sm font-medium text-bolt-elements-textTertiary">
               <p>
                 <a href="https://www.convex.dev/ai-platforms">
                   <span>Building your own prompt-to-app platform? Use Convex.</span>
                 </a>
               </p>
             </div>
-            <div className="text-lg font-display font-medium text-bolt-elements-textTertiary flex gap-3 items-end">
+            <div className="flex items-end gap-3 font-display text-lg font-medium text-bolt-elements-textTertiary">
               <p className="flex items-center">
                 Made&nbsp;by{' '}
                 <a
                   href="https://www.convex.dev"
-                  className="hover:text-bolt-elements-textPrimary transition-colors"
+                  className="transition-colors hover:text-bolt-elements-textPrimary"
                   aria-label="Convex"
                 >
                   <svg
@@ -388,7 +388,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     viewBox="0 0 223 37"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-[.7em] ml-1.5 w-auto mt-[0.13em]"
+                    className="ml-1.5 mt-[0.13em] h-[.7em] w-auto"
                   >
                     <path
                       d="M5.29382 31.6648C1.95422 28.6785 0.284424 24.2644 0.284424 18.434C0.284424 12.6036 1.98662 8.18965 5.39652 5.20335C8.80092 2.21695 13.4591 0.720947 19.3655 0.720947C21.8188 0.720947 23.9858 0.897345 25.8717 1.26134C27.7577 1.61974 29.5626 2.22835 31.2864 3.09295V12.5524C28.6061 11.2157 25.5637 10.5445 22.1593 10.5445C19.1601 10.5445 16.9446 11.1417 15.5179 12.3363C14.0859 13.5308 13.3726 15.5615 13.3726 18.434C13.3726 21.2099 14.0751 23.2178 15.4855 24.4578C16.8905 25.7035 19.1169 26.3235 22.1647 26.3235C25.3908 26.3235 28.4548 25.5329 31.3621 23.9573V33.8547C28.136 35.3849 24.1155 36.1471 19.3006 36.1471C13.2969 36.1471 8.63342 34.6511 5.29382 31.6648Z"
@@ -421,12 +421,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   </svg>
                 </a>
               </p>
-              <hr className="w-0.5 h-8 bg-bolt-elements-textTertiary opacity-20" />
+              <hr className="h-8 w-0.5 bg-bolt-elements-textTertiary opacity-20" />
               <p className="flex items-center">
                 Powered&nbsp;by{' '}
                 <a
                   href="https://bolt.new"
-                  className="hover:text-bolt-elements-textPrimary transition-colors contents"
+                  className="contents transition-colors hover:text-bolt-elements-textPrimary"
                   aria-label="Bolt"
                 >
                   <svg
@@ -435,7 +435,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 51 21.9"
                     fill="currentColor"
-                    className="h-[1em] w-auto ml-[0.4em]"
+                    className="ml-[0.4em] h-[1em] w-auto"
                   >
                     <path d="M24.1 19.3c-4.7 0-7-2.7-7-6.1s3.2-7.7 7.9-7.7 7 2.7 7 6.1-3.2 7.7-7.9 7.7Zm.2-4.3c1.6 0 2.7-1.5 2.7-3.1s-.8-2-2.2-2-2.7 1.5-2.7 3.1.8 2 2.2 2ZM37 19h-4.9l4-18.2H41l-4 18.1Z" />
                     <path
@@ -465,13 +465,13 @@ function SignInButton() {
   }, [setStarted]);
   return (
     <button
-      className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm text-bolt-elements-textPrimary bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-primary-backgroundHover"
+      className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-button-primary-backgroundHover"
       onClick={signIn}
     >
-      <div className="flex items-center gap-2 p-1.5 w-full">
+      <div className="flex w-full items-center gap-2 p-1.5">
         {!started && (
           <>
-            <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+            <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
             <span>Sign in</span>
           </>
         )}

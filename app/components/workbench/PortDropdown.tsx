@@ -48,17 +48,17 @@ export const PortDropdown = memo(
     }, [isDropdownOpen]);
 
     return (
-      <div className="relative z-port-dropdown" ref={dropdownRef}>
+      <div className="z-port-dropdown relative" ref={dropdownRef}>
         <IconButton icon={<Link2Icon />} onClick={() => setIsDropdownOpen(!isDropdownOpen)} />
         {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 bg-bolt-elements-background-depth-2 border border-bolt-elements-borderColor rounded shadow-sm min-w-[140px] dropdown-animation">
-            <div className="px-4 py-2 border-b border-bolt-elements-borderColor text-sm font-semibold text-bolt-elements-textPrimary">
+          <div className="dropdown-animation absolute right-0 mt-2 min-w-[140px] rounded border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 shadow-sm">
+            <div className="border-b border-bolt-elements-borderColor px-4 py-2 text-sm font-semibold text-bolt-elements-textPrimary">
               Ports
             </div>
             {sortedPreviews.map((preview) => (
               <div
                 key={preview.port}
-                className="flex items-center px-4 py-2 cursor-pointer hover:bg-bolt-elements-item-backgroundActive"
+                className="flex cursor-pointer items-center px-4 py-2 hover:bg-bolt-elements-item-backgroundActive"
                 onClick={() => {
                   setActivePreviewIndex(preview.index);
                   setIsDropdownOpen(false);

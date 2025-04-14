@@ -24,10 +24,10 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
         'border-bolt-elements-borderColor': chat.started,
       })}
     >
-      <div className="flex items-center gap-4 z-logo text-bolt-elements-textPrimary cursor-pointer">
+      <div className="z-logo flex cursor-pointer items-center gap-4 text-bolt-elements-textPrimary">
         {showSidebarIcon && <HamburgerMenuIcon />}
-        <a href="/" className="text-2xl font-semibold flex flex-col leading-tight">
-          <div className="flex items-center font-display font-bold gap-2">
+        <a href="/" className="flex flex-col text-2xl font-semibold leading-tight">
+          <div className="flex items-center gap-2 font-display font-bold">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 fillRule="evenodd"
@@ -43,19 +43,19 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
               />
             </svg>
             <span className="flex items-baseline gap-2">
-              chef <span className="text-sm align-baseline font-medium">by convex</span>
+              chef <span className="align-baseline text-sm font-medium">by convex</span>
             </span>
           </div>
         </a>
       </div>
       {chat.started && (
         <>
-          <span className="flex-1 px-4 truncate text-center text-bolt-elements-textPrimary">
+          <span className="flex-1 truncate px-4 text-center text-bolt-elements-textPrimary">
             <ClientOnly>{() => <ChatDescription />}</ClientOnly>
           </span>
           <ClientOnly>
             {() => (
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <FeedbackButton />
                 <ShareButton />
                 <DeployButton />

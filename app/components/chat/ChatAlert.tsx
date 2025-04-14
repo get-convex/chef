@@ -29,12 +29,7 @@ export default function ChatAlert({ alert, clearAlert, postMessage }: Props) {
       >
         <div className="flex items-start">
           {/* Icon */}
-          <motion.div
-            className="flex-shrink-0"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-          >
+          <motion.div className="shrink-0" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2 }}>
             <ExclamationTriangleIcon className="text-bolt-elements-button-danger-text" />
           </motion.div>
           {/* Content */}
@@ -55,7 +50,7 @@ export default function ChatAlert({ alert, clearAlert, postMessage }: Props) {
             >
               <p>{message}</p>
               {description && (
-                <div className="text-xs text-bolt-elements-textSecondary p-2 bg-bolt-elements-background-depth-3 rounded mt-4 mb-4">
+                <div className="my-4 rounded bg-bolt-elements-background-depth-3 p-2 text-xs text-bolt-elements-textSecondary">
                   Error: {description}
                 </div>
               )}

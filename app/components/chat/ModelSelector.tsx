@@ -36,7 +36,7 @@ export function ModelSelector(props: ModelSelectorProps) {
     throw new Error(`Model ${props.modelSelection} not found`);
   }
   return (
-    <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
+    <div className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor text-sm">
       <Select.Root
         value={props.modelSelection}
         open={open}
@@ -61,12 +61,12 @@ export function ModelSelector(props: ModelSelectorProps) {
         </Select.Trigger>
         <Select.Portal>
           <Select.Content
-            className="z-50 min-w-[200px] max-h-64 overflow-y-auto bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor rounded-md shadow-lg"
+            className="z-50 max-h-64 min-w-[200px] overflow-y-auto rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-lg"
             position="popper"
             sideOffset={5}
           >
             <Select.Viewport>
-              <div className="border-b border-b-bolt-elements-borderColor p-2 sticky top-0 bg-bolt-elements-button-secondary-background z-10">
+              <div className="sticky top-0 z-10 border-b border-b-bolt-elements-borderColor bg-bolt-elements-button-secondary-background p-2">
                 <h3 className="text-sm font-medium">Select Model</h3>
               </div>
               {Object.entries(models).map(([slug, model]) => (

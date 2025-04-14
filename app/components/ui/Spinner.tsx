@@ -2,7 +2,7 @@ export function Spinner() {
   return (
     <svg
       role="status"
-      className="ml-auto h-4 w-4 animate-spin fill-bolt-elements-messages-linkColor text-[var(--cvx-neutral-4)]"
+      className="ml-auto size-4 animate-spin fill-bolt-elements-messages-linkColor text-[var(--cvx-neutral-4)]"
       viewBox="0 0 100 101"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

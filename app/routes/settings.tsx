@@ -37,8 +37,8 @@ export default function Settings() {
 export function SettingsContent() {
   return (
     <div className="min-h-screen bg-bolt-elements-background-depth-2">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="mb-8 flex items-center gap-4">
           <a href="/" className="inline-flex" title="Back to Chat">
             <ArrowLeftIcon />
           </a>

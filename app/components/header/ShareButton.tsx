@@ -102,21 +102,21 @@ export function ShareButton() {
 
       <Popover.Portal>
         <Popover.Content
-          className="z-50 bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor rounded-md shadow-lg w-[320px] animate-fadeIn"
+          className="z-50 w-[320px] animate-fadeIn rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-lg"
           sideOffset={5}
           align="end"
         >
           <div className="p-4">
-            <h2 className="text-base font-medium mb-4 text-bolt-elements-textPrimary">Share Project</h2>
+            <h2 className="mb-4 text-base font-medium text-bolt-elements-textPrimary">Share Project</h2>
 
             {status === 'idle' && (
               <>
-                <p className="text-sm mb-4 text-bolt-elements-textSecondary">
+                <p className="mb-4 text-sm text-bolt-elements-textSecondary">
                   This will create a shareable link to your code and chat history that anyone can access.
                 </p>
                 <div className="flex justify-end">
                   <button
-                    className="px-3 py-1.5 bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent rounded-md text-sm"
+                    className="rounded-md bg-bolt-elements-item-backgroundAccent px-3 py-1.5 text-sm text-bolt-elements-item-contentAccent"
                     onClick={handleShare}
                   >
                     Generate Link
@@ -134,17 +134,17 @@ export function ShareButton() {
 
             {status === 'success' && (
               <>
-                <p className="text-sm mb-4 text-bolt-elements-textSecondary">Use this link to share with others:</p>
-                <div className="flex items-center gap-2 mb-4">
+                <p className="mb-4 text-sm text-bolt-elements-textSecondary">Use this link to share with others:</p>
+                <div className="mb-4 flex items-center gap-2">
                   <input
                     type="text"
                     readOnly
                     value={shareUrl}
-                    className="flex-1 px-3 py-1.5 rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 text-bolt-elements-textPrimary text-sm"
+                    className="flex-1 rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-bolt-elements-textPrimary"
                   />
                   <button
                     onClick={copyToClipboard}
-                    className="p-1.5 bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textPrimary rounded-md border border-bolt-elements-borderColor"
+                    className="rounded-md border border-bolt-elements-borderColor bg-bolt-elements-item-backgroundDefault p-1.5 text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive"
                   >
                     <ClipboardIcon />
                   </button>

@@ -21,7 +21,7 @@ interface SliderProps<T> {
 
 export const Slider = genericMemo(<T,>({ selected, options, setSelected }: SliderProps<T>) => {
   return (
-    <div className="flex items-center flex-wrap shrink-0 gap-1 bg-bolt-elements-background-depth-1 overflow-hidden rounded-full p-1">
+    <div className="flex shrink-0 flex-wrap items-center gap-1 overflow-hidden rounded-full bg-bolt-elements-background-depth-1 p-1">
       {options.options.map((option) => (
         <SliderButton
           key={String(option.value)}
@@ -59,7 +59,7 @@ const SliderButton = memo(
           <motion.span
             layoutId="pill-tab"
             transition={{ duration: 0.2, ease: cubicEasingFn }}
-            className="absolute inset-0 z-0 bg-bolt-elements-item-backgroundAccent rounded-full"
+            className="absolute inset-0 z-0 rounded-full bg-bolt-elements-item-backgroundAccent"
           ></motion.span>
         )}
       </button>

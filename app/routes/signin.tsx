@@ -39,7 +39,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
 // tag so all in-memory state is rebuilt from scratch.
 export default function Index() {
   return (
-    <div className="flex flex-col h-full w-full bg-bolt-elements-background-depth-1">
+    <div className="flex size-full flex-col bg-bolt-elements-background-depth-1">
       <Header hideSidebarIcon />
       <ClientOnly>
         {() => (

@@ -80,8 +80,8 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
       }}
     >
       <div className="h-full">
-        <div className="bg-bolt-elements-terminals-background h-full flex flex-col">
-          <div className="flex items-center bg-bolt-elements-background-depth-2 border-y border-bolt-elements-borderColor gap-1.5 min-h-[34px] p-2">
+        <div className="flex h-full flex-col bg-bolt-elements-terminals-background">
+          <div className="flex min-h-[34px] items-center gap-1.5 border-y border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 p-2">
             {Array.from({ length: terminalCount + 1 }, (_, index) => {
               const isActive = activeTerminal === index;
 
