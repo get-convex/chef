@@ -144,7 +144,9 @@ const ActionList = memo(({ actions }: ActionListProps) => {
         {actions.map((action, index) => {
           const { status, type } = action;
           if (type !== 'file') {
-            captureException(`Action is not a file: ${action.type}`);
+            captureException(
+              `Action is not a file: ${type} status: ${status} toolName: ${action?.toolName} content: ${action?.content?.slice(0, 1000)}`,
+            );
             return null;
           }
           const message = action.isEdit ? 'Edit' : 'Create';

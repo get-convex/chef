@@ -320,18 +320,34 @@ export const updateStorageState = internalMutation({
       partIndex,
     });
     if (doc.storageId !== null) {
-      await ctx.scheduler.runAfter(0, internal.messages.cleanupStaleStoredFiles, {
+      await ctx.scheduler.runAfter(0, internal.messages.maybeCleanupStaleChatHistory, {
         storageId: doc.storageId,
       });
     }
   },
 });
 
-export const cleanupStaleStoredFiles = internalMutation({
+export const maybeCleanupStaleChatHistory = internalMutation({
   args: {
     storageId: v.id('_storage'),
   },
   handler: async (ctx, args): Promise<void> => {
+    const chatRef = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byStorageId', (q) => q.eq('storageId', args.storageId))
+      .first();
+    if (chatRef !== null) {
+      return;
+    }
+
+    const shareRef = await ctx.db
+      .query('shares')
+      .withIndex('byChatHistoryId', (q) => q.eq('chatHistoryId', args.storageId))
+      .first();
+    if (shareRef !== null) {
+      return;
+    }
+
     await ctx.storage.delete(args.storageId);
   },
 });
@@ -444,7 +460,7 @@ export const remove = action({
           const text = await response.text();
           throw new Error(`Failed to delete project: ${response.statusText} ${text}`);
         }
-    }
+      }
     }
 
     await ctx.runMutation(internal.messages.removeChatInner, {

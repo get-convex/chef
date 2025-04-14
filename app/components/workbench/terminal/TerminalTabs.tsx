@@ -2,7 +2,6 @@ import { useStore } from '@nanostores/react';
 import React, { memo, useEffect, useRef, useState } from 'react';
 import { Panel, type ImperativePanelHandle } from 'react-resizable-panels';
 import { IconButton } from '~/components/ui/IconButton';
-import { shortcutEventEmitter } from '~/lib/hooks';
 import { themeStore } from '~/lib/stores/theme';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { classNames } from '~/utils/classNames';
@@ -26,7 +25,6 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
 
   const terminalRefs = useRef<Array<TerminalRef | null>>([]);
   const terminalPanelRef = useRef<ImperativePanelHandle>(null);
-  const terminalToggledByShortcut = useRef(false);
 
   const activeTerminal = useStore(activeTerminalTabStore);
   const [terminalCount, setTerminalCount] = useState(2);
@@ -54,15 +52,9 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
     } else if (showTerminal && isCollapsed) {
       terminal.resize(DEFAULT_TERMINAL_SIZE);
     }
-
-    terminalToggledByShortcut.current = false;
   }, [showTerminal]);
 
   useEffect(() => {
-    const unsubscribeFromEventEmitter = shortcutEventEmitter.on('toggleTerminal', () => {
-      terminalToggledByShortcut.current = true;
-    });
-
     const unsubscribeFromThemeStore = themeStore.subscribe(() => {
       for (const ref of Object.values(terminalRefs.current)) {
         ref?.reloadStyles();
@@ -70,7 +62,6 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
     });
 
     return () => {
-      unsubscribeFromEventEmitter();
       unsubscribeFromThemeStore();
     };
   }, []);
@@ -82,14 +73,10 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
       minSize={10}
       collapsible
       onExpand={() => {
-        if (!terminalToggledByShortcut.current) {
-          workbenchStore.toggleTerminal(true);
-        }
+        workbenchStore.toggleTerminal(true);
       }}
       onCollapse={() => {
-        if (!terminalToggledByShortcut.current) {
-          workbenchStore.toggleTerminal(false);
-        }
+        workbenchStore.toggleTerminal(false);
       }}
     >
       <div className="h-full">

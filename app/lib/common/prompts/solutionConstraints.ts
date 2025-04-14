@@ -10,7 +10,8 @@ export function solutionConstraints(options: SystemPromptOptions) {
 
     <convex_guidelines>
       You MUST use Convex for the database, realtime, file storage, functions, scheduling, HTTP handlers,
-      and search functionality. Here are some guidelines for using Convex effectively:
+      and search functionality. Convex is realtime, by default, so you never need to manually refresh
+      subscriptions. Here are some guidelines for using Convex effectively:
 
       ${convexGuidelines}
 

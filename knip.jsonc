@@ -8,6 +8,8 @@
     // generated code containing possibly-unused exports
     "convex/_generated/**",
     "functions/**",
+    "convex/eslint.config.mjs",
+    "convex/vitest.config.mts",
     "load-context.ts"
   ],
   "project": ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}!"],

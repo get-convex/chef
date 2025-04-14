@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { httpAction, internalMutation, mutation } from './_generated/server';
 import { getCurrentMember } from './sessions';
-import { internal } from './_generated/api'; // hi
+import { internal } from './_generated/api';
 
 const ALLOWED_MODELS = [
   'gpt-4o-mini',
@@ -29,6 +29,11 @@ export const openaiProxy = httpAction(async (ctx, req) => {
     return new Response(result.error, { status: 401 });
   }
 
+  const url = new URL(req.url);
+  if (url.pathname != '/openai-proxy/chat/completions') {
+    return new Response('Only the /chat/completions API is supported', { status: 400 });
+  }
+
   let body: any;
   try {
     body = await req.json();
@@ -39,13 +44,59 @@ export const openaiProxy = httpAction(async (ctx, req) => {
     return new Response('Only gpt-4o-mini and gpt-4.1-nano are supported', { status: 400 });
   }
 
+  if (body.max_completion_tokens && body.max_completion_tokens > 16384) {
+    return new Response('max_completion_tokens must be <= 16384', { status: 400 });
+  }
+  if (body.max_tokens && body.max_tokens > 16384) {
+    return new Response('max_tokens must be <= 16384', { status: 400 });
+  }
+  if (body.service_tier !== undefined) {
+    return new Response('service_tier is not supported', { status: 400 });
+  }
+  if (body.store !== undefined) {
+    return new Response('store is not supported', { status: 400 });
+  }
+  if (body.web_search_options !== undefined ) {
+    return new Response('web_search_options is not supported', { status: 400 });
+  }
+  // Pin allowed fields from https://platform.openai.com/docs/api-reference/chat/create on 2025-04-14.
+  const proxiedBody = {
+    messages: body.messages,
+    model: body.model,
+    audio: body.audio,
+    frequency_penalty: body.frequency_penalty,
+    function_call: body.function_call,
+    functions: body.functions,
+    logit_bias: body.logit_bias,
+    logprobs: body.logprobs,
+    max_completion_tokens: body.max_completion_tokens,
+    max_tokens: body.max_tokens,
+    metadata: body.metadata,
+    modalities: body.modalities,
+    n: body.n,
+    parallel_tool_calls: body.parallel_tool_calls,
+    prediction: body.prediction,
+    presence_penalty: body.presence_penalty,
+    reasoning_effort: body.reasoning_effort,
+    response_format: body.response_format,
+    seed: body.seed,
+    stop: body.stop,
+    stream: body.stream,
+    stream_options: body.stream_options,
+    temperature: body.temperature,
+    tool_choice: body.tool_choice,
+    tools: body.tools,
+    top_logprobs: body.top_logprobs,
+    top_p: body.top_p,
+    user: body.user,
+  };
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(proxiedBody),
   });
   return response;
 });

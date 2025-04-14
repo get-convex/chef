@@ -23,7 +23,7 @@ export const ChefSignInPage = () => {
   }
 };
 
-export function ConvexSignInForm() {
+function ConvexSignInForm() {
   const { loginWithRedirect } = useAuth0();
   const [started, setStarted] = useState(false);
   return (

@@ -63,12 +63,58 @@ export async function convexAgent(
   let model: string;
   // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
   const fetch = undiciFetch as unknown as Fetch;
+  const userKeyApiFetch = (provider: 'Anthropic' | 'OpenAI') => {
+    return async (input: RequestInfo | URL, init?: RequestInit) => {
+      const result = await fetch(input, init);
+      if (result.status === 401) {
+        const text = await result.text();
+        throw new Error(JSON.stringify({ error: 'Invalid API key', details: text }));
+      }
+      if (result.status === 413) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({
+            error: 'Request exceeds the maximum allowed number of bytes.',
+            details: text,
+          }),
+        );
+      }
+      if (result.status === 429) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({
+            error: `${provider} is temporarily overloaded`,
+            details: text,
+          }),
+        );
+      }
+      if (result.status === 529) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({
+            error: `${provider}'s API is temporarily overloaded`,
+            details: text,
+          }),
+        );
+      }
+      if (!result.ok) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({
+            error: `${provider} returned an error (${result.status} ${result.statusText}) when using your provided API key: ${text}`,
+            details: text,
+          }),
+        );
+      }
+      return result;
+    };
+  };
   switch (modelProvider) {
     case 'OpenAI': {
       model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4.1';
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv(env, 'OPENAI_API_KEY'),
-        fetch,
+        fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
       });
       provider = {
         model: openai(model),
@@ -149,29 +195,9 @@ export async function convexAgent(
           return throwIfBad(lowQosResponse, true);
         };
       };
-      const userKeyApiFetch = () => {
-        return async (input: RequestInfo | URL, init?: RequestInit) => {
-          const result = await fetch(input, init);
-          if (result.status === 413) {
-            const text = await result.text();
-            throw new Error(
-              JSON.stringify({ error: 'Request exceeds the maximum allowed number of bytes.', details: text }),
-            );
-          }
-          if (result.status === 429) {
-            const text = await result.text();
-            throw new Error(JSON.stringify({ error: 'Rate limited by Anthropic', details: text }));
-          }
-          if (result.status === 529) {
-            const text = await result.text();
-            throw new Error(JSON.stringify({ error: "Anthropic's API is temporarily overloaded", details: text }));
-          }
-          return result;
-        };
-      };
       const anthropic = createAnthropic({
         apiKey: userApiKey || getEnv(env, 'ANTHROPIC_API_KEY'),
-        fetch: userApiKey ? userKeyApiFetch() : rateLimitAwareFetch(),
+        fetch: userApiKey ? userKeyApiFetch('Anthropic') : rateLimitAwareFetch(),
       });
 
       provider = {

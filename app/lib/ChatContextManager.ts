@@ -50,7 +50,7 @@ export class ChatContextManager {
 
     // Seed the set with the PREWARM_PATHS.
     const cache = workbenchStore.files.get();
-    const allPaths = Object.keys(cache).toSorted();
+    const allPaths = Object.keys(cache).sort();
 
     const lastUsed: Map<AbsolutePath, number> = new Map();
     for (const path of PREWARM_PATHS) {

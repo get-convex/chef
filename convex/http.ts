@@ -5,7 +5,7 @@ import type { Id } from './_generated/dataModel';
 import { ConvexError } from 'convex/values';
 import { openaiProxy } from './openaiProxy';
 import { corsRouter } from 'convex-helpers/server/cors';
-import { Lz4 } from './lz4';
+import { compressMessages } from './compressMessages';
 
 const http = httpRouter();
 const httpWithCors = corsRouter(http, {});
@@ -105,8 +105,7 @@ httpWithCors.route({
           status: 204,
         });
       }
-      const lz4 = await Lz4.initialize();
-      const compressed = lz4.compress(new TextEncoder().encode(JSON.stringify(messages)));
+      const compressed = await compressMessages(messages);
       const blob = new Blob([compressed]);
       const storageId = await ctx.storage.store(blob);
       await ctx.runMutation(internal.messages.handleStorageStateMigration, {
