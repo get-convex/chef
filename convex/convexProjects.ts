@@ -479,7 +479,7 @@ export const disconnectConvexProject = mutation({
   },
 });
 
-function ensureEnvVar(name: string) {
+export function ensureEnvVar(name: string) {
   if (!process.env[name]) {
     throw new Error(`Environment variable ${name} is not set`);
   }

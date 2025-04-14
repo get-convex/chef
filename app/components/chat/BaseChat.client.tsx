@@ -23,6 +23,9 @@ import { useChefAuth } from './ChefAuthWrapper';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import { openSignInWindow } from '~/components/ChefSignInPage';
+import { Spinner } from '~/components/ui/Spinner';
+import { ModelSelector } from './ModelSelector';
+import type { ModelSelection } from '~/utils/constants';
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -47,7 +50,7 @@ interface BaseChatProps {
   // Chat user interactions
   handleInputChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleStop: () => void;
-  sendMessage: (event: React.UIEvent, messageInput?: string) => Promise<void>;
+  sendMessage: (messageInput?: string) => Promise<void>;
   sendMessageInProgress: boolean;
 
   // Current chat history props
@@ -57,6 +60,10 @@ interface BaseChatProps {
   messages: Message[];
   terminalInitializationOptions: TerminalInitializationOptions | undefined;
   disableChatMessage: string | null;
+
+  // Model selection props
+  modelSelection: ModelSelection;
+  setModelSelection: (modelSelection: ModelSelection) => void;
 
   // Alert related props
   actionAlert: ActionAlert | undefined;
@@ -88,6 +95,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       toolStatus,
       terminalInitializationOptions,
       disableChatMessage,
+      modelSelection,
+      setModelSelection,
     },
     ref,
   ) => {
@@ -96,9 +105,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
 
-    const handleSendMessage = (event: React.UIEvent, messageInput?: string) => {
+    const handleSendMessage = (messageInput?: string) => {
       if (sendMessage) {
-        sendMessage(event, messageInput).then(() => {
+        sendMessage(messageInput).then(() => {
           handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
         });
       }
@@ -152,7 +161,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       alert={actionAlert}
                       clearAlert={() => clearAlert?.()}
                       postMessage={(message) => {
-                        handleSendMessage?.({} as any, message);
+                        handleSendMessage?.(message);
                         clearAlert?.();
                       }}
                     />
@@ -164,6 +173,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     numMessages={messages?.length ?? 0}
                     toolStatus={toolStatus}
                     currentError={currentError}
+                    resendMessage={() => {
+                      const lastUserMessage = messages.toReversed().find((message) => message.role === 'user');
+                      if (lastUserMessage) {
+                        handleSendMessage?.(lastUserMessage.content);
+                      }
+                    }}
                   />
                 }
                 <div className="bg-bolt-elements-background-depth-2 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt">
@@ -239,7 +254,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                             return;
                           }
 
-                          handleSendMessage?.(event);
+                          handleSendMessage();
                         }
                       }}
                       value={input}
@@ -271,13 +286,13 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                               sendMessageInProgress ||
                               maintenanceMode
                             }
-                            onClick={(event) => {
+                            onClick={() => {
                               if (isStreaming) {
                                 handleStop?.();
                                 return;
                               }
                               if (input.length > 0 || uploadedFiles.length > 0) {
-                                handleSendMessage?.(event);
+                                handleSendMessage?.();
                               }
                             }}
                           />
@@ -299,6 +314,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       )}
                     </Tooltip.Root>
                     <div className="flex justify-end gap-4 items-center text-sm p-4 pt-2">
+                      <div className="text-xs text-bolt-elements-textTertiary">
+                        <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
+                      </div>
+                      <div className="flex-grow" />
                       {input.length > 3 ? (
                         <div className="text-xs text-bolt-elements-textTertiary">
                           <KeyboardShortcut
@@ -397,8 +416,26 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
             <hr className="w-0.5 h-8 bg-bolt-elements-textTertiary opacity-20" />
             <p className="flex items-center">
               Powered by{' '}
-              <a href="https://bolt.new" className="hover:text-bolt-elements-textPrimary transition-colors contents">
-                <span className="i-bolt:logo-text?mask w-[4ch] inline-block ml-1">Bolt</span>
+              <a
+                href="https://bolt.new"
+                className="hover:text-bolt-elements-textPrimary transition-colors contents"
+                aria-label="Bolt"
+              >
+                <svg
+                  width="51"
+                  height="21.9"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 51 21.9"
+                  fill="currentColor"
+                  className="h-[1em] w-auto ml-[0.4em]"
+                >
+                  <path d="M24.1 19.3c-4.7 0-7-2.7-7-6.1s3.2-7.7 7.9-7.7 7 2.7 7 6.1-3.2 7.7-7.9 7.7Zm.2-4.3c1.6 0 2.7-1.5 2.7-3.1s-.8-2-2.2-2-2.7 1.5-2.7 3.1.8 2 2.2 2ZM37 19h-4.9l4-18.2H41l-4 18.1Z" />
+                  <path
+                    d="M9.6 19.3c-1.5 0-3-.5-3.8-1.7L5.5 19 0 21.9.6 19 4.6.8h4.9L8.1 7.2c1.1-1.2 2.2-1.7 3.6-1.7 3 0 4.9 1.9 4.9 5.5s-2.3 8.3-7 8.3Zm1.9-7.3c0 1.7-1.2 3-2.8 3s-1.7-.3-2.2-.9l.8-3.3c.6-.6 1.2-.9 2-.9 1.2 0 2.2.9 2.2 2.2Z"
+                    fillRule="evenodd"
+                  />
+                  <path d="M46.1 19.3c-2.8 0-4.9-1-4.9-3.3s0-.7.1-1l1.1-4.9h-2.2l1-4.2h2.2l.8-3.6L49.7 0l-.6 2.3-.8 3.6H51l-1 4.2h-2.7l-.7 3.2v.6c0 .6.4 1.1 1.2 1.1s.6 0 .7-.1v3.9c-.5.4-1.4.5-2.3.5Z" />
+                </svg>
               </a>
             </p>
           </div>
@@ -431,7 +468,7 @@ function SignInButton() {
         )}
         {started && (
           <>
-            <div className="i-ph:spinner-gap animate-spin" />
+            <Spinner />
             Signing in...
           </>
         )}

@@ -4,7 +4,7 @@ import type { MetaFunction } from '@vercel/remix';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Header } from '~/components/header/Header';
 import { Homepage } from '~/components/Homepage.client';
-import { SafariWarning } from '~/components/SafariWarning';
+import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 
 export const meta: MetaFunction = () => {
   return [
@@ -38,14 +38,19 @@ export const loader = async (args: LoaderFunctionArgs) => {
 // It's critical that going back to the homepage or to other chats use a `<a>`
 // tag so all in-memory state is rebuilt from scratch.
 export default function Index() {
+  /*
+  const location = useLocation();
+  const experience = chooseExperience(navigator.userAgent, new URLSearchParams(location.search));
+  */
+
   return (
     <div className="flex flex-col h-full w-full bg-bolt-elements-background-depth-1">
       <Header />
       <ClientOnly>
         {() => (
           <>
-            <Homepage />
-            <SafariWarning />
+            {<Homepage />}
+            <CompatibilityWarnings />
           </>
         )}
       </ClientOnly>

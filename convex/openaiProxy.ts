@@ -3,6 +3,11 @@ import { httpAction, internalMutation, mutation } from './_generated/server';
 import { getCurrentMember } from './sessions';
 import { internal } from './_generated/api'; // hi
 
+const ALLOWED_MODELS = [
+  'gpt-4o-mini',
+  'gpt-4.1-nano',
+];
+
 export const openaiProxy = httpAction(async (ctx, req) => {
   if (!openaiProxyEnabled()) {
     return new Response('Convex OpenAI proxy is disabled.', { status: 400 });
@@ -30,8 +35,8 @@ export const openaiProxy = httpAction(async (ctx, req) => {
   } catch (_error) {
     return new Response('Invalid request body', { status: 400 });
   }
-  if (body.model != 'gpt-4o-mini') {
-    return new Response('Only gpt-4o-mini is supported', { status: 400 });
+  if (!ALLOWED_MODELS.includes(body.model)) {
+    return new Response('Only gpt-4o-mini and gpt-4.1-nano are supported', { status: 400 });
   }
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -66,7 +71,7 @@ export const issueOpenAIToken = mutation({
     await ctx.db.insert('memberOpenAITokens', {
       memberId: member._id,
       token,
-      requestsRemaining: included4oMiniRequests(),
+      requestsRemaining: includedRequests(),
       lastUsedTime: 0,
     });
     return token;
@@ -107,7 +112,11 @@ export const decrementToken = internalMutation({
 // 16384 max output tokens @ $0.6/1M
 // 128K max input tokens @ $0.15/1M
 // => ~$0.03 per request.
-function included4oMiniRequests() {
+//
+// Cost per gpt-4.1-nano request (2025-04-14):
+// output tokens: $0.40/1M
+// input tokens: $0.10/1M
+function includedRequests() {
   const fromEnv = process.env.OPENAI_PROXY_INCLUDED_REQUESTS;
   if (!fromEnv) {
     return 100;

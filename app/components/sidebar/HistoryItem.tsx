@@ -5,6 +5,7 @@ import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
 import WithTooltip from '~/components/ui/Tooltip';
 import { useEditChatDescription } from '~/lib/hooks';
 import { forwardRef, type ForwardedRef } from 'react';
+import { CheckIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 
 interface HistoryItemProps {
   item: ChatHistoryItem;
@@ -46,9 +47,11 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
           />
           <button
             type="submit"
-            className="i-ph:check h-4 w-4 text-gray-500 hover:text-[var(--cvx-util-accent)] transition-colors"
+            className="h-4 w-4 text-gray-500 hover:text-[var(--cvx-util-accent)] transition-colors"
             onMouseDown={handleSubmit}
-          />
+          >
+            <CheckIcon />
+          </button>
         </form>
       ) : (
         <a href={`/chat/${item.urlId ?? item.initialId}`} className="flex w-full relative truncate block">
@@ -67,7 +70,7 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
             <div className="flex items-center gap-2.5 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
               <ChatActionButton
                 toolTipContent="Rename"
-                icon="i-ph:pencil-fill h-4 w-4"
+                icon={<Pencil1Icon />}
                 onClick={(event) => {
                   event.preventDefault();
                   toggleEditMode();
@@ -76,7 +79,7 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
               <Dialog.Trigger asChild>
                 <ChatActionButton
                   toolTipContent="Delete"
-                  icon="i-ph:trash h-4 w-4"
+                  icon={<TrashIcon />}
                   className="hover:text-red-500"
                   onClick={(event) => {
                     event.preventDefault();
@@ -101,7 +104,7 @@ const ChatActionButton = forwardRef(
       onClick,
     }: {
       toolTipContent: string;
-      icon: string;
+      icon: React.ReactNode;
       className?: string;
       onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
       btnTitle?: string;
@@ -113,9 +116,11 @@ const ChatActionButton = forwardRef(
         <button
           ref={ref}
           type="button"
-          className={`text-gray-400 dark:text-gray-500 hover:text-[var(--cvx-util-accent)] transition-colors ${icon} ${className ? className : ''}`}
+          className={`text-gray-400 dark:text-gray-500 hover:text-[var(--cvx-util-accent)] transition-colors bg-transparent ${className ? className : ''}`}
           onClick={onClick}
-        />
+        >
+          {icon}
+        </button>
       </WithTooltip>
     );
   },

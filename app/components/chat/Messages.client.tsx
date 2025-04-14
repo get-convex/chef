@@ -7,6 +7,8 @@ import { useStore } from '@nanostores/react';
 import { profileStore } from '~/lib/stores/profile';
 import { forwardRef } from 'react';
 import type { ForwardedRef } from 'react';
+import { SpinnerThreeDots } from '~/components/ui/SpinnerThreeDots';
+import { PersonIcon } from '@radix-ui/react-icons';
 
 interface MessagesProps {
   id?: string;
@@ -56,7 +58,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
                           decoding="sync"
                         />
                       ) : (
-                        <div className="i-ph:user-fill text-2xl" />
+                        <PersonIcon className="size-4" />
                       )}
                     </div>
                   )}
@@ -67,8 +69,10 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
               );
             })
           : null}
-        {isStreaming && (
-          <div className="text-center w-full text-bolt-elements-textSecondary i-svg-spinners:3-dots-fade text-4xl mt-4"></div>
+        {(isStreaming || true) && (
+          <div className="w-full flex justify-center text-bolt-elements-textSecondary mt-4">
+            <SpinnerThreeDots className="size-9" />
+          </div>
         )}
       </div>
     );

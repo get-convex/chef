@@ -13,13 +13,7 @@
   "project": ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}!"],
   "ignore": ["template/**"],
 
-  "ignoreDependencies": [
-    // UnoCSS Icon Dependencies
-    // These packages are needed by UnoCSS's presetIcons for the i-* icon classes
-    // even though they're not directly imported in our code
-    "@iconify-json/ph",        // For Phosphor icons (i-ph:*) used in components like TabManagement.tsx
-    "@iconify-json/svg-spinners" // For spinner icons (i-svg-spinners:*)
-  ],
+  "ignoreDependencies": [],
   "ignoreBinaries": [
     "open" // yeah this only works on macs, sorry
   ]

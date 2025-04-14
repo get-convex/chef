@@ -115,6 +115,8 @@ export function solutionConstraints(options: SystemPromptOptions) {
         \`\`\`
 
         You can use the \`api\` object to call any public Convex function.
+
+        Always use \`canvas\` for image compression.
       </client_guidelines>
     </convex_guidelines>
   </solution_constraints>
@@ -154,7 +156,8 @@ function templateInfo() {
     <file path="convex/http.ts">
       This file contains the HTTP handlers for the Convex backend. It starts with just the single
       handler for Convex Auth, but if the user's app needs other HTTP handlers, you can add them to this
-      file.
+      file. DO NOT modify the \`convex/http.ts\` file under any circumstances unless explicitly instructed to do so.
+      DO NOT modify the \`convex/http.ts\` for file storage. Use an action instead.
     </file>
 
     <file path="convex/schema.ts">

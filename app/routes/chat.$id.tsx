@@ -2,9 +2,9 @@ import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
 import { json } from '@vercel/remix';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Header } from '~/components/header/Header';
-import { SafariWarning } from '~/components/SafariWarning';
 import { ExistingChat } from '~/components/ExistingChat.client';
 import { redirect, useLoaderData } from '@remix-run/react';
+import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Chef' }];
@@ -35,7 +35,7 @@ export default function ChatRoute() {
         {() => (
           <>
             <ExistingChat chatId={loaderData.id} />
-            <SafariWarning />
+            <CompatibilityWarnings />
           </>
         )}
       </ClientOnly>

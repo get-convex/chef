@@ -6,6 +6,8 @@ import { useMutation } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
+import { Share2Icon, ClipboardIcon } from '@radix-ui/react-icons';
+import { Spinner } from '~/components/ui/Spinner';
 
 const Button = forwardRef<
   HTMLButtonElement,
@@ -93,7 +95,7 @@ export function ShareButton() {
     <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>
       <Popover.Trigger asChild>
         <Button active={isOpen}>
-          <div className="i-ph:share-network w-4 h-4" />
+          <Share2Icon />
           <span>Share</span>
         </Button>
       </Popover.Trigger>
@@ -125,7 +127,7 @@ export function ShareButton() {
 
             {status === 'loading' && (
               <div className="flex flex-col items-center justify-center py-6">
-                <div className="i-ph:spinner-gap animate-spin w-8 h-8 mb-4 text-bolt-elements-textSecondary" />
+                <Spinner />
                 <p className="text-bolt-elements-textSecondary">Generating share link…</p>
               </div>
             )}
@@ -144,7 +146,7 @@ export function ShareButton() {
                     onClick={copyToClipboard}
                     className="p-1.5 bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textPrimary rounded-md border border-bolt-elements-borderColor"
                   >
-                    <div className="i-ph:clipboard-text-duotone w-5 h-5" />
+                    <ClipboardIcon />
                   </button>
                 </div>
               </>

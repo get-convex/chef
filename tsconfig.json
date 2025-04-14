@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "types": [
-      "@remix-run/node",
-      "vite/client",
-      "@types/dom-speech-recognition"
-    ],
+    "types": ["@remix-run/node", "vite/client", "@types/dom-speech-recognition"],
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
@@ -35,7 +31,5 @@
     "**/.client/**/*.ts",
     "**/.client/**/*.tsx"
   ],
-  "exclude": [
-    "template"
-  ]
+  "exclude": ["template"]
 }

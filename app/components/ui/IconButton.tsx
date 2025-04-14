@@ -14,7 +14,7 @@ interface BaseIconButtonProps {
 }
 
 type IconButtonWithoutChildrenProps = {
-  icon: string;
+  icon: string | React.ReactNode;
   children?: undefined;
 } & BaseIconButtonProps;
 
@@ -62,7 +62,13 @@ export const IconButton = memo(
             onClick?.(event);
           }}
         >
-          {children ? children : <div className={classNames(icon, getIconSize(size), iconClassName)}></div>}
+          {children ? (
+            children
+          ) : typeof icon === 'string' ? (
+            <div className={classNames(icon, getIconSize(size), iconClassName)}></div>
+          ) : (
+            icon
+          )}
         </button>
       );
     },

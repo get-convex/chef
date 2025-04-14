@@ -8,6 +8,7 @@ import { DeployButton } from './DeployButton';
 import { FeedbackButton } from './FeedbackButton';
 import { ShareButton } from './ShareButton';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { HamburgerMenuIcon } from '@radix-ui/react-icons';
 
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
@@ -24,7 +25,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
       })}
     >
       <div className="flex items-center gap-4 z-logo text-bolt-elements-textPrimary cursor-pointer">
-        {showSidebarIcon && <div className="i-ph:sidebar-simple-duotone text-xl" />}
+        {showSidebarIcon && <HamburgerMenuIcon />}
         <a href="/" className="text-2xl font-semibold flex flex-col leading-tight">
           <div className="flex items-center font-display font-bold gap-2">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

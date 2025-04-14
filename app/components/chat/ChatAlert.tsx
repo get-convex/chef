@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { ActionAlert } from '~/types/actions';
 import { classNames } from '~/utils/classNames';
+import { ExclamationTriangleIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
 
 interface Props {
   alert: ActionAlert;
@@ -34,7 +35,7 @@ export default function ChatAlert({ alert, clearAlert, postMessage }: Props) {
             animate={{ scale: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <div className={`i-ph:warning-duotone text-xl text-bolt-elements-button-danger-text`}></div>
+            <ExclamationTriangleIcon className="text-bolt-elements-button-danger-text" />
           </motion.div>
           {/* Content */}
           <div className="ml-3 flex-1">
@@ -83,7 +84,7 @@ export default function ChatAlert({ alert, clearAlert, postMessage }: Props) {
                     'flex items-center gap-1.5',
                   )}
                 >
-                  <div className="i-ph:chat-circle-duotone"></div>
+                  <ChatBubbleIcon />
                   Ask Chef
                 </button>
                 <button

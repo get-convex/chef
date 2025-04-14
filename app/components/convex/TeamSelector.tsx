@@ -3,6 +3,8 @@ import * as Select from '@radix-ui/react-select';
 import { classNames } from '~/utils/classNames';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { useStore } from '@nanostores/react';
+import { CaretDownIcon, CheckIcon } from '@radix-ui/react-icons';
+import { Spinner } from '~/components/ui/Spinner';
 
 export function TeamSelector({
   selectedTeamSlug,
@@ -20,7 +22,7 @@ export function TeamSelector({
     return (
       <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden text-sm">
         <div className="flex items-center gap-2 p-1.5 w-full">
-          <div className="i-ph:spinner-gap animate-spin" />
+          <Spinner />
           Loading teams…
         </div>
       </div>
@@ -50,7 +52,7 @@ export function TeamSelector({
           <img className="w-4 h-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
           <Select.Value placeholder="Select a team...">{selectedTeam?.name ?? 'Select a team...'}</Select.Value>
           <Select.Icon className="ml-auto">
-            <div className={classNames('i-ph:caret-down-bold transition-all', open ? 'rotate-180' : '')}></div>
+            <CaretDownIcon className={classNames('transition-all', open ? 'rotate-180' : '')} />
           </Select.Icon>
         </Select.Trigger>
         <Select.Portal>
@@ -79,7 +81,7 @@ export function TeamSelector({
                     <Select.ItemText>{team.name}</Select.ItemText>
                   </div>
                   <Select.ItemIndicator className="ml-auto">
-                    <div className="i-ph:check" />
+                    <CheckIcon />
                   </Select.ItemIndicator>
                 </Select.Item>
               ))}

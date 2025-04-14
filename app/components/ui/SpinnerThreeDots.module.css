@@ -1,0 +1,24 @@
+.Dot1,
+.Dot2,
+.Dot3 {
+  animation: SpinnerDot 0.8s linear infinite;
+}
+
+.Dot1 {
+  animation-delay: -0.8s;
+}
+
+.Dot2 {
+  animation-delay: -0.65s;
+}
+
+.Dot3 {
+  animation-delay: -0.5s;
+}
+
+@keyframes SpinnerDot {
+  93.75%,
+  100% {
+    opacity: 0.2;
+  }
+}
