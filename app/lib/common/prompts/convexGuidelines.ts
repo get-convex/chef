@@ -480,6 +480,9 @@ need to do access checks.
 - The \`ctx.storage.getUrl()\` method returns a signed URL for a given file. It returns \`null\` if the file doesn't exist.
 - Do NOT use the deprecated \`ctx.storage.getMetadata\` call for loading a file's metadata.
 - Do NOT store file urls in the database. Instead, store the file id in the database and query the \`_storage\` system table to get the url.
+- Profile images are stored as Convex storage IDs. Do NOT directly as image URLs. Instead, fetch the signed URL for each image from Convex
+  storage and use that as the image source.
+- Make sure to ALWAYS use the \`_storage\` system table to get the signed URL for a given file.
 
 Instead, query the \`_storage\` system table. For example, you can use \`ctx.db.system.get\` to get an \`Id<"_storage">\`.
 

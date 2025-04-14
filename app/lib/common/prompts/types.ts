@@ -3,4 +3,5 @@ export interface SystemPromptOptions {
   enablePreciseEdits: boolean;
   includeTemplate: boolean;
   openaiProxyEnabled: boolean;
+  usingOpenAi: boolean;
 }
