@@ -54,7 +54,7 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
           </button>
         </form>
       ) : (
-        <a href={`/chat/${item.urlId ?? item.initialId}`} className="relative block flex w-full truncate">
+        <a href={`/chat/${item.urlId ?? item.initialId}`} className="relative flex w-full truncate">
           <WithTooltip tooltip={description}>
             <span className="truncate pr-24">{description}</span>
           </WithTooltip>
