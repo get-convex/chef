@@ -66,10 +66,19 @@ interface ChatProps {
 
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
+  initialInput?: string;
 }
 
 export const Chat = memo(
-  ({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy }: ChatProps) => {
+  ({
+    initialMessages,
+    partCache,
+    storeMessageHistory,
+    initializeChat,
+    isReload,
+    hadSuccessfulDeploy,
+    initialInput,
+  }: ChatProps) => {
     const convex = useConvex();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
@@ -159,7 +168,7 @@ export const Chat = memo(
 
     const { messages, status, input, handleInputChange, setInput, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
-      initialInput: Cookies.get(PROMPT_COOKIE_KEY) || '',
+      initialInput: Cookies.get(PROMPT_COOKIE_KEY) || initialInput || '',
       api: '/api/chat',
       sendExtraMessageFields: true,
       experimental_prepareRequestBody: ({ messages }) => {
