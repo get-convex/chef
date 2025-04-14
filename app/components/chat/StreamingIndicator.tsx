@@ -27,13 +27,13 @@ export const STATUS_MESSAGES = {
 } as const;
 
 const COOKING_SPLINES_MESSAGES = [
-  "Simmering... ",
-  "Sautéing...",
-  "Baking...",
-  "Grilling...",
-  "Whisking...",
-  "Practicing mise-en-place...",
-]
+  'Simmering... ',
+  'Sautéing...',
+  'Baking...',
+  'Grilling...',
+  'Whisking...',
+  'Practicing mise-en-place...',
+];
 const COOKING_SPLINES_PROBABILITY = 0.2;
 const COOKING_SPLINES_DURATION = 4000;
 
@@ -50,7 +50,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
   const [cookingMessage, setCookingMessage] = useState<string | null>(null);
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
-    if (streamStatus === "submitted" || streamStatus === "streaming") {
+    if (streamStatus === 'submitted' || streamStatus === 'streaming') {
       timer = setInterval(() => {
         let newMessage = null;
         if (Math.random() < COOKING_SPLINES_PROBABILITY) {
