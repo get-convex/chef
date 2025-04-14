@@ -25,14 +25,10 @@ npx convex dev --configure existing --team convex --project chef --once
 Explanation:
 
 Clone the 100MB repo (don't worry, it's not much code) into a dir called chef.
-Let's use the same Node.js version as the monorepo for convenience
-even though it's old. This project uses `pnpm` instead of `npm`. Download an
-.env.local from Vercel. Add `VITE_CONVEX_URL` because otherwise `npx convex dev`
-will incorrectly guess that you want to use `CONVEX_URL` as the client
-environment variable (Nicolas added a fix to the convex CLI that will be in
-the next client release so we can avoid this.) Connect to the same Convex
-project as the rest of us so that you get some environment variables populated
-in your dev deployment automatically.
+We use Node.js version 20 to develop even though in production on Vercel backend code runs in Vercel's Node.js 22 environment!
+This project uses `pnpm` instead of `npm`. Download an .env.local from Vercel.
+Add `VITE_CONVEX_URL` because otherwise `npx convex dev` will incorrectly guess that you want to use `CONVEX_URL` as the client environment variable (Nicolas added a fix to the convex CLI that will be in the next client release so we can avoid this.)
+Connect to the same Convex project as the rest of us so that you get some environment variables populated in your dev deployment automatically.
 
 ### Developing
 
@@ -50,17 +46,30 @@ npx convex dev
 # to use the hot-reloading dev server.
 ```
 
+### Submitting PRs
+
 Probably set up an editor plugin for running prettier on save.
 
-We have a commit queue, we don't block on test (nobody runs them) but we do block
-on lints and formatting.
+We have a commit queue that blocks on tests, formatting, lints and typechecking.
+Run `pnpm run lint:fix` for lints and formatting, `pnpm run test`for tests (or skip this,
+there are very few tests so you're unlikely to break any), and `pnpm run typecheck` for typechecking.
+
+Hit "Merge when ready" on your own PR once it's ready.
 
 We have deploy previews, click the link on
 your PR or push a branch and go to [vercel.com/convex-dev/chef/deployments](https://vercel.com/convex-dev/chef/deployments)
-to find your preview deploy. Preview deploys have a test code of 'preview-test'
-issued on them during the deploy process.
+to find your preview deploy.
 
-Test your work, we don't have automated tests!
+Test your work, we don't have e2e tests.
+
+### Deploy Process
+
+You can make a PR to merge staging into release or just push staging to release; it's not a protected branch on GitHub.
+Announce in the #project-chef Slack channel when you do this. Try out staging for a while before promoting it to
+release.
+
+If the change does not include non-backward compatible Convex DB changes you
+can use the Vercel instant rollbacks to prompt old deployments to production.
 
 ### Auth
 
