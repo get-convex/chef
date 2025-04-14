@@ -27,7 +27,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, resetErrorBou
       {resetErrorBoundary && (
         <button
           onClick={resetErrorBoundary}
-          className="mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+          className="mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/50"
         >
           Try again
         </button>
