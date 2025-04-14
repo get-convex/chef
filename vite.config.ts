@@ -46,8 +46,6 @@ export default defineConfig((config) => {
 
               // these were guesses to fix a bundling issue, must have
               // needed at least on of the not to be bundled.
-              'semver',
-              'semver-parser',
               '@sentry/remix',
 
               'vite-plugin-node-polyfills',

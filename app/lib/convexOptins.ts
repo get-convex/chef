@@ -3,7 +3,7 @@ import { getConvexAuthToken } from './stores/sessionId';
 
 const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
-export type OptInToAccept = {
+type OptInToAccept = {
   optIn: {
     tos: string;
   };

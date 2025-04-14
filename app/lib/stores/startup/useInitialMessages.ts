@@ -117,7 +117,7 @@ function deserializeMessageForConvex(message: SerializedMessage): Message {
   };
 }
 
-export async function decompressMessages(compressed: Uint8Array): Promise<SerializedMessage[]> {
+async function decompressMessages(compressed: Uint8Array): Promise<SerializedMessage[]> {
   // Dynamic import only executed on the client
   if (typeof window === 'undefined') {
     throw new Error('decompressSnapshot can only be used in browser environments');
