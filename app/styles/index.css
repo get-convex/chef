@@ -28,3 +28,19 @@ body {
 :root[data-theme='dark'] {
   color-scheme: dark;
 }
+
+@layer components {
+  .kdb {
+    @apply bg-bolt-elements-code-background text-bolt-elements-code-text py-1 px-1.5 rounded-md;
+  }
+}
+
+@layer utilities {
+  .transition-theme {
+    @apply transition-[background-color,border-color,color] duration-150 bolt-ease-cubic-bezier;
+  }
+
+  .bolt-ease-cubic-bezier {
+    @apply ease-[cubic-bezier(0.4,0,0.2,1)];
+  }
+}
