@@ -30,7 +30,7 @@ function ConvexSignInForm() {
     <div className="flex h-full flex-col items-center justify-center gap-4">
       <h1 className="text-2xl font-bold">Connect to Convex</h1>
       <button
-        className="flex items-center gap-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background px-4 py-2 text-bolt-elements-button-primary-text hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex items-center gap-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background px-4 py-2 text-bolt-elements-button-secondary-text hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() => {
           if (!started) {
             setStarted(true);

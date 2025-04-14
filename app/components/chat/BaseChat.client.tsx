@@ -465,7 +465,7 @@ function SignInButton() {
   }, [setStarted]);
   return (
     <button
-      className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-button-primary-backgroundHover"
+      className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-button-secondary-backgroundHover"
       onClick={signIn}
     >
       <div className="flex w-full items-center gap-2 p-1.5">
