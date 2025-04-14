@@ -22,6 +22,7 @@ import type * as lz4 from "../lz4.js";
 import type * as lz4Wasm from "../lz4Wasm.js";
 import type * as messages from "../messages.js";
 import type * as openaiProxy from "../openaiProxy.js";
+import type * as resendProxy from "../resendProxy.js";
 import type * as sessions from "../sessions.js";
 import type * as share from "../share.js";
 import type * as snapshot from "../snapshot.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   lz4Wasm: typeof lz4Wasm;
   messages: typeof messages;
   openaiProxy: typeof openaiProxy;
+  resendProxy: typeof resendProxy;
   sessions: typeof sessions;
   share: typeof share;
   snapshot: typeof snapshot;
