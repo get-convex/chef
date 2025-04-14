@@ -60,15 +60,19 @@ export function useInitialMessages(chatId: string):
           }
 
           const updatedParts = message.parts.map((part) => {
-            if (part.type === 'tool-invocation' && part.toolInvocation.state === 'partial-call') {
-              return {
-                ...part,
-                toolInvocation: {
-                  ...part.toolInvocation,
-                  state: 'result' as const,
-                  result: 'Error: Tool call was interrupted',
-                },
-              };
+            if (part.type === 'tool-invocation') {
+              // We could potentially handle these better by making the action runner
+              // handle the interrupted calls, but treat these as failed states for now.
+              if (part.toolInvocation.state === 'partial-call' || part.toolInvocation.state === 'call') {
+                return {
+                  ...part,
+                  toolInvocation: {
+                    ...part.toolInvocation,
+                    state: 'result' as const,
+                    result: 'Error: Tool call was interrupted',
+                  },
+                };
+              }
             }
             return part;
           });
