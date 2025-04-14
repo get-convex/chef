@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { computed } from 'nanostores';
 import { memo, useEffect, useRef, useState } from 'react';
 import { createHighlighter, type BundledLanguage, type BundledTheme, type HighlighterGeneric } from 'shiki';
+import { FileIcon, CaretUpIcon, CaretDownIcon, CircleIcon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
 import type { ActionState } from '~/lib/runtime/action-runner';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { type PartId } from '~/lib/stores/artifacts';
@@ -73,19 +74,13 @@ export const Artifact = memo(({ partId }: ArtifactProps) => {
         >
           {artifact.type == 'bundled' && (
             <>
-              <div className="p-4">
-                {allActionFinished ? (
-                  <div className={'i-ph:files-light'} style={{ fontSize: '2rem' }}></div>
-                ) : (
-                  <Spinner />
-                )}
-              </div>
+              <div className="p-4">{allActionFinished ? <FileIcon /> : <Spinner />}</div>
               <div className="bg-bolt-elements-artifacts-borderColor w-[1px]" />
             </>
           )}
           <div className="px-5 p-3.5 w-full text-left">
             <div className="w-full text-bolt-elements-textPrimary font-medium leading-5 text-sm">{artifact?.title}</div>
-            <div className="w-full w-full text-bolt-elements-textSecondary text-xs mt-0.5">Click to open Workbench</div>
+            <div className="w-full text-bolt-elements-textSecondary text-xs mt-0.5">Click to open Workbench</div>
           </div>
         </button>
         <div className="bg-bolt-elements-artifacts-borderColor w-[1px]" />
@@ -99,9 +94,7 @@ export const Artifact = memo(({ partId }: ArtifactProps) => {
               className="bg-bolt-elements-artifacts-background hover:bg-bolt-elements-artifacts-backgroundHover"
               onClick={toggleActions}
             >
-              <div className="p-4">
-                <div className={showActions ? 'i-ph:caret-up-bold' : 'i-ph:caret-down-bold'}></div>
-              </div>
+              <div className="p-4">{showActions ? <CaretUpIcon /> : <CaretDownIcon />}</div>
             </motion.button>
           )}
         </AnimatePresence>
@@ -171,11 +164,11 @@ const ActionList = memo(({ actions }: ActionListProps) => {
                   {status === 'running' ? (
                     <Spinner />
                   ) : status === 'pending' ? (
-                    <div className="i-ph:circle-duotone"></div>
+                    <CircleIcon />
                   ) : status === 'complete' ? (
-                    <div className="i-ph:check"></div>
+                    <CheckIcon />
                   ) : status === 'failed' || status === 'aborted' ? (
-                    <div className="i-ph:x"></div>
+                    <Cross2Icon />
                   ) : null}
                 </div>
                 <div>
