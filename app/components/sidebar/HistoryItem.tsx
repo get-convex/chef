@@ -38,7 +38,7 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
         <form onSubmit={handleSubmit} className="flex-1 flex items-center gap-2">
           <input
             type="text"
-            className="flex-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-md px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-1 focus:ring-[var(--cvx-border-selected)]/50"
+            className="flex-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-md px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-1 focus:ring-[var(--cvx-border-selected)]"
             autoFocus
             value={currentDescription}
             onChange={handleChange}
