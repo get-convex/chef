@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as apiKeys from "../apiKeys.js";
+import type * as compressMessages from "../compressMessages.js";
 import type * as convexProjects from "../convexProjects.js";
 import type * as dev from "../dev.js";
 import type * as http from "../http.js";
@@ -35,6 +36,7 @@ import type * as snapshot from "../snapshot.js";
  */
 declare const fullApi: ApiFromModules<{
   apiKeys: typeof apiKeys;
+  compressMessages: typeof compressMessages;
   convexProjects: typeof convexProjects;
   dev: typeof dev;
   http: typeof http;
