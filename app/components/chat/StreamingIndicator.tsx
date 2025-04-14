@@ -27,12 +27,21 @@ export const STATUS_MESSAGES = {
 } as const;
 
 const COOKING_SPLINES_MESSAGES = [
-  'Simmering... ',
-  'Sautéing...',
-  'Baking...',
-  'Grilling...',
-  'Whisking...',
+  'Simmering stock... ',
   'Practicing mise-en-place...',
+  'Adjusting seasoning...',
+  'Adding a pinch of salt...',
+  'Reducing sauce...',
+  'Whisking vigorously...',
+  'Deglazing pan...',
+  'Letting the flavors mingle...',
+  'Browning butter...',
+  'Preheating oven...',
+  'Caramelizing onions...',
+  'Chiffonading herbs...',
+  'Massaging kale...',
+  'Adding a splash of flavor...',
+  'Julienning carrots...',
 ];
 const COOKING_SPLINES_PROBABILITY = 0.2;
 const COOKING_SPLINES_DURATION = 4000;
