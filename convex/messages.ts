@@ -4,6 +4,7 @@ import {
   internalQuery,
   mutation,
   query,
+  type ActionCtx,
   type MutationCtx,
   type QueryCtx,
 } from './_generated/server';
@@ -428,49 +429,70 @@ export const remove = action({
   },
   handler: async (ctx, args) => {
     const { accessToken, id, sessionId, teamSlug, projectSlug, shouldDeleteConvexProject } = args;
-    console.log(teamSlug, projectSlug);
+    let projectDeletionResult: { kind: 'success' } | { kind: 'error'; error: string } = { kind: 'success' };
     if (shouldDeleteConvexProject) {
-      if (teamSlug === undefined || projectSlug === undefined) {
-        throw new Error('Team slug and project slug are required to delete a Convex project');
-      }
-
-      const bigBrainHost = ensureEnvVar('BIG_BRAIN_HOST');
-
-      const projectsResponse = await fetch(`${bigBrainHost}/api/teams/${teamSlug}/projects`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!projectsResponse.ok) {
-        const text = await projectsResponse.text();
-        throw new Error(`Failed to fetch team projects: ${projectsResponse.statusText} ${text}`);
-      }
-
-      const projects = await projectsResponse.json();
-      const project = projects.find((p: any) => p.slug === projectSlug);
-
-      if (project) {
-        const response = await fetch(`${bigBrainHost}/api/dashboard/delete_project/${project.id}`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(`Failed to delete project: ${response.statusText} ${text}`);
-        }
-      }
+      projectDeletionResult = await tryDeleteProject({ teamSlug, projectSlug, accessToken });
     }
 
     await ctx.runMutation(internal.messages.removeChatInner, {
       id,
       sessionId,
     });
+
+    return projectDeletionResult;
   },
 });
+
+async function tryDeleteProject(args: {
+  teamSlug: string | undefined;
+  projectSlug: string | undefined;
+  accessToken: string;
+}): Promise<{ kind: 'success' } | { kind: 'error'; error: string }> {
+  const { teamSlug, projectSlug, accessToken } = args;
+  if (teamSlug === undefined || projectSlug === undefined) {
+    return { kind: 'error', error: 'Team slug and project slug are required to delete a Convex project' };
+  }
+
+  const bigBrainHost = ensureEnvVar('BIG_BRAIN_HOST');
+
+  const projectsResponse = await fetch(`${bigBrainHost}/api/teams/${teamSlug}/projects`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!projectsResponse.ok) {
+    const text = await projectsResponse.text();
+    try {
+      const error = JSON.parse(text);
+      if (error.code === 'TeamNotFound') {
+        return { kind: 'error', error: `Team not found: ${teamSlug}` };
+      }
+      return { kind: 'error', error: `Failed to fetch team projects: ${projectsResponse.statusText} ${text}` };
+    } catch (e) {
+      return { kind: 'error', error: `Failed to fetch team projects: ${projectsResponse.statusText} ${text}` };
+    }
+  }
+
+  const projects = await projectsResponse.json();
+  const project = projects.find((p: any) => p.slug === projectSlug);
+
+  if (project) {
+    const response = await fetch(`${bigBrainHost}/api/dashboard/delete_project/${project.id}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      return { kind: 'error', error: `Failed to delete project: ${response.statusText} ${text}` };
+    }
+  }
+
+  return { kind: 'success' };
+}
 
 export const removeChatInner = internalMutation({
   args: {
@@ -484,6 +506,35 @@ export const removeChatInner = internalMutation({
       return;
     }
 
+    // This doesn't delete the snapshot, and it also will break if the chat was ever shared.
+    // We might want soft deletion instead, but for now, let's just delete more stuff.
+    await ctx.scheduler.runAfter(0, internal.messages.cleanupChatMessages, {
+      chatId: existing._id,
+    });
+    const storageState = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', existing._id))
+      .unique();
+    if (storageState !== null) {
+      if (storageState.storageId !== null) {
+        await ctx.scheduler.runAfter(0, internal.messages.maybeCleanupStaleChatHistory, {
+          storageId: storageState.storageId,
+        });
+      }
+      await ctx.db.delete(storageState._id);
+    }
+    const convexProject = existing.convexProject;
+    if (convexProject !== undefined && convexProject.kind === 'connected') {
+      const credentials = await ctx.db
+        .query('convexProjectCredentials')
+        .withIndex('bySlugs', (q) =>
+          q.eq('teamSlug', convexProject.teamSlug).eq('projectSlug', convexProject.projectSlug),
+        )
+        .unique();
+      if (credentials !== null) {
+        await ctx.db.delete(credentials._id);
+      }
+    }
     await ctx.db.delete(existing._id);
   },
 });
@@ -494,13 +545,9 @@ export const cleanupChatMessages = internalMutation({
   },
   handler: async (ctx, args) => {
     const { chatId } = args;
-    const chat = await ctx.db.get(chatId);
-    if (!chat) {
-      return;
-    }
     const storageState = await ctx.db
       .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .withIndex('byChatId', (q) => q.eq('chatId', chatId))
       .unique();
     if (storageState === null) {
       throw new Error(
@@ -509,7 +556,7 @@ export const cleanupChatMessages = internalMutation({
     }
     const messages = await ctx.db
       .query('chatMessages')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .withIndex('byChatId', (q) => q.eq('chatId', chatId))
       .collect();
     for (const message of messages) {
       // Soft delete for now, and we'll follow up with hard delete later.
