@@ -3,6 +3,15 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import { AnimatePresence } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import {
+  CaretUpIcon,
+  CaretDownIcon,
+  Cross2Icon,
+  CircleIcon,
+  CheckIcon,
+  FileIcon,
+  Pencil1Icon,
+} from '@radix-ui/react-icons';
 import type { ActionState } from '~/lib/runtime/action-runner';
 import { workbenchStore, type ArtifactState } from '~/lib/stores/workbench.client';
 import { type PartId } from '~/lib/stores/artifacts';
@@ -22,6 +31,7 @@ import { loggingSafeParse } from '~/lib/zodUtil';
 import { deployToolParameters } from '~/lib/runtime/deployTool';
 import type { ZodError } from 'zod';
 import { Spinner } from '~/components/ui/Spinner';
+import { FolderIcon } from '@heroicons/react/24/outline';
 
 export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => {
   const { partId, toolCallId } = props;
@@ -80,7 +90,7 @@ export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => 
               onClick={toggleAction}
             >
               <div className="p-4 text-bolt-elements-textPrimary">
-                <div className={showAction ? 'i-ph:caret-up-bold' : 'i-ph:caret-down-bold'}></div>
+                {showAction ? <CaretUpIcon /> : <CaretDownIcon />}
               </div>
             </motion.button>
           )}
@@ -333,7 +343,7 @@ function statusIcon(status: ActionState['status'], invocation: ConvexToolInvocat
     typeof invocation.result === 'string' &&
     invocation.result.startsWith('Error:')
   ) {
-    inner = <div className="i-ph:x" />;
+    inner = <Cross2Icon />;
     color = 'text-bolt-elements-icon-error';
   } else {
     switch (status) {
@@ -342,19 +352,19 @@ function statusIcon(status: ActionState['status'], invocation: ConvexToolInvocat
         color = 'text-bolt-elements-loader-progress';
         break;
       case 'pending':
-        inner = <div className="i-ph:circle-duotone" />;
+        inner = <CircleIcon />;
         color = 'text-bolt-elements-textTertiary';
         break;
       case 'complete':
-        inner = <div className="i-ph:check" />;
+        inner = <CheckIcon />;
         color = 'text-bolt-elements-icon-success';
         break;
       case 'failed':
-        inner = <div className="i-ph:x" />;
+        inner = <Cross2Icon />;
         color = 'text-bolt-elements-icon-error';
         break;
       case 'aborted':
-        inner = <div className="i-ph:x" />;
+        inner = <Cross2Icon />;
         color = 'text-bolt-elements-textSecondary';
         break;
       default:
@@ -369,11 +379,11 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
     case 'view': {
       const args = loggingSafeParse(viewParameters, invocation.args);
       let verb = 'Read';
-      let icon = 'i-ph:file-text';
+      let icon = <FileIcon />;
       let renderedPath = 'a file';
       if (invocation.state === 'result' && invocation.result.startsWith('Directory:')) {
         verb = 'List';
-        icon = 'i-ph:folder';
+        icon = <FolderIcon className="size-4" />;
         renderedPath = 'a directory';
       }
       let extra = '';
@@ -387,7 +397,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
       }
       return (
         <div className="flex items-center gap-2">
-          <div className={`${icon} text-bolt-elements-textSecondary`} />
+          <div className="text-bolt-elements-textSecondary">{icon}</div>
           <span>
             {verb} {renderedPath}
             {extra}
@@ -453,7 +463,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
       }
       return (
         <div className="flex items-center gap-2">
-          <div className={`i-ph:pencil-line text-bolt-elements-textSecondary`} />
+          <Pencil1Icon className="text-bolt-elements-textSecondary" />
           <span>Edited {renderedPath}</span>
         </div>
       );
@@ -489,13 +499,11 @@ function ViewTool({ invocation }: { invocation: ConvexToolInvocation }) {
           const trimmed = item.replace('(dir)', '').replace('(file)', '').replace('- ', '').trim();
           return (
             <div key={i} className="flex items-center gap-2">
-              <div
-                className={
-                  isDir
-                    ? 'i-ph:folder-duotone text-bolt-elements-icon-folder'
-                    : 'i-ph:file-text-duotone text-bolt-elements-icon-file'
-                }
-              />
+              {isDir ? (
+                <FolderIcon className="size-4 text-bolt-elements-icon-folder" />
+              ) : (
+                <FileIcon className="text-bolt-elements-icon-file" />
+              )}
               {trimmed}
             </div>
           );
