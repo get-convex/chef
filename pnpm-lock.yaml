@@ -83,6 +83,9 @@ importers:
       '@fast-check/vitest':
         specifier: ^0.2.1
         version: 0.2.1(vitest@2.1.9(@edge-runtime/vm@5.0.0)(@types/node@22.14.0)(jsdom@26.0.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))
+      '@heroicons/react':
+        specifier: ^2.2.0
+        version: 2.2.0(react@18.3.1)
       '@iconify-json/svg-spinners':
         specifier: ^1.2.1
         version: 1.2.2
@@ -113,6 +116,9 @@ importers:
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.6
         version: 2.1.6(@types/react-dom@18.3.6(@types/react@18.3.20))(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-icons':
+        specifier: ^1.3.2
+        version: 1.3.2(react@18.3.1)
       '@radix-ui/react-popover':
         specifier: ^1.1.7
         version: 1.1.7(@types/react-dom@18.3.6(@types/react@18.3.20))(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -151,7 +157,7 @@ importers:
         version: 2.0.0(@aws-sdk/credential-provider-web-identity@3.782.0)
       '@vercel/remix':
         specifier: 2.15.3
-        version: 2.15.3(@remix-run/dev@2.15.3(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(ts-node@10.9.1(@types/node@22.14.0)(typescript@5.8.3))(typescript@5.8.3)(vite@5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))(wrangler@3.108.0(@cloudflare/workers-types@4.20250413.0)))(@remix-run/node@2.15.3(typescript@5.8.3))(@remix-run/server-runtime@2.15.3(typescript@5.8.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 2.15.3(@remix-run/dev@2.15.3(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(ts-node@10.9.1(@types/node@22.14.0)(typescript@5.8.3))(typescript@5.8.3)(vite@5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))(wrangler@3.108.0))(@remix-run/node@2.15.3(typescript@5.8.3))(@remix-run/server-runtime@2.15.3(typescript@5.8.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@webcontainer/api':
         specifier: 1.5.1-internal.10
         version: 1.5.1-internal.10
@@ -277,7 +283,7 @@ importers:
         version: 0.2.0(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@remix-run/server-runtime@2.15.3(typescript@5.8.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       remix-utils:
         specifier: ^7.7.0
-        version: 7.7.0(@remix-run/cloudflare@2.15.3(@cloudflare/workers-types@4.20250413.0)(typescript@5.8.3))(@remix-run/node@2.15.3(typescript@5.8.3))(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@remix-run/router@1.22.0)(react@18.3.1)(zod@3.24.1)
+        version: 7.7.0(@remix-run/cloudflare@2.15.3(typescript@5.8.3))(@remix-run/node@2.15.3(typescript@5.8.3))(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@remix-run/router@1.22.0)(react@18.3.1)(zod@3.24.1)
       semver:
         specifier: 7.7.1
         version: 7.7.1
@@ -306,12 +312,9 @@ importers:
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
-      '@iconify-json/ph':
-        specifier: ^1.2.1
-        version: 1.2.2
       '@remix-run/dev':
         specifier: 2.15.3
-        version: 2.15.3(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(ts-node@10.9.1(@types/node@22.14.0)(typescript@5.8.3))(typescript@5.8.3)(vite@5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))(wrangler@3.108.0(@cloudflare/workers-types@4.20250413.0))
+        version: 2.15.3(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(ts-node@10.9.1(@types/node@22.14.0)(typescript@5.8.3))(typescript@5.8.3)(vite@5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))(wrangler@3.108.0)
       '@sentry/vite-plugin':
         specifier: ^3.3.1
         version: 3.3.1
@@ -814,9 +817,6 @@ packages:
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
-
-  '@cloudflare/workers-types@4.20250413.0':
-    resolution: {integrity: sha512-Pa9QGH/IGGivsKc7JuxM9hlaSUfUQjrMT8gKX2FVQPsfipVhp5yPBmaHId5UKyPB5e1n46zBEq/pJifRD1YjWQ==}
 
   '@codemirror/autocomplete@6.18.4':
     resolution: {integrity: sha512-sFAphGQIqyQZfP2ZBsSHV7xQvo9Py0rV0dW7W3IMRdS+zDuNb2l3no78CvUaWKGfzFjI4FTrLdUSj86IGb2hRA==}
@@ -1715,6 +1715,11 @@ packages:
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
 
+  '@heroicons/react@2.2.0':
+    resolution: {integrity: sha512-LMcepvRaS9LYHJGsF0zzmgKCUim/X3N/DQKc4jepAXJ7l8QxJ1PmxJzqplF2Z3FE4PqBAIGyJAQ/w4B5dsqbtQ==}
+    peerDependencies:
+      react: '>= 16 || ^19.0.0-rc'
+
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -1734,9 +1739,6 @@ packages:
   '@humanwhocodes/retry@0.4.1':
     resolution: {integrity: sha512-c7hNEllBlenFTHBky65mhq8WD2kbN9Q6gk0bTk8lSBvc554jpXSkST1iePudpt7+A/AQvuHs9EMqjHDXMY1lrA==}
     engines: {node: '>=18.18'}
-
-  '@iconify-json/ph@1.2.2':
-    resolution: {integrity: sha512-PgkEZNtqa8hBGjHXQa4pMwZa93hmfu8FUSjs/nv4oUU6yLsgv+gh9nu28Kqi8Fz9CCVu4hj1MZs9/60J57IzFw==}
 
   '@iconify-json/svg-spinners@1.2.2':
     resolution: {integrity: sha512-DIErwfBWWzLfmAG2oQnbUOSqZhDxlXvr8941itMCrxQoMB0Hiv8Ww6Bln/zIgxwjDvSem2dKJtap+yKKwsB/2A==}
@@ -2553,6 +2555,11 @@ packages:
         optional: true
       '@types/react-dom':
         optional: true
+
+  '@radix-ui/react-icons@1.3.2':
+    resolution: {integrity: sha512-fyQIhGDhzfc9pK2kH6Pl9c4BDJGfMkPqkyIgYDthyNYoNg3wVhoJMMh19WS4Up/1KMPFVpNsT2q3WmXn2N1m6g==}
+    peerDependencies:
+      react: ^16.x || ^17.x || ^18.x || ^19.0.0 || ^19.0.0-rc
 
   '@radix-ui/react-id@1.1.0':
     resolution: {integrity: sha512-EJUrI8yYh7WOjNOqpoJaf1jlFIH2LvtgAl+YcFqNCa+4hj64ZXmPkAKOFs/ukjz3byN6bdb/AVUqHkI8/uWWMA==}
@@ -9127,9 +9134,6 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20250204.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20250413.0':
-    optional: true
-
   '@codemirror/autocomplete@6.18.4':
     dependencies:
       '@codemirror/language': 6.10.8
@@ -9744,6 +9748,10 @@ snapshots:
 
   '@floating-ui/utils@0.2.9': {}
 
+  '@heroicons/react@2.2.0(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.6':
@@ -9756,10 +9764,6 @@ snapshots:
   '@humanwhocodes/retry@0.3.1': {}
 
   '@humanwhocodes/retry@0.4.1': {}
-
-  '@iconify-json/ph@1.2.2':
-    dependencies:
-      '@iconify/types': 2.0.0
 
   '@iconify-json/svg-spinners@1.2.2':
     dependencies:
@@ -10678,6 +10682,10 @@ snapshots:
       '@types/react': 18.3.20
       '@types/react-dom': 18.3.6(@types/react@18.3.20)
 
+  '@radix-ui/react-icons@1.3.2(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+
   '@radix-ui/react-id@1.1.0(@types/react@18.3.20)(react@18.3.1)':
     dependencies:
       '@radix-ui/react-use-layout-effect': 1.1.0(@types/react@18.3.20)(react@18.3.1)
@@ -11020,16 +11028,15 @@ snapshots:
 
   '@react-dnd/shallowequal@4.0.2': {}
 
-  '@remix-run/cloudflare@2.15.3(@cloudflare/workers-types@4.20250413.0)(typescript@5.8.3)':
+  '@remix-run/cloudflare@2.15.3(typescript@5.8.3)':
     dependencies:
       '@cloudflare/kv-asset-handler': 0.1.3
-      '@cloudflare/workers-types': 4.20250413.0
       '@remix-run/server-runtime': 2.15.3(typescript@5.8.3)
     optionalDependencies:
       typescript: 5.8.3
     optional: true
 
-  '@remix-run/dev@2.15.3(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(ts-node@10.9.1(@types/node@22.14.0)(typescript@5.8.3))(typescript@5.8.3)(vite@5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))(wrangler@3.108.0(@cloudflare/workers-types@4.20250413.0))':
+  '@remix-run/dev@2.15.3(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(ts-node@10.9.1(@types/node@22.14.0)(typescript@5.8.3))(typescript@5.8.3)(vite@5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))(wrangler@3.108.0)':
     dependencies:
       '@babel/core': 7.26.8
       '@babel/generator': 7.26.8
@@ -11090,7 +11097,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.3
       vite: 5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))
-      wrangler: 3.108.0(@cloudflare/workers-types@4.20250413.0)
+      wrangler: 3.108.0
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -12422,9 +12429,9 @@ snapshots:
       - rollup
       - supports-color
 
-  '@vercel/remix@2.15.3(@remix-run/dev@2.15.3(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(ts-node@10.9.1(@types/node@22.14.0)(typescript@5.8.3))(typescript@5.8.3)(vite@5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))(wrangler@3.108.0(@cloudflare/workers-types@4.20250413.0)))(@remix-run/node@2.15.3(typescript@5.8.3))(@remix-run/server-runtime@2.15.3(typescript@5.8.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@vercel/remix@2.15.3(@remix-run/dev@2.15.3(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(ts-node@10.9.1(@types/node@22.14.0)(typescript@5.8.3))(typescript@5.8.3)(vite@5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))(wrangler@3.108.0))(@remix-run/node@2.15.3(typescript@5.8.3))(@remix-run/server-runtime@2.15.3(typescript@5.8.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@remix-run/dev': 2.15.3(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(ts-node@10.9.1(@types/node@22.14.0)(typescript@5.8.3))(typescript@5.8.3)(vite@5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))(wrangler@3.108.0(@cloudflare/workers-types@4.20250413.0))
+      '@remix-run/dev': 2.15.3(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(ts-node@10.9.1(@types/node@22.14.0)(typescript@5.8.3))(typescript@5.8.3)(vite@5.4.17(@types/node@22.14.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))(wrangler@3.108.0)
       '@remix-run/node': 2.15.3(typescript@5.8.3)
       '@remix-run/server-runtime': 2.15.3(typescript@5.8.3)
       '@vercel/static-config': 3.0.0
@@ -16309,11 +16316,11 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  remix-utils@7.7.0(@remix-run/cloudflare@2.15.3(@cloudflare/workers-types@4.20250413.0)(typescript@5.8.3))(@remix-run/node@2.15.3(typescript@5.8.3))(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@remix-run/router@1.22.0)(react@18.3.1)(zod@3.24.1):
+  remix-utils@7.7.0(@remix-run/cloudflare@2.15.3(typescript@5.8.3))(@remix-run/node@2.15.3(typescript@5.8.3))(@remix-run/react@2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@remix-run/router@1.22.0)(react@18.3.1)(zod@3.24.1):
     dependencies:
       type-fest: 4.34.1
     optionalDependencies:
-      '@remix-run/cloudflare': 2.15.3(@cloudflare/workers-types@4.20250413.0)(typescript@5.8.3)
+      '@remix-run/cloudflare': 2.15.3(typescript@5.8.3)
       '@remix-run/node': 2.15.3(typescript@5.8.3)
       '@remix-run/react': 2.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3)
       '@remix-run/router': 1.22.0
@@ -17577,7 +17584,7 @@ snapshots:
       '@cloudflare/workerd-windows-64': 1.20250204.0
     optional: true
 
-  wrangler@3.108.0(@cloudflare/workers-types@4.20250413.0):
+  wrangler@3.108.0:
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.4
       '@esbuild-plugins/node-globals-polyfill': 0.2.3(esbuild@0.17.19)
@@ -17589,7 +17596,6 @@ snapshots:
       unenv: 2.0.0-rc.1
       workerd: 1.20250204.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20250413.0
       fsevents: 2.3.3
       sharp: 0.33.5
     transitivePeerDependencies:
