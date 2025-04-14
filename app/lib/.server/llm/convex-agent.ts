@@ -63,7 +63,7 @@ export async function convexAgent(
   let model: string;
   // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
   const fetch = undiciFetch as unknown as Fetch;
-  const userKeyApiFetch = () => {
+  const userKeyApiFetch = (provider: 'Anthropic' | 'OpenAI') => {
     return async (input: RequestInfo | URL, init?: RequestInit) => {
       const result = await fetch(input, init);
       if (result.status === 401) {
@@ -85,14 +85,18 @@ export async function convexAgent(
       if (result.status === 429) {
         const text = await result.text();
         throw new Error(
-          JSON.stringify({ error: 'Rate limited by Anthropic', details: text, userProvidedApiKey: !!userApiKey }),
+          JSON.stringify({
+            error: `${provider} is temporarily overloaded`,
+            details: text,
+            userProvidedApiKey: !!userApiKey,
+          }),
         );
       }
       if (result.status === 529) {
         const text = await result.text();
         throw new Error(
           JSON.stringify({
-            error: "Anthropic's API is temporarily overloaded",
+            error: `${provider}'s API is temporarily overloaded`,
             details: text,
             userProvidedApiKey: !!userApiKey,
           }),
@@ -101,7 +105,7 @@ export async function convexAgent(
       if (!result.ok) {
         const text = await result.text();
         throw new Error(
-          JSON.stringify({ error: 'Anthropic returned an error', details: text, userProvidedApiKey: !!userApiKey }),
+          JSON.stringify({ error: `${provider} returned an error`, details: text, userProvidedApiKey: !!userApiKey }),
         );
       }
       return result;
@@ -112,7 +116,7 @@ export async function convexAgent(
       model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4.1';
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv(env, 'OPENAI_API_KEY'),
-        fetch: userApiKey ? userKeyApiFetch() : fetch,
+        fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
       });
       provider = {
         model: openai(model),
@@ -195,7 +199,7 @@ export async function convexAgent(
       };
       const anthropic = createAnthropic({
         apiKey: userApiKey || getEnv(env, 'ANTHROPIC_API_KEY'),
-        fetch: userApiKey ? userKeyApiFetch() : rateLimitAwareFetch(),
+        fetch: userApiKey ? userKeyApiFetch('Anthropic') : rateLimitAwareFetch(),
       });
 
       provider = {
