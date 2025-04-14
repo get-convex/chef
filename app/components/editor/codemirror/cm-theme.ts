@@ -67,7 +67,7 @@ function getEditorTheme(settings: EditorSettings) {
         background: 'transparent',
         color: 'var(--cm-gutter-activeLineTextColor)',
       },
-      '&.cm-foldGutter .cm-gutterElement > .fold-icon': {
+      '&.cm-foldGutter .cm-gutterElement > [title="Fold line"]': {
         cursor: 'pointer',
         color: 'var(--cm-foldGutter-textColor)',
         transform: 'translateY(2px)',
