@@ -68,7 +68,7 @@ export async function convexAgent(
       const result = await fetch(input, init);
       if (result.status === 401) {
         const text = await result.text();
-        throw new Error(JSON.stringify({ error: 'Invalid or missing API key', details: text }));
+        throw new Error(JSON.stringify({ error: 'Invalid API key', details: text }));
       }
       if (result.status === 413) {
         const text = await result.text();
