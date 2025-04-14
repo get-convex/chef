@@ -173,7 +173,6 @@ export const Chat = memo(
       api: '/api/chat',
       sendExtraMessageFields: true,
       experimental_prepareRequestBody: ({ messages }) => {
-        console.log('Preparing request body');
         const chatId = chatIdStore.get();
         const deploymentName = convexProjectStore.get()?.deploymentName;
         const teamSlug = selectedTeamSlugStore.get();
@@ -191,8 +190,6 @@ export const Chat = memo(
         } else {
           modelProvider = 'OpenAI';
         }
-        console.log('Model provider', modelProvider);
-        console.log('Retries', retries);
         return {
           messages: chatContextManager.current.prepareContext(messages),
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
