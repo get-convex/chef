@@ -87,7 +87,9 @@ export default defineSchema({
     storageId: v.union(v.id('_storage'), v.null()),
     lastMessageRank: v.number(),
     partIndex: v.number(),
-  }).index('byChatId', ['chatId']),
+  })
+    .index('byChatId', ['chatId'])
+    .index('byStorageId', ['storageId']),
   inviteCodes: defineTable({
     code: v.string(),
     sessionId: v.id('sessions'),
@@ -103,15 +105,18 @@ export default defineSchema({
     snapshotId: v.optional(v.id('_storage')),
     code: v.string(),
 
+    chatHistoryId: v.optional(v.union(v.id('_storage'), v.null())),
+
     // Shares are created at one point in time, so this makes sure
     // people using the link don’t see newer messages.
     lastMessageRank: v.number(),
-
+    partIndex: v.optional(v.number()),
     // The description of the chat at the time the share was created.
     description: v.optional(v.string()),
   })
     .index('byCode', ['code'])
-    .index('bySnapshotId', ['snapshotId']),
+    .index('bySnapshotId', ['snapshotId'])
+    .index('byChatHistoryId', ['chatHistoryId']),
 
   memberOpenAITokens: defineTable({
     memberId: v.id('convexMembers'),
