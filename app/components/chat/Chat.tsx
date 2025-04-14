@@ -86,6 +86,7 @@ export const Chat = memo(
     const [imageDataList, setImageDataList] = useState<string[]>([]);
     const [searchParams, setSearchParams] = useSearchParams();
     const actionAlert = useStore(workbenchStore.alert);
+    const [hasReloaded, setHasReloaded] = useState(false);
 
     const title = useStore(description);
 
@@ -172,6 +173,7 @@ export const Chat = memo(
       api: '/api/chat',
       sendExtraMessageFields: true,
       experimental_prepareRequestBody: ({ messages }) => {
+        console.log('Preparing request body');
         const chatId = chatIdStore.get();
         const deploymentName = convexProjectStore.get()?.deploymentName;
         const teamSlug = selectedTeamSlugStore.get();
@@ -189,6 +191,8 @@ export const Chat = memo(
         } else {
           modelProvider = 'OpenAI';
         }
+        console.log('Model provider', modelProvider);
+        console.log('Retries', retries);
         return {
           messages: chatContextManager.current.prepareContext(messages),
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
@@ -257,6 +261,14 @@ export const Chat = memo(
         await checkTokenUsage();
       },
     });
+
+    // Automatically reload the chat after the first failed request
+    useEffect(() => {
+      if (retries.numFailures === 1 && !hasReloaded) {
+        setHasReloaded(true);
+        reload();
+      }
+    }, [retries.numFailures]);
 
     useEffect(() => {
       const prompt = searchParams.get('prompt');
