@@ -11,35 +11,9 @@ export interface PreviewInfo {
 
 const PROXY_PORT_RANGE_START = 0xc4ef;
 
-const PROXY_SERVER_SOURCE = `
-const http = require('http');
-
-const sourcePort = Number(process.argv[1]);
-const targetPort = Number(process.argv[2]);
-
-console.log(\`Starting proxy server: proxying \${targetPort} → \${sourcePort}\`);
-
-http.createServer((req, res) => {
-  const proxyReq = http.request({
-    hostname: 'localhost',
-    port: sourcePort,
-    path: req.url,
-    method: req.method,
-    headers: req.headers
-  }, (proxyRes) => {
-    res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
-    proxyRes.pipe(res);
-  });
-  
-  proxyReq.on('error', (error) => {
-    console.error('Proxy error:', error);
-    res.writeHead(502);
-    res.end('Bad Gateway');
-  });
-  
-  req.pipe(proxyReq);
-}).listen(targetPort);
-`;
+// This is a separate codebase.
+// eslint-disable-next-line no-restricted-imports
+import PROXY_SERVER_SOURCE from '../../../proxy/proxy.bundled.cjs?raw';
 
 type ProxyState = { sourcePort: number; start: (arg: { proxyUrl: string }) => void; stop: () => void };
 
@@ -121,14 +95,20 @@ export class PreviewsStore {
     };
     this.#proxies.set(targetPort, proxyState);
 
-    // Start the proxy
+    // Start the HTTP + HMR WebSocket proxy
     const webcontainer = await this.#webcontainer;
-    const proxyProcess = await webcontainer.spawn('node', [
-      '-e',
-      PROXY_SERVER_SOURCE,
-      sourcePort.toString(),
-      targetPort.toString(),
-    ]);
+    let proxySource = PROXY_SERVER_SOURCE.replace(
+      '"use strict";',
+      `"use strict";
+process.argv[2] = ${JSON.stringify(sourcePort.toString())};
+process.argv[3] = ${JSON.stringify(targetPort.toString())};
+`,
+    );
+
+    // WebContainer Node.js has trouble with this syntax
+    proxySource = proxySource.replace(`replace(/\\/+/g,`, `replace((new RegExp(String.fromCharCode(92) + '/+')),`);
+
+    const proxyProcess = await webcontainer.spawn('node', ['-e', proxySource]);
 
     proxyState.stop = () => {
       proxyLogger.info('Stopping proxy');
