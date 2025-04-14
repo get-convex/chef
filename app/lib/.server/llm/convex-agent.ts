@@ -63,12 +63,56 @@ export async function convexAgent(
   let model: string;
   // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
   const fetch = undiciFetch as unknown as Fetch;
+  const userKeyApiFetch = () => {
+    return async (input: RequestInfo | URL, init?: RequestInit) => {
+      const result = await fetch(input, init);
+      if (result.status === 401) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({ error: 'Invalid or missing API key', details: text, userProvidedApiKey: !!userApiKey }),
+        );
+      }
+      if (result.status === 413) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({
+            error: 'Request exceeds the maximum allowed number of bytes.',
+            details: text,
+            userProvidedApiKey: !!userApiKey,
+          }),
+        );
+      }
+      if (result.status === 429) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({ error: 'Rate limited by Anthropic', details: text, userProvidedApiKey: !!userApiKey }),
+        );
+      }
+      if (result.status === 529) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({
+            error: "Anthropic's API is temporarily overloaded",
+            details: text,
+            userProvidedApiKey: !!userApiKey,
+          }),
+        );
+      }
+      if (!result.ok) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({ error: 'Anthropic returned an error', details: text, userProvidedApiKey: !!userApiKey }),
+        );
+      }
+      return result;
+    };
+  };
   switch (modelProvider) {
     case 'OpenAI': {
       model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4.1';
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv(env, 'OPENAI_API_KEY'),
-        fetch,
+        fetch: userApiKey ? userKeyApiFetch() : fetch,
       });
       provider = {
         model: openai(model),
@@ -147,50 +191,6 @@ export async function convexAgent(
           }
           const lowQosResponse = await fetch(input, enrichedOptions);
           return throwIfBad(lowQosResponse, true);
-        };
-      };
-      const userKeyApiFetch = () => {
-        return async (input: RequestInfo | URL, init?: RequestInit) => {
-          const result = await fetch(input, init);
-          if (result.status === 401) {
-            const text = await result.text();
-            throw new Error(
-              JSON.stringify({ error: 'Invalid or missing API key', details: text, userProvidedApiKey: !!userApiKey }),
-            );
-          }
-          if (result.status === 413) {
-            const text = await result.text();
-            throw new Error(
-              JSON.stringify({
-                error: 'Request exceeds the maximum allowed number of bytes.',
-                details: text,
-                userProvidedApiKey: !!userApiKey,
-              }),
-            );
-          }
-          if (result.status === 429) {
-            const text = await result.text();
-            throw new Error(
-              JSON.stringify({ error: 'Rate limited by Anthropic', details: text, userProvidedApiKey: !!userApiKey }),
-            );
-          }
-          if (result.status === 529) {
-            const text = await result.text();
-            throw new Error(
-              JSON.stringify({
-                error: "Anthropic's API is temporarily overloaded",
-                details: text,
-                userProvidedApiKey: !!userApiKey,
-              }),
-            );
-          }
-          if (!result.ok) {
-            const text = await result.text();
-            throw new Error(
-              JSON.stringify({ error: 'Anthropic returned an error', details: text, userProvidedApiKey: !!userApiKey }),
-            );
-          }
-          return result;
         };
       };
       const anthropic = createAnthropic({
