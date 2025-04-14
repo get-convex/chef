@@ -91,6 +91,7 @@ function artifactInstructions(_options: SystemPromptOptions) {
             ...
             </boltAction>
           </boltArtifact>
+          [Ends with a tool call to deploy the changes and fixes any issues with the deployment]
         </assistant_response>
       </example>
       <example>
@@ -104,6 +105,7 @@ function artifactInstructions(_options: SystemPromptOptions) {
             <boltAction type="file" filePath="src/App.tsx">...</boltAction>
             ...
           </boltArtifact>
+          [Ends with a tool call to deploy the changes and fixes any issues with the deployment]
           Now you can play the Snake game by opening the provided local server URL in your browser. Use the arrow keys to control the
           snake. Eat the red food to grow and increase your score. The game ends if you hit the wall or your own tail.
         </assistant_response>
