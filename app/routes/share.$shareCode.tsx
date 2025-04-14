@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import { getConvexAuthToken, sessionIdStore, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
-import { useMutation, useConvex } from 'convex/react';
+import { useMutation, useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useCallback } from 'react';
 import { toast, Toaster } from 'sonner';
@@ -63,6 +63,8 @@ function ShareProjectContent() {
   const sessionId = useStore(sessionIdStore);
   const cloneChat = useMutation(api.share.clone);
   const convex = useConvex();
+  const getShareDescription = useQuery(api.share.getShareDescription, { code: shareCode });
+
   const handleCloneChat = useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
@@ -94,7 +96,16 @@ function ShareProjectContent() {
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <div className="max-w-md w-full space-y-4">
           <h1 className="text-2xl font-bold text-center">Sign in to Chef</h1>
-          <p className="text-sm text-center text-gray-500">Please sign in to Chef to clone this project.</p>
+          <p className="text-sm text-center text-gray-500">
+            Please sign in to Chef to clone this project
+            {getShareDescription?.description ? (
+              <>
+                : <span className="font-bold">{getShareDescription.description}</span>
+              </>
+            ) : (
+              ''
+            )}
+          </p>
           <button
             className="mx-auto px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
             onClick={signIn}
@@ -108,17 +119,33 @@ function ShareProjectContent() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <div className="max-w-md w-full space-y-4">
-        <h1 className="text-2xl font-bold text-center">Select a Team</h1>
-        <p className="text-sm text-center text-gray-500">Choose the team where you want to clone this project</p>
-        {chefAuthState.kind === 'fullyLoggedIn' && (
-          <TeamSelector selectedTeamSlug={selectedTeamSlug} setSelectedTeamSlug={setSelectedTeamSlug} />
-        )}
+      <div className="max-w-md w-full space-y-6 bg-white rounded-xl border border-bolt-elements-borderColor p-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold text-center">Clone Project</h1>
+          {getShareDescription?.description && (
+            <p className="text-base text-gray-500">{getShareDescription.description}</p>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold text-center">Select Team</h2>
+            <p className="text-sm text-center text-gray-500">Choose where to clone this project</p>
+          </div>
+
+          {chefAuthState.kind === 'fullyLoggedIn' && (
+            <div className="border border-bolt-elements-borderColor rounded-lg p-4">
+              <TeamSelector selectedTeamSlug={selectedTeamSlug} setSelectedTeamSlug={setSelectedTeamSlug} />
+            </div>
+          )}
+        </div>
+
         <button
-          className="mx-auto px-4 py-2 rounded-lg border-1 border-bolt-elements-borderColor flex items-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
+          className="w-full px-6 py-3 rounded-lg border border-bolt-elements-borderColor flex items-center justify-center gap-2 text-bolt-elements-button-primary disabled:opacity-50 disabled:cursor-not-allowed bg-bolt-elements-button-secondary-background hover:bg-bolt-elements-button-secondary-backgroundHover"
           onClick={handleCloneChat}
+          disabled={!selectedTeamSlug}
         >
-          Clone
+          Clone Project
         </button>
       </div>
     </div>
