@@ -116,7 +116,7 @@ const ChatActionButton = forwardRef(
         <button
           ref={ref}
           type="button"
-          className={`text-gray-400 dark:text-gray-500 hover:text-[var(--cvx-util-accent)] transition-colors ${className ? className : ''}`}
+          className={`text-gray-400 dark:text-gray-500 hover:text-[var(--cvx-util-accent)] transition-colors bg-transparent ${className ? className : ''}`}
           onClick={onClick}
         >
           {icon}
