@@ -30,8 +30,8 @@ export const openaiProxy = httpAction(async (ctx, req) => {
   }
 
   const url = new URL(req.url);
-  if (url.pathname != '/v1/chat/completions') {
-    return new Response('Only the /v1/chat/completions API is supported', { status: 400 });
+  if (url.pathname != '/openai-proxy/chat/completions') {
+    return new Response('Only the /chat/completions API is supported', { status: 400 });
   }
 
   let body: any;
