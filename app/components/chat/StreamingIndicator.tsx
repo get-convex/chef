@@ -4,7 +4,7 @@ import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { chatStore } from '~/lib/stores/chatId';
 import { Spinner } from '~/components/ui/Spinner';
-import { ExclamationTriangleIcon, CheckCircledIcon } from '@radix-ui/react-icons';
+import { ExclamationTriangleIcon, CheckCircledIcon, ResetIcon } from '@radix-ui/react-icons';
 import { useEffect, useState } from 'react';
 
 interface StreamingIndicatorProps {
@@ -152,7 +152,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                         className="flex items-center gap-1 px-2 py-1.5 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text rounded-md transition-colors"
                         onClick={props.resendMessage}
                       >
-                        <div className="i-ph:arrow-clockwise" />
+                        <ResetIcon />
                         Resend
                       </button>
                     )}
