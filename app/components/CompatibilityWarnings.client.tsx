@@ -73,7 +73,7 @@ export function CompatibilityWarnings() {
             )}
 
             <div className="text-center text-lg">
-              <div className="text-gray-800">
+              <div className="text-bolt-elements-textPrimary">
                 {experience === 'marketing-page-only-for-mobile' ? (
                   <>
                     <p>Grab your laptop!</p>
@@ -83,12 +83,12 @@ export function CompatibilityWarnings() {
                   </>
                 ) : experience === 'marketing-page-only-for-desktop-safari' ? (
                   <>
-                    <p>You're a few keystrokes away from cooking with Chef!</p>
+                    <p>You’re a few keystrokes away from cooking with Chef!</p>
                     <p className="mt-4">
                       Chef uses{' '}
                       <a
                         href="https://webcontainers.io/guides/browser-support#web-platform-requirements"
-                        className="text-blue-500 hover:text-blue-600 underline"
+                        className="text-bolt-elements-messages-linkColor hover:underline"
                       >
                         WebContainers
                       </a>{' '}
@@ -98,12 +98,12 @@ export function CompatibilityWarnings() {
                   </>
                 ) : experience === 'marketing-page-only-for-desktop' ? (
                   <>
-                    <p>You're a few keystrokes away from cooking with Chef!</p>
+                    <p>You’re a few keystrokes away from cooking with Chef!</p>
                     <p className="mt-4">
                       Chef uses{' '}
                       <a
                         href="https://webcontainers.io/guides/browser-support#web-platform-requirements"
-                        className="text-blue-500 hover:text-blue-600 underline"
+                        className="text-bolt-elements-messages-linkColor hover:underline"
                       >
                         WebContainers
                       </a>{' '}
@@ -118,7 +118,7 @@ export function CompatibilityWarnings() {
                       Chef uses{' '}
                       <a
                         href="https://webcontainers.io/guides/browser-support#web-platform-requirements"
-                        className="text-blue-500 hover:text-blue-600 underline"
+                        className="text-bolt-elements-messages-linkColor hover:underline"
                       >
                         WebContainers
                       </a>{' '}
@@ -141,18 +141,24 @@ export function CompatibilityWarnings() {
               />
             </div>
 
-            <div className="text-center text-gray-600">
+            <div className="text-center text-bolt-elements-textSecondary">
               <div>
                 Read more about{' '}
-                <a href="https://news.convex.dev/meet-chef/" className="text-blue-500 hover:text-blue-600 underline">
+                <a
+                  href="https://news.convex.dev/meet-chef/"
+                  className="text-bolt-elements-messages-linkColor hover:underline"
+                >
                   Chef
                 </a>
                 , check out{' '}
-                <a href="https://convex.dev" className="text-blue-500 hover:text-blue-600 underline">
+                <a href="https://convex.dev" className="text-bolt-elements-messages-linkColor hover:underline">
                   Convex
                 </a>
                 , and join our{' '}
-                <a href="https://www.convex.dev/community" className="text-blue-500 hover:text-blue-600 underline">
+                <a
+                  href="https://www.convex.dev/community"
+                  className="text-bolt-elements-messages-linkColor hover:underline"
+                >
                   Discord community
                 </a>
               </div>

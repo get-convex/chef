@@ -1,18 +1,50 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Message } from '@ai-sdk/react';
 import { useConvex } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import type { SerializedMessage } from '@convex/messages';
 import { waitForConvexSessionId } from '~/lib/stores/sessionId';
-import { setKnownUrlId, setKnownInitialId } from '~/lib/stores/chatId';
+import { setKnownUrlId, setKnownInitialId, getKnownUrlId } from '~/lib/stores/chatId';
 import { description } from '~/lib/stores/description';
+import * as lz4 from 'lz4-wasm';
+import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
+import { toast } from 'sonner';
+
+type MessagePart = Message['parts'] extends Array<infer P> | undefined ? P : never;
 
 export function useStoreMessageHistory(chatId: string, initialMessages: SerializedMessage[] | undefined) {
   const convex = useConvex();
-
-  // The messages that have been persisted to the database
-  const [persistedMessages, setPersistedMessages] = useState<Message[]>([]);
+  const [persistedState, setPersistedState] = useState<{
+    lastMessageRank: number;
+    partIndex: number;
+    lastPart: MessagePart | null;
+  }>({
+    lastMessageRank: -1,
+    partIndex: 0,
+    lastPart: null,
+  });
   const persistInProgress = useRef(false);
+  const siteUrl = getConvexSiteUrl();
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return () => {
+        // No-op
+      };
+    }
+    const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
+      if (persistInProgress.current) {
+        // Some browsers require both preventDefault and setting returnValue
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+      return undefined;
+    };
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+    return () => {
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+    };
+  }, []);
 
   return useCallback(
     async (messages: Message[]) => {
@@ -25,95 +57,76 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       if (persistInProgress.current) {
         return;
       }
-      const { messagesToUpdate, startIndex } = findMessagesToUpdate(
-        initialMessages.length,
-        persistedMessages,
-        messages,
-      );
-      if (messagesToUpdate.length === 0) {
-        return;
-      }
 
       const sessionId = await waitForConvexSessionId('useStoreMessageHistory');
+      const updateResult = shouldUpdateMessages(messages, persistedState);
+      if (updateResult.kind === 'noUpdate') {
+        return;
+      }
+      const url = new URL(`${siteUrl}/store_messages`);
+      const compressed = await compressMessages(messages);
+      url.searchParams.set('chatId', chatId);
+      url.searchParams.set('sessionId', sessionId);
+      url.searchParams.set('lastMessageRank', updateResult.lastMessageRank.toString());
+      url.searchParams.set('partIndex', updateResult.partIndex.toString());
 
       persistInProgress.current = true;
-      let result;
+      // If there's no URL ID yet, try to extract it from the messages.
+      // The server will allocate a unique URL ID based on the hint.
+      if (getKnownUrlId() === undefined) {
+        const result = extractUrlHintAndDescription(messages);
+        if (result) {
+          const { urlId, initialId } = await convex.mutation(api.messages.setUrlId, {
+            sessionId,
+            chatId,
+            urlHint: result.urlHint,
+            description: result.description,
+          });
+          description.set(result.description);
+          setKnownUrlId(urlId);
+          setKnownInitialId(initialId);
+        }
+      }
+      let response;
       try {
-        result = await convex.mutation(api.messages.addMessages, {
-          id: chatId,
-          sessionId,
-          messages: messagesToUpdate.map(serializeMessageForConvex),
-          expectedLength: messages.length,
-          startIndex,
+        response = await fetch(url, {
+          method: 'POST',
+          body: compressed,
         });
       } finally {
         persistInProgress.current = false;
       }
-      setPersistedMessages(messages);
-
-      // Update the description + URL ID if they have changed
-      if (description.get() !== result.description) {
-        description.set(result.description);
+      if (!response.ok) {
+        toast.error('Failed to store message history');
+        return;
       }
-      if (result.initialId) {
-        setKnownInitialId(result.initialId);
-      }
-      if (result.urlId) {
-        setKnownUrlId(result.urlId);
-      }
+      setPersistedState(updateResult);
     },
-    [convex, chatId, initialMessages, persistedMessages, setPersistedMessages, persistInProgress],
+    [convex, chatId, initialMessages, persistedState, persistInProgress],
   );
 }
 
-function findMessagesToUpdate(
-  initialMessagesLength: number,
-  persistedMessages: Message[],
-  currentMessages: Message[],
-): {
-  messagesToUpdate: Message[];
-  startIndex?: number;
-} {
-  if (persistedMessages.length > currentMessages.length) {
-    console.error('Unexpected state -- more persisted messages than current messages');
-    return {
-      messagesToUpdate: [],
-      startIndex: undefined,
-    };
-  }
-
-  if (initialMessagesLength > persistedMessages.length) {
-    // Initial messages should never change. Update with everything after the initial messages.
-    return {
-      messagesToUpdate: currentMessages.slice(initialMessagesLength),
-      startIndex: initialMessagesLength,
-    };
-  }
-
+function extractUrlHintAndDescription(messages: Message[]) {
   /*
-   * We assume that changes to the messages either are edits to the last persisted message, or
-   * new messages.
+   * This replicates the original bolt.diy behavior of client-side assigning a URL + description
+   * based on the first artifact registered.
    *
-   * We want to avoid sending the entire message history on every change, so we only send the
-   * changed messages.
+   * I suspect there's a bug somewhere here since the first artifact tends to be named "imported-files"
    *
-   * In theory, `Message` that are semantically the same are `===` to each other, but empirically
-   * that's not always true. But occasional false positive means extra no-op calls to persistence,
-   * which should be fine (the persisted state should still be correct).
+   * Example: <boltArtifact id="imported-files" title="Interactive Tic Tac Toe Game"
    */
-  for (let i = persistedMessages.length - 1; i < currentMessages.length; i++) {
-    if (currentMessages[i] !== persistedMessages[i]) {
-      return {
-        messagesToUpdate: currentMessages.slice(i),
-        startIndex: i,
-      };
+  for (const message of messages) {
+    for (const part of message.parts ?? []) {
+      if (part.type === 'text') {
+        const content = part.text;
+        const match = content.match(/<boltArtifact id="([^"]+)" title="([^"]+)"/);
+        if (match) {
+          return { urlHint: match[1], description: match[2] };
+        }
+      }
     }
   }
-
-  return {
-    messagesToUpdate: [],
-    startIndex: undefined,
-  };
+  return null;
 }
 
 export function serializeMessageForConvex(message: Message) {
@@ -142,4 +155,57 @@ export function serializeMessageForConvex(message: Message) {
     parts: processedParts,
     createdAt: message.createdAt?.getTime() ?? undefined,
   };
+}
+
+function shouldUpdateMessages(
+  messages: Message[],
+  persisted: {
+    lastMessageRank: number;
+    partIndex: number;
+    lastPart: MessagePart | null;
+  },
+): { kind: 'update'; lastMessageRank: number; partIndex: number; lastPart: MessagePart | null } | { kind: 'noUpdate' } {
+  if (messages.length > persisted.lastMessageRank) {
+    return {
+      kind: 'update',
+      lastMessageRank: messages.length - 1,
+      partIndex: (messages.at(-1)?.parts?.length ?? 0) - 1,
+      lastPart: messages.at(-1)?.parts?.at(-1) ?? null,
+    };
+  }
+  const lastMessage = messages[messages.length - 1];
+  if (lastMessage.parts === undefined) {
+    throw new Error('Last message has no parts');
+  }
+  if (lastMessage.parts.length > persisted.partIndex) {
+    return {
+      kind: 'update',
+      lastMessageRank: messages.length - 1,
+      partIndex: lastMessage.parts.length - 1,
+      lastPart: lastMessage.parts.at(-1) ?? null,
+    };
+  }
+  if (lastMessage.parts[lastMessage.parts.length - 1] !== persisted.lastPart) {
+    return {
+      kind: 'update',
+      lastMessageRank: messages.length - 1,
+      partIndex: lastMessage.parts.length - 1,
+      lastPart: lastMessage.parts.at(-1) ?? null,
+    };
+  }
+  return { kind: 'noUpdate' };
+}
+
+async function compressMessages(messages: Message[]): Promise<Uint8Array> {
+  const serialized = messages.map(serializeMessageForConvex);
+  // Dynamic import only executed on the client
+  if (typeof window === 'undefined') {
+    throw new Error('compressMessages can only be used in browser environments');
+  }
+
+  const textEncoder = new TextEncoder();
+  const uint8Array = textEncoder.encode(JSON.stringify(serialized));
+  // Dynamically load the module
+  const compressed = lz4.compress(uint8Array);
+  return compressed;
 }
