@@ -8,6 +8,8 @@ import { convexProjectStore } from '~/lib/stores/convexProject';
 import { getFileUpdateCounter, useFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
 import { toast } from 'sonner';
 import { streamOutput } from '~/utils/process';
+import { Spinner } from '~/components/ui/Spinner';
+import { CheckIcon, ExternalLinkIcon, RocketIcon, UpdateIcon } from '@radix-ui/react-icons';
 
 interface ErrorResponse {
   error: string;
@@ -139,35 +141,35 @@ export function DeployButton() {
   const isDisabled = isLoading || !convex;
 
   let buttonText: string;
-  let icon: string;
+  let icon: React.ReactNode;
   switch (status.type) {
     case 'idle':
       buttonText = 'Deploy';
-      icon = 'i-ph:rocket-launch';
+      icon = <RocketIcon />;
       break;
     case 'building':
       buttonText = 'Building...';
-      icon = 'i-ph:spinner-gap animate-spin';
+      icon = <Spinner />;
       break;
     case 'zipping':
       buttonText = 'Creating package...';
-      icon = 'i-ph:spinner-gap animate-spin';
+      icon = <Spinner />;
       break;
     case 'deploying':
       buttonText = 'Deploying...';
-      icon = 'i-ph:spinner-gap animate-spin';
+      icon = <Spinner />;
       break;
     case 'error':
       buttonText = 'Deploy';
-      icon = 'i-ph:rocket-launch';
+      icon = <RocketIcon />;
       break;
     case 'success': {
       if (status.updateCounter === currentCounter) {
         buttonText = 'Deployed';
-        icon = 'i-ph:check text-green-500';
+        icon = <CheckIcon className="text-bolt-elements-icon-success" />;
       } else {
         buttonText = 'Redeploy';
-        icon = 'i-ph:arrows-clockwise';
+        icon = <UpdateIcon />;
       }
       break;
     }
@@ -176,7 +178,7 @@ export function DeployButton() {
   return (
     <div className="flex items-center gap-2">
       <Button disabled={isDisabled} onClick={handleDeploy} title={status.type === 'error' ? status.message : undefined}>
-        <div className={classNames('w-4 h-4', icon)} />
+        {icon}
         <span>{buttonText}</span>
       </Button>
       {status.type === 'success' && convex && (
@@ -186,8 +188,8 @@ export function DeployButton() {
           rel="noopener noreferrer"
           className="flex items-center gap-1"
         >
-          <div className="i-ph:arrow-square-out w-4 h-4" />
-          <span>View site</span>
+          <ExternalLinkIcon />
+          View site
         </Button>
       )}
     </div>

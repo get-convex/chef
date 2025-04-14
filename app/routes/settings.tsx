@@ -2,6 +2,7 @@ import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider } from '~/components/chat/ChefAuthWrapper';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
+import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import { ApiKeyCard } from '~/components/settings/ApiKeyCard';
 import { ThemeCard } from '~/components/settings/ThemeCard';
 import { ProfileCard } from '~/components/settings/ProfileCard';
@@ -39,7 +40,7 @@ export function SettingsContent() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <a href="/" className="inline-flex" title="Back to Chat">
-            <div className="i-ph:arrow-left" />
+            <ArrowLeftIcon />
           </a>
           <h1 className="text-3xl font-bold text-bolt-elements-textPrimary">Settings</h1>
         </div>

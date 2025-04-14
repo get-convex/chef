@@ -17,6 +17,8 @@ import type * as apiKeys from "../apiKeys.js";
 import type * as convexProjects from "../convexProjects.js";
 import type * as dev from "../dev.js";
 import type * as http from "../http.js";
+import type * as lz4 from "../lz4.js";
+import type * as lz4Wasm from "../lz4Wasm.js";
 import type * as messages from "../messages.js";
 import type * as openaiProxy from "../openaiProxy.js";
 import type * as sessions from "../sessions.js";
@@ -36,6 +38,8 @@ declare const fullApi: ApiFromModules<{
   convexProjects: typeof convexProjects;
   dev: typeof dev;
   http: typeof http;
+  lz4: typeof lz4;
+  lz4Wasm: typeof lz4Wasm;
   messages: typeof messages;
   openaiProxy: typeof openaiProxy;
   sessions: typeof sessions;

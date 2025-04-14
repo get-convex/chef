@@ -2,6 +2,7 @@ import { useStore } from '@nanostores/react';
 import { memo, useEffect, useRef } from 'react';
 import { IconButton } from '~/components/ui/IconButton';
 import { convexProjectStore } from '~/lib/stores/convexProject';
+import { ExternalLinkIcon } from '@radix-ui/react-icons';
 
 export const Dashboard = memo(() => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -60,7 +61,7 @@ export const Dashboard = memo(() => {
           <input ref={inputRef} className="w-full bg-transparent outline-none" type="text" value={shownUrl} disabled />
         </div>
         <IconButton
-          icon="i-ph:arrow-square-out"
+          icon={<ExternalLinkIcon />}
           onClick={() => {
             window.open(shownUrl, '_blank');
           }}

@@ -5,6 +5,8 @@ import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
 import WithTooltip from '~/components/ui/Tooltip';
+import { EyeSlashIcon } from '@heroicons/react/24/outline';
+import { EyeOpenIcon, QuestionMarkCircledIcon } from '@radix-ui/react-icons';
 
 export function ApiKeyCard() {
   const convex = useConvex();
@@ -193,7 +195,7 @@ function ApiKeyInput(props: {
           onClick={() => setShowKey(!showKey)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary bg-transparent"
         >
-          <div className={showKey ? 'i-ph:eye-slash-bold h-4 w-4' : 'i-ph:eye-bold h-4 w-4'} />
+          {showKey ? <EyeSlashIcon /> : <EyeOpenIcon />}
         </button>
       </div>
       {props.value && (
@@ -244,7 +246,7 @@ function AlwaysUseKeyCheckbox(props: {
             type="button"
             className="text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary bg-transparent"
           >
-            <div className="i-ph:question-bold h-4 w-4" />
+            <QuestionMarkCircledIcon />
           </button>
         </WithTooltip>
       </TooltipProvider>

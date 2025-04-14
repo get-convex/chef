@@ -1,10 +1,11 @@
+import { CaretDownIcon, CheckIcon, MagicWandIcon } from '@radix-ui/react-icons';
 import * as Select from '@radix-ui/react-select';
 import { useState } from 'react';
 import { classNames } from '~/utils/classNames';
 import type { ModelSelection } from '~/utils/constants';
 
-function svgIcon(url: string, name: string) {
-  return <img className="w-4 h-4" height="16" width="16" src={url} alt={name} />;
+function svgIcon(url: string) {
+  return <img className="size-4" height="16" width="16" src={url} alt="" />;
 }
 
 export interface ModelSelectorProps {
@@ -16,17 +17,17 @@ export function ModelSelector(props: ModelSelectorProps) {
   const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNode }>> = {
     auto: {
       name: 'Auto',
-      icon: <i className="i-ph:robot h-4 w-4" />,
+      icon: <MagicWandIcon />,
     },
     'claude-3.5-sonnet': {
       name: 'Claude 3.5 Sonnet',
-      icon: svgIcon('/icons/claude.svg', 'Claude 3.5 Sonnet'),
+      icon: svgIcon('/icons/claude.svg'),
     },
   };
   if (import.meta.env.VITE_ENABLE_OPENAI) {
     models['gpt-4.1'] = {
       name: 'GPT-4.1',
-      icon: svgIcon('/icons/openai.svg', 'GPT-4.1'),
+      icon: svgIcon('/icons/openai.svg'),
     };
   }
   const [open, setOpen] = useState(false);
@@ -55,7 +56,7 @@ export function ModelSelector(props: ModelSelectorProps) {
           {selectedModel.icon}
           <Select.Value placeholder="Select a model...">{selectedModel.name}</Select.Value>
           <Select.Icon className="ml-auto">
-            <div className={classNames('i-ph:caret-down-bold transition-all', open ? 'rotate-180' : '')}></div>
+            <CaretDownIcon className={classNames('transition-all', open ? 'rotate-180' : '')} />
           </Select.Icon>
         </Select.Trigger>
         <Select.Portal>
@@ -83,7 +84,7 @@ export function ModelSelector(props: ModelSelectorProps) {
                     <Select.ItemText>{model.name}</Select.ItemText>
                   </div>
                   <Select.ItemIndicator className="ml-auto">
-                    <div className="i-ph:check" />
+                    <CheckIcon />
                   </Select.ItemIndicator>
                 </Select.Item>
               ))}

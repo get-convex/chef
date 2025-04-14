@@ -7,6 +7,7 @@ import { useChatId } from '~/lib/stores/chatId';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { ConvexConnectButton } from '~/components/convex/ConvexConnectButton';
+import { ExternalLinkIcon } from '@radix-ui/react-icons';
 
 export function ConvexConnection() {
   const [isOpen, setIsOpen] = useState(false);
@@ -110,7 +111,7 @@ function ConnectedDialogContent({
           target="_blank"
         >
           View in Convex Dashboard
-          <div className="i-ph:arrow-square-out w-4 h-4" />
+          <ExternalLinkIcon />
         </a>
         {projectInfo.warningMessage && (
           <p className="text-sm text-bolt-elements-textSecondary">{projectInfo.warningMessage}</p>

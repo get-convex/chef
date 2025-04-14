@@ -23,6 +23,8 @@ import { convexProjectStore } from '~/lib/stores/convexProject';
 import { BackupStatusIndicator } from '~/components/BackupStatusIndicator';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { getAbsolutePath } from '~/lib/stores/files';
+import { PlusIcon, Cross2Icon, DownloadIcon } from '@radix-ui/react-icons';
+import { CommandLineIcon } from '@heroicons/react/24/outline';
 
 interface WorkspaceProps {
   chatStarted?: boolean;
@@ -189,7 +191,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                           });
                         }}
                       >
-                        <div className="i-ph:code" />
+                        <DownloadIcon />
                         Download Code
                       </PanelHeaderButton>
                       <PanelHeaderButton
@@ -198,7 +200,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                           workbenchStore.toggleTerminal(!workbenchStore.showTerminal.get());
                         }}
                       >
-                        <div className="i-ph:terminal" />
+                        <CommandLineIcon className="size-4" />
                         Toggle Terminal
                       </PanelHeaderButton>
                     </div>
@@ -210,12 +212,12 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                         setPreviewPanes([...previewPanes, randomId()]);
                       }}
                     >
-                      <div className="i-ph:plus" />
+                      <PlusIcon />
                       Add Preview
                     </PanelHeaderButton>
                   )}
                   <IconButton
-                    icon="i-ph:x-circle"
+                    icon={<Cross2Icon />}
                     className="-mr-1"
                     size="xl"
                     onClick={() => {

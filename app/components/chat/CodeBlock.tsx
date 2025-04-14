@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import { bundledLanguages, codeToHtml, isSpecialLang, type BundledLanguage, type SpecialLanguage } from 'shiki';
 import { classNames } from '~/utils/classNames';
 import { createScopedLogger } from '~/utils/logger';
+import { ClipboardIcon } from '@radix-ui/react-icons';
 
 import styles from './CodeBlock.module.css';
 
@@ -71,7 +72,7 @@ export const CodeBlock = memo(
               title="Copy Code"
               onClick={() => copyToClipboard()}
             >
-              <div className="i-ph:clipboard-text-duotone"></div>
+              <ClipboardIcon />
             </button>
           )}
         </div>

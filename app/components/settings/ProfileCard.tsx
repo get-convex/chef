@@ -1,6 +1,7 @@
 import { useStore } from '@nanostores/react';
 import { profileStore } from '~/lib/stores/profile';
 import { useAuth0 } from '@auth0/auth0-react';
+import { ExitIcon, ExternalLinkIcon, PersonIcon } from '@radix-ui/react-icons';
 
 export function ProfileCard() {
   const profile = useStore(profileStore);
@@ -22,7 +23,7 @@ export function ProfileCard() {
               <img src={profile.avatar} alt={profile?.username || 'User'} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <div className="i-ph:user-fill text-4xl text-gray-400" />
+                <PersonIcon className="text-gray-400 size-8" />
               </div>
             )}
           </div>
@@ -36,14 +37,14 @@ export function ProfileCard() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
               >
-                <div className="i-ph:arrow-square-out min-w-[1rem]" />
+                <ExternalLinkIcon />
                 Manage your profile on the Convex Dashboard
               </a>
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 bg-transparent"
               >
-                <div className="i-ph:sign-out min-w--[1rem]" />
+                <ExitIcon />
                 Log out
               </button>
             </div>

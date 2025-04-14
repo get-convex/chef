@@ -4,6 +4,7 @@ import React, { memo, type ReactNode } from 'react';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
 import { IconButton } from './IconButton';
+import { Cross2Icon } from '@radix-ui/react-icons';
 
 export { Root as DialogRoot } from '@radix-ui/react-dialog';
 
@@ -130,7 +131,7 @@ export const Dialog = memo(
               {showCloseButton && (
                 <RadixDialog.Close asChild onClick={onClose}>
                   <IconButton
-                    icon="i-ph:x"
+                    icon={<Cross2Icon />}
                     className="absolute top-3 right-3 text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary"
                   />
                 </RadixDialog.Close>

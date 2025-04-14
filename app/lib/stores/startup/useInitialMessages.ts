@@ -8,6 +8,8 @@ import { setKnownUrlId } from '~/lib/stores/chatId';
 import { setKnownInitialId } from '~/lib/stores/chatId';
 import { description } from '~/lib/stores/description';
 import { toast } from 'sonner';
+import * as lz4 from 'lz4-wasm';
+import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 
 export interface InitialMessages {
   loadedChatId: string;
@@ -25,36 +27,52 @@ export function useInitialMessages(chatId: string):
     const loadInitialMessages = async () => {
       const sessionId = await waitForConvexSessionId('loadInitialMessages');
       try {
-        const rawMessages = await convex.mutation(api.messages.getInitialMessages, {
+        const siteUrl = getConvexSiteUrl();
+        const chatInfo = await convex.query(api.messages.get, {
           id: chatId,
           sessionId,
-          rewindToMessageId: null,
         });
-        if (rawMessages === null) {
+        if (chatInfo === null) {
           setInitialMessages(null);
           return;
         }
-        setKnownInitialId(rawMessages.initialId);
-        if (rawMessages.urlId) {
-          setKnownUrlId(rawMessages.urlId);
+        setKnownInitialId(chatInfo.initialId);
+        if (chatInfo.urlId) {
+          setKnownUrlId(chatInfo.urlId);
         }
+        const initialMessagesResponse = await fetch(`${siteUrl}/initial_messages`, {
+          method: 'POST',
+          body: JSON.stringify({
+            chatId,
+            sessionId,
+          }),
+        });
+        if (!initialMessagesResponse.ok) {
+          throw new Error('Failed to fetch initial messages');
+        }
+        const content = await initialMessagesResponse.arrayBuffer();
+        const initialMessages = await decompressMessages(new Uint8Array(content));
 
         // Transform messages to convert partial-call states to failed states
-        const transformedMessages = rawMessages.messages.map((message) => {
+        const transformedMessages = initialMessages.map((message) => {
           if (!message.parts) {
             return message;
           }
 
           const updatedParts = message.parts.map((part) => {
-            if (part.type === 'tool-invocation' && part.toolInvocation.state === 'partial-call') {
-              return {
-                ...part,
-                toolInvocation: {
-                  ...part.toolInvocation,
-                  state: 'result' as const,
-                  result: 'Error: Tool call was interrupted',
-                },
-              };
+            if (part.type === 'tool-invocation') {
+              // We could potentially handle these better by making the action runner
+              // handle the interrupted calls, but treat these as failed states for now.
+              if (part.toolInvocation.state === 'partial-call' || part.toolInvocation.state === 'call') {
+                return {
+                  ...part,
+                  toolInvocation: {
+                    ...part.toolInvocation,
+                    state: 'result' as const,
+                    result: 'Error: Tool call was interrupted',
+                  },
+                };
+              }
             }
             return part;
           });
@@ -67,11 +85,11 @@ export function useInitialMessages(chatId: string):
 
         const deserializedMessages = transformedMessages.map(deserializeMessageForConvex);
         setInitialMessages({
-          loadedChatId: rawMessages.id,
+          loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
           serialized: transformedMessages,
           deserialized: deserializedMessages,
         });
-        description.set(rawMessages.description);
+        description.set(chatInfo.description);
       } catch (error) {
         toast.error('Failed to load chat messages from Convex. Reload the page?');
         console.error('Error fetching initial messages:', error);
@@ -97,4 +115,20 @@ function deserializeMessageForConvex(message: SerializedMessage): Message {
     createdAt: message.createdAt ? new Date(message.createdAt) : undefined,
     content,
   };
+}
+
+export async function decompressMessages(compressed: Uint8Array): Promise<SerializedMessage[]> {
+  // Dynamic import only executed on the client
+  if (typeof window === 'undefined') {
+    throw new Error('decompressSnapshot can only be used in browser environments');
+  }
+
+  // Dynamically load the module
+  const decompressed = lz4.decompress(compressed);
+  const textDecoder = new TextDecoder();
+  const deserialized = JSON.parse(textDecoder.decode(decompressed));
+  if (!Array.isArray(deserialized)) {
+    throw new Error('Unexpected state -- decompressed data is not an array');
+  }
+  return deserialized;
 }

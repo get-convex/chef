@@ -19,6 +19,7 @@ import { getKnownInitialId } from '~/lib/stores/chatId';
 import { profileStore } from '~/lib/stores/profile';
 import { useAuth0 } from '@auth0/auth0-react';
 import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
+import { PersonIcon, GearIcon, ExitIcon } from '@radix-ui/react-icons';
 
 const menuVariants = {
   closed: {
@@ -284,7 +285,7 @@ export const Menu = memo(() => {
                         decoding="sync"
                       />
                     ) : (
-                      <div className="i-ph:user-fill text-2xl" />
+                      <PersonIcon className="size-8" />
                     )}
                   </button>
                 </DropdownMenu.Trigger>
@@ -298,14 +299,14 @@ export const Menu = memo(() => {
                       className="flex items-center gap-2 px-3 py-2 text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive rounded-md cursor-pointer outline-none"
                       onSelect={handleSettingsClick}
                     >
-                      <div className="i-ph:gear-six" />
+                      <GearIcon />
                       Settings
                     </DropdownMenu.Item>
                     <DropdownMenu.Item
                       className="flex items-center gap-2 px-3 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md cursor-pointer outline-none"
                       onSelect={handleLogout}
                     >
-                      <div className="i-ph:sign-out" />
+                      <ExitIcon />
                       Log out
                     </DropdownMenu.Item>
                   </DropdownMenu.Content>

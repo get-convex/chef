@@ -80,7 +80,14 @@ export default defineSchema({
     content: v.any() as VAny<SerializedMessage>,
     rank: v.number(),
     chatId: v.id('chats'),
+    deletedAt: v.optional(v.number()),
   }).index('byChatId', ['chatId', 'rank']),
+  chatMessagesStorageState: defineTable({
+    chatId: v.id('chats'),
+    storageId: v.union(v.id('_storage'), v.null()),
+    lastMessageRank: v.number(),
+    partIndex: v.number(),
+  }).index('byChatId', ['chatId']),
   inviteCodes: defineTable({
     code: v.string(),
     sessionId: v.id('sessions'),
