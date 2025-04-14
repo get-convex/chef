@@ -553,6 +553,10 @@ export class WorkbenchStore {
             currentFolder = currentFolder.folder(pathSegments[i])!;
           }
           currentFolder.file(pathSegments[pathSegments.length - 1], dirent.content);
+
+          if (relativePath === '.cursor/rules/convex_rules.mdc') {
+            hasCursorRules = true;
+          }
         } else {
           // if there's only one segment, it's a file in the root
           zip.file(relativePath, dirent.content);
@@ -564,9 +568,6 @@ export class WorkbenchStore {
           }
           if (relativePath.toLowerCase() === '.env.local') {
             hasEnvLocalFile = true;
-          }
-          if (relativePath.toLowerCase() === '.cursor/rules/convex_rules.mdc') {
-            hasCursorRules = true;
           }
         }
       }
