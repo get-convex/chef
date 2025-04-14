@@ -26,6 +26,9 @@ export const create = mutation({
       .first();
 
     if (storageState) {
+      if (storageState.storageId === null) {
+        throw new ConvexError('Chat history not found');
+      }
       await ctx.db.insert('shares', {
         chatId: chat._id,
 
@@ -33,7 +36,7 @@ export const create = mutation({
         // snapshot excludes .env.local.
         snapshotId: chat.snapshotId,
 
-        chatHistoryId: storageState.storageId ?? undefined,
+        chatHistoryId: storageState.storageId,
 
         code,
         lastMessageRank: storageState.lastMessageRank,
