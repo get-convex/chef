@@ -89,7 +89,7 @@ export const openaiProxy = httpAction(async (ctx, req) => {
     top_logprobs: body.top_logprobs,
     top_p: body.top_p,
     user: body.user,
-  }
+  };
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
