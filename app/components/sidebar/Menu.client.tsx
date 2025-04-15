@@ -1,9 +1,8 @@
 import { motion, type Variants } from 'framer-motion';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useStore } from '@nanostores/react';
-import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
+import { ConfirmationDialog } from '@ui/ConfirmationDialog';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
 import { cubicEasingFn } from '~/utils/easings';
@@ -20,8 +19,9 @@ import { profileStore } from '~/lib/stores/profile';
 import { useAuth0 } from '@auth0/auth0-react';
 import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
 import { PersonIcon, GearIcon, ExitIcon, PlusIcon } from '@radix-ui/react-icons';
-import { Button } from '@convex-dev/design-system/Button';
-import { TextInput } from '@convex-dev/design-system/TextInput';
+import { Button } from '@ui/Button';
+import { TextInput } from '@ui/TextInput';
+import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 
 const menuVariants = {
   closed: {
@@ -44,7 +44,7 @@ const menuVariants = {
   },
 } satisfies Variants;
 
-type DialogContent = { type: 'delete'; item: ChatHistoryItem } | null;
+type ModalContent = { type: 'delete'; item: ChatHistoryItem } | null;
 
 export const Menu = memo(() => {
   const menuRef = useRef<HTMLDivElement>(null);
@@ -52,7 +52,7 @@ export const Menu = memo(() => {
   const convex = useConvex();
   const list = useQuery(api.messages.getAll, sessionId ? { sessionId } : 'skip') ?? [];
   const [open, setOpen] = useState(false);
-  const [dialogContent, setDialogContent] = useState<DialogContent>(null);
+  const [dialogContent, setDialogContent] = useState<ModalContent>(null);
   const profile = useStore(profileStore);
   const { logout } = useAuth0();
   const [shouldDeleteConvexProject, setShouldDeleteConvexProject] = useState(false);
@@ -72,8 +72,7 @@ export const Menu = memo(() => {
   });
 
   const deleteItem = useCallback(
-    (event: React.UIEvent, item: ChatHistoryItem) => {
-      event.preventDefault();
+    (item: ChatHistoryItem) => {
       const accessToken = getConvexAuthToken(convex);
       if (!sessionId || !accessToken) {
         return;
@@ -153,6 +152,8 @@ export const Menu = memo(() => {
     return null;
   }
 
+  console.log(dialogContent);
+
   return (
     <>
       <motion.div
@@ -165,7 +166,7 @@ export const Menu = memo(() => {
           'flex flex-col side-menu fixed top-0 h-full',
           'bg-[var(--bolt-elements-sidebar-background)] border-r border-bolt-elements-borderColor',
           'shadow-sm text-sm',
-          'z-sidebar',
+          'z-40',
         )}
       >
         <div className="flex h-[var(--header-height)] items-center justify-between border-b border-bolt-elements-borderColor px-4"></div>
@@ -192,128 +193,98 @@ export const Menu = memo(() => {
                 {list.length === 0 ? 'No previous projects' : 'No matches found'}
               </div>
             )}
-            <DialogRoot open={dialogContent !== null}>
-              {binDates(filteredList).map(({ category, items }) => (
-                <div key={category} className="mt-2 space-y-1 first:mt-0">
-                  <div className="sticky top-0 z-10 bg-[var(--bolt-elements-sidebar-background)] px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                    {category}
-                  </div>
-                  <div className="space-y-0.5 pr-1">
-                    {items.map((item) => (
-                      <HistoryItem key={item.initialId} item={item} handleDeleteClick={handleDeleteClick} />
-                    ))}
-                  </div>
+            {binDates(filteredList).map(({ category, items }) => (
+              <div key={category} className="mt-2 space-y-1 first:mt-0">
+                <div className="sticky top-0 z-10 bg-[var(--bolt-elements-sidebar-background)] px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {category}
                 </div>
-              ))}
-              <Dialog onBackdrop={closeDialog} onClose={closeDialog}>
-                {dialogContent?.type === 'delete' && (
+                <div className="space-y-0.5 pr-1">
+                  {items.map((item) => (
+                    <HistoryItem key={item.initialId} item={item} handleDeleteClick={handleDeleteClick} />
+                  ))}
+                </div>
+              </div>
+            ))}
+            {dialogContent?.type === 'delete' && (
+              <ConfirmationDialog
+                onClose={closeDialog}
+                confirmText={'Delete'}
+                onConfirm={() => {
+                  if (dialogContent?.type === 'delete') {
+                    deleteItem(dialogContent.item);
+                  }
+                  closeDialog();
+                  return Promise.resolve();
+                }}
+                dialogTitle="Delete Chat"
+                dialogBody={
                   <>
-                    <div className="rounded-t-lg bg-bolt-elements-background-depth-1 p-6">
-                      <DialogTitle className="text-bolt-elements-textPrimary">Delete Chat?</DialogTitle>
-                      <DialogDescription className="mt-2 text-bolt-elements-textSecondary">
-                        <p>
-                          You are about to delete{' '}
-                          <span className="font-medium text-bolt-elements-textPrimary">
-                            {dialogContent.item.description || 'New chat...'}
-                          </span>
-                        </p>
-                        <p className="mt-2">Are you sure you want to delete this chat?</p>
-                        {dialogContent?.type === 'delete' && sessionId && convexProjectInfo === undefined ? (
-                          <div className="mt-4 flex items-center gap-2">
-                            <div className="size-4 animate-pulse rounded bg-bolt-elements-background-depth-3" />
-                            <div className="h-5 max-w-[280px] flex-1 animate-pulse rounded bg-bolt-elements-background-depth-3" />
-                          </div>
-                        ) : (
-                          convexProjectInfo?.kind === 'connected' && (
-                            <div className="mt-4 flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                id="delete-convex-project"
-                                checked={shouldDeleteConvexProject}
-                                onChange={(e) => setShouldDeleteConvexProject(e.target.checked)}
-                                className="rounded border-bolt-elements-borderColor text-bolt-elements-button-primary-background focus:ring-bolt-elements-borderColorActive"
-                              />
-                              <label
-                                htmlFor="delete-convex-project"
-                                className="text-pretty text-bolt-elements-textSecondary"
-                              >
-                                Also delete the associated Convex project (
-                                <a
-                                  href={`https://dashboard.convex.dev/p/${convexProjectInfo.projectSlug}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-bolt-elements-messages-linkColor"
-                                >
-                                  {convexProjectInfo.projectSlug}
-                                </a>
-                                )
-                              </label>
-                            </div>
+                    <p>
+                      You are about to delete{' '}
+                      <span className="font-medium text-content-primary">
+                        {dialogContent?.item.description || 'New chat...'}
+                      </span>
+                    </p>
+                    {convexProjectInfo?.kind === 'connected' && (
+                      <div className="mt-4 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="delete-convex-project"
+                          checked={shouldDeleteConvexProject}
+                          onChange={(e) => setShouldDeleteConvexProject(e.target.checked)}
+                          className="rounded border-bolt-elements-borderColor text-bolt-elements-button-primary-background focus:ring-bolt-elements-borderColorActive"
+                        />
+                        <label htmlFor="delete-convex-project" className="text-pretty text-content-secondary">
+                          Also delete the associated Convex project (
+                          <a
+                            href={`https://dashboard.convex.dev/p/${convexProjectInfo.projectSlug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-bolt-elements-messages-linkColor"
+                          >
+                            {convexProjectInfo.projectSlug}
+                          </a>
                           )
-                        )}
-                      </DialogDescription>
-                    </div>
-                    <div className="flex justify-end gap-3 rounded-b-lg border-t border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 px-6 py-4">
-                      <DialogButton type="secondary" onClick={closeDialog}>
-                        Cancel
-                      </DialogButton>
-                      <DialogButton
-                        type="danger"
-                        onClick={(event) => {
-                          deleteItem(event, dialogContent.item);
-                          closeDialog();
-                        }}
-                      >
-                        Delete
-                      </DialogButton>
-                    </div>
+                        </label>
+                      </div>
+                    )}
                   </>
-                )}
-              </Dialog>
-            </DialogRoot>
+                }
+              />
+            )}
           </div>
           <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-gray-800">
             <ThemeSwitch />
             {profile && open && (
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <button className="flex size-[40px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-gray-600 transition-all hover:ring-2 hover:ring-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:hover:ring-gray-700">
-                    {profile.avatar ? (
-                      <img
-                        src={profile.avatar}
-                        alt={profile.username || 'User'}
-                        className="size-full object-cover"
-                        loading="eager"
-                        decoding="sync"
-                      />
-                    ) : (
-                      <PersonIcon className="size-8" />
-                    )}
-                  </button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className="z-menu min-w-[180px] rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 p-1 shadow-lg"
-                    sideOffset={5}
-                    align="end"
-                  >
-                    <DropdownMenu.Item
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-bolt-elements-textPrimary outline-none hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive"
-                      onSelect={handleSettingsClick}
-                    >
-                      <GearIcon />
-                      Settings
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-red-500 outline-none hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                      onSelect={handleLogout}
-                    >
-                      <ExitIcon />
-                      Log out
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+              <MenuComponent
+                placement="top-start"
+                buttonProps={{
+                  variant: 'neutral',
+                  title: 'User menu',
+                  inline: true,
+                  className: 'rounded-full',
+                  icon: profile.avatar ? (
+                    <img
+                      src={profile.avatar}
+                      alt={profile.username || 'User'}
+                      className="size-8 rounded-full object-cover"
+                      loading="eager"
+                      decoding="sync"
+                    />
+                  ) : (
+                    <PersonIcon className="size-8 rounded-full" />
+                  ),
+                }}
+              >
+                <MenuItemComponent action={handleSettingsClick}>
+                  <GearIcon />
+                  Settings
+                </MenuItemComponent>
+                <MenuItemComponent action={handleLogout}>
+                  <ExitIcon />
+                  Log out
+                </MenuItemComponent>
+              </MenuComponent>
             )}
           </div>
         </div>

@@ -16,7 +16,7 @@ export function ProfileCard() {
   return (
     <div className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-sm">
       <div className="p-6">
-        <h2 className="mb-4 text-xl font-semibold text-bolt-elements-textPrimary">Profile</h2>
+        <h2 className="mb-4 text-xl font-semibold text-content-primary">Profile</h2>
         <div className="flex items-center gap-4">
           <div className="size-20 min-w-20 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
             {profile?.avatar ? (
@@ -28,8 +28,8 @@ export function ProfileCard() {
             )}
           </div>
           <div>
-            <h3 className="text-lg font-medium text-bolt-elements-textPrimary">{profile?.username || 'User'}</h3>
-            {profile?.email && <p className="text-sm text-bolt-elements-textSecondary">{profile.email}</p>}
+            <h3 className="text-lg font-medium text-content-primary">{profile?.username || 'User'}</h3>
+            {profile?.email && <p className="text-sm text-content-secondary">{profile.email}</p>}
             <div className="mt-2 flex flex-col gap-2">
               <a
                 href="https://dashboard.convex.dev/profile"

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Dialog, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { chooseExperience, type Experience } from '~/utils/experienceChooser';
+import { Modal } from '@ui/Modal';
+import { Button } from '@ui/Button';
 
 export function CompatibilityWarnings() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -19,12 +20,13 @@ export function CompatibilityWarnings() {
   const experience =
     selectedExperience || chooseExperience(navigator.userAgent, searchParams, window.crossOriginIsolated);
 
-  if (experience === 'the-real-thing' || (experience === 'mobile-warning' && hasDismissedMobileWarning)) {
+  if (!isOpen) {
     return null;
   }
 
-  const isMarketingOnly = experience.startsWith('marketing-page-only');
-  const isDismissable = !isMarketingOnly;
+  if (experience === 'the-real-thing' || (experience === 'mobile-warning' && hasDismissedMobileWarning)) {
+    return null;
+  }
 
   const handleDismiss = () => {
     if (experience === 'mobile-warning') {
@@ -39,142 +41,164 @@ export function CompatibilityWarnings() {
     setIsOpen(false);
   };
 
-  return (
-    <DialogRoot open={isOpen} onOpenChange={isMarketingOnly ? undefined : setIsOpen}>
-      <Dialog showCloseButton={!isMarketingOnly} className="flex size-full" innerClassName="w-full">
-        <div className="flex size-full">
-          <div className="m-auto flex max-h-screen w-full flex-col items-center gap-8 overflow-auto px-4 sm:px-8">
-            <DialogTitle className="sr-only">
-              {experience === 'marketing-page-only-for-mobile'
-                ? 'Mobile Browser Compatibility Notice'
-                : experience === 'marketing-page-only-for-desktop-safari'
-                  ? 'Safari Browser Compatibility Notice'
-                  : experience === 'marketing-page-only-for-desktop'
-                    ? 'Desktop Browser Compatibility Notice'
-                    : experience === 'mobile-warning'
-                      ? 'Mobile Device Warning'
-                      : 'Browser Compatibility Notice'}
-            </DialogTitle>
+  // Warning only - use Modal component
+  if (experience === 'mobile-warning') {
+    return (
+      <Modal onClose={handleDismiss} title={<div className="sr-only">Mobile Device Warning</div>}>
+        {isDebug && (
+          <div className="absolute left-4 top-4 z-50">
+            <select
+              value={experience}
+              onChange={(e) => setSelectedExperience(e.target.value as Experience)}
+              className="rounded border bg-white px-2 py-1"
+            >
+              <option value="marketing-page-only-for-mobile">marketing-page-only-for-mobile</option>
+              <option value="marketing-page-only-for-desktop">marketing-page-only-for-desktop</option>
+              <option value="marketing-page-only-for-desktop-safari">marketing-page-only-for-desktop-safari</option>
+              <option value="mobile-warning">mobile-warning</option>
+              <option value="the-real-thing">the-real-thing</option>
+            </select>
+          </div>
+        )}
 
-            {isDebug && (
-              <div className="absolute right-4 top-4 z-50">
-                <select
-                  value={experience}
-                  onChange={(e) => setSelectedExperience(e.target.value as Experience)}
-                  className="rounded border bg-white px-2 py-1"
-                >
-                  <option value="marketing-page-only-for-mobile">marketing-page-only-for-mobile</option>
-                  <option value="marketing-page-only-for-desktop">marketing-page-only-for-desktop</option>
-                  <option value="marketing-page-only-for-desktop-safari">marketing-page-only-for-desktop-safari</option>
-                  <option value="mobile-warning">mobile-warning</option>
-                  <option value="the-real-thing">the-real-thing</option>
-                </select>
-              </div>
-            )}
-
-            <div className="text-center text-lg">
-              <div className="text-bolt-elements-textPrimary">
-                {experience === 'marketing-page-only-for-mobile' ? (
-                  <>
-                    <p>Grab your laptop!</p>
-                    <p className="mt-4">
-                      Chef supports desktop Firefox, Chrome, and some other Chromium-based browsers.
-                    </p>
-                  </>
-                ) : experience === 'marketing-page-only-for-desktop-safari' ? (
-                  <>
-                    <p>You’re a few keystrokes away from cooking with Chef!</p>
-                    <p className="mt-4">
-                      Chef uses{' '}
-                      <a
-                        href="https://webcontainers.io/guides/browser-support#web-platform-requirements"
-                        className="text-bolt-elements-messages-linkColor hover:underline"
-                      >
-                        WebContainers
-                      </a>{' '}
-                      in ways that require browsers like desktop Firefox, Chrome, and some other Chromium-based
-                      browsers.
-                    </p>
-                  </>
-                ) : experience === 'marketing-page-only-for-desktop' ? (
-                  <>
-                    <p>You’re a few keystrokes away from cooking with Chef!</p>
-                    <p className="mt-4">
-                      Chef uses{' '}
-                      <a
-                        href="https://webcontainers.io/guides/browser-support#web-platform-requirements"
-                        className="text-bolt-elements-messages-linkColor hover:underline"
-                      >
-                        WebContainers
-                      </a>{' '}
-                      in ways that require desktop Firefox, Chrome, and some other Chromium-based browsers. Your current
-                      browser does not support cross-origin isolation.
-                    </p>
-                  </>
-                ) : experience === 'mobile-warning' ? (
-                  <>
-                    <p>Grab your laptop!</p>
-                    <p className="mt-4">
-                      Chef uses{' '}
-                      <a
-                        href="https://webcontainers.io/guides/browser-support#web-platform-requirements"
-                        className="text-bolt-elements-messages-linkColor hover:underline"
-                      >
-                        WebContainers
-                      </a>{' '}
-                      in ways that require a browser that supports cross-origin isolation. Get cooking with desktop
-                      Chrome or Firefox!
-                    </p>
-                  </>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="flex min-h-0 flex-1 items-center">
-              <video
-                src="/Basic-Screencast.mp4"
-                controls
-                className="max-h-[calc(100vh-24rem)] w-auto max-w-full"
-                autoPlay
-                muted
-                playsInline
-              />
-            </div>
-
-            <div className="text-center text-bolt-elements-textSecondary">
-              <div>
-                Read more about{' '}
-                <a
-                  href="https://news.convex.dev/meet-chef/"
-                  className="text-bolt-elements-messages-linkColor hover:underline"
-                >
-                  Chef
-                </a>
-                , check out{' '}
-                <a href="https://convex.dev" className="text-bolt-elements-messages-linkColor hover:underline">
-                  Convex
-                </a>
-                , and join our{' '}
-                <a
-                  href="https://www.convex.dev/community"
-                  className="text-bolt-elements-messages-linkColor hover:underline"
-                >
-                  Discord community
-                </a>
-              </div>
-
-              {isDismissable && (
-                <button
-                  onClick={handleDismiss}
-                  className="mt-8 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-                >
-                  Let me use it even though it's designed for desktop and mobile / tablets are not supported
-                </button>
-              )}
-            </div>
+        <div className="text-center">
+          <div>
+            <h3>Grab your laptop!</h3>
+            <p className="my-2">
+              Chef uses{' '}
+              <a
+                href="https://webcontainers.io/guides/browser-support#web-platform-requirements"
+                className="text-bolt-elements-messages-linkColor hover:underline"
+              >
+                WebContainers
+              </a>{' '}
+              in ways that require a browser that supports cross-origin isolation. Get cooking with desktop Chrome or
+              Firefox!
+            </p>
           </div>
         </div>
-      </Dialog>
-    </DialogRoot>
+
+        <div className="flex min-h-0 flex-1 items-center">
+          <video
+            src="/Basic-Screencast.mp4"
+            controls
+            className="max-h-[calc(100vh-24rem)] w-auto max-w-full"
+            autoPlay
+            muted
+            playsInline
+          />
+        </div>
+
+        <div className="mt-2 text-center text-content-secondary">
+          <div>
+            Read more about{' '}
+            <a href="https://news.convex.dev/meet-chef/" className="text-content-link hover:underline">
+              Chef
+            </a>
+            , check out{' '}
+            <a href="https://convex.dev" className="text-content-link hover:underline">
+              Convex
+            </a>
+            , and join our{' '}
+            <a href="https://www.convex.dev/community" className="text-content-link hover:underline">
+              Discord community
+            </a>
+          </div>
+
+          <Button onClick={handleDismiss} className="mt-8 max-w-full text-wrap">
+            Let me use it even though my device is not supported
+          </Button>
+        </div>
+      </Modal>
+    );
+  }
+
+  // Marketing pages - use full-page overlay (not dismissable)
+  return (
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background-secondary/95 bg-bolt-elements-background-depth-1 backdrop-blur-sm">
+      {isDebug && (
+        <div className="absolute left-4 top-4 z-50">
+          <select
+            value={experience}
+            onChange={(e) => setSelectedExperience(e.target.value as Experience)}
+            className="rounded border bg-white px-2 py-1"
+          >
+            <option value="marketing-page-only-for-mobile">marketing-page-only-for-mobile</option>
+            <option value="marketing-page-only-for-desktop">marketing-page-only-for-desktop</option>
+            <option value="marketing-page-only-for-desktop-safari">marketing-page-only-for-desktop-safari</option>
+            <option value="mobile-warning">mobile-warning</option>
+            <option value="the-real-thing">the-real-thing</option>
+          </select>
+        </div>
+      )}
+
+      <div className="flex max-w-lg flex-col items-center gap-6 rounded-xl bg-white p-8 text-center shadow-lg dark:bg-bolt-elements-background-depth-2">
+        <div>
+          {experience === 'marketing-page-only-for-mobile' ? (
+            <>
+              <h3 className="text-xl font-bold">Grab your laptop!</h3>
+              <p className="my-2">Chef supports desktop Firefox, Chrome, and some other Chromium-based browsers.</p>
+            </>
+          ) : experience === 'marketing-page-only-for-desktop-safari' ? (
+            <>
+              <h3 className="text-xl font-bold">You're a few keystrokes away from cooking with Chef!</h3>
+              <p className="my-2">
+                Chef uses{' '}
+                <a
+                  href="https://webcontainers.io/guides/browser-support#web-platform-requirements"
+                  className="text-bolt-elements-messages-linkColor hover:underline"
+                >
+                  WebContainers
+                </a>{' '}
+                in ways that require browsers like desktop Firefox, Chrome, and some other Chromium-based browsers.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-bold">You're a few keystrokes away from cooking with Chef!</h3>
+              <p className="my-2">
+                Chef uses{' '}
+                <a
+                  href="https://webcontainers.io/guides/browser-support#web-platform-requirements"
+                  className="text-bolt-elements-messages-linkColor hover:underline"
+                >
+                  WebContainers
+                </a>{' '}
+                in ways that require desktop Firefox, Chrome, and some other Chromium-based browsers. Your current
+                browser does not support cross-origin isolation.
+              </p>
+            </>
+          )}
+        </div>
+
+        <div className="flex w-full items-center justify-center">
+          <video
+            src="/Basic-Screencast.mp4"
+            controls
+            className="max-h-[50vh] w-auto max-w-full rounded-lg"
+            autoPlay
+            muted
+            playsInline
+          />
+        </div>
+
+        <div className="text-center text-content-secondary">
+          <div>
+            Read more about{' '}
+            <a href="https://news.convex.dev/meet-chef/" className="text-content-link hover:underline">
+              Chef
+            </a>
+            , check out{' '}
+            <a href="https://convex.dev" className="text-content-link hover:underline">
+              Convex
+            </a>
+            , and join our{' '}
+            <a href="https://www.convex.dev/community" className="text-content-link hover:underline">
+              Discord community
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

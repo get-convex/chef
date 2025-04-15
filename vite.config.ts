@@ -7,7 +7,6 @@ import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import path from 'path';
 
 dotenv.config();
 
@@ -71,6 +70,12 @@ export default defineConfig((config) => {
       include: [
         'jose', // discovered late during dev so causes a reload when optimizing
         'classnames', // fix for @convex-dev/design-system to work
+
+        // these are all used by @convex-dev/design-system/Combobox
+        'react-dom',
+        'react-fast-compare',
+        'warning',
+        'fuzzy',
       ],
       esbuildOptions: {
         define: {

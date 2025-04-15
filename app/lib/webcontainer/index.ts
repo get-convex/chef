@@ -53,7 +53,7 @@ if (shouldBootWebcontainer) {
       .then(async (webcontainer) => {
         // Listen for preview errors
         webcontainer.on('preview-message', (message) => {
-          logger.info('WebContainer preview message:', message);
+          logger.info('WebContainer preview message:', JSON.stringify(message));
 
           // Handle both uncaught exceptions and unhandled promise rejections
           if (message.type === 'PREVIEW_UNCAUGHT_EXCEPTION' || message.type === 'PREVIEW_UNHANDLED_REJECTION') {

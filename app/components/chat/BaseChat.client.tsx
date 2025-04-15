@@ -1,11 +1,10 @@
 import type { Message } from 'ai';
-import React, { type RefCallback, useCallback, useState } from 'react';
+import React, { type ReactNode, type RefCallback, useCallback, useState } from 'react';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import { classNames } from '~/utils/classNames';
 import { Messages } from './Messages.client';
 import { SendButton } from './SendButton.client';
-import * as Tooltip from '@radix-ui/react-tooltip';
 import styles from './BaseChat.module.css';
 import FilePreview from './FilePreview';
 import { ScreenshotStateManager } from './ScreenshotStateManager';
@@ -13,7 +12,7 @@ import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
 import { SuggestionButtons } from './SuggestionButtons';
-import { KeyboardShortcut } from '~/components/ui/KeyboardShortcut';
+import { KeyboardShortcut } from '@ui/KeyboardShortcut';
 import StreamingIndicator from './StreamingIndicator';
 import type { ToolStatus } from '~/lib/common/types';
 import { TeamSelector } from '~/components/convex/TeamSelector';
@@ -23,10 +22,11 @@ import { useChefAuth } from './ChefAuthWrapper';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import { openSignInWindow } from '~/components/ChefSignInPage';
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 import { ModelSelector } from './ModelSelector';
 import type { ModelSelection } from '~/utils/constants';
-
+import { Button } from '@ui/Button';
+import { Callout } from '@ui/Callout';
 const TEXTAREA_MIN_HEIGHT = 76;
 
 interface BaseChatProps {
@@ -59,7 +59,7 @@ interface BaseChatProps {
   toolStatus: ToolStatus;
   messages: Message[];
   terminalInitializationOptions: TerminalInitializationOptions | undefined;
-  disableChatMessage: string | null;
+  disableChatMessage: ReactNode | string | null;
 
   // Model selection props
   modelSelection: ModelSelection;
@@ -129,10 +129,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
             <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
               {!chatStarted && (
                 <div id="intro" className="mx-auto mt-[16vh] max-w-chat px-4 text-center lg:px-0">
-                  <h1 className="mb-4 animate-fadeIn font-display text-4xl font-black tracking-tight text-bolt-elements-textPrimary lg:text-6xl">
+                  <h1 className="mb-4 animate-fadeInFromLoading font-display text-4xl font-black tracking-tight text-content-primary lg:text-6xl">
                     Now you&rsquo;re cooking
                   </h1>
-                  <p className="mb-8 animate-fadeIn text-balance font-display text-xl font-medium text-bolt-elements-textSecondary [animation-delay:200ms] [animation-fill-mode:backwards] lg:text-2xl">
+                  <p className="mb-8 animate-fadeInFromLoading text-balance font-display text-xl font-medium text-content-secondary [animation-delay:200ms] [animation-fill-mode:backwards] lg:text-2xl">
                     Generate and launch realtime full‑stack apps you never thought possible
                   </p>
                 </div>
@@ -182,7 +182,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       }}
                     />
                   }
-                  <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2">
+                  {disableChatMessage && (
+                    <Callout variant="upsell" className="min-w-full rounded-md">
+                      {disableChatMessage}
+                    </Callout>
+                  )}
+                  <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border bg-background-primary/75 backdrop-blur-md transition-all duration-200 focus-within:border-border-selected">
                     <FilePreview
                       files={uploadedFiles}
                       imageDataList={imageDataList}
@@ -201,27 +206,13 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       <textarea
                         ref={textareaRef}
                         className={classNames(
-                          'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent text-sm',
-                          'transition-all duration-200',
-                          'hover:border-bolt-elements-focus',
+                          'w-full pl-4 pt-4 pr-16 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
+                          'focus:ring-0',
                           'disabled:opacity-50 disabled:cursor-not-allowed',
                         )}
                         disabled={disableChatMessage !== null || maintenanceMode}
-                        onDragEnter={(e) => {
-                          e.preventDefault();
-                          e.currentTarget.style.border = '2px solid #1488fc';
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.currentTarget.style.border = '2px solid #1488fc';
-                        }}
-                        onDragLeave={(e) => {
-                          e.preventDefault();
-                          e.currentTarget.style.border = '1px solid var(--bolt-elements-borderColor)';
-                        }}
                         onDrop={(e) => {
                           e.preventDefault();
-                          e.currentTarget.style.border = '1px solid var(--bolt-elements-borderColor)';
 
                           const files = Array.from(e.dataTransfer.files);
                           files.forEach((file) => {
@@ -267,67 +258,45 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           maxHeight: TEXTAREA_MAX_HEIGHT,
                         }}
                         placeholder={
-                          disableChatMessage
-                            ? disableChatMessage
-                            : chatStarted
-                              ? 'Request changes by sending another message...'
-                              : 'What app do you want to serve?'
+                          chatStarted
+                            ? 'Request changes by sending another message...'
+                            : 'What app do you want to serve?'
                         }
                         translate="no"
                       />
-                      <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                          <div>
-                            <SendButton
-                              show={
-                                input.length > 0 || isStreaming || uploadedFiles.length > 0 || sendMessageInProgress
-                              }
-                              isStreaming={isStreaming}
-                              disabled={
-                                !selectedTeamSlug ||
-                                chefAuthState.kind === 'loading' ||
-                                sendMessageInProgress ||
-                                maintenanceMode
-                              }
-                              onClick={() => {
-                                if (isStreaming) {
-                                  handleStop?.();
-                                  return;
-                                }
-                                if (input.length > 0 || uploadedFiles.length > 0) {
-                                  handleSendMessage?.();
-                                }
-                              }}
-                            />
-                          </div>
-                        </Tooltip.Trigger>
-                        {(chefAuthState.kind === 'unauthenticated' || !selectedTeamSlug) && (
-                          <Tooltip.Portal>
-                            <Tooltip.Content
-                              className="z-50 animate-fadeIn rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 px-3 py-1.5 text-sm shadow-lg"
-                              sideOffset={5}
-                              side="right"
-                            >
-                              {chefAuthState.kind === 'unauthenticated'
-                                ? 'Please sign in to continue'
-                                : 'Please select a team to continue'}
-                              <Tooltip.Arrow className="fill-bolt-elements-borderColor" />
-                            </Tooltip.Content>
-                          </Tooltip.Portal>
-                        )}
-                      </Tooltip.Root>
-                      <div className="flex items-center justify-end gap-4 p-4 pt-2 text-sm">
-                        <div className="text-xs text-bolt-elements-textTertiary">
-                          <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
-                        </div>
+                      <SendButton
+                        show={input.length > 0 || isStreaming || uploadedFiles.length > 0 || sendMessageInProgress}
+                        isStreaming={isStreaming}
+                        disabled={
+                          !selectedTeamSlug ||
+                          chefAuthState.kind === 'loading' ||
+                          sendMessageInProgress ||
+                          maintenanceMode
+                        }
+                        onClick={() => {
+                          if (isStreaming) {
+                            handleStop?.();
+                            return;
+                          }
+                          if (input.length > 0 || uploadedFiles.length > 0) {
+                            handleSendMessage?.();
+                          }
+                        }}
+                        tip={
+                          chefAuthState.kind === 'unauthenticated'
+                            ? 'Please sign in to continue'
+                            : !selectedTeamSlug
+                              ? 'Please select a team to continue'
+                              : undefined
+                        }
+                      />
+                      <div className="flex items-center justify-end gap-4 p-4 pb-3 pt-2 text-sm">
+                        <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
                         <div className="grow" />
                         {input.length > 3 ? (
-                          <div className="text-xs text-bolt-elements-textTertiary">
-                            <KeyboardShortcut
-                              value={['Shift', 'Return']}
-                              className="mr-0.5 font-bold text-bolt-elements-textSecondary"
-                            />{' '}
-                            for new line
+                          <div className="text-xs text-content-tertiary">
+                            <KeyboardShortcut value={['Shift', 'Return']} className="mr-0.5 font-semibold" /> for new
+                            line
                           </div>
                         ) : null}
                         {chatStarted && <ConvexConnection />}
@@ -377,18 +346,18 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 <p>
                   <a
                     href="https://www.convex.dev/ai-platforms"
-                    className="font-display text-sm font-medium text-bolt-elements-textTertiary transition-colors hover:text-bolt-elements-textPrimary"
+                    className="font-display text-sm font-medium text-content-tertiary transition-colors hover:text-content-primary"
                   >
                     <span>Building your own prompt-to-app platform? Use Convex.</span>
                   </a>
                 </p>
               </div>
-              <div className="flex items-end gap-3 font-display text-lg font-medium text-bolt-elements-textTertiary">
+              <div className="flex items-end gap-3 font-display text-lg font-medium text-content-tertiary">
                 <p className="flex items-center">
                   Made&nbsp;by{' '}
                   <a
                     href="https://www.convex.dev"
-                    className="transition-colors hover:text-bolt-elements-textPrimary"
+                    className="transition-colors hover:text-content-primary"
                     aria-label="Convex"
                   >
                     <svg
@@ -430,12 +399,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     </svg>
                   </a>
                 </p>
-                <hr className="h-8 w-0.5 bg-bolt-elements-textTertiary opacity-20" />
+                <hr className="h-8 w-0.5 bg-content-tertiary opacity-20" />
                 <p className="flex items-center">
                   Powered&nbsp;by{' '}
                   <a
                     href="https://bolt.new"
-                    className="contents transition-colors hover:text-bolt-elements-textPrimary"
+                    className="contents transition-colors hover:text-content-primary"
                     aria-label="Bolt"
                   >
                     <svg
@@ -462,7 +431,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       </div>
     );
 
-    return <Tooltip.Provider delayDuration={200}>{baseChat}</Tooltip.Provider>;
+    return baseChat;
   },
 );
 BaseChat.displayName = 'BaseChat';
@@ -474,24 +443,19 @@ function SignInButton() {
     openSignInWindow();
   }, [setStarted]);
   return (
-    <button
-      className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-button-secondary-backgroundHover"
-      onClick={signIn}
-    >
-      <div className="flex w-full items-center gap-2 p-1.5">
-        {!started && (
-          <>
-            <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
-            <span>Sign in</span>
-          </>
-        )}
-        {started && (
-          <>
-            <Spinner />
-            Signing in...
-          </>
-        )}
-      </div>
-    </button>
+    <Button variant="neutral" onClick={signIn}>
+      {!started && (
+        <>
+          <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+          <span>Sign in</span>
+        </>
+      )}
+      {started && (
+        <>
+          <Spinner />
+          Signing in...
+        </>
+      )}
+    </Button>
   );
 }

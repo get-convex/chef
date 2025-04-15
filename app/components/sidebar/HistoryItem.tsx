@@ -1,11 +1,11 @@
 import { useParams } from '@remix-run/react';
 import { classNames } from '~/utils/classNames';
-import * as Dialog from '@radix-ui/react-dialog';
 import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
-import WithTooltip from '~/components/ui/Tooltip';
 import { useEditChatDescription } from '~/lib/hooks';
 import { forwardRef, type ForwardedRef } from 'react';
 import { CheckIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
+import { TextInput } from '@ui/TextInput';
 
 interface HistoryItemProps {
   item: ChatHistoryItem;
@@ -30,34 +30,27 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
   return (
     <div
       className={classNames(
-        'group rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[var(--bolt-elements-sidebar-active-item-background)] overflow-hidden flex justify-between items-center px-3 py-2 transition-colors',
+        'group rounded text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[var(--bolt-elements-sidebar-active-item-background)] overflow-hidden flex justify-between items-center px-3 py-2 transition-colors',
         { 'text-gray-900 dark:text-white bg-[var(--bolt-elements-sidebar-active-item-background)]': isActiveChat },
       )}
     >
       {editing ? (
         <form onSubmit={handleSubmit} className="flex flex-1 items-center gap-2">
-          <input
-            type="text"
-            className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[var(--cvx-border-selected)] dark:border-gray-800 dark:bg-gray-900 dark:text-white"
+          <TextInput
+            labelHidden
+            id="description"
+            className="-ml-1.5 -mt-1.5"
             autoFocus
             value={currentDescription}
             onChange={handleChange}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
           />
-          <button
-            type="submit"
-            className="size-4 text-gray-500 transition-colors hover:text-[var(--cvx-util-accent)]"
-            onMouseDown={handleSubmit}
-          >
-            <CheckIcon />
-          </button>
+          <Button type="submit" variant="neutral" icon={<CheckIcon />} size="xs" inline onMouseDown={handleSubmit} />
         </form>
       ) : (
         <a href={`/chat/${item.urlId ?? item.initialId}`} className="relative flex w-full truncate">
-          <WithTooltip tooltip={description}>
-            <span className="truncate pr-24">{description}</span>
-          </WithTooltip>
+          <span className="truncate pr-24">{description}</span>
           <div
             className={classNames(
               {
@@ -76,17 +69,14 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
                   toggleEditMode();
                 }}
               />
-              <Dialog.Trigger asChild>
-                <ChatActionButton
-                  toolTipContent="Delete"
-                  icon={<TrashIcon />}
-                  className="hover:text-red-500"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    handleDeleteClick(event, item);
-                  }}
-                />
-              </Dialog.Trigger>
+              <ChatActionButton
+                toolTipContent="Delete"
+                icon={<TrashIcon />}
+                onClick={(event) => {
+                  event.preventDefault();
+                  handleDeleteClick(event, item);
+                }}
+              />
             </div>
           </div>
         </a>
@@ -112,16 +102,16 @@ const ChatActionButton = forwardRef(
     ref: ForwardedRef<HTMLButtonElement>,
   ) => {
     return (
-      <WithTooltip tooltip={toolTipContent} position="bottom" sideOffset={4}>
-        <button
-          ref={ref}
-          type="button"
-          className={`bg-transparent text-gray-400 transition-colors hover:text-[var(--cvx-util-accent)] dark:text-gray-500 ${className ? className : ''}`}
-          onClick={onClick}
-        >
-          {icon}
-        </button>
-      </WithTooltip>
+      <Button
+        ref={ref}
+        variant="neutral"
+        icon={icon}
+        inline
+        size="xs"
+        tip={toolTipContent}
+        className={className}
+        onClick={onClick}
+      />
     );
   },
 );

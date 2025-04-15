@@ -1,8 +1,8 @@
 import { useStore } from '@nanostores/react';
 import { memo, useEffect, useState } from 'react';
 import { themeStore, toggleTheme } from '~/lib/stores/theme';
-import { IconButton } from './IconButton';
 import { SunIcon, MoonIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
 
 interface ThemeSwitchProps {
   className?: string;
@@ -18,11 +18,14 @@ export const ThemeSwitch = memo(({ className }: ThemeSwitchProps) => {
 
   return (
     domLoaded && (
-      <IconButton
+      <Button
+        variant="neutral"
+        inline
+        aria-label="Toggle Theme"
         className={className}
-        size="xl"
-        title="Toggle Theme"
         onClick={toggleTheme}
+        tip={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        tipSide="right"
         icon={theme === 'dark' ? <SunIcon /> : <MoonIcon />}
       />
     )

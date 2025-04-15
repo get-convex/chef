@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useSearchParams } from '@remix-run/react';
 import type { MetaFunction } from '@vercel/remix';
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Loading | Chef' }];

@@ -7,7 +7,7 @@ import { api } from '@convex/_generated/api';
 import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
 import { Share2Icon, ClipboardIcon } from '@radix-ui/react-icons';
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 
 const Button = forwardRef<
   HTMLButtonElement,
@@ -26,10 +26,10 @@ const Button = forwardRef<
       className={classNames(
         'flex items-center gap-1 p-1 text-sm border border-bolt-elements-borderColor rounded-md',
         {
-          'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textPrimary hover:text-bolt-elements-textPrimary':
+          'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-content-primary hover:text-content-primary':
             !active,
           'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent': active && !disabled,
-          'bg-bolt-elements-item-backgroundDefault text-gray-900/20 dark:text-white/20 cursor-not-allowed hover:bg-bolt-elements-item-backgroundDefault hover:text-bolt-elements-textTertiary':
+          'bg-bolt-elements-item-backgroundDefault text-gray-900/20 dark:text-white/20 cursor-not-allowed hover:bg-bolt-elements-item-backgroundDefault hover:text-content-tertiary':
             disabled,
         },
         className,
@@ -102,16 +102,16 @@ export function ShareButton() {
 
       <Popover.Portal>
         <Popover.Content
-          className="z-50 w-[320px] animate-fadeIn rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-lg"
+          className="z-50 w-[320px] animate-fadeInFromLoading rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-lg"
           sideOffset={5}
           align="end"
         >
           <div className="p-4">
-            <h2 className="mb-4 text-base font-medium text-bolt-elements-textPrimary">Share Project</h2>
+            <h2 className="mb-4 text-base font-medium text-content-primary">Share Project</h2>
 
             {status === 'idle' && (
               <>
-                <p className="mb-4 text-sm text-bolt-elements-textSecondary">
+                <p className="mb-4 text-sm text-content-secondary">
                   This will create a shareable link to your code and chat history that anyone can access.
                 </p>
                 <div className="flex justify-end">
@@ -128,23 +128,23 @@ export function ShareButton() {
             {status === 'loading' && (
               <div className="flex flex-col items-center justify-center py-6">
                 <Spinner />
-                <p className="text-bolt-elements-textSecondary">Generating share link…</p>
+                <p className="text-content-secondary">Generating share link…</p>
               </div>
             )}
 
             {status === 'success' && (
               <>
-                <p className="mb-4 text-sm text-bolt-elements-textSecondary">Use this link to share with others:</p>
+                <p className="mb-4 text-sm text-content-secondary">Use this link to share with others:</p>
                 <div className="mb-4 flex items-center gap-2">
                   <input
                     type="text"
                     readOnly
                     value={shareUrl}
-                    className="flex-1 rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-bolt-elements-textPrimary"
+                    className="flex-1 rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
                   />
                   <button
                     onClick={copyToClipboard}
-                    className="rounded-md border border-bolt-elements-borderColor bg-bolt-elements-item-backgroundDefault p-1.5 text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive"
+                    className="rounded-md border border-bolt-elements-borderColor bg-bolt-elements-item-backgroundDefault p-1.5 text-content-primary hover:bg-bolt-elements-item-backgroundActive"
                   >
                     <ClipboardIcon />
                   </button>

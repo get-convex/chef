@@ -38,7 +38,7 @@ export default function ChatAlert({ alert, clearAlert, postMessage }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className={`text-sm font-medium text-bolt-elements-textPrimary`}
+              className={`text-sm font-medium text-content-primary`}
             >
               {title}
             </motion.h3>
@@ -46,11 +46,11 @@ export default function ChatAlert({ alert, clearAlert, postMessage }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className={`mt-2 text-sm text-bolt-elements-textSecondary`}
+              className={`mt-2 text-sm text-content-secondary`}
             >
               <p>{message}</p>
               {description && (
-                <div className="my-4 rounded bg-bolt-elements-background-depth-3 p-2 text-xs text-bolt-elements-textSecondary">
+                <div className="my-4 rounded bg-bolt-elements-background-depth-3 p-2 text-xs text-content-secondary">
                   Error: {description}
                 </div>
               )}

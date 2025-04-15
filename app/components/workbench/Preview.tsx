@@ -3,7 +3,7 @@ import { useStore } from '@nanostores/react';
 import { IconButton } from '~/components/ui/IconButton';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { PortDropdown } from './PortDropdown';
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 import { UpdateIcon, MobileIcon, ExternalLinkIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 
 type ResizeSide = 'left' | 'right' | null;
@@ -319,12 +319,12 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
                 allowFullScreen={true}
               />
             ) : (
-              <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
+              <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-content-primary">
                 <Spinner />
               </div>
             )
           ) : (
-            <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
+            <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-content-primary">
               No preview available
             </div>
           )}

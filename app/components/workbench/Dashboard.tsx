@@ -1,8 +1,8 @@
 import { useStore } from '@nanostores/react';
 import { memo, useEffect, useRef } from 'react';
-import { IconButton } from '~/components/ui/IconButton';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
 
 export const Dashboard = memo(() => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -60,12 +60,14 @@ export const Dashboard = memo(() => {
         >
           <input ref={inputRef} className="w-full bg-transparent outline-none" type="text" value={shownUrl} disabled />
         </div>
-        <IconButton
+        <Button
+          variant="neutral"
+          inline
           icon={<ExternalLinkIcon />}
           onClick={() => {
             window.open(shownUrl, '_blank');
           }}
-          title={`Open dashboard in new tab`}
+          aria-label={`Open dashboard in new tab`}
         />
       </div>
       <div className="flex-1 border-t border-bolt-elements-borderColor">

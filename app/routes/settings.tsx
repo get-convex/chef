@@ -42,7 +42,7 @@ export function SettingsContent() {
           <a href="/" className="inline-flex" title="Back to Chat">
             <ArrowLeftIcon />
           </a>
-          <h1 className="text-3xl font-bold text-bolt-elements-textPrimary">Settings</h1>
+          <h1 className="text-3xl font-bold text-content-primary">Settings</h1>
         </div>
 
         <div className="space-y-6">

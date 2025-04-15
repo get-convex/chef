@@ -17,7 +17,8 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"],
-      "@convex/*": ["./convex/*"]
+      "@convex/*": ["./convex/*"],
+      "@ui/*": ["./node_modules/@convex-dev/design-system/dist/*"]
     },
 
     // vite takes care of building everything, not tsc

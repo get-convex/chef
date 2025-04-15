@@ -47,9 +47,6 @@ export default {
                 4: 'var(--bolt-elements-bg-depth-4)',
               },
             },
-            textPrimary: 'var(--bolt-elements-textPrimary)',
-            textSecondary: 'var(--bolt-elements-textSecondary)',
-            textTertiary: 'var(--bolt-elements-textTertiary)',
             code: {
               background: 'var(--bolt-elements-code-background)',
               text: 'var(--bolt-elements-code-text)',

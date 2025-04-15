@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import type { Message } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMessageParser, useSnapScroll, type PartCache } from '~/lib/hooks';
 import { description } from '~/lib/stores/description';
 import { chatStore } from '~/lib/stores/chatId';
@@ -29,9 +29,10 @@ import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { disabledText, getTokenUsage, noTokensText } from '~/lib/convexUsage';
-import { STATUS_MESSAGES } from './StreamingIndicator';
+import { disabledText, getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
 import { formatDistanceStrict } from 'date-fns';
+import { atom } from 'nanostores';
+import { STATUS_MESSAGES } from './StreamingIndicator';
 
 const logger = createScopedLogger('Chat');
 
@@ -68,6 +69,11 @@ interface ChatProps {
   initialInput?: string;
 }
 
+const retryState = atom({
+  numFailures: 0,
+  nextRetry: Date.now(),
+});
+
 export const Chat = memo(
   ({
     initialMessages,
@@ -96,23 +102,18 @@ export const Chat = memo(
 
     const [modelSelection, setModelSelection] = useState<ModelSelection>('auto');
 
-    const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number; seed: number }>({
-      numFailures: 0,
-      nextRetry: Date.now(),
-      seed: Math.random() < 0.5 ? 0 : 1,
-    });
-
     // Reset retries counter every minute
     useEffect(() => {
       const resetInterval = setInterval(() => {
-        setRetries((prev) => ({ ...prev, numFailures: 0, nextRetry: Date.now() }));
+        retryState.set({ numFailures: 0, nextRetry: Date.now() });
       }, 60 * 1000);
-
       return () => clearInterval(resetInterval);
     }, []);
 
     const chatContextManager = useRef(new ChatContextManager());
-    const [disableChatMessage, setDisableChatMessage] = useState<string | null>(null);
+    const [disableChatMessage, setDisableChatMessage] = useState<
+      { type: 'ExceededQuota'; tokensUsed: number; tokensQuota: number } | { type: 'TeamDisabled' } | null
+    >(null);
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     function hasApiKeySet() {
@@ -159,9 +160,9 @@ export const Chat = memo(
         if (tokensUsed !== undefined && tokensQuota !== undefined) {
           console.log(`Convex tokens used/quota: ${tokensUsed} / ${tokensQuota}`);
           if (isTeamDisabled) {
-            setDisableChatMessage(disabledText);
+            setDisableChatMessage({ type: 'TeamDisabled' });
           } else if (tokensUsed > tokensQuota) {
-            setDisableChatMessage(noTokensText(tokensUsed, tokensQuota));
+            setDisableChatMessage({ type: 'ExceededQuota', tokensUsed, tokensQuota });
           } else {
             setDisableChatMessage(null);
           }
@@ -186,9 +187,11 @@ export const Chat = memo(
           throw new Error('No team slug');
         }
         let modelProvider: ModelProvider;
+        const retries = retryState.get();
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
+          // Send all traffic to Anthropic first before failing over to Bedrock.
           const providers: ModelProvider[] = ['Anthropic', 'Bedrock'];
-          modelProvider = providers[(retries.seed + retries.numFailures) % providers.length];
+          modelProvider = providers[retries.numFailures % providers.length];
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
         } else {
@@ -240,17 +243,22 @@ export const Chat = memo(
             userHasOwnApiKey: !!apiKey,
           },
         });
-        setRetries((prevRetries) => {
-          logger.error(`Request failed (retries: ${JSON.stringify(prevRetries)})`, e, error);
-          if (prevRetries.numFailures === 0) {
-            logger.info('Retrying immediately on first failure.');
-            setTimeout(() => reload(), 0);
-          }
-          const newRetries = prevRetries.numFailures + 1;
-          const backoff = error?.message.includes(STATUS_MESSAGES.error) ? exponentialBackoff(newRetries) : 0;
-          return { ...prevRetries, numFailures: newRetries, nextRetry: Date.now() + backoff };
+
+        const retries = retryState.get();
+        logger.error(`Request failed (retries: ${JSON.stringify(retries)})`, e, error);
+        const isFirstFailure = retries.numFailures === 0;
+
+        const backoff = error?.message.includes(STATUS_MESSAGES.error)
+          ? exponentialBackoff(retries.numFailures + 1)
+          : 0;
+        retryState.set({
+          numFailures: retries.numFailures + 1,
+          nextRetry: Date.now() + backoff,
         });
 
+        if (isFirstFailure) {
+          reload();
+        }
         await checkTokenUsage();
       },
       onFinish: async (message, response) => {
@@ -259,7 +267,7 @@ export const Chat = memo(
           console.debug('Token usage in response:', usage);
         }
         if (response.finishReason == 'stop') {
-          setRetries((prev) => ({ ...prev, numFailures: 0, nextRetry: Date.now() }));
+          retryState.set({ numFailures: 0, nextRetry: Date.now() });
         }
         logger.debug('Finished streaming');
 
@@ -339,11 +347,31 @@ export const Chat = memo(
 
     const sendMessage = async (messageInput?: string) => {
       const now = Date.now();
+      const retries = retryState.get();
       if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet()) {
-        const remaining = formatDistanceStrict(now, retries.nextRetry);
-        toast.error(
-          `Chef is too busy cooking right now. Please try again in ${remaining} or enter your own API key at chef.convex.dev/settings.`,
-        );
+        let message: string | ReactNode = 'Chef is too busy cooking right now.';
+        if (retries.numFailures >= MAX_RETRIES) {
+          message += ' Please enter your own API key ';
+          message = (
+            <>
+              {message}
+              <a href="https://chef.convex.dev/settings">here</a>.
+            </>
+          );
+        } else {
+          const remaining = formatDistanceStrict(now, retries.nextRetry);
+          message += ` Please try again in ${remaining} or enter your own API key `;
+          message = (
+            <>
+              {message}
+              <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
+                here
+              </a>
+              .
+            </>
+          );
+        }
+        toast.error(message);
         captureException('User tried to send message but chef is too busy');
         return;
       }
@@ -506,7 +534,13 @@ export const Chat = memo(
           isReload,
           shouldDeployConvexFunctions: hadSuccessfulDeploy,
         }}
-        disableChatMessage={disableChatMessage}
+        disableChatMessage={
+          disableChatMessage?.type === 'ExceededQuota'
+            ? noTokensText(disableChatMessage.tokensUsed, disableChatMessage.tokensQuota, selectedTeamSlugStore.get())
+            : disableChatMessage?.type === 'TeamDisabled'
+              ? disabledText
+              : null
+        }
         sendMessageInProgress={sendMessageInProgress}
         modelSelection={modelSelection}
         setModelSelection={setModelSelection}
@@ -578,4 +612,34 @@ function getConvexAuthToken(convex: ConvexReactClient): string | null {
     return null;
   }
   return token;
+}
+
+function noTokensText(tokensUsed: number, tokensQuota: number, selectedTeamSlug: string | null) {
+  return (
+    <span className="max-w-prose text-pretty">
+      You've used all the tokens included with your free plan! Please{' '}
+      <a
+        href={
+          selectedTeamSlug
+            ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
+            : 'https://dashboard.convex.dev/team/settings/billing'
+        }
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-content-link hover:underline"
+      >
+        upgrade to a paid plan
+      </a>{' '}
+      or{' '}
+      <a
+        href={`https://chef.convex.dev/settings`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-content-link hover:underline"
+      >
+        add your own API key
+      </a>{' '}
+      to continue. Used {renderTokenCount(tokensUsed)} of {renderTokenCount(tokensQuota)}.
+    </span>
+  );
 }

@@ -1,10 +1,9 @@
 import { useStore } from '@nanostores/react';
-import { TooltipProvider } from '@radix-ui/react-tooltip';
-import WithTooltip from '~/components/ui/Tooltip';
 import { useEditChatDescription } from '~/lib/hooks';
 import { description as descriptionStore } from '~/lib/stores/description';
 import { CheckIcon, Pencil1Icon } from '@radix-ui/react-icons';
-import { IconButton } from '~/components/ui/IconButton';
+import { Button } from '@ui/Button';
+import { TextInput } from '@ui/TextInput';
 
 export function ChatDescription() {
   const initialDescription = useStore(descriptionStore)!;
@@ -24,30 +23,29 @@ export function ChatDescription() {
     <div className="flex items-center justify-center">
       {editing ? (
         <form onSubmit={handleSubmit} className="flex items-center justify-center">
-          <input
-            type="text"
-            className="mr-2 w-fit rounded bg-bolt-elements-background-depth-1 px-2 text-bolt-elements-textPrimary"
+          <TextInput
+            labelHidden
             autoFocus
+            className="mr-2"
+            id="chat-description"
             value={currentDescription}
             onChange={handleChange}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
-            style={{ width: `${Math.max(currentDescription.length * 8, 100)}px` }}
           />
-          <TooltipProvider>
-            <WithTooltip tooltip="Save title">
-              <IconButton icon={<CheckIcon />} onClick={handleSubmit} />
-            </WithTooltip>
-          </TooltipProvider>
+          <Button variant="neutral" onClick={handleSubmit} icon={<CheckIcon />} inline size="xs" tip="Save title" />
         </form>
       ) : (
         <>
           <span className="mr-1 max-w-64 truncate">{currentDescription}</span>
-          <TooltipProvider>
-            <WithTooltip tooltip="Rename chat">
-              <IconButton icon={<Pencil1Icon />} onClick={toggleEditMode} />
-            </WithTooltip>
-          </TooltipProvider>
+          <Button
+            variant="neutral"
+            onClick={toggleEditMode}
+            icon={<Pencil1Icon />}
+            inline
+            size="xs"
+            tip="Rename chat"
+          />
         </>
       )}
     </div>

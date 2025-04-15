@@ -3,10 +3,9 @@ import { useEffect, useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
-import { TooltipProvider } from '@radix-ui/react-tooltip';
-import WithTooltip from '~/components/ui/Tooltip';
 import { EyeSlashIcon } from '@heroicons/react/24/outline';
 import { EyeOpenIcon, QuestionMarkCircledIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
 
 export function ApiKeyCard() {
   const convex = useConvex();
@@ -74,21 +73,18 @@ export function ApiKeyCard() {
   return (
     <div className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-sm">
       <div className="p-6">
-        <h2 className="mb-2 text-xl font-semibold text-bolt-elements-textPrimary">API Keys</h2>
+        <h2 className="mb-2 text-xl font-semibold text-content-primary">API Keys</h2>
 
-        <p className="mb-4 text-sm text-bolt-elements-textSecondary">
+        <p className="mb-4 text-sm text-content-secondary">
           Chef uses different model providers to generate code. You can use your own API keys to cook with Chef.
         </p>
         <div className="space-y-4">
           <div>
             <div>
-              <label
-                htmlFor="anthropic-key"
-                className="mb-1 block text-lg font-medium text-bolt-elements-textSecondary"
-              >
+              <label htmlFor="anthropic-key" className="mb-1 block text-lg font-medium text-content-secondary">
                 Anthropic API Key
               </label>
-              <p className="mb-4 text-sm text-bolt-elements-textSecondary">
+              <p className="mb-4 text-sm text-content-secondary">
                 See instructions for generating an Anthropic API key{' '}
                 <a
                   href="https://docs.anthropic.com/en/api/getting-started#accessing-the-api"
@@ -111,13 +107,10 @@ export function ApiKeyCard() {
                 handleDelete={handleDeleteAnthropicApiKey}
               />
 
-              <label
-                htmlFor="openai-key"
-                className="mb-1 mt-4 block text-lg font-medium text-bolt-elements-textSecondary"
-              >
+              <label htmlFor="openai-key" className="mb-1 mt-4 block text-lg font-medium text-content-secondary">
                 OpenAI API Key
               </label>
-              <p className="mb-4 text-sm text-bolt-elements-textSecondary">
+              <p className="mb-4 text-sm text-content-secondary">
                 See instructions for generating an OpenAI API key{' '}
                 <a
                   href="https://platform.openai.com/docs/api-reference/introduction"
@@ -187,13 +180,13 @@ function ApiKeyInput(props: {
           onChange={(e) => {
             props.onChange(e.target.value);
           }}
-          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 pr-10 text-bolt-elements-textPrimary dark:border-gray-800 dark:bg-gray-900"
+          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 pr-10 text-content-primary dark:border-gray-800 dark:bg-gray-900"
           placeholder="sk-..."
         />
         <button
           type="button"
           onClick={() => setShowKey(!showKey)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary"
+          className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent text-content-tertiary hover:text-content-secondary"
         >
           {showKey ? <EyeSlashIcon /> : <EyeOpenIcon />}
         </button>
@@ -237,19 +230,16 @@ function AlwaysUseKeyCheckbox(props: {
         disabled={props.disabled}
         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
       />
-      <label htmlFor="always-use-key" className="text-sm text-bolt-elements-textSecondary">
+      <label htmlFor="always-use-key" className="text-sm text-content-secondary">
         Always use my API keys
       </label>
-      <TooltipProvider>
-        <WithTooltip tooltip="When unchecked, your API key will only be used if you've run out of tokens built into your Convex plan">
-          <button
-            type="button"
-            className="bg-transparent text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary"
-          >
-            <QuestionMarkCircledIcon />
-          </button>
-        </WithTooltip>
-      </TooltipProvider>
+      <Button
+        variant="neutral"
+        icon={<QuestionMarkCircledIcon />}
+        inline
+        size="xs"
+        tip="When unchecked, your API key will only be used if you've run out of tokens built into your Convex plan"
+      />
     </div>
   );
 }

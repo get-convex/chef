@@ -18,8 +18,7 @@ export function SignInForm() {
           const formData = new FormData(e.target as HTMLFormElement);
           formData.set("flow", flow);
           void signIn("password", formData).catch((_error) => {
-            let toastTitle: string;
-            toastTitle =
+            const toastTitle =
               flow === "signIn"
                 ? "Could not sign in, did you mean to sign up?"
                 : "Could not sign up, did you mean to sign in?";
