@@ -190,7 +190,7 @@ function getPreceedingPart(
     return { messageIndex: args.messageIndex, partIndex: parts.length - 1 };
   }
   if (args.partIndex === 0) {
-    let messageIndex = messages.length - 1;
+    let messageIndex = args.messageIndex - 1;
     while (messageIndex >= 0) {
       const message = messages[messageIndex];
       if (message.parts!.length > 0) {
@@ -203,7 +203,8 @@ function getPreceedingPart(
   return { messageIndex: args.messageIndex, partIndex: args.partIndex - 1 };
 }
 
-function getLastCompletePart(
+// Exported for testing
+export function getLastCompletePart(
   messages: Message[],
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
 ): { messageIndex: number; partIndex: number } | null {
