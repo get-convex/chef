@@ -37,7 +37,7 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
           <Button
             key={suggestion.title}
             onClick={() => onSuggestionClick?.(suggestion.prompt)}
-            className="rounded-full"
+            className="rounded-full px-3"
             variant="neutral"
             disabled={disabled}
             icon={<ArrowUpIcon className="size-4" />}
