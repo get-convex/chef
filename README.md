@@ -2,10 +2,11 @@
 
 This is fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-labs/bolt.diy).
 
-We use two branches:
+There are three special branches:
 
-- staging (use this like main): [chef.convex.dev](https://chef.convex.dev)
-- release: [chef-staging.convex.dev](https://chef-staging.convex.dev)
+- main: detault branch, make PRs against this
+- staging: what the world sees at [chef-staging.convex.dev](https://chef-staging.convex.dev)
+- release: what the world sees at [chef.convex.dev](https://chef.convex.dev)
 
 ### One-time setup
 
@@ -64,9 +65,23 @@ Test your work, we don't have e2e tests.
 
 ### Deploy Process
 
-You can make a PR to merge staging into release or just push staging to release; it's not a protected branch on GitHub.
+Push from main to staging whenever it makes sense, it's not a protected branch on GitHub.
+
+```
+git checkout main;
+git pull
+git push origin main:staging
+```
+
+Push from staging to release once we know that staging is in a good state.
 Announce in the #project-chef Slack channel when you do this. Try out staging for a while before promoting it to
 release.
+
+```
+git checkout staging;
+git pull
+git push origin staging:release
+```
 
 If the change does not include non-backward compatible Convex DB changes you
 can use the Vercel instant rollbacks to prompt old deployments to production.
