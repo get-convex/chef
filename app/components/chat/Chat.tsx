@@ -30,14 +30,14 @@ import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { disabledText, getTokenUsage, noTokensText } from '~/lib/convexUsage';
+import { formatDistanceStrict } from 'date-fns';
+import { atom } from 'nanostores';
 import { STATUS_MESSAGES } from './StreamingIndicator';
 
 const logger = createScopedLogger('Chat');
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 4;
 
-const CHEF_TOO_BUSY_ERROR =
-  'Chef is too busy cooking right now. Please try again in a moment or enter your own API key at chef.convex.dev/settings.';
 export const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
 const processSampledMessages = createSampler(
@@ -69,6 +69,11 @@ interface ChatProps {
   initialInput?: string;
 }
 
+const retryState = atom({
+  numFailures: 0,
+  nextRetry: Date.now(),
+});
+
 export const Chat = memo(
   ({
     initialMessages,
@@ -97,18 +102,11 @@ export const Chat = memo(
 
     const [modelSelection, setModelSelection] = useState<ModelSelection>('auto');
 
-    const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number; seed: number }>({
-      numFailures: 0,
-      nextRetry: Date.now(),
-      seed: Math.random() < 0.5 ? 0 : 1,
-    });
-
     // Reset retries counter every minute
     useEffect(() => {
       const resetInterval = setInterval(() => {
-        setRetries((prev) => ({ ...prev, numFailures: 0, nextRetry: Date.now() }));
+        retryState.set({ numFailures: 0, nextRetry: Date.now() });
       }, 60 * 1000);
-
       return () => clearInterval(resetInterval);
     }, []);
 
@@ -183,9 +181,11 @@ export const Chat = memo(
           throw new Error('No team slug');
         }
         let modelProvider: ModelProvider;
+        const retries = retryState.get();
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
+          // Send all traffic to Anthropic first before failing over to Bedrock.
           const providers: ModelProvider[] = ['Anthropic', 'Bedrock'];
-          modelProvider = providers[(retries.seed + retries.numFailures) % providers.length];
+          modelProvider = providers[retries.numFailures % providers.length];
         } else {
           modelProvider = 'OpenAI';
         }
@@ -235,13 +235,22 @@ export const Chat = memo(
             userHasOwnApiKey: !!apiKey,
           },
         });
-        logger.error('Request failed\n\n', e, error);
-        setRetries((prevRetries) => {
-          const newRetries = prevRetries.numFailures + 1;
-          const backoff = error?.message.includes(STATUS_MESSAGES.error) ? exponentialBackoff(newRetries) : 0;
-          return { ...prevRetries, numFailures: newRetries, nextRetry: Date.now() + backoff };
+
+        const retries = retryState.get();
+        logger.error(`Request failed (retries: ${JSON.stringify(retries)})`, e, error);
+        const isFirstFailure = retries.numFailures === 0;
+
+        const backoff = error?.message.includes(STATUS_MESSAGES.error)
+          ? exponentialBackoff(retries.numFailures + 1)
+          : 0;
+        retryState.set({
+          numFailures: retries.numFailures + 1,
+          nextRetry: Date.now() + backoff,
         });
 
+        if (isFirstFailure) {
+          reload();
+        }
         await checkTokenUsage();
       },
       onFinish: async (message, response) => {
@@ -250,7 +259,7 @@ export const Chat = memo(
           console.debug('Token usage in response:', usage);
         }
         if (response.finishReason == 'stop') {
-          setRetries((prev) => ({ ...prev, numFailures: 0, nextRetry: Date.now() }));
+          retryState.set({ numFailures: 0, nextRetry: Date.now() });
         }
         logger.debug('Finished streaming');
 
@@ -329,8 +338,17 @@ export const Chat = memo(
     };
 
     const sendMessage = async (messageInput?: string) => {
-      if ((retries.numFailures >= MAX_RETRIES || Date.now() < retries.nextRetry) && !hasApiKeySet()) {
-        toast.error(CHEF_TOO_BUSY_ERROR);
+      const now = Date.now();
+      const retries = retryState.get();
+      if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet()) {
+        let message = 'Chef is too busy cooking right now.';
+        if (retries.numFailures >= MAX_RETRIES) {
+          message += ' Please enter your own API key at chef.convex.dev/settings.';
+        } else {
+          const remaining = formatDistanceStrict(now, retries.nextRetry);
+          message += ` Please try again in ${remaining} or enter your own API key at chef.convex.dev/settings.`;
+        }
+        toast.error(message);
         captureException('User tried to send message but chef is too busy');
         return;
       }

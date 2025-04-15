@@ -86,7 +86,10 @@ export const Menu = memo(() => {
           shouldDeleteConvexProject: shouldDeleteConvexProject && convexProjectInfo?.kind === 'connected',
           accessToken,
         })
-        .then(() => {
+        .then((result) => {
+          if (result && result.kind === 'error') {
+            toast.error(result.error);
+          }
           if (getKnownInitialId() === item.initialId) {
             // hard page navigation to clear the stores
             window.location.pathname = '/';

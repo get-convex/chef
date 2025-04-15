@@ -93,10 +93,12 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
           method: 'POST',
           body: compressed,
         });
+      } catch (_e) {
+        toast.error('Failed to store message history');
       } finally {
         persistInProgress.current = false;
       }
-      if (!response.ok) {
+      if (response !== undefined && !response.ok) {
         toast.error('Failed to store message history');
         return;
       }
