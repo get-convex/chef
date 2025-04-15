@@ -102,7 +102,7 @@ export function ShareButton() {
 
       <Popover.Portal>
         <Popover.Content
-          className="z-50 w-[320px] animate-fadeIn rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-lg"
+          className="z-50 w-[320px] animate-fadeInFromLoading rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-lg"
           sideOffset={5}
           align="end"
         >
