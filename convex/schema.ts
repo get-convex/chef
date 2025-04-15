@@ -88,6 +88,7 @@ export default defineSchema({
     storageId: v.union(v.id('_storage'), v.null()),
     lastMessageRank: v.number(),
     partIndex: v.number(),
+    snapshotId: v.optional(v.id('_storage')),
   })
     .index('byChatId', ['chatId'])
     .index('byStorageId', ['storageId']),

@@ -290,41 +290,64 @@ export const updateStorageState = internalMutation({
     storageId: v.id('_storage'),
     lastMessageRank: v.number(),
     partIndex: v.number(),
+    snapshotId: v.optional(v.id('_storage')),
   },
   handler: async (ctx, args): Promise<void> => {
-    const { chatId, storageId, lastMessageRank, partIndex, sessionId } = args;
+    const { chatId, storageId, lastMessageRank, partIndex, snapshotId, sessionId } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
       throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
     }
-    const doc = await ctx.db
+    // Add a new document, keep the previous one, and remove the second previous one and its snapshots.
+    const docs = await ctx.db
       .query('chatMessagesStorageState')
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .unique();
-    if (!doc) {
+      .order('desc')
+      .take(2);
+    const previous = docs[0];
+    if (!previous) {
       throw new Error('Chat messages storage state not found');
     }
-    if (doc.lastMessageRank > lastMessageRank) {
+    if (previous.lastMessageRank > lastMessageRank) {
       console.warn(
-        `Stale update -- stored messages up to ${doc.lastMessageRank} but received update up to ${lastMessageRank}`,
+        `Stale update -- stored messages up to ${previous.lastMessageRank} but received update up to ${lastMessageRank}`,
       );
       return;
     }
-    if (doc.lastMessageRank === lastMessageRank && doc.partIndex > partIndex) {
+    if (previous.lastMessageRank === lastMessageRank && previous.partIndex > partIndex) {
       console.warn(
-        `Stale update -- stored parts in message ${doc.lastMessageRank} up to part ${doc.partIndex} but received update up to part ${partIndex}`,
+        `Stale update -- stored parts in message ${previous.lastMessageRank} up to part ${previous.partIndex} but received update up to part ${partIndex}`,
       );
       return;
     }
-    await ctx.db.patch(doc._id, {
-      storageId,
-      lastMessageRank,
-      partIndex,
-    });
-    if (doc.storageId !== null) {
-      await ctx.scheduler.runAfter(0, internal.messages.maybeCleanupStaleChatHistory, {
-        storageId: doc.storageId,
+
+    // Delete the second previous document and its snapshots.
+    if (docs[1]) {
+      await ctx.db.delete(docs[1]._id);
+      // Check references to the second previous snapshots.
+      const snapshotToMaybeDelete = docs[1].snapshotId;
+      if (snapshotToMaybeDelete) {
+        const shareRef = await ctx.db
+          .query('shares')
+          .withIndex('byChatHistoryId', (q) => q.eq('chatHistoryId', snapshotToMaybeDelete))
+          .first();
+        if (shareRef == null) {
+          await ctx.storage.delete(snapshotToMaybeDelete);
+        }
+      }
+
+      await ctx.db.insert('chatMessagesStorageState', {
+        chatId: chat._id,
+        storageId,
+        lastMessageRank,
+        partIndex,
+        snapshotId,
       });
+      if (previous.storageId !== null) {
+        await ctx.scheduler.runAfter(0, internal.messages.maybeCleanupStaleChatHistory, {
+          storageId: previous.storageId,
+        });
+      }
     }
   },
 });
