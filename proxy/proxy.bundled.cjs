@@ -836,11 +836,19 @@ var require_http_proxy3 = __commonJS({
 // proxy.cjs
 var sourcePort = Number(process.argv[2]);
 var targetPort = Number(process.argv[3]);
+console.log({ sourcePort, targetPort });
 var http = require("http");
 var httpProxy = require_http_proxy3();
 var proxy = httpProxy.createProxyServer({});
 proxy.on("error", function(err, req, res) {
-  console.error("Proxy error:", err);
+  console.error("Proxy error:", {
+    error: err.message,
+    stack: err.stack,
+    url: req?.url,
+    method: req?.method,
+    headers: req?.headers,
+    code: err.code
+  });
   if (res.writeHead && !res.headersSent) {
     res.writeHead(502);
   }
@@ -852,7 +860,24 @@ var server = http.createServer(function(req, res) {
   proxy.web(req, res, { target: `http://localhost:${sourcePort}` });
 });
 server.on("upgrade", function(req, socket, head) {
-  proxy.ws(req, socket, head, { target: `ws://localhost:${sourcePort}` });
+  console.log("WebSocket upgrade request:", {
+    url: req.url,
+    headers: req.headers,
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    sourcePort,
+    targetPort
+  });
+  socket.on("error", (err) => {
+    console.error("WebSocket socket error:", {
+      error: err.message,
+      stack: err.stack,
+      code: err.code,
+      url: req.url
+    });
+  });
+  proxy.ws(req, socket, head, {
+    target: `ws://localhost:${sourcePort}`
+  });
 });
 server.listen(targetPort, () => {
   console.log(`Starting proxy server: proxying ${targetPort} \u2192 ${sourcePort}`);

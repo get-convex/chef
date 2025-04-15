@@ -18,3 +18,11 @@ have to get past if we use `-e`.
 Writing a very short proxy that works with WebSockets should be easy
 (TODO) but I couldn't get it to work. So we bundle up a simple proxy server
 built with node-http-proxy aka http-proxy.
+
+TOMHERE
+
+next to test: can I get this working again?
+
+What was previously working was
+creating a file and running it.
+The file was the big thing we got by bundling.

@@ -106,9 +106,10 @@ process.argv[3] = ${JSON.stringify(targetPort.toString())};
     );
 
     // WebContainer Node.js has trouble with this syntax
-    proxySource = proxySource.replace(`replace(/\\/+/g,`, `replace((new RegExp(String.fromCharCode(92) + '/+')),`);
+    proxySource = proxySource.replace(`replace(/\\/+/g,`, `replace((new RegExp(String.fromCharCode(92) + '/+', 'g')),`);
 
     const proxyProcess = await webcontainer.spawn('node', ['-e', proxySource]);
+    console.log('starting proxy process');
 
     proxyState.stop = () => {
       proxyLogger.info('Stopping proxy');
