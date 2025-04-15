@@ -4,7 +4,6 @@ import {
   internalQuery,
   mutation,
   query,
-  type ActionCtx,
   type MutationCtx,
   type QueryCtx,
 } from './_generated/server';
@@ -439,7 +438,13 @@ export const remove = action({
       sessionId,
     });
 
-    return projectDeletionResult;
+    if (projectDeletionResult.kind === 'error') {
+      return {
+        kind: 'error',
+        error: `Deleted chat, but failed to delete linked Convex project:\n${projectDeletionResult.error}`,
+      };
+    }
+    return { kind: 'success' };
   },
 });
 
@@ -469,7 +474,7 @@ async function tryDeleteProject(args: {
         return { kind: 'error', error: `Team not found: ${teamSlug}` };
       }
       return { kind: 'error', error: `Failed to fetch team projects: ${projectsResponse.statusText} ${text}` };
-    } catch (e) {
+    } catch (_e) {
       return { kind: 'error', error: `Failed to fetch team projects: ${projectsResponse.statusText} ${text}` };
     }
   }
