@@ -533,7 +533,7 @@ export const Chat = memo(
             ? noTokensText(disableChatMessage.tokensUsed, disableChatMessage.tokensQuota, selectedTeamSlugStore.get())
             : disableChatMessage?.type === 'TeamDisabled'
               ? disabledText
-              : undefined
+              : null
         }
         sendMessageInProgress={sendMessageInProgress}
         modelSelection={modelSelection}
