@@ -11,23 +11,12 @@
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.80",
-    "@hookform/resolvers": "^5.0.1",
-    "@radix-ui/react-accordion": "^1.2.3",
-    "@radix-ui/react-checkbox": "^1.1.4",
-    "@radix-ui/react-label": "^2.1.2",
-    "@radix-ui/react-select": "^2.1.6",
-    "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-toast": "^1.2.6",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "1.21.1-alpha.1",
-    "lucide-react": "^0.487.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-hook-form": "^7.55.0",
-    "tailwind-merge": "^3.1.0",
-    "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.24.2"
+    "tailwind-merge": "^3.1.0"
   },
   "overrides": {
     "convex": "1.21.1-alpha.1"
