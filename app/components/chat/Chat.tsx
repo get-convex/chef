@@ -344,10 +344,15 @@ export const Chat = memo(
       const now = Date.now();
       const retries = retryState.get();
       if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet()) {
-        const remaining = formatDistanceStrict(now, retries.nextRetry);
-        toast.error(
-          `Chef is too busy cooking right now. Please try again in ${remaining} or enter your own API key at chef.convex.dev/settings.`,
-        );
+        let message = 'Chef is too busy cooking right now.';
+        if (retries.numFailures >= MAX_RETRIES) {
+          message += ' Please enter your own API key at chef.convex.dev/settings.';
+        } else {
+          const remaining = formatDistanceStrict(now, retries.nextRetry);
+          message += ` Please try again in ${remaining} or enter your own API key at chef.convex.dev/settings.`;
+
+        }
+        toast.error(message);
         captureException('User tried to send message but chef is too busy');
         return;
       }
