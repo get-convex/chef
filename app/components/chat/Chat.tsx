@@ -72,7 +72,6 @@ interface ChatProps {
 const retryState = atom({
   numFailures: 0,
   nextRetry: Date.now(),
-  seed: Math.random() < 0.5 ? 0 : 1,
 });
 
 export const Chat = memo(
@@ -106,8 +105,7 @@ export const Chat = memo(
     // Reset retries counter every minute
     useEffect(() => {
       const resetInterval = setInterval(() => {
-        const { seed } = retryState.get();
-        retryState.set({ numFailures: 0, nextRetry: Date.now(), seed });
+        retryState.set({ numFailures: 0, nextRetry: Date.now() });
       }, 60 * 1000);
       return () => clearInterval(resetInterval);
     }, []);
@@ -185,8 +183,9 @@ export const Chat = memo(
         let modelProvider: ModelProvider;
         const retries = retryState.get();
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
+          // Send all traffic to Anthropic first before failing over to Bedrock.
           const providers: ModelProvider[] = ['Anthropic', 'Bedrock'];
-          modelProvider = providers[(retries.seed + retries.numFailures) % providers.length];
+          modelProvider = providers[retries.numFailures % providers.length];
         } else {
           modelProvider = 'OpenAI';
         }
@@ -247,7 +246,6 @@ export const Chat = memo(
         retryState.set({
           numFailures: retries.numFailures + 1,
           nextRetry: Date.now() + backoff,
-          seed: retries.seed,
         });
 
         if (isFirstFailure) {
@@ -261,8 +259,7 @@ export const Chat = memo(
           console.debug('Token usage in response:', usage);
         }
         if (response.finishReason == 'stop') {
-          const retries = retryState.get();
-          retryState.set({ numFailures: 0, nextRetry: Date.now(), seed: retries.seed });
+          retryState.set({ numFailures: 0, nextRetry: Date.now() });
         }
         logger.debug('Finished streaming');
 
