@@ -196,7 +196,8 @@ export const getInitialMessages = mutation({
     const storageInfo = await ctx.db
       .query('chatMessagesStorageState')
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .unique();
+      .order('desc')
+      .first();
     if (storageInfo !== null) {
       // The data is stored in storage, but the client is on an old version, so crash instead of returning
       // stale data.
@@ -271,7 +272,8 @@ export const getInitialMessagesStorageInfo = internalQuery({
     const doc = await ctx.db
       .query('chatMessagesStorageState')
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .unique();
+      .order('desc')
+      .first();
     if (!doc) {
       return null;
     }
@@ -298,13 +300,11 @@ export const updateStorageState = internalMutation({
     if (!chat) {
       throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
     }
-    // Add a new document, keep the previous one, and remove the second previous one and its snapshots.
-    const docs = await ctx.db
+    const previous = await ctx.db
       .query('chatMessagesStorageState')
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
       .order('desc')
-      .take(2);
-    const previous = docs[0];
+      .first();
     if (!previous) {
       throw new Error('Chat messages storage state not found');
     }
@@ -374,7 +374,8 @@ export const handleStorageStateMigration = internalMutation({
     const doc = await ctx.db
       .query('chatMessagesStorageState')
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .unique();
+      .order('desc')
+      .first();
     if (doc) {
       throw new Error(`Chat ID: ${chat._id} Chat messages storage state already exists`);
     }
@@ -580,7 +581,7 @@ export const cleanupChatMessages = internalMutation({
       const storageState = await ctx.db
         .query('chatMessagesStorageState')
         .withIndex('byChatId', (q) => q.eq('chatId', chatId))
-        .unique();
+        .first();
       if (storageState === null) {
         throw new Error(
           'Chat messages storage state not found -- should not clean up messages from DB if they are not stored',
@@ -639,7 +640,8 @@ async function _appendMessagesDb(
   const storageState = await ctx.db
     .query('chatMessagesStorageState')
     .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-    .unique();
+    .order('desc')
+    .first();
   if (storageState === null) {
     throw new Error('Chat messages should be stored in storage');
   }
