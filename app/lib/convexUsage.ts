@@ -62,5 +62,5 @@ export async function getTokenUsage(
     centitokensQuota,
     isTeamDisabled,
   }: { centitokensUsed: number; centitokensQuota: number; isTeamDisabled: boolean } = await response.json();
-  return { status: 'success', centitokensUsed: centitokensUsed * 100, centitokensQuota, isTeamDisabled };
+  return { status: 'success', centitokensUsed, centitokensQuota, isTeamDisabled };
 }
