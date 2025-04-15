@@ -14,6 +14,7 @@ import { Auth0Provider } from '@auth0/auth0-react';
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
 import { ConvexReactClient } from 'convex/react';
 import globalStyles from './styles/index.css?url';
+import "@convex-dev/design-system/styles/shared.css";
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 import posthog from 'posthog-js';
 
@@ -69,7 +70,7 @@ const inlineThemeCode = stripIndents`
       theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
 
-    document.querySelector('html')?.setAttribute('data-theme', theme);
+    document.querySelector('html')?.setAttribute('class', theme);
   }
 `;
 
@@ -103,7 +104,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // TODO does it still make sense?
   useEffect(() => {
-    document.querySelector('html')?.setAttribute('data-theme', theme);
+    document.querySelector('html')?.setAttribute('class', theme);
   }, [theme]);
 
   // Initialize PostHog.

@@ -1,4 +1,4 @@
-/* Convex Tokens */
+// Convex Tokens
 :root {
   --cvx-red-100: rgb(252, 215, 203);
   --cvx-red-200: rgb(255, 202, 193);
@@ -53,7 +53,7 @@
   --cvx-util-warning: rgb(243, 176, 28);
 }
 
-/* Convex Tokens Light Theme (from Dashboard) */
+// Convex Tokens Light Theme (from Dashboard)
 :root,
 html.light {
   --cvx-background-brand: rgb(249, 247, 238);
@@ -78,7 +78,7 @@ html.light {
   --cvx-border-selected: rgb(30, 28, 25);
 }
 
-/* Convex Tokens Dark Theme (from Dashboard) */
+// Convex Tokens Dark Theme (from Dashboard)
 :root,
 html.dark {
   --cvx-background-brand: rgb(30, 28, 26);
@@ -103,7 +103,7 @@ html.dark {
   --cvx-border-selected: rgb(225, 215, 205);
 }
 
-/* Color Tokens */
+// Color Tokens
 :root {
   --bolt-elements-borderColor: var(--cvx-border-transparent);
   --bolt-elements-borderColorActive: var(--cvx-border-selected);
@@ -159,7 +159,7 @@ html.dark {
 :root,
 html.light {
   --bolt-elements-bg-depth-3: theme('colors.gray.200');
-  --bolt-elements-bg-depth-4: theme('colors.gray.900/0.05');
+  --bolt-elements-bg-depth-4: theme('colors.alpha.gray.5');
 
   --bolt-elements-code-background: theme('colors.gray.100');
   --bolt-elements-code-text: theme('colors.gray.950');
@@ -169,16 +169,16 @@ html.light {
   --bolt-elements-artifacts-inlineCode-background: theme('colors.gray.100');
   --bolt-elements-artifacts-inlineCode-text: var(--bolt-elements-textPrimary);
 
-  --bolt-elements-item-contentDefault: theme('colors.gray.900/0.5');
+  --bolt-elements-item-contentDefault: theme('colors.alpha.gray.50');
   --bolt-elements-item-contentActive: theme('colors.gray.950');
   --bolt-elements-item-contentDanger: theme('colors.red.500');
   --bolt-elements-item-backgroundDefault: rgba(0, 0, 0, 0);
-  --bolt-elements-item-backgroundActive: theme('colors.gray.900/0.05');
-  --bolt-elements-item-backgroundDanger: theme('colors.red.500/0.1');
+  --bolt-elements-item-backgroundActive: theme('colors.alpha.gray.5');
+  --bolt-elements-item-backgroundDanger: theme('colors.alpha.red.10');
 
   --bolt-elements-icon-success: theme('colors.green.500');
   --bolt-elements-icon-error: theme('colors.red.500');
-  --bolt-elements-prompt-background: theme('colors.white/0.8');
+  --bolt-elements-prompt-background: theme('colors.alpha.white.80');
 
   --bolt-elements-terminals-background: theme('colors.white');
 
@@ -208,7 +208,7 @@ html.light {
 :root,
 html.dark {
   --bolt-elements-bg-depth-3: theme('colors.gray.800');
-  --bolt-elements-bg-depth-4: theme('colors.white/0.05');
+  --bolt-elements-bg-depth-4: theme('colors.alpha.white.5');
 
   --bolt-elements-code-background: theme('colors.gray.800');
   --bolt-elements-code-text: theme('colors.white');
@@ -218,17 +218,17 @@ html.dark {
   --bolt-elements-artifacts-inlineCode-background: theme('colors.gray.800');
   --bolt-elements-artifacts-inlineCode-text: theme('colors.white');
 
-  --bolt-elements-item-contentDefault: theme('colors.white/0.5');
+  --bolt-elements-item-contentDefault: theme('colors.alpha.white.50');
   --bolt-elements-item-contentActive: theme('colors.white');
   --bolt-elements-item-contentDanger: theme('colors.red.500');
   --bolt-elements-item-backgroundDefault: rgba(255, 255, 255, 0);
-  --bolt-elements-item-backgroundActive: theme('colors.white/0.1');
-  --bolt-elements-item-backgroundDanger: theme('colors.red.500/0.1');
+  --bolt-elements-item-backgroundActive: theme('colors.alpha.white.10');
+  --bolt-elements-item-backgroundDanger: theme('colors.alpha.red.10');
 
   --bolt-elements-icon-success: theme('colors.green.400');
   --bolt-elements-icon-error: theme('colors.red.400');
 
-  --bolt-elements-prompt-background: theme('colors.gray.900/0.8');
+  --bolt-elements-prompt-background: theme('colors.alpha.gray.80');
 
   --bolt-elements-terminals-background: var(--bolt-elements-bg-depth-1);
 
@@ -266,6 +266,10 @@ html.dark {
   --workbench-width: min(calc(100% - var(--chat-min-width)), 2536px);
   --workbench-inner-width: var(--workbench-width);
   --workbench-left: calc(100% - var(--workbench-width));
+
+  /* Toasts */
+  --toastify-color-progress-success: var(--bolt-elements-icon-success);
+  --toastify-color-progress-error: var(--bolt-elements-icon-error);
 
   /* Terminal */
   --bolt-elements-terminal-backgroundColor: var(--bolt-terminal-background);

@@ -19,7 +19,9 @@ import { getKnownInitialId } from '~/lib/stores/chatId';
 import { profileStore } from '~/lib/stores/profile';
 import { useAuth0 } from '@auth0/auth0-react';
 import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
-import { PersonIcon, GearIcon, ExitIcon } from '@radix-ui/react-icons';
+import { PersonIcon, GearIcon, ExitIcon, PlusIcon } from '@radix-ui/react-icons';
+import { Button } from '@convex-dev/design-system/Button';
+import { TextInput } from '@convex-dev/design-system/TextInput';
 
 const menuVariants = {
   closed: {
@@ -166,16 +168,11 @@ export const Menu = memo(() => {
         <div className="flex h-[var(--header-height)] items-center justify-between border-b border-bolt-elements-borderColor px-4"></div>
 
         <div className="flex size-full flex-1 flex-col overflow-hidden">
-          <div className="space-y-3 p-4">
-            <a
-              href="/"
-              className="inline-flex items-center gap-2 rounded-lg bg-bolt-elements-button-primary-background px-4 py-2 text-bolt-elements-button-primary-text transition-colors hover:bg-bolt-elements-button-primary-backgroundHover"
-            >
-              <span className="text-sm font-medium">Start new project</span>
-            </a>
+          <div className="p-4 space-y-3">
+          <Button className="w-fit" href="/" icon={<PlusIcon />}>Start new project</Button>
             <div className="relative w-full">
-              <input
-                className="relative w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-bolt-elements-borderColorActive dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
+              <TextInput
+                id="search-projects"
                 type="search"
                 placeholder="Search projects..."
                 onChange={handleSearchChange}

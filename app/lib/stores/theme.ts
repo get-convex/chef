@@ -11,7 +11,7 @@ export const themeStore = atom<Theme>(initStore());
 function initStore() {
   if (!import.meta.env.SSR) {
     const persistedTheme = localStorage.getItem(kTheme) as Theme | undefined;
-    const themeAttribute = document.querySelector('html')?.getAttribute('data-theme');
+    const themeAttribute = document.querySelector('html')?.getAttribute('class');
 
     return persistedTheme ?? (themeAttribute as Theme) ?? DEFAULT_THEME;
   }
@@ -30,7 +30,7 @@ export function toggleTheme() {
   localStorage.setItem(kTheme, newTheme);
 
   // Update the HTML attribute
-  document.querySelector('html')?.setAttribute('data-theme', newTheme);
+  document.querySelector('html')?.setAttribute('class', newTheme);
 
   // Update user profile if it exists
   try {

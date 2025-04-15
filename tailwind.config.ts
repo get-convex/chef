@@ -1,25 +1,27 @@
-import type { Config } from 'tailwindcss';
+import TailwindConfig from '@convex-dev/design-system/tailwind.config';
 
 export default {
-  content: ['./app/**/*.{js,jsx,ts,tsx}', './app/styles/**/*.{css,scss}'],
+  ...TailwindConfig,
+  content: [
+    './app/**/*.{js,jsx,ts,tsx}',
+    './app/styles/**/*.{css,scss}',
+    './node_modules/@convex-dev/design-system/**/*.{js,jsx,ts,tsx}',
+  ],
   theme: {
     extend: {
+      // @ts-ignore Will be fixed once we reconcile and remove the tailwind config merging
+      ...(TailwindConfig.theme?.extend || {}),
       keyframes: {
+      // @ts-ignore Will be fixed once we reconcile and remove the tailwind config merging
+        ...(TailwindConfig.theme?.extend?.keyframes || {}),
         shimmer: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(200%)' },
         },
-        fadeIn: {
-          '0%': {
-            opacity: '0',
-          },
-          '100%': {
-            opacity: '1',
-          },
-        },
       },
       animation: {
-        fadeIn: 'fadeIn 1s',
+      // @ts-ignore Will be fixed once we reconcile and remove the tailwind config merging
+        ...(TailwindConfig.theme?.extend?.animation || {}),
       },
       fontFamily: {
         display: [
@@ -43,6 +45,8 @@ export default {
         ],
       },
       colors: {
+        // @ts-ignore Will be fixed once we reconcile and remove the tailwind config merging
+        ...(TailwindConfig.theme?.extend?.colors || {}),
         bolt: {
           elements: {
             borderColor: 'var(--bolt-elements-borderColor)',
@@ -219,6 +223,6 @@ export default {
       },
     },
   },
-  plugins: [],
-  darkMode: ['selector', '[data-theme="dark"]'],
-} satisfies Config;
+  // @ts-ignore Will be fixed once we reconcile and remove the tailwind config merging
+  plugins: [...(TailwindConfig.plugins || [])],
+} satisfies typeof TailwindConfig;

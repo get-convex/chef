@@ -21,11 +21,11 @@ body {
   --accent-color: rgba(128, 59, 239, var(--gradient-opacity));
 }
 
-:root[data-theme='light'] {
+html.light {
   color-scheme: light;
 }
 
-:root[data-theme='dark'] {
+html.dark {
   color-scheme: dark;
 }
 

@@ -112,7 +112,7 @@
   --cm-searchMatch-backgroundColor: var(--bolt-elements-editor-searchMatch-backgroundColor, rgba(234, 92, 0, 0.33));
 }
 
-html[data-theme='light'] {
+html.light {
   --bolt-elements-editor-gutter-textColor: #237893;
   --bolt-elements-editor-gutter-activeLineTextColor: var(--bolt-elements-textPrimary);
   --bolt-elements-editor-foldGutter-textColorHover: var(--bolt-elements-textPrimary);
@@ -122,7 +122,7 @@ html[data-theme='light'] {
   --bolt-elements-editor-search-button-backgroundColorHover: theme('colors.gray.900/0.1');
 }
 
-html[data-theme='dark'] {
+html.dark {
   --cm-backgroundColor: var(--bolt-elements-bg-depth-2);
   --bolt-elements-editor-gutter-textColor: var(--bolt-elements-textTertiary);
   --bolt-elements-editor-gutter-activeLineTextColor: var(--bolt-elements-textSecondary);
