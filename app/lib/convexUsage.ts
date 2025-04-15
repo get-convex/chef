@@ -24,6 +24,10 @@ export function renderTokenCount(tokens: number) {
   return renderedTokens.toLocaleString();
 }
 
+export function noTokensText(tokensUsed: number, tokensQuota: number) {
+  return `No remaining tokens available. Please upgrade to a paid plan or add your own API key at chef.convex.dev/settings to continue. Used ${renderTokenCount(tokensUsed)} of ${renderTokenCount(tokensQuota)}.`;
+}
+
 export async function getTokenUsage(
   provisionHost: string,
   convexAuthToken: string,
