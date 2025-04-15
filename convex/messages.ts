@@ -321,34 +321,13 @@ export const updateStorageState = internalMutation({
       return;
     }
 
-    // Delete the second previous document and its snapshots.
-    if (docs[1]) {
-      await ctx.db.delete(docs[1]._id);
-      // Check references to the second previous snapshots.
-      const snapshotToMaybeDelete = docs[1].snapshotId;
-      if (snapshotToMaybeDelete) {
-        const shareRef = await ctx.db
-          .query('shares')
-          .withIndex('byChatHistoryId', (q) => q.eq('chatHistoryId', snapshotToMaybeDelete))
-          .first();
-        if (shareRef == null) {
-          await ctx.storage.delete(snapshotToMaybeDelete);
-        }
-      }
-
-      await ctx.db.insert('chatMessagesStorageState', {
-        chatId: chat._id,
-        storageId,
-        lastMessageRank,
-        partIndex,
-        snapshotId,
-      });
-      if (previous.storageId !== null) {
-        await ctx.scheduler.runAfter(0, internal.messages.maybeCleanupStaleChatHistory, {
-          storageId: previous.storageId,
-        });
-      }
-    }
+    await ctx.db.insert('chatMessagesStorageState', {
+      chatId: chat._id,
+      storageId,
+      lastMessageRank,
+      partIndex,
+      snapshotId,
+    });
   },
 });
 
