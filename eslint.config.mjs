@@ -79,6 +79,11 @@ export default [
               message: "Relative imports are not allowed. Please use '~/' instead.",
             },
           ],
+          paths: [{
+            name: 'sonner',
+            importNames: ['Toaster'],
+            message: "Please import Toaster from '~/components/ui/Toaster' instead of 'sonner'."
+          }]
         },
       ],
     },

@@ -1,6 +1,5 @@
 import { useConvexChatExisting } from '~/lib/stores/startup';
 import { Chat } from './chat/Chat';
-import { Toaster } from 'sonner';
 import { ChefAuthProvider } from './chat/ChefAuthWrapper';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
 import { sessionIdStore } from '~/lib/stores/sessionId';
@@ -10,6 +9,7 @@ import { ContainerBootState, useContainerBootState } from '~/lib/stores/containe
 import { useReloadMessages } from '~/lib/stores/startup/reloadMessages';
 import { useSplines } from '~/lib/splines';
 import { UserProvider } from '~/components/UserProvider';
+import { Toaster } from '~/components/ui/Toaster';
 
 export function ExistingChat({ chatId }: { chatId: string }) {
   // Fill in the chatID store from props early in app initialization. If this
@@ -24,7 +24,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
           <ExistingChatWrapper chatId={chatId} />
         </UserProvider>
       </ChefAuthProvider>
-      <Toaster position="bottom-right" closeButton richColors />
+      <Toaster />
     </>
   );
 }

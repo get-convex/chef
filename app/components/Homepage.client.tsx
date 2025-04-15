@@ -2,7 +2,7 @@ import { Chat } from './chat/Chat';
 import { ChefAuthProvider } from './chat/ChefAuthWrapper';
 import { useRef } from 'react';
 import { useConvexChatHomepage } from '~/lib/stores/startup';
-import { Toaster } from 'sonner';
+import { Toaster } from '~/components/ui/Toaster';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
 import type { Message } from '@ai-sdk/react';
 import type { PartCache } from '~/lib/hooks';
@@ -23,7 +23,7 @@ export function Homepage() {
           <ChatWrapper initialId={initialId.current} />
         </UserProvider>
       </ChefAuthProvider>
-      <Toaster position="bottom-right" closeButton richColors />
+      <Toaster />
     </>
   );
 }

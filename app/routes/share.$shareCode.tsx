@@ -5,7 +5,8 @@ import type { LoaderFunctionArgs } from '@vercel/remix';
 import { useMutation, useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useCallback } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
+import { Toaster } from '~/components/ui/Toaster';
 import { setSelectedTeamSlug, useSelectedTeamSlug, waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
@@ -45,7 +46,7 @@ export default function ShareProject() {
       <ChefAuthProvider redirectIfUnauthenticated={false}>
         <ShareProjectContent />
       </ChefAuthProvider>
-      <Toaster position="bottom-right" closeButton richColors />
+      <Toaster />
     </>
   );
 }
