@@ -14,7 +14,7 @@ import { Auth0Provider } from '@auth0/auth0-react';
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
 import { ConvexReactClient } from 'convex/react';
 import globalStyles from './styles/index.css?url';
-import "@convex-dev/design-system/styles/shared.css";
+import '@convex-dev/design-system/styles/shared.css';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 import posthog from 'posthog-js';
 

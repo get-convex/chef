@@ -168,8 +168,10 @@ export const Menu = memo(() => {
         <div className="flex h-[var(--header-height)] items-center justify-between border-b border-bolt-elements-borderColor px-4"></div>
 
         <div className="flex size-full flex-1 flex-col overflow-hidden">
-          <div className="p-4 space-y-3">
-          <Button className="w-fit" href="/" icon={<PlusIcon />}>Start new project</Button>
+          <div className="space-y-3 p-4">
+            <Button className="w-fit" href="/" icon={<PlusIcon />}>
+              Start new project
+            </Button>
             <div className="relative w-full">
               <TextInput
                 id="search-projects"
