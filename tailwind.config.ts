@@ -9,20 +9,9 @@ export default {
   ],
   theme: {
     extend: {
-      // @ts-ignore Will be fixed once we reconcile and remove the tailwind config merging
-      ...(TailwindConfig.theme?.extend || {}),
-      keyframes: {
-      // @ts-ignore Will be fixed once we reconcile and remove the tailwind config merging
-        ...(TailwindConfig.theme?.extend?.keyframes || {}),
-        shimmer: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(200%)' },
-        },
-      },
-      animation: {
-      // @ts-ignore Will be fixed once we reconcile and remove the tailwind config merging
-        ...(TailwindConfig.theme?.extend?.animation || {}),
-      },
+      ...TailwindConfig.theme?.extend,
+      keyframes: TailwindConfig.theme?.extend?.keyframes,
+      animation: TailwindConfig.theme?.extend?.animation,
       fontFamily: {
         display: [
           'GT America',
@@ -45,8 +34,7 @@ export default {
         ],
       },
       colors: {
-        // @ts-ignore Will be fixed once we reconcile and remove the tailwind config merging
-        ...(TailwindConfig.theme?.extend?.colors || {}),
+        ...TailwindConfig.theme?.extend?.colors,
         bolt: {
           elements: {
             borderColor: 'var(--bolt-elements-borderColor)',
@@ -223,6 +211,5 @@ export default {
       },
     },
   },
-  // @ts-ignore Will be fixed once we reconcile and remove the tailwind config merging
   plugins: [...(TailwindConfig.plugins || [])],
 } satisfies typeof TailwindConfig;
