@@ -14,6 +14,11 @@ body {
   width: 100%;
 }
 
+/* Temporary fix to make scrollbars look right in the production build */
+* {
+  scrollbar-width: thin !important;
+} 
+
 :root {
   --gradient-opacity: 0.8;
   --primary-color: rgba(158, 117, 240, var(--gradient-opacity));
