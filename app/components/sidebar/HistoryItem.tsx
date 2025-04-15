@@ -1,11 +1,12 @@
 import { useParams } from '@remix-run/react';
 import { classNames } from '~/utils/classNames';
-import * as Dialog from '@radix-ui/react-dialog';
 import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
 import { useEditChatDescription } from '~/lib/hooks';
 import { forwardRef, type ForwardedRef } from 'react';
 import { CheckIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@convex-dev/design-system/Button';
+import { TextInput } from '@convex-dev/design-system/TextInput';
+
 interface HistoryItemProps {
   item: ChatHistoryItem;
   handleDeleteClick: (event: React.UIEvent, item: ChatHistoryItem) => void;
@@ -29,28 +30,23 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
   return (
     <div
       className={classNames(
-        'group rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[var(--bolt-elements-sidebar-active-item-background)] overflow-hidden flex justify-between items-center px-3 py-2 transition-colors',
+        'group rounded text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[var(--bolt-elements-sidebar-active-item-background)] overflow-hidden flex justify-between items-center px-3 py-2 transition-colors',
         { 'text-gray-900 dark:text-white bg-[var(--bolt-elements-sidebar-active-item-background)]': isActiveChat },
       )}
     >
       {editing ? (
         <form onSubmit={handleSubmit} className="flex flex-1 items-center gap-2">
-          <input
-            type="text"
-            className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[var(--cvx-border-selected)] dark:border-gray-800 dark:bg-gray-900 dark:text-white"
+          <TextInput
+            labelHidden
+            id="description"
+            className="-ml-3 -mt-2"
             autoFocus
             value={currentDescription}
             onChange={handleChange}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
           />
-          <button
-            type="submit"
-            className="size-4 text-gray-500 transition-colors hover:text-[var(--cvx-util-accent)]"
-            onMouseDown={handleSubmit}
-          >
-            <CheckIcon />
-          </button>
+          <Button type="submit" variant="neutral" icon={<CheckIcon />} size="xs" inline onMouseDown={handleSubmit} />
         </form>
       ) : (
         <a href={`/chat/${item.urlId ?? item.initialId}`} className="relative flex w-full truncate">
@@ -73,17 +69,14 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
                   toggleEditMode();
                 }}
               />
-              <Dialog.Trigger asChild>
-                <ChatActionButton
-                  toolTipContent="Delete"
-                  icon={<TrashIcon />}
-                  className="hover:text-red-500"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    handleDeleteClick(event, item);
-                  }}
-                />
-              </Dialog.Trigger>
+              <ChatActionButton
+                toolTipContent="Delete"
+                icon={<TrashIcon />}
+                onClick={(event) => {
+                  event.preventDefault();
+                  handleDeleteClick(event, item);
+                }}
+              />
             </div>
           </div>
         </a>

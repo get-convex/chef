@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useStore } from '@nanostores/react';
-import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
+import { ConfirmationDialog } from '@convex-dev/design-system/ConfirmationDialog';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
 import { cubicEasingFn } from '~/utils/easings';
@@ -72,8 +72,7 @@ export const Menu = memo(() => {
   });
 
   const deleteItem = useCallback(
-    (event: React.UIEvent, item: ChatHistoryItem) => {
-      event.preventDefault();
+    (item: ChatHistoryItem) => {
       const accessToken = getConvexAuthToken(convex);
       if (!sessionId || !accessToken) {
         return;
@@ -150,6 +149,8 @@ export const Menu = memo(() => {
     return null;
   }
 
+  console.log(dialogContent);
+
   return (
     <>
       <motion.div
@@ -189,85 +190,65 @@ export const Menu = memo(() => {
                 {list.length === 0 ? 'No previous projects' : 'No matches found'}
               </div>
             )}
-            <DialogRoot open={dialogContent !== null}>
-              {binDates(filteredList).map(({ category, items }) => (
-                <div key={category} className="mt-2 space-y-1 first:mt-0">
-                  <div className="sticky top-0 z-10 bg-[var(--bolt-elements-sidebar-background)] px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                    {category}
-                  </div>
-                  <div className="space-y-0.5 pr-1">
-                    {items.map((item) => (
-                      <HistoryItem key={item.initialId} item={item} handleDeleteClick={handleDeleteClick} />
-                    ))}
-                  </div>
+            {binDates(filteredList).map(({ category, items }) => (
+              <div key={category} className="mt-2 space-y-1 first:mt-0">
+                <div className="sticky top-0 z-10 bg-[var(--bolt-elements-sidebar-background)] px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {category}
                 </div>
-              ))}
-              <Dialog onBackdrop={closeDialog} onClose={closeDialog}>
-                {dialogContent?.type === 'delete' && (
+                <div className="space-y-0.5 pr-1">
+                  {items.map((item) => (
+                    <HistoryItem key={item.initialId} item={item} handleDeleteClick={handleDeleteClick} />
+                  ))}
+                </div>
+              </div>
+            ))}
+            {dialogContent?.type === 'delete' && (
+              <ConfirmationDialog
+                onClose={closeDialog}
+                confirmText={'Delete'}
+                onConfirm={() => {
+                  if (dialogContent?.type === 'delete') {
+                    deleteItem(dialogContent.item);
+                  }
+                  closeDialog();
+                  return Promise.resolve();
+                }}
+                dialogTitle="Delete Chat"
+                dialogBody={
                   <>
-                    <div className="rounded-t-lg bg-bolt-elements-background-depth-1 p-6">
-                      <DialogTitle className="text-bolt-elements-textPrimary">Delete Chat?</DialogTitle>
-                      <DialogDescription className="mt-2 text-bolt-elements-textSecondary">
-                        <p>
-                          You are about to delete{' '}
-                          <span className="font-medium text-bolt-elements-textPrimary">
-                            {dialogContent.item.description || 'New chat...'}
-                          </span>
-                        </p>
-                        <p className="mt-2">Are you sure you want to delete this chat?</p>
-                        {dialogContent?.type === 'delete' && sessionId && convexProjectInfo === undefined ? (
-                          <div className="mt-4 flex items-center gap-2">
-                            <div className="size-4 animate-pulse rounded bg-bolt-elements-background-depth-3" />
-                            <div className="h-5 max-w-[280px] flex-1 animate-pulse rounded bg-bolt-elements-background-depth-3" />
-                          </div>
-                        ) : (
-                          convexProjectInfo?.kind === 'connected' && (
-                            <div className="mt-4 flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                id="delete-convex-project"
-                                checked={shouldDeleteConvexProject}
-                                onChange={(e) => setShouldDeleteConvexProject(e.target.checked)}
-                                className="rounded border-bolt-elements-borderColor text-bolt-elements-button-primary-background focus:ring-bolt-elements-borderColorActive"
-                              />
-                              <label
-                                htmlFor="delete-convex-project"
-                                className="text-pretty text-bolt-elements-textSecondary"
-                              >
-                                Also delete the associated Convex project (
-                                <a
-                                  href={`https://dashboard.convex.dev/p/${convexProjectInfo.projectSlug}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-bolt-elements-messages-linkColor"
-                                >
-                                  {convexProjectInfo.projectSlug}
-                                </a>
-                                )
-                              </label>
-                            </div>
+                    <p>
+                      You are about to delete{' '}
+                      <span className="font-medium text-bolt-elements-textPrimary">
+                        {dialogContent?.item.description || 'New chat...'}
+                      </span>
+                    </p>
+                    {convexProjectInfo?.kind === 'connected' && (
+                      <div className="mt-4 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="delete-convex-project"
+                          checked={shouldDeleteConvexProject}
+                          onChange={(e) => setShouldDeleteConvexProject(e.target.checked)}
+                          className="rounded border-bolt-elements-borderColor text-bolt-elements-button-primary-background focus:ring-bolt-elements-borderColorActive"
+                        />
+                        <label htmlFor="delete-convex-project" className="text-pretty text-bolt-elements-textSecondary">
+                          Also delete the associated Convex project (
+                          <a
+                            href={`https://dashboard.convex.dev/p/${convexProjectInfo.projectSlug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-bolt-elements-messages-linkColor"
+                          >
+                            {convexProjectInfo.projectSlug}
+                          </a>
                           )
-                        )}
-                      </DialogDescription>
-                    </div>
-                    <div className="flex justify-end gap-3 rounded-b-lg border-t border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 px-6 py-4">
-                      <DialogButton type="secondary" onClick={closeDialog}>
-                        Cancel
-                      </DialogButton>
-                      <DialogButton
-                        type="danger"
-                        onClick={(event) => {
-                          deleteItem(event, dialogContent.item);
-                          closeDialog();
-                        }}
-                      >
-                        Delete
-                      </DialogButton>
-                    </div>
+                        </label>
+                      </div>
+                    )}
                   </>
-                )}
-              </Dialog>
-            </DialogRoot>
+                }
+              />
+            )}
           </div>
           <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-gray-800">
             <ThemeSwitch />
