@@ -14,6 +14,11 @@ const logger = createScopedLogger('api.chat');
 export type Tracer = ReturnType<typeof WebTracerProvider.prototype.getTracer>;
 
 export async function chatAction({ request }: ActionFunctionArgs) {
+  if (Math.random() < 0.9) {
+    console.log('failing!!!');
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    throw new Error('test');
+  }
   const env = globalThis.process.env;
   const AXIOM_API_TOKEN = getEnv(env, 'AXIOM_API_TOKEN');
   const AXIOM_API_URL = getEnv(env, 'AXIOM_API_URL');
