@@ -112,7 +112,7 @@ export const Chat = memo(
 
     const chatContextManager = useRef(new ChatContextManager());
     const [disableChatMessage, setDisableChatMessage] = useState<
-      { type: 'ExceededQuota'; tokensUsed: number; tokensQuota: number } | { type: 'TeamDisabled' } | null
+      { type: 'ExceededQuota'; centitokensUsed: number; centitokensQuota: number } | { type: 'TeamDisabled' } | null
     >(null);
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
@@ -148,17 +148,17 @@ export const Chat = memo(
       if (tokenUsage.status === 'error') {
         console.error('Failed to check for token usage', tokenUsage.httpStatus, tokenUsage.httpBody);
       } else {
-        if (tokenUsage.tokensQuota === 50000000) {
+        if (tokenUsage.centitokensQuota === 50000000) {
           // TODO(nipunn) Hack for launch day
-          tokenUsage.tokensQuota = tokenUsage.tokensQuota * 10000;
+          tokenUsage.centitokensQuota = tokenUsage.centitokensQuota * 10000;
         }
-        const { tokensUsed, tokensQuota, isTeamDisabled } = tokenUsage;
-        if (tokensUsed !== undefined && tokensQuota !== undefined) {
-          console.log(`Convex tokens used/quota: ${tokensUsed} / ${tokensQuota}`);
+        const { centitokensUsed, centitokensQuota, isTeamDisabled } = tokenUsage;
+        if (centitokensUsed !== undefined && centitokensQuota !== undefined) {
+          console.log(`Convex tokens used/quota: ${centitokensUsed} / ${centitokensQuota}`);
           if (isTeamDisabled) {
             setDisableChatMessage({ type: 'TeamDisabled' });
-          } else if (tokensUsed > tokensQuota) {
-            setDisableChatMessage({ type: 'ExceededQuota', tokensUsed, tokensQuota });
+          } else if (centitokensUsed > centitokensQuota) {
+            setDisableChatMessage({ type: 'ExceededQuota', centitokensUsed, centitokensQuota });
           } else {
             setDisableChatMessage(null);
           }
@@ -530,7 +530,11 @@ export const Chat = memo(
         }}
         disableChatMessage={
           disableChatMessage?.type === 'ExceededQuota'
-            ? noTokensText(disableChatMessage.tokensUsed, disableChatMessage.tokensQuota, selectedTeamSlugStore.get())
+            ? noTokensText(
+                disableChatMessage.centitokensUsed,
+                disableChatMessage.centitokensQuota,
+                selectedTeamSlugStore.get(),
+              )
             : disableChatMessage?.type === 'TeamDisabled'
               ? disabledText
               : null
@@ -608,7 +612,7 @@ function getConvexAuthToken(convex: ConvexReactClient): string | null {
   return token;
 }
 
-function noTokensText(tokensUsed: number, tokensQuota: number, selectedTeamSlug: string | null) {
+function noTokensText(centitokensUsed: number, centitokensQuota: number, selectedTeamSlug: string | null) {
   return (
     <span className="max-w-prose text-pretty">
       You've used all the tokens included with your free plan! Please{' '}
@@ -633,7 +637,7 @@ function noTokensText(tokensUsed: number, tokensQuota: number, selectedTeamSlug:
       >
         add your own API key
       </a>{' '}
-      to continue. Used {renderTokenCount(tokensUsed)} of {renderTokenCount(tokensQuota)}.
+      to continue. Used {renderTokenCount(centitokensUsed)} of {renderTokenCount(centitokensQuota)}.
     </span>
   );
 }

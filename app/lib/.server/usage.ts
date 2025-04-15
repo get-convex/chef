@@ -16,7 +16,9 @@ export async function checkTokenUsage(
     logger.error(`Failed to check for token usage: ${tokenUsage.httpStatus}: ${tokenUsage.httpBody}`);
   }
   if (tokenUsage.status === 'success') {
-    logger.info(`${teamSlug}/${deploymentName}: Tokens used: ${tokenUsage.tokensUsed} / ${tokenUsage.tokensQuota}`);
+    logger.info(
+      `${teamSlug}/${deploymentName}: Tokens used: ${tokenUsage.centitokensUsed} / ${tokenUsage.centitokensQuota}`,
+    );
   }
   return tokenUsage;
 }
@@ -125,7 +127,7 @@ export async function recordUsage(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      tokens: chefTokens,
+      centitokens: chefTokens,
     }),
   });
   if (!response.ok) {
@@ -133,6 +135,6 @@ export async function recordUsage(
     logger.error(await response.json());
   }
 
-  const { tokensUsed, tokensQuota } = await response.json();
-  logger.info(`${teamSlug}/${deploymentName}: Tokens used: ${tokensUsed} / ${tokensQuota}`);
+  const { centitokensUsed, centitokensQuota } = await response.json();
+  logger.info(`${teamSlug}/${deploymentName}: Tokens used: ${centitokensUsed} / ${centitokensQuota}`);
 }

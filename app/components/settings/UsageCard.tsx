@@ -20,7 +20,7 @@ export function UsageCard() {
   const [selectedTeamSlug, setSelectedTeamSlug] = useState(useSelectedTeamSlug() ?? teams?.[0]?.slug ?? null);
 
   const [isLoadingUsage, setIsLoadingUsage] = useState(true);
-  const [tokenUsage, setTokenUsage] = useState<{ tokensUsed?: number; tokensQuota?: number }>({});
+  const [tokenUsage, setTokenUsage] = useState<{ centitokensUsed?: number; centitokensQuota?: number }>({});
   useEffect(() => {
     async function fetchTokenUsage() {
       if (!selectedTeamSlug) {
@@ -46,7 +46,9 @@ export function UsageCard() {
     void fetchTokenUsage();
   }, [selectedTeamSlug, convex]);
 
-  const usagePercentage = tokenUsage.tokensQuota ? ((tokenUsage.tokensUsed || 0) / tokenUsage.tokensQuota) * 100 : 0;
+  const usagePercentage = tokenUsage.centitokensQuota
+    ? ((tokenUsage.centitokensUsed || 0) / tokenUsage.centitokensQuota) * 100
+    : 0;
 
   return (
     <div className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-sm">
@@ -74,7 +76,7 @@ export function UsageCard() {
               <div>
                 <div
                   className="h-4 rounded-full bg-blue-500 transition-all duration-300"
-                  style={{ width: tokenUsage.tokensQuota ? `${Math.min(100, usagePercentage)}%` : '0%' }}
+                  style={{ width: tokenUsage.centitokensQuota ? `${Math.min(100, usagePercentage)}%` : '0%' }}
                 />
                 <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium text-content-primary">
                   {Math.round(usagePercentage)}%
@@ -92,7 +94,7 @@ export function UsageCard() {
               </span>
             ) : (
               <span>
-                {`${renderTokenCount(tokenUsage.tokensUsed || 0)} / ${renderTokenCount(tokenUsage.tokensQuota || 0)} included tokens used this billing period.`}
+                {`${renderTokenCount(tokenUsage.centitokensUsed || 0)} / ${renderTokenCount(tokenUsage.centitokensQuota || 0)} included tokens used this billing period.`}
               </span>
             )}
           </p>

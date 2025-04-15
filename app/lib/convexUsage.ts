@@ -1,8 +1,8 @@
 export type CheckTokenUsageResponse =
   | {
       status: 'success';
-      tokensUsed: number;
-      tokensQuota: number;
+      centitokensUsed: number;
+      centitokensQuota: number;
       isTeamDisabled: boolean;
     }
   | {
@@ -17,15 +17,19 @@ export const disabledText =
   'Please upgrade to a Pro plan or reach out to us ' +
   'at support@convex.dev for help.';
 
-// We render tokens as 100x smaller than their actual amount to get them
+// We render centitokens as 100x smaller than their actual amount to get them
 // closer to user's expectations for Claude tokens.
-export function renderTokenCount(tokens: number) {
-  const renderedTokens = Math.max(1, Math.floor(tokens / 100));
+export function renderTokenCount(centitokens: number) {
+  const renderedTokens = Math.max(1, Math.floor(centitokens / 100));
   return renderedTokens.toLocaleString();
 }
 
-export function noTokensText(tokensUsed: number, tokensQuota: number) {
-  return `No remaining tokens available. Please upgrade to a paid plan or add your own API key at chef.convex.dev/settings to continue. Used ${renderTokenCount(tokensUsed)} of ${renderTokenCount(tokensQuota)}.`;
+export function noTokensText(centitokensUsed: number, centitokensQuota: number) {
+  return (
+    `No remaining tokens available. ` +
+    `Please upgrade to a paid plan or add your own API key at chef.convex.dev/settings to continue. ` +
+    `Used ${renderTokenCount(centitokensUsed)} of ${renderTokenCount(centitokensQuota)}.`
+  );
 }
 
 export async function getTokenUsage(
@@ -54,9 +58,9 @@ export async function getTokenUsage(
     };
   }
   const {
-    tokensUsed,
-    tokensQuota,
+    centitokensUsed,
+    centitokensQuota,
     isTeamDisabled,
-  }: { tokensUsed: number; tokensQuota: number; isTeamDisabled: boolean } = await response.json();
-  return { status: 'success', tokensUsed, tokensQuota, isTeamDisabled };
+  }: { centitokensUsed: number; centitokensQuota: number; isTeamDisabled: boolean } = await response.json();
+  return { status: 'success', centitokensUsed: centitokensUsed * 100, centitokensQuota, isTeamDisabled };
 }
