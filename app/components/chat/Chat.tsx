@@ -350,7 +350,6 @@ export const Chat = memo(
         } else {
           const remaining = formatDistanceStrict(now, retries.nextRetry);
           message += ` Please try again in ${remaining} or enter your own API key at chef.convex.dev/settings.`;
-
         }
         toast.error(message);
         captureException('User tried to send message but chef is too busy');
