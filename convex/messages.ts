@@ -305,14 +305,16 @@ export const updateStorageState = internalMutation({
       throw new Error('Chat messages storage state not found');
     }
     if (doc.lastMessageRank > lastMessageRank) {
-      throw new Error(
+      console.warn(
         `Stale update -- stored messages up to ${doc.lastMessageRank} but received update up to ${lastMessageRank}`,
       );
+      return;
     }
     if (doc.lastMessageRank === lastMessageRank && doc.partIndex > partIndex) {
-      throw new Error(
+      console.warn(
         `Stale update -- stored parts in message ${doc.lastMessageRank} up to part ${doc.partIndex} but received update up to part ${partIndex}`,
       );
+      return;
     }
     await ctx.db.patch(doc._id, {
       storageId,
