@@ -50,8 +50,7 @@ describe('StreamingMessageParser', () => {
   });
 
   describe('valid artifacts without actions', () => {
-    // TODO(ENG-9010): Fix failing tests
-    it.skip.each<[string | string[], ExpectedResult | string]>([
+    it.each<[string | string[], ExpectedResult | string]>([
       [
         'Some text before <boltArtifact title="Some title" id="artifact_1">foo bar</boltArtifact> Some more text',
         {
@@ -138,8 +137,7 @@ describe('StreamingMessageParser', () => {
   });
 
   describe('valid artifacts with actions', () => {
-    // TODO(ENG-9010): Fix failing tests
-    it.skip.each<[string | string[], ExpectedResult | string]>([
+    it.each<[string | string[], ExpectedResult | string]>([
       [
         'Before <boltArtifact title="Some title" id="artifact_1"><boltAction type="shell">npm install</boltAction></boltArtifact> After',
         {
