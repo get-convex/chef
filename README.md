@@ -101,10 +101,16 @@ Additionally make sure `CHEF_OAUTH_APP_NAME` is set on your Convex deployment
 
 ### Developing against local big-brain
 
-- Start local big-brain/usher/dashboard the traditional way
-- Switch .env.local env vars to the dev variants (from 1Password)
+You will need a lot of terminals
+
+- just run-big-brain-for-chef-dev
+- just run-usher-with-big-brain
+- just run-dash
+- Switch chef .env.local env vars to the dev variants (from 1Password)
 - Set VITE_CONVEX_URL to 'placeholder' and remove CONVEX_URL
 - just convex-bb dev
+- Set VITE_CONVEX_SITE_URL to match the newly updated VITE_CONVEX_URL (but .convex.site instead)
+- npm run dev
 
 # Working on the template
 
