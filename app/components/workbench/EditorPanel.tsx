@@ -30,6 +30,7 @@ interface EditorPanelProps {
   editorDocument?: EditorDocument;
   selectedFile?: string | undefined;
   isStreaming?: boolean;
+  scrollToDocAppend?: boolean;
   fileHistory?: Record<string, FileHistory>;
   onEditorChange?: OnEditorChange;
   onEditorScroll?: OnEditorScroll;
@@ -50,6 +51,7 @@ export const EditorPanel = memo(
     editorDocument,
     selectedFile,
     isStreaming,
+    scrollToDocAppend,
     fileHistory,
     onFileSelect,
     onEditorChange,
@@ -122,6 +124,7 @@ export const EditorPanel = memo(
                   settings={editorSettings}
                   doc={editorDocument}
                   autoFocusOnDocumentChange={!isMobile()}
+                  scrollToDocAppend={!!scrollToDocAppend}
                   onScroll={onEditorScroll}
                   onChange={onEditorChange}
                   onSave={onFileSave}

@@ -68,6 +68,7 @@ interface Props {
   theme: Theme;
   id?: unknown;
   doc?: EditorDocument;
+  scrollToDocAppend: boolean;
   editable?: boolean;
   debounceChange?: number;
   debounceScroll?: number;
@@ -131,6 +132,7 @@ export const CodeMirrorEditor = memo(
     onScroll,
     onChange,
     onSave,
+    scrollToDocAppend,
     theme,
     settings,
     className = '',
@@ -264,8 +266,9 @@ export const CodeMirrorEditor = memo(
         autoFocusOnDocumentChange,
         doc as TextEditorDocument,
         isFileChange,
+        scrollToDocAppend,
       );
-    }, [doc?.value, editable, doc?.filePath, autoFocusOnDocumentChange]);
+    }, [doc?.value, editable, doc?.filePath, autoFocusOnDocumentChange, scrollToDocAppend]);
 
     return (
       <div className={classNames('relative h-full', className)}>
@@ -385,6 +388,7 @@ function setEditorDocument(
   autoFocus: boolean,
   doc: TextEditorDocument,
   isFileChange: boolean,
+  scrollToDocAppend: boolean,
 ) {
   if (doc.value !== view.state.doc.toString()) {
     view.dispatch({
@@ -431,6 +435,23 @@ function setEditorDocument(
 
         console.log('scroll restoration for doc change', newTop);
         view.scrollDOM.scrollTo(newLeft, newTop);
+      });
+    }
+    if (scrollToDocAppend) {
+      requestAnimationFrame(() => {
+        const currentScrollTop = view.scrollDOM.scrollTop;
+        const pagesOffscreen =
+          (view.scrollDOM.scrollHeight - currentScrollTop - view.scrollDOM.offsetHeight) / view.scrollDOM.offsetHeight;
+        console.log('currently', pagesOffscreen, 'pagesOffscreen');
+
+        // There's ~.97 of a viewport of blank space in the document below the last line from the scrollPastEnd() extension.
+        if (pagesOffscreen > 1) {
+          const desiredPagesOffscreen = 0.4;
+          view.scrollDOM.scrollTo(
+            0,
+            view.scrollDOM.scrollHeight - view.scrollDOM.offsetHeight * (desiredPagesOffscreen + 1),
+          );
+        }
       });
     }
   });

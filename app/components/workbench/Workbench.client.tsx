@@ -64,6 +64,8 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
   const files = useStore(workbenchStore.files);
   const selectedView = useStore(workbenchStore.currentView);
 
+  const following = useStore(workbenchStore.followingStreamedCode);
+
   const isSmallViewport = useViewport(1024);
 
   const [previewPanes, setPreviewPanes] = useState<string[]>(() => [randomId()]);
@@ -230,6 +232,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                     <EditorPanel
                       editorDocument={currentDocument}
                       isStreaming={isStreaming}
+                      scrollToDocAppend={following && isStreaming}
                       selectedFile={selectedFile}
                       files={files}
                       unsavedFiles={unsavedFiles}

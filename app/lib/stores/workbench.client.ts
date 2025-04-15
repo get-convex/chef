@@ -505,8 +505,6 @@ export class WorkbenchStore {
       if (!isStreaming) {
         await artifact.runner.runAction(data);
         this.resetAllFileModifications();
-        // hack, sometimes this isn't cleared
-        //setTimeout(() => this.resetAllFileModifications(), 10);
       }
     } else {
       await artifact.runner.runAction(data);
