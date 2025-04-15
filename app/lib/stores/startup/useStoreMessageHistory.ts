@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect } from 'react';
 import type { Message } from '@ai-sdk/react';
-import { useConvex } from 'convex/react';
+import { ConvexReactClient, useConvex } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import type { SerializedMessage } from '@convex/messages';
 import { waitForConvexSessionId } from '~/lib/stores/sessionId';
@@ -9,15 +9,99 @@ import { description } from '~/lib/stores/description';
 import * as lz4 from 'lz4-wasm';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { toast } from 'sonner';
+import { atom } from 'nanostores';
+
+const lastCompleteMessageInfoStore = atom<{ messageIndex: number; partIndex: number; allMessages: Message[] } | null>(
+  null,
+);
+const lastPersistedMessageInfoStore = atom<{ messageIndex: number; partIndex: number } | null>(null);
+
+async function handleStoreMessageHistory(chatId: string, convex: ConvexReactClient) {
+  const lastCompleteMessageInfo = lastCompleteMessageInfoStore.get();
+  const lastPersistedMessageInfo = lastPersistedMessageInfoStore.get();
+  if (lastCompleteMessageInfo === null || lastPersistedMessageInfo === null) {
+    // Not initialized yet
+    return;
+  }
+  const { messageIndex, partIndex, allMessages } = lastCompleteMessageInfo;
+  if (messageIndex === lastPersistedMessageInfo.messageIndex && partIndex === lastPersistedMessageInfo.partIndex) {
+    // No changes
+    return;
+  }
+  const sessionId = await waitForConvexSessionId('useStoreMessageHistory');
+  // If there's no URL ID yet, try to extract it from the messages.
+  // The server will allocate a unique URL ID based on the hint.
+  if (getKnownUrlId() === undefined) {
+    const result = extractUrlHintAndDescription(allMessages);
+    if (result) {
+      const { urlId, initialId } = await convex.mutation(api.messages.setUrlId, {
+        sessionId,
+        chatId,
+        urlHint: result.urlHint,
+        description: result.description,
+      });
+      description.set(result.description);
+      setKnownUrlId(urlId);
+      setKnownInitialId(initialId);
+    }
+  }
+  const siteUrl = getConvexSiteUrl();
+  const url = new URL(`${siteUrl}/store_messages`);
+  const compressed = await compressMessages(allMessages, messageIndex, partIndex);
+  url.searchParams.set('chatId', chatId);
+  url.searchParams.set('sessionId', sessionId);
+  url.searchParams.set('lastMessageRank', messageIndex.toString());
+  url.searchParams.set('partIndex', partIndex.toString());
+  let response;
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      body: compressed,
+    });
+  } catch (_e) {
+    toast.error('Failed to store message history');
+  }
+  if (response === undefined || !response.ok) {
+    toast.error('Failed to store message history');
+    return;
+  }
+  lastPersistedMessageInfoStore.set({ messageIndex, partIndex });
+}
+
+async function storeMessageHistoryWorker(chatId: string, convex: ConvexReactClient) {
+  while (true) {
+    const lastPersistedMessageInfo = lastPersistedMessageInfoStore.get();
+    if (lastPersistedMessageInfo !== null) {
+      await waitForNewMessages(lastPersistedMessageInfo.messageIndex, lastPersistedMessageInfo.partIndex);
+      await handleStoreMessageHistory(chatId, convex);
+    }
+  }
+}
+
+export async function waitForNewMessages(messageIndex: number, partIndex: number) {
+  return new Promise<void>((resolve) => {
+    let unlisten: (() => void) | null = null;
+    unlisten = lastCompleteMessageInfoStore.listen((lastCompleteMessageInfo) => {
+      if (
+        lastCompleteMessageInfo !== null &&
+        (lastCompleteMessageInfo.messageIndex !== messageIndex || lastCompleteMessageInfo.partIndex !== partIndex)
+      ) {
+        if (unlisten !== null) {
+          unlisten();
+          unlisten = null;
+        }
+        resolve();
+      }
+    });
+  });
+}
 
 export function useStoreMessageHistory(chatId: string, initialMessages: SerializedMessage[] | undefined) {
   const convex = useConvex();
-  const lastSeenMessageRank = useRef(-1);
-  const lastSeenPartIndex = useRef(-1);
-  const lastPersistedMessageRank = useRef(-1);
-  const lastPersistedPartIndex = useRef(-1);
-  const persistInProgress = useRef(false);
-  const siteUrl = getConvexSiteUrl();
+  // Local state that includes incomplete parts too for the beforeunload handler
+  const lastMessageRank = useRef(-1);
+  const partIndex = useRef(-1);
+
   useEffect(() => {
     if (typeof window === 'undefined') {
       return () => {
@@ -25,11 +109,14 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       };
     }
     const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-      if (
-        persistInProgress.current ||
-        lastSeenMessageRank.current !== lastPersistedMessageRank.current ||
-        lastSeenPartIndex.current !== lastPersistedPartIndex.current
-      ) {
+      const lastPersistedMessageInfo = lastPersistedMessageInfoStore.get();
+      if (lastPersistedMessageInfo !== null) {
+        if (
+          lastMessageRank.current === lastPersistedMessageInfo.messageIndex &&
+          partIndex.current === lastPersistedMessageInfo.partIndex
+        ) {
+          return;
+        }
         // Some browsers require both preventDefault and setting returnValue
         e.preventDefault();
         e.returnValue = '';
@@ -51,67 +138,36 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       if (messages.length === 0) {
         return;
       }
-      lastSeenMessageRank.current = messages.length - 1;
-      lastSeenPartIndex.current = (messages[messages.length - 1].parts?.length ?? 0) - 1;
-      if (persistInProgress.current) {
-        return;
-      }
-
-      const sessionId = await waitForConvexSessionId('useStoreMessageHistory');
-      const updateResult = shouldUpdateMessages({
-        messages,
-        persisted: {
-          lastMessageRank: lastPersistedMessageRank.current,
-          partIndex: lastPersistedPartIndex.current,
-        },
-        streamStatus,
-      });
-      if (updateResult.kind === 'noUpdate') {
-        return;
-      }
-      const url = new URL(`${siteUrl}/store_messages`);
-      const compressed = await compressMessages(messages, updateResult.lastMessageRank, updateResult.partIndex);
-      url.searchParams.set('chatId', chatId);
-      url.searchParams.set('sessionId', sessionId);
-      url.searchParams.set('lastMessageRank', updateResult.lastMessageRank.toString());
-      url.searchParams.set('partIndex', updateResult.partIndex.toString());
-
-      persistInProgress.current = true;
-      // If there's no URL ID yet, try to extract it from the messages.
-      // The server will allocate a unique URL ID based on the hint.
-      if (getKnownUrlId() === undefined) {
-        const result = extractUrlHintAndDescription(messages);
-        if (result) {
-          const { urlId, initialId } = await convex.mutation(api.messages.setUrlId, {
-            sessionId,
-            chatId,
-            urlHint: result.urlHint,
-            description: result.description,
-          });
-          description.set(result.description);
-          setKnownUrlId(urlId);
-          setKnownInitialId(initialId);
-        }
-      }
-      let response;
-      try {
-        response = await fetch(url, {
-          method: 'POST',
-          body: compressed,
+      const lastPersistedMessageInfo = lastPersistedMessageInfoStore.get();
+      if (lastPersistedMessageInfo === null) {
+        lastPersistedMessageInfoStore.set({
+          messageIndex: initialMessages.length - 1,
+          partIndex: (initialMessages[initialMessages.length - 1].parts?.length ?? 0) - 1,
         });
-      } catch (_e) {
-        toast.error('Failed to store message history');
-      } finally {
-        persistInProgress.current = false;
+        void storeMessageHistoryWorker(chatId, convex);
       }
-      if (response !== undefined && !response.ok) {
-        toast.error('Failed to store message history');
+      lastMessageRank.current = messages.length - 1;
+      partIndex.current = (messages[messages.length - 1].parts?.length ?? 0) - 1;
+
+      const lastCompleteMessageInfo = getLastCompletePart(messages, streamStatus);
+      if (lastCompleteMessageInfo === null) {
         return;
       }
-      lastPersistedMessageRank.current = updateResult.lastMessageRank;
-      lastPersistedPartIndex.current = updateResult.partIndex;
+      const currentLastCompleteMessageInfo = lastCompleteMessageInfoStore.get();
+      if (
+        currentLastCompleteMessageInfo !== null &&
+        lastCompleteMessageInfo.messageIndex === currentLastCompleteMessageInfo.messageIndex &&
+        lastCompleteMessageInfo.partIndex === currentLastCompleteMessageInfo.partIndex
+      ) {
+        return;
+      }
+      lastCompleteMessageInfoStore.set({
+        messageIndex: lastCompleteMessageInfo.messageIndex,
+        partIndex: lastCompleteMessageInfo.partIndex,
+        allMessages: messages,
+      });
     },
-    [convex, chatId, initialMessages, persistInProgress],
+    [convex, chatId, initialMessages],
   );
 }
 
