@@ -8,7 +8,7 @@ import { convexProjectStore } from '~/lib/stores/convexProject';
 import { getFileUpdateCounter, useFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
 import { toast } from 'sonner';
 import { streamOutput } from '~/utils/process';
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 import { CheckIcon, ExternalLinkIcon, RocketIcon, UpdateIcon } from '@radix-ui/react-icons';
 
 interface ErrorResponse {

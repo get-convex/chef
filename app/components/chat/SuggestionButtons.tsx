@@ -1,6 +1,5 @@
-// required to avoid to many open files
-// https://github.com/phosphor-icons/react/issues/45
-import { ArrowUp } from '@phosphor-icons/react/dist/csr/ArrowUp';
+import { Button } from '@ui/Button';
+import { ArrowUpIcon } from '@radix-ui/react-icons';
 
 interface SuggestionButtonsProps {
   chatStarted: boolean;
@@ -35,15 +34,16 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
     <div id="suggestions">
       <div className="flex flex-wrap justify-center gap-x-6 gap-y-4">
         {suggestions.map((suggestion) => (
-          <button
+          <Button
             key={suggestion.title}
             onClick={() => onSuggestionClick?.(suggestion.prompt)}
-            className="flex min-w-fit items-center gap-1 rounded-full border border-bolt-elements-borderColor bg-bolt-elements-item-backgroundDefault px-3 py-1 text-bolt-elements-textSecondary hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-textPrimary"
+            className="rounded-full"
+            variant="neutral"
             disabled={disabled}
+            icon={<ArrowUpIcon className="size-4" />}
           >
-            <ArrowUp className="size-4" />
             {suggestion.title}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

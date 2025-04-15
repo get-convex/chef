@@ -3,9 +3,10 @@ import type { ToolStatus } from '~/lib/common/types';
 import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { chatStore } from '~/lib/stores/chatId';
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 import { ExclamationTriangleIcon, CheckCircledIcon, ResetIcon } from '@radix-ui/react-icons';
 import { useEffect, useState } from 'react';
+import { Button } from '@ui/Button';
 
 interface StreamingIndicatorProps {
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
@@ -121,17 +122,11 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
 
   return (
     <AnimatePresence>
-      <div
-        className={classNames(
-          'bg-bolt-elements-background-depth-2',
-          'border border-bolt-elements-borderColor',
-          'rounded-lg relative w-full max-w-chat mx-auto z-prompt',
-        )}
-      >
+      <div className={classNames('border', 'rounded-lg relative w-full max-w-chat mx-auto z-prompt')}>
         <div
           className={classNames(
-            'bg-bolt-elements-item-backgroundAccent',
-            'p-2 rounded-lg text-bolt-elements-item-contentAccent',
+            'bg-background-primary/75 backdrop-blur-md',
+            'p-2 rounded-lg text-content-primary',
             'flex',
           )}
         >
@@ -156,14 +151,9 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                     {message}
                     <div className="grow" />
                     {streamStatus === 'error' && (
-                      <button
-                        type="button"
-                        className="flex items-center gap-1 rounded-md bg-bolt-elements-button-primary-background px-2 py-1.5 text-bolt-elements-button-primary-text transition-colors hover:bg-bolt-elements-button-primary-backgroundHover"
-                        onClick={props.resendMessage}
-                      >
-                        <ResetIcon />
+                      <Button type="button" onClick={props.resendMessage} icon={<ResetIcon />}>
                         Resend
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </motion.div>

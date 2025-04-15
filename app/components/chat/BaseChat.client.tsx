@@ -12,20 +12,20 @@ import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
 import { SuggestionButtons } from './SuggestionButtons';
-import { KeyboardShortcut } from '@convex-dev/design-system/KeyboardShortcut';
+import { KeyboardShortcut } from '@ui/KeyboardShortcut';
 import StreamingIndicator from './StreamingIndicator';
 import type { ToolStatus } from '~/lib/common/types';
-import { TeamSelector } from '~/components/convex/TeamSelector.client';
+import { TeamSelector } from '~/components/convex/TeamSelector';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { useChefAuth } from './ChefAuthWrapper';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import { openSignInWindow } from '~/components/ChefSignInPage';
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 import { ModelSelector } from './ModelSelector';
 import type { ModelSelection } from '~/utils/constants';
-import { Button } from '@convex-dev/design-system/Button';
+import { Button } from '@ui/Button';
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -182,7 +182,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       }}
                     />
                   }
-                  <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2">
+                  <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border bg-background-primary/75 backdrop-blur-md transition-all duration-200 focus-within:border-border-selected">
                     <FilePreview
                       files={uploadedFiles}
                       imageDataList={imageDataList}
@@ -201,27 +201,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       <textarea
                         ref={textareaRef}
                         className={classNames(
-                          'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent text-sm',
-                          'transition-all duration-200',
-                          'hover:border-bolt-elements-focus',
+                          'w-full pl-4 pt-4 pr-16 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
                           'disabled:opacity-50 disabled:cursor-not-allowed',
                         )}
                         disabled={disableChatMessage !== null || maintenanceMode}
-                        onDragEnter={(e) => {
-                          e.preventDefault();
-                          e.currentTarget.style.border = '2px solid #1488fc';
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.currentTarget.style.border = '2px solid #1488fc';
-                        }}
-                        onDragLeave={(e) => {
-                          e.preventDefault();
-                          e.currentTarget.style.border = '1px solid var(--bolt-elements-borderColor)';
-                        }}
                         onDrop={(e) => {
                           e.preventDefault();
-                          e.currentTarget.style.border = '1px solid var(--bolt-elements-borderColor)';
 
                           const files = Array.from(e.dataTransfer.files);
                           files.forEach((file) => {
@@ -301,18 +286,13 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                               : undefined
                         }
                       />
-                      <div className="flex items-center justify-end gap-4 p-4 pt-2 text-sm">
-                        <div className="text-xs text-bolt-elements-textTertiary">
-                          <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
-                        </div>
+                      <div className="flex items-center justify-end gap-4 p-4 pb-3 pt-2 text-sm">
+                        <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
                         <div className="grow" />
                         {input.length > 3 ? (
-                          <div className="text-xs text-bolt-elements-textTertiary">
-                            <KeyboardShortcut
-                              value={['Shift', 'Return']}
-                              className="mr-0.5 font-bold text-bolt-elements-textSecondary"
-                            />{' '}
-                            for new line
+                          <div className="text-xs text-content-tertiary">
+                            <KeyboardShortcut value={['Shift', 'Return']} className="mr-0.5 font-semibold" /> for new
+                            line
                           </div>
                         ) : null}
                         {chatStarted && <ConvexConnection />}

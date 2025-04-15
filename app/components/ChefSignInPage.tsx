@@ -8,6 +8,9 @@ import { classNames } from '~/utils/classNames';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { useConvex, useConvexAuth } from 'convex/react';
 import { fetchOptIns } from '~/lib/convexOptins';
+import { Button } from '@ui/Button';
+import { Spinner } from '@ui/Spinner';
+
 export const ChefSignInPage = () => {
   const chefAuth = useChefAuthContext();
 
@@ -28,9 +31,9 @@ function ConvexSignInForm() {
   const [started, setStarted] = useState(false);
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4">
-      <h1 className="text-2xl font-bold">Connect to Convex</h1>
-      <button
-        className="flex items-center gap-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background px-4 py-2 text-bolt-elements-button-secondary-text hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
+      <h1>Connect to Convex</h1>
+      <Button
+        variant="neutral"
         onClick={() => {
           if (!started) {
             setStarted(true);
@@ -43,10 +46,12 @@ function ConvexSignInForm() {
           }
         }}
         disabled={started}
+        icon={
+          started ? <Spinner /> : <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+        }
       >
-        <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
         Log in with your Convex account
-      </button>
+      </Button>
     </div>
   );
 }

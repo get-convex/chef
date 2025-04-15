@@ -12,7 +12,7 @@ import { cubicEasingFn } from '~/utils/easings';
 import { captureException } from '@sentry/remix';
 import type { RelativePath } from '~/lib/stores/files';
 import { getAbsolutePath } from '~/lib/stores/files';
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 const highlighterOptions = {
   langs: ['shell'],
   themes: ['light-plus', 'dark-plus'],

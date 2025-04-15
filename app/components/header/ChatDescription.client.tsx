@@ -2,8 +2,8 @@ import { useStore } from '@nanostores/react';
 import { useEditChatDescription } from '~/lib/hooks';
 import { description as descriptionStore } from '~/lib/stores/description';
 import { CheckIcon, Pencil1Icon } from '@radix-ui/react-icons';
-import { Button } from '@convex-dev/design-system/Button';
-import { TextInput } from '@convex-dev/design-system/TextInput';
+import { Button } from '@ui/Button';
+import { TextInput } from '@ui/TextInput';
 
 export function ChatDescription() {
   const initialDescription = useStore(descriptionStore)!;

@@ -4,8 +4,8 @@ import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
 import { useEditChatDescription } from '~/lib/hooks';
 import { forwardRef, type ForwardedRef } from 'react';
 import { CheckIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
-import { Button } from '@convex-dev/design-system/Button';
-import { TextInput } from '@convex-dev/design-system/TextInput';
+import { Button } from '@ui/Button';
+import { TextInput } from '@ui/TextInput';
 
 interface HistoryItemProps {
   item: ChatHistoryItem;
@@ -39,7 +39,7 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
           <TextInput
             labelHidden
             id="description"
-            className="-ml-3 -mt-2"
+            className="-ml-1.5 -mt-1.5"
             autoFocus
             value={currentDescription}
             onChange={handleChange}

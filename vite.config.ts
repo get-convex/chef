@@ -7,7 +7,6 @@ import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import path from 'path';
 
 dotenv.config();
 
@@ -76,8 +75,6 @@ export default defineConfig((config) => {
         'react-dom',
         'react-fast-compare',
         'warning',
-        'lodash/isEqual',
-        'fuzzy/lib/fuzzy',
         'fuzzy',
       ],
       esbuildOptions: {

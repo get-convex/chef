@@ -1,7 +1,7 @@
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { useStore } from '@nanostores/react';
-import { Spinner } from '~/components/ui/Spinner';
-import { Combobox } from '@convex-dev/design-system/Combobox';
+import { Spinner } from '@ui/Spinner';
+import { Combobox } from '@ui/Combobox';
 
 export function TeamSelector({
   selectedTeamSlug,
@@ -18,7 +18,7 @@ export function TeamSelector({
   if (!teams) {
     return (
       <div className="flex overflow-hidden rounded border text-sm">
-        <div className="flex w-full items-center gap-2 px-3 py-2">
+        <div className="flex w-full items-center gap-2 p-1.5">
           <Spinner />
           Loading...
         </div>

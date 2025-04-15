@@ -1,4 +1,4 @@
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 
 export function Loading(props: { message?: string }) {
   return (

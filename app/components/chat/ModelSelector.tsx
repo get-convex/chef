@@ -1,4 +1,4 @@
-import { Combobox } from '@convex-dev/design-system/Combobox';
+import { Combobox } from '@ui/Combobox';
 import { MagicWandIcon } from '@radix-ui/react-icons';
 import type { ModelSelection } from '~/utils/constants';
 

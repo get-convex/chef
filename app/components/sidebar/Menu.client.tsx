@@ -1,9 +1,8 @@
 import { motion, type Variants } from 'framer-motion';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useStore } from '@nanostores/react';
-import { ConfirmationDialog } from '@convex-dev/design-system/ConfirmationDialog';
+import { ConfirmationDialog } from '@ui/ConfirmationDialog';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
 import { cubicEasingFn } from '~/utils/easings';
@@ -20,8 +19,9 @@ import { profileStore } from '~/lib/stores/profile';
 import { useAuth0 } from '@auth0/auth0-react';
 import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
 import { PersonIcon, GearIcon, ExitIcon, PlusIcon } from '@radix-ui/react-icons';
-import { Button } from '@convex-dev/design-system/Button';
-import { TextInput } from '@convex-dev/design-system/TextInput';
+import { Button } from '@ui/Button';
+import { TextInput } from '@ui/TextInput';
+import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 
 const menuVariants = {
   closed: {
@@ -44,7 +44,7 @@ const menuVariants = {
   },
 } satisfies Variants;
 
-type DialogContent = { type: 'delete'; item: ChatHistoryItem } | null;
+type ModalContent = { type: 'delete'; item: ChatHistoryItem } | null;
 
 export const Menu = memo(() => {
   const menuRef = useRef<HTMLDivElement>(null);
@@ -52,7 +52,7 @@ export const Menu = memo(() => {
   const convex = useConvex();
   const list = useQuery(api.messages.getAll, sessionId ? { sessionId } : 'skip') ?? [];
   const [open, setOpen] = useState(false);
-  const [dialogContent, setDialogContent] = useState<DialogContent>(null);
+  const [dialogContent, setDialogContent] = useState<ModalContent>(null);
   const profile = useStore(profileStore);
   const { logout } = useAuth0();
   const [shouldDeleteConvexProject, setShouldDeleteConvexProject] = useState(false);
@@ -253,45 +253,35 @@ export const Menu = memo(() => {
           <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-gray-800">
             <ThemeSwitch />
             {profile && open && (
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <button className="flex size-[40px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-gray-600 transition-all hover:ring-2 hover:ring-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:hover:ring-gray-700">
-                    {profile.avatar ? (
-                      <img
-                        src={profile.avatar}
-                        alt={profile.username || 'User'}
-                        className="size-full object-cover"
-                        loading="eager"
-                        decoding="sync"
-                      />
-                    ) : (
-                      <PersonIcon className="size-8" />
-                    )}
-                  </button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className="z-menu min-w-[180px] rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 p-1 shadow-lg"
-                    sideOffset={5}
-                    align="end"
-                  >
-                    <DropdownMenu.Item
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-bolt-elements-textPrimary outline-none hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive"
-                      onSelect={handleSettingsClick}
-                    >
-                      <GearIcon />
-                      Settings
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-red-500 outline-none hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                      onSelect={handleLogout}
-                    >
-                      <ExitIcon />
-                      Log out
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+              <MenuComponent
+                placement="top-start"
+                buttonProps={{
+                  variant: 'neutral',
+                  title: 'User menu',
+                  inline: true,
+                  className: 'rounded-full',
+                  icon: profile.avatar ? (
+                    <img
+                      src={profile.avatar}
+                      alt={profile.username || 'User'}
+                      className="size-8 rounded-full object-cover"
+                      loading="eager"
+                      decoding="sync"
+                    />
+                  ) : (
+                    <PersonIcon className="size-8 rounded-full" />
+                  ),
+                }}
+              >
+                <MenuItemComponent action={handleSettingsClick}>
+                  <GearIcon />
+                  Settings
+                </MenuItemComponent>
+                <MenuItemComponent action={handleLogout}>
+                  <ExitIcon />
+                  Log out
+                </MenuItemComponent>
+              </MenuComponent>
             )}
           </div>
         </div>

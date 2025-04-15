@@ -1,7 +1,7 @@
 import { AnimatePresence, cubicBezier, motion } from 'framer-motion';
 import { ArrowRightIcon, StopIcon } from '@radix-ui/react-icons';
 import { classNames } from '~/utils/classNames';
-import { Button, buttonClasses } from '@convex-dev/design-system/Button';
+import { Button, buttonClasses } from '@ui/Button';
 
 interface SendButtonProps {
   show: boolean;

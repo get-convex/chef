@@ -6,8 +6,8 @@ import { convexProjectStore } from '~/lib/stores/convexProject';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useChatId } from '~/lib/stores/chatId';
-import { TeamSelector } from './TeamSelector.client';
-import { Spinner } from '~/components/ui/Spinner';
+import { TeamSelector } from './TeamSelector';
+import { Spinner } from '@ui/Spinner';
 import { Link1Icon } from '@radix-ui/react-icons';
 
 export function ConvexConnectButton() {

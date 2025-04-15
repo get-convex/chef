@@ -5,7 +5,7 @@ import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
 import { EyeSlashIcon } from '@heroicons/react/24/outline';
 import { EyeOpenIcon, QuestionMarkCircledIcon } from '@radix-ui/react-icons';
-import { Button } from '@convex-dev/design-system/Button';
+import { Button } from '@ui/Button';
 
 export function ApiKeyCard() {
   const convex = useConvex();

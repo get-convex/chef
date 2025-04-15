@@ -11,7 +11,7 @@
 
 .MarkdownContent {
   line-height: 1.6;
-  color: var(--bolt-elements-textPrimary);
+  color: var(--content-primary);
 
   > *:not(:last-child) {
     margin-block-end: 16px;
@@ -27,19 +27,19 @@
       margin-block-end: 16px;
       font-weight: 600;
       line-height: 1.25;
-      color: var(--bolt-elements-textPrimary);
+      color: var(--content-primary);
     }
   }
 
   h1 {
     font-size: 2em;
-    border-bottom: 1px solid var(--bolt-elements-borderColor);
+    border-bottom: 1px solid var(--border-transparent);
     padding-bottom: 0.3em;
   }
 
   h2 {
     font-size: 1.5em;
-    border-bottom: 1px solid var(--bolt-elements-borderColor);
+    border-bottom: 1px solid var(--border-transparent);
     padding-bottom: 0.3em;
   }
 
@@ -70,7 +70,7 @@
   }
 
   a {
-    color: var(--bolt-elements-messages-linkColor);
+    color: var(--content-link);
     text-decoration: none;
     cursor: pointer;
 
@@ -86,8 +86,8 @@
     @mixin not-inside-actions {
       border-radius: 6px;
       padding: 0.2em 0.4em;
-      background-color: var(--bolt-elements-messages-inlineCode-background);
-      color: var(--bolt-elements-messages-inlineCode-text);
+      background-color: var(--background-primary);
+      color: var(--content-primary);
     }
   }
 
@@ -107,8 +107,8 @@
   blockquote {
     margin: 0;
     padding: 0 1em;
-    color: var(--bolt-elements-textTertiary);
-    border-left: 0.25em solid var(--bolt-elements-borderColor);
+    color: var(--content-tertiary);
+    border-left: 0.25em solid var(--border-transparent);
   }
 
   :is(ul, ol) {
@@ -152,7 +152,7 @@
     height: 0.25em;
     padding: 0;
     margin: 24px 0;
-    background-color: var(--bolt-elements-borderColor);
+    background-color: var(--border-transparent);
     border: 0;
   }
 
@@ -163,11 +163,11 @@
 
     :is(th, td) {
       padding: 6px 13px;
-      border: 1px solid #dfe2e5;
+      border: 1px solid var(--border-transparent);
     }
 
     tr:nth-child(2n) {
-      background-color: #f6f8fa;
+      background-color: var(--background-primary);
     }
   }
 }

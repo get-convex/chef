@@ -6,7 +6,7 @@ import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
-import { TeamSelector } from '~/components/convex/TeamSelector.client';
+import { TeamSelector } from '~/components/convex/TeamSelector';
 
 export function UsageCard() {
   const convex = useConvex();

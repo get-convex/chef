@@ -30,7 +30,7 @@ import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
 import { loggingSafeParse } from '~/lib/zodUtil';
 import { deployToolParameters } from '~/lib/runtime/deployTool';
 import type { ZodError } from 'zod';
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 import { FolderIcon } from '@heroicons/react/24/outline';
 
 export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => {

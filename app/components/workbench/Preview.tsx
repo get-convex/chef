@@ -3,7 +3,7 @@ import { useStore } from '@nanostores/react';
 import { IconButton } from '~/components/ui/IconButton';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { PortDropdown } from './PortDropdown';
-import { Spinner } from '~/components/ui/Spinner';
+import { Spinner } from '@ui/Spinner';
 import { UpdateIcon, MobileIcon, ExternalLinkIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 
 type ResizeSide = 'left' | 'right' | null;
