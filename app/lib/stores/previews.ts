@@ -99,10 +99,12 @@ export class PreviewsStore {
     const webcontainer = await this.#webcontainer;
 
     const proxyScriptLocation = '/tmp/previewProxy.cjs';
-    //await webcontainer.fs.writeFile(proxyScriptLocation, PROXY_SERVER_SOURCE);
+    // webcontainer.writeFile seems incapable of writing to /tmp/foo
+    // so use sh instead. It's important that this string has no
+    // single quote characters ' in it so this naive escaping works.
     const writeProxyProcess = await webcontainer.spawn('sh', [
       '-c',
-      `echo -n '${PROXY_SERVER_SOURCE}' > ${proxyScriptLocation}`,
+      `echo '${PROXY_SERVER_SOURCE}' > ${proxyScriptLocation}`,
     ]);
     await writeProxyProcess.exit;
     const proxyProcess = await webcontainer.spawn('node', [
