@@ -82,14 +82,14 @@ export async function chatAction({ request }: ActionFunctionArgs) {
         status: 402,
       });
     }
-    if (resp.tokensQuota === 50000000) {
+    if (resp.centitokensQuota === 50000000) {
       // TODO(nipunn) Hack for launch day
-      resp.tokensQuota = resp.tokensQuota * 10000;
+      resp.centitokensQuota = resp.centitokensQuota * 10000;
     }
-    if (resp.tokensUsed >= resp.tokensQuota) {
+    if (resp.centitokensUsed >= resp.centitokensQuota) {
       if (body.userApiKey?.preference !== 'quotaExhausted') {
-        logger.error(`No tokens available for ${deploymentName}: ${resp.tokensUsed} of ${resp.tokensQuota}`);
-        return new Response(JSON.stringify({ error: noTokensText(resp.tokensUsed, resp.tokensQuota) }), {
+        logger.error(`No tokens available for ${deploymentName}: ${resp.centitokensUsed} of ${resp.centitokensQuota}`);
+        return new Response(JSON.stringify({ error: noTokensText(resp.centitokensUsed, resp.centitokensQuota) }), {
           status: 402,
         });
       }
