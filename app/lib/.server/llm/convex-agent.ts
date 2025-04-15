@@ -83,7 +83,7 @@ export async function convexAgent(
         const text = await result.text();
         throw new Error(
           JSON.stringify({
-            error: `${provider} is temporarily overloaded`,
+            error: `${provider} is rate limiting your requests`,
             details: text,
           }),
         );
