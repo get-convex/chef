@@ -326,6 +326,33 @@ export const updateStorageState = internalMutation({
   },
 });
 
+// TODO: Implement fast-forward
+export const rewindChat = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    chatId: v.string(),
+    lastMessageRank: v.number(),
+  },
+  handler: async (ctx, args): Promise<void> => {
+    const { chatId, sessionId, lastMessageRank } = args;
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    if (!chat) {
+      throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
+    }
+    if (chat.lastMessageRank !== undefined && chat.lastMessageRank < lastMessageRank) {
+      throw new ConvexError({
+        code: 'RewindToFuture',
+        message:
+          'Cannot rewind to a future message rank, received ' +
+          lastMessageRank +
+          ' but current last message rank is ' +
+          chat.lastMessageRank,
+      });
+    }
+    ctx.db.patch(chat._id, { lastMessageRank });
+  },
+});
+
 export const maybeCleanupStaleChatHistory = internalMutation({
   args: {
     storageId: v.id('_storage'),
