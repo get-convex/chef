@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import React, { type RefCallback, useCallback, useState } from 'react';
+import React, { type ReactNode, type RefCallback, useCallback, useState } from 'react';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import { classNames } from '~/utils/classNames';
@@ -26,7 +26,7 @@ import { Spinner } from '@ui/Spinner';
 import { ModelSelector } from './ModelSelector';
 import type { ModelSelection } from '~/utils/constants';
 import { Button } from '@ui/Button';
-
+import { Callout } from '@ui/Callout';
 const TEXTAREA_MIN_HEIGHT = 76;
 
 interface BaseChatProps {
@@ -59,7 +59,7 @@ interface BaseChatProps {
   toolStatus: ToolStatus;
   messages: Message[];
   terminalInitializationOptions: TerminalInitializationOptions | undefined;
-  disableChatMessage: string | null;
+  disableChatMessage: ReactNode | string | null;
 
   // Model selection props
   modelSelection: ModelSelection;
@@ -182,6 +182,11 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       }}
                     />
                   }
+                  {disableChatMessage && (
+                    <Callout variant="upsell" className="min-w-full rounded-md">
+                      {disableChatMessage}
+                    </Callout>
+                  )}
                   <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border bg-background-primary/75 backdrop-blur-md transition-all duration-200 focus-within:border-border-selected">
                     <FilePreview
                       files={uploadedFiles}
@@ -252,11 +257,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           maxHeight: TEXTAREA_MAX_HEIGHT,
                         }}
                         placeholder={
-                          disableChatMessage
-                            ? disableChatMessage
-                            : chatStarted
-                              ? 'Request changes by sending another message...'
-                              : 'What app do you want to serve?'
+                          chatStarted
+                            ? 'Request changes by sending another message...'
+                            : 'What app do you want to serve?'
                         }
                         translate="no"
                       />

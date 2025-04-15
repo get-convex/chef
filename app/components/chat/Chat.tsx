@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import type { Message } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMessageParser, useSnapScroll, type PartCache } from '~/lib/hooks';
 import { description } from '~/lib/stores/description';
 import { chatStore } from '~/lib/stores/chatId';
@@ -29,7 +29,7 @@ import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { disabledText, getTokenUsage, noTokensText } from '~/lib/convexUsage';
+import { disabledText, getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
 import { formatDistanceStrict } from 'date-fns';
 import { atom } from 'nanostores';
 import { STATUS_MESSAGES } from './StreamingIndicator';
@@ -111,7 +111,9 @@ export const Chat = memo(
     }, []);
 
     const chatContextManager = useRef(new ChatContextManager());
-    const [disableChatMessage, setDisableChatMessage] = useState<string | null>(null);
+    const [disableChatMessage, setDisableChatMessage] = useState<
+      { type: 'ExceededQuota'; tokensUsed: number; tokensQuota: number } | { type: 'TeamDisabled' } | null
+    >(null);
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     function hasApiKeySet() {
@@ -154,9 +156,9 @@ export const Chat = memo(
         if (tokensUsed !== undefined && tokensQuota !== undefined) {
           console.log(`Convex tokens used/quota: ${tokensUsed} / ${tokensQuota}`);
           if (isTeamDisabled) {
-            setDisableChatMessage(disabledText);
+            setDisableChatMessage({ type: 'TeamDisabled' });
           } else if (tokensUsed > tokensQuota) {
-            setDisableChatMessage(noTokensText(tokensUsed, tokensQuota));
+            setDisableChatMessage({ type: 'ExceededQuota', tokensUsed, tokensQuota });
           } else {
             setDisableChatMessage(null);
           }
@@ -341,12 +343,27 @@ export const Chat = memo(
       const now = Date.now();
       const retries = retryState.get();
       if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet()) {
-        let message = 'Chef is too busy cooking right now.';
+        let message: string | ReactNode = 'Chef is too busy cooking right now.';
         if (retries.numFailures >= MAX_RETRIES) {
-          message += ' Please enter your own API key at chef.convex.dev/settings.';
+          message += ' Please enter your own API key ';
+          message = (
+            <>
+              {message}
+              <a href="https://chef.convex.dev/settings">here</a>.
+            </>
+          );
         } else {
           const remaining = formatDistanceStrict(now, retries.nextRetry);
-          message += ` Please try again in ${remaining} or enter your own API key at chef.convex.dev/settings.`;
+          message += ` Please try again in ${remaining} or enter your own API key `;
+          message = (
+            <>
+              {message}
+              <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
+                here
+              </a>
+              .
+            </>
+          );
         }
         toast.error(message);
         captureException('User tried to send message but chef is too busy');
@@ -511,7 +528,13 @@ export const Chat = memo(
           isReload,
           shouldDeployConvexFunctions: hadSuccessfulDeploy,
         }}
-        disableChatMessage={disableChatMessage}
+        disableChatMessage={
+          disableChatMessage?.type === 'ExceededQuota'
+            ? noTokensText(disableChatMessage.tokensUsed, disableChatMessage.tokensQuota, selectedTeamSlugStore.get())
+            : disableChatMessage?.type === 'TeamDisabled'
+              ? disabledText
+              : undefined
+        }
         sendMessageInProgress={sendMessageInProgress}
         modelSelection={modelSelection}
         setModelSelection={setModelSelection}
@@ -583,4 +606,34 @@ function getConvexAuthToken(convex: ConvexReactClient): string | null {
     return null;
   }
   return token;
+}
+
+function noTokensText(tokensUsed: number, tokensQuota: number, selectedTeamSlug: string | null) {
+  return (
+    <span className="max-w-prose text-pretty">
+      You've used all the tokens included with your free plan! Please{' '}
+      <a
+        href={
+          selectedTeamSlug
+            ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
+            : 'https://dashboard.convex.dev/team/settings/billing'
+        }
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-content-link hover:underline"
+      >
+        upgrade to a paid plan
+      </a>{' '}
+      or{' '}
+      <a
+        href={`https://chef.convex.dev/settings`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-content-link hover:underline"
+      >
+        add your own API key
+      </a>{' '}
+      to continue. Used {renderTokenCount(tokensUsed)} of {renderTokenCount(tokensQuota)}.
+    </span>
+  );
 }
