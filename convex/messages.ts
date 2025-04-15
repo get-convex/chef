@@ -170,6 +170,13 @@ export const get = query({
   },
 });
 
+export function getLatestChatMessageStorageState(ctx: QueryCtx, chat: Doc<'chats'>) {
+  const indexExpression = chat.lastMessageRank
+    ? (q: any) => q.eq('chatId', chat._id).eq('lastMessageRank', chat.lastMessageRank)
+    : (q: any) => q.eq('chatId', chat._id);
+  return ctx.db.query('chatMessagesStorageState').withIndex('byChatId', indexExpression).order('desc').first();
+}
+
 // This exists for compatibility with old clients
 export const getInitialMessages = mutation({
   args: {
@@ -193,11 +200,7 @@ export const getInitialMessages = mutation({
     if (!chat) {
       return null;
     }
-    const storageInfo = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .order('desc')
-      .first();
+    const storageInfo = await getLatestChatMessageStorageState(ctx, chat);
     if (storageInfo !== null) {
       // The data is stored in storage, but the client is on an old version, so crash instead of returning
       // stale data.
@@ -269,11 +272,7 @@ export const getInitialMessagesStorageInfo = internalQuery({
     if (!chat) {
       return null;
     }
-    const doc = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .order('desc')
-      .first();
+    const doc = await getLatestChatMessageStorageState(ctx, chat);
     if (!doc) {
       return null;
     }
@@ -300,11 +299,7 @@ export const updateStorageState = internalMutation({
     if (!chat) {
       throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
     }
-    const previous = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .order('desc')
-      .first();
+    const previous = await getLatestChatMessageStorageState(ctx, chat);
     if (!previous) {
       throw new Error('Chat messages storage state not found');
     }
@@ -371,11 +366,7 @@ export const handleStorageStateMigration = internalMutation({
     if (!chat) {
       throw new ConvexError({ code: 'NotFound', message: `Chat ID: ${chatId} not found` });
     }
-    const doc = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .order('desc')
-      .first();
+    const doc = await getLatestChatMessageStorageState(ctx, chat);
     if (doc) {
       throw new Error(`Chat ID: ${chat._id} Chat messages storage state already exists`);
     }
@@ -578,10 +569,11 @@ export const cleanupChatMessages = internalMutation({
   handler: async (ctx, args) => {
     const { chatId, assertStorageStateExists } = args;
     if (assertStorageStateExists) {
-      const storageState = await ctx.db
-        .query('chatMessagesStorageState')
-        .withIndex('byChatId', (q) => q.eq('chatId', chatId))
-        .first();
+      const chat = await ctx.db.get(chatId);
+      if (!chat) {
+        return;
+      }
+      const storageState = await getLatestChatMessageStorageState(ctx, chat);
       if (storageState === null) {
         throw new Error(
           'Chat messages storage state not found -- should not clean up messages from DB if they are not stored',

@@ -44,6 +44,7 @@ export default defineSchema({
     timestamp: v.string(),
     metadata: v.optional(v.any()), // TODO migration to remove this column
     snapshotId: v.optional(v.id('_storage')),
+    lastMessageRank: v.optional(v.number()),
     convexProject: v.optional(
       v.union(
         v.object({

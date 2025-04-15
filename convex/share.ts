@@ -1,6 +1,6 @@
 import { ConvexError, v } from 'convex/values';
 import { internalAction, internalMutation, mutation, query, type DatabaseReader } from './_generated/server';
-import { getChatByIdOrUrlIdEnsuringAccess, type SerializedMessage } from './messages';
+import { getChatByIdOrUrlIdEnsuringAccess, getLatestChatMessageStorageState, type SerializedMessage } from './messages';
 import { startProvisionConvexProjectHelper } from './convexProjects';
 import { internal } from './_generated/api';
 import { compressMessages } from './compressMessages';
@@ -22,10 +22,7 @@ export const create = mutation({
 
     const code = await generateUniqueCode(ctx.db);
 
-    const storageState = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .first();
+    const storageState = await getLatestChatMessageStorageState(ctx, chat);
 
     if (storageState) {
       if (storageState.storageId === null) {
