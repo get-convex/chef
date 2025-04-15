@@ -55,7 +55,7 @@ const processSampledMessages = createSampler(
     const { messages, initialMessages, parseMessages, storeMessageHistory, streamStatus } = options;
     parseMessages(messages);
 
-    if (messages.length > initialMessages.length) {
+    if (messages.length > initialMessages.length || streamStatus !== 'streaming') {
       storeMessageHistory(messages, streamStatus).catch((error) => toast.error(error.message));
     }
   },

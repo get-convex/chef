@@ -220,7 +220,7 @@ function getLastCompletePart(
       return getPreceedingPart(messages, lastPartIndices);
     }
   }
-  if (streamStatus === 'ready') {
+  if (streamStatus !== 'streaming') {
     return { messageIndex: lastPartIndices.messageIndex, partIndex: lastPartIndices.partIndex };
   } else {
     return getPreceedingPart(messages, lastPartIndices);
