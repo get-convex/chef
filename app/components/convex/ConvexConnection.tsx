@@ -113,9 +113,7 @@ function ConnectedDialogContent({
           View in Convex Dashboard
           <ExternalLinkIcon />
         </a>
-        {projectInfo.warningMessage && (
-          <p className="text-sm text-content-secondary">{projectInfo.warningMessage}</p>
-        )}
+        {projectInfo.warningMessage && <p className="text-sm text-content-secondary">{projectInfo.warningMessage}</p>}
       </div>
       <button
         onClick={handleDisconnect}

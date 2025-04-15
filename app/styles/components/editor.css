@@ -70,10 +70,7 @@
 
   --cm-search-button-textColor: var(--bolt-elements-editor-search-button-textColor, var(--content-secondary));
 
-  --cm-search-button-textColorHover: var(
-    --bolt-elements-editor-search-button-textColorHover,
-    var(--content-primary)
-  );
+  --cm-search-button-textColorHover: var(--bolt-elements-editor-search-button-textColorHover, var(--content-primary));
 
   --cm-search-button-borderColor: var(--bolt-elements-editor-search-button-borderColor, transparent);
   --cm-search-button-borderColorHover: var(--bolt-elements-editor-search-button-borderColorHover, transparent);
@@ -102,10 +99,7 @@
     theme('colors.gray.500/0.2')
   );
 
-  --cm-tooltip-textColorSelected: var(
-    --bolt-elements-editor-tooltip-textColorSelected,
-    var(--content-primary)
-  );
+  --cm-tooltip-textColorSelected: var(--bolt-elements-editor-tooltip-textColorSelected, var(--content-primary));
 
   --cm-tooltip-borderColor: var(--bolt-elements-editor-tooltip-borderColor, var(--bolt-elements-borderColor));
 

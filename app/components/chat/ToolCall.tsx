@@ -89,9 +89,7 @@ export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => 
               disabled={parsed.state === 'partial-call'}
               onClick={toggleAction}
             >
-              <div className="p-4 text-content-primary">
-                {showAction ? <CaretUpIcon /> : <CaretDownIcon />}
-              </div>
+              <div className="p-4 text-content-primary">{showAction ? <CaretUpIcon /> : <CaretDownIcon />}</div>
             </motion.button>
           )}
         </AnimatePresence>
