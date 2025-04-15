@@ -37,6 +37,13 @@ export function TeamSelector({
       }))}
       className="w-fit"
       buttonClasses="w-fit"
+      optionsHeader={
+        <div className="flex flex-col gap-0.5 px-2">
+          <h5>Select Team</h5>
+          <p className="text-xs text-content-secondary">Your Convex project will be created in the selected team.</p>
+        </div>
+      }
+      disableSearch
       selectedOption={selectedTeam?.slug}
       placeholder="Select a team..."
       setSelectedOption={(option) => setSelectedTeamSlug(option ?? '')}

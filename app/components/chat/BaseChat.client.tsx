@@ -207,6 +207,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         ref={textareaRef}
                         className={classNames(
                           'w-full pl-4 pt-4 pr-16 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
+                          'focus:ring-0',
                           'disabled:opacity-50 disabled:cursor-not-allowed',
                         )}
                         disabled={disableChatMessage !== null || maintenanceMode}
