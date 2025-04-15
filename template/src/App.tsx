@@ -2,7 +2,7 @@ import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
 import { SignOutButton } from "./SignOutButton";
-import { Toaster } from "./components/ui/toaster";
+import { Toaster } from "sonner";
 
 export default function App() {
   return (

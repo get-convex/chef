@@ -1,7 +1,7 @@
 "use client";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
-import { toast } from "./hooks/use-toast";
+import { toast } from "sonner";
 
 export function SignInForm() {
   const { signIn } = useAuthActions();
@@ -22,7 +22,7 @@ export function SignInForm() {
               flow === "signIn"
                 ? "Could not sign in, did you mean to sign up?"
                 : "Could not sign up, did you mean to sign in?";
-            toast({ title: toastTitle, variant: "destructive" });
+            toast.error(toastTitle);
             setSubmitting(false);
           });
         }}
