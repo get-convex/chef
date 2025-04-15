@@ -129,10 +129,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
             <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
               {!chatStarted && (
                 <div id="intro" className="mx-auto mt-[16vh] max-w-chat px-4 text-center lg:px-0">
-                  <h1 className="mb-4 animate-fadeIn font-display text-4xl font-black tracking-tight text-bolt-elements-textPrimary lg:text-6xl">
+                  <h1 className="mb-4 animate-fadeIn font-display text-4xl font-black tracking-tight text-content-primary lg:text-6xl">
                     Now you&rsquo;re cooking
                   </h1>
-                  <p className="mb-8 animate-fadeIn text-balance font-display text-xl font-medium text-bolt-elements-textSecondary [animation-delay:200ms] [animation-fill-mode:backwards] lg:text-2xl">
+                  <p className="mb-8 animate-fadeIn text-balance font-display text-xl font-medium text-content-secondary [animation-delay:200ms] [animation-fill-mode:backwards] lg:text-2xl">
                     Generate and launch realtime full‑stack apps you never thought possible
                   </p>
                 </div>
@@ -342,18 +342,18 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 <p>
                   <a
                     href="https://www.convex.dev/ai-platforms"
-                    className="font-display text-sm font-medium text-bolt-elements-textTertiary transition-colors hover:text-bolt-elements-textPrimary"
+                    className="font-display text-sm font-medium text-content-tertiary transition-colors hover:text-content-primary"
                   >
                     <span>Building your own prompt-to-app platform? Use Convex.</span>
                   </a>
                 </p>
               </div>
-              <div className="flex items-end gap-3 font-display text-lg font-medium text-bolt-elements-textTertiary">
+              <div className="flex items-end gap-3 font-display text-lg font-medium text-content-tertiary">
                 <p className="flex items-center">
                   Made&nbsp;by{' '}
                   <a
                     href="https://www.convex.dev"
-                    className="transition-colors hover:text-bolt-elements-textPrimary"
+                    className="transition-colors hover:text-content-primary"
                     aria-label="Convex"
                   >
                     <svg
@@ -395,12 +395,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     </svg>
                   </a>
                 </p>
-                <hr className="h-8 w-0.5 bg-bolt-elements-textTertiary opacity-20" />
+                <hr className="h-8 w-0.5 bg-content-tertiary opacity-20" />
                 <p className="flex items-center">
                   Powered&nbsp;by{' '}
                   <a
                     href="https://bolt.new"
-                    className="contents transition-colors hover:text-bolt-elements-textPrimary"
+                    className="contents transition-colors hover:text-content-primary"
                     aria-label="Bolt"
                   >
                     <svg

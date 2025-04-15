@@ -24,7 +24,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
         'border-bolt-elements-borderColor': chat.started,
       })}
     >
-      <div className="z-logo flex cursor-pointer items-center gap-4 text-bolt-elements-textPrimary">
+      <div className="z-logo flex cursor-pointer items-center gap-4 text-content-primary">
         {showSidebarIcon && <HamburgerMenuIcon />}
         <a href="/" className="flex flex-col text-2xl font-semibold leading-tight">
           <div className="flex items-center gap-2 font-display font-bold">
@@ -50,7 +50,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
       </div>
       {chat.started && (
         <>
-          <span className="flex-1 truncate px-4 text-center text-bolt-elements-textPrimary">
+          <span className="flex-1 truncate px-4 text-center text-content-primary">
             <ClientOnly>{() => <ChatDescription />}</ClientOnly>
           </span>
           <ClientOnly>

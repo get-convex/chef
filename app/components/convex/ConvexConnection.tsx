@@ -30,7 +30,7 @@ export function ConvexConnection() {
         <button
           onClick={() => setIsOpen(true)}
           className={classNames(
-            'flex items-center gap-2 p-1.5 w-full rounded-md text-left text-bolt-elements-textPrimary bg-bolt-elements-button-secondary-background',
+            'flex items-center gap-2 p-1.5 w-full rounded-md text-left text-content-primary bg-bolt-elements-button-secondary-background',
             'hover:bg-bolt-elements-item-backgroundAccent/90',
           )}
         >
@@ -103,10 +103,10 @@ function ConnectedDialogContent({
   return (
     <div className="mx-3 flex items-center justify-between rounded-lg">
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-bolt-elements-textPrimary">Project: {projectInfo.projectSlug}</p>
-        <p className="text-sm font-medium text-bolt-elements-textPrimary">Team: {projectInfo.teamSlug}</p>
+        <p className="text-sm font-medium text-content-primary">Project: {projectInfo.projectSlug}</p>
+        <p className="text-sm font-medium text-content-primary">Team: {projectInfo.teamSlug}</p>
         <a
-          className="flex items-center gap-1 text-sm text-bolt-elements-textSecondary hover:underline"
+          className="flex items-center gap-1 text-sm text-content-secondary hover:underline"
           href={`https://dashboard.convex.dev/d/${projectInfo.deploymentName}`}
           target="_blank"
         >
@@ -114,7 +114,7 @@ function ConnectedDialogContent({
           <ExternalLinkIcon />
         </a>
         {projectInfo.warningMessage && (
-          <p className="text-sm text-bolt-elements-textSecondary">{projectInfo.warningMessage}</p>
+          <p className="text-sm text-content-secondary">{projectInfo.warningMessage}</p>
         )}
       </div>
       <button
@@ -132,7 +132,7 @@ function ErrorDialogContent({ errorMessage }: { errorMessage: string }) {
   return (
     <div className="mx-3 flex items-center justify-between rounded-lg">
       <div className="flex flex-col gap-4">
-        <p className="text-sm font-medium text-bolt-elements-textPrimary">Error: {errorMessage}</p>
+        <p className="text-sm font-medium text-content-primary">Error: {errorMessage}</p>
         <div className="flex justify-end gap-2">{sessionId ? <ConvexConnectButton /> : null}</div>
       </div>
     </div>

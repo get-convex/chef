@@ -79,8 +79,8 @@ export const Artifact = memo(({ partId }: ArtifactProps) => {
             </>
           )}
           <div className="w-full p-3.5 px-5 text-left">
-            <div className="w-full text-sm font-medium leading-5 text-bolt-elements-textPrimary">{artifact?.title}</div>
-            <div className="mt-0.5 w-full text-xs text-bolt-elements-textSecondary">Click to open Workbench</div>
+            <div className="w-full text-sm font-medium leading-5 text-content-primary">{artifact?.title}</div>
+            <div className="mt-0.5 w-full text-xs text-content-secondary">Click to open Workbench</div>
           </div>
         </button>
         <div className="w-px bg-bolt-elements-artifacts-borderColor" />
@@ -194,7 +194,7 @@ const ActionList = memo(({ actions }: ActionListProps) => {
 function getIconColor(status: ActionState['status']) {
   switch (status) {
     case 'pending': {
-      return 'text-bolt-elements-textTertiary';
+      return 'text-content-tertiary';
     }
     case 'running': {
       return 'text-bolt-elements-loader-progress';
@@ -203,7 +203,7 @@ function getIconColor(status: ActionState['status']) {
       return 'text-bolt-elements-icon-success';
     }
     case 'aborted': {
-      return 'text-bolt-elements-textSecondary';
+      return 'text-content-secondary';
     }
     case 'failed': {
       return 'text-bolt-elements-icon-error';

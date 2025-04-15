@@ -70,7 +70,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
             })
           : null}
         {isStreaming && (
-          <div className="mt-4 flex w-full justify-center text-bolt-elements-textSecondary">
+          <div className="mt-4 flex w-full justify-center text-content-secondary">
             <SpinnerThreeDots className="size-9" />
           </div>
         )}

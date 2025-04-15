@@ -221,7 +221,7 @@ export const Menu = memo(() => {
                   <>
                     <p>
                       You are about to delete{' '}
-                      <span className="font-medium text-bolt-elements-textPrimary">
+                      <span className="font-medium text-content-primary">
                         {dialogContent?.item.description || 'New chat...'}
                       </span>
                     </p>
@@ -234,7 +234,7 @@ export const Menu = memo(() => {
                           onChange={(e) => setShouldDeleteConvexProject(e.target.checked)}
                           className="rounded border-bolt-elements-borderColor text-bolt-elements-button-primary-background focus:ring-bolt-elements-borderColorActive"
                         />
-                        <label htmlFor="delete-convex-project" className="text-pretty text-bolt-elements-textSecondary">
+                        <label htmlFor="delete-convex-project" className="text-pretty text-content-secondary">
                           Also delete the associated Convex project (
                           <a
                             href={`https://dashboard.convex.dev/p/${convexProjectInfo.projectSlug}`}

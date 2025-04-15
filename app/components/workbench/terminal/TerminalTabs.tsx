@@ -95,8 +95,8 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
                   className={classNames(
                     'flex items-center text-sm cursor-pointer gap-1.5 px-3 py-2 h-full whitespace-nowrap rounded-full',
                     {
-                      'bg-bolt-elements-terminals-buttonBackground text-bolt-elements-textPrimary': isActive,
-                      'bg-bolt-elements-background-depth-2 text-bolt-elements-textSecondary hover:bg-bolt-elements-terminals-buttonBackground':
+                      'bg-bolt-elements-terminals-buttonBackground text-content-primary': isActive,
+                      'bg-bolt-elements-background-depth-2 text-content-secondary hover:bg-bolt-elements-terminals-buttonBackground':
                         !isActive,
                     },
                   )}

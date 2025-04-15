@@ -144,7 +144,7 @@ function OptInsScreen() {
     return (
       <div className="flex size-full flex-col items-center justify-center">
         <div className="text-2xl font-bold">Finish signing up for Convex on the dashboard!</div>
-        <div className="text-sm text-bolt-elements-textSecondary">
+        <div className="text-sm text-content-secondary">
           Go to the{' '}
           <Link
             className="text-bolt-elements-button-primary-text underline"
@@ -164,9 +164,7 @@ function OptInsScreen() {
     return (
       <div className="flex size-full flex-col items-center justify-center">
         <div className="text-2xl font-bold">Done logging in!</div>
-        <div className="text-sm text-bolt-elements-textSecondary">
-          You can now close this window and return to your project.
-        </div>
+        <div className="text-sm text-content-secondary">You can now close this window and return to your project.</div>
       </div>
     );
   }
@@ -174,12 +172,12 @@ function OptInsScreen() {
     // Note: As of 2025-04-11, we have a single opt in type, so we're hardcoding the UI for that.
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4">
-        <div className="text-center text-lg text-bolt-elements-textPrimary">
+        <div className="text-center text-lg text-content-primary">
           Welcome to Convex! We need you to take a look at these before we continue.
         </div>
         <div className="flex items-center gap-2">
           <input type="checkbox" checked={isChecked} onChange={(e) => setIsChecked(e.target.checked)} />
-          <div className="text-sm text-bolt-elements-textPrimary">
+          <div className="text-sm text-content-primary">
             <span>
               I've read and accept the{' '}
               <a
@@ -196,7 +194,7 @@ function OptInsScreen() {
         </div>
         <button
           className={classNames(
-            'flex items-center gap-2 p-1.5 rounded-md text-left text-bolt-elements-textPrimary bg-bolt-elements-button-primary',
+            'flex items-center gap-2 p-1.5 rounded-md text-left text-content-primary bg-bolt-elements-button-primary',
             'hover:bg-bolt-elements-button-primaryHover',
             !isChecked ? 'opacity-50 cursor-not-allowed' : '',
           )}

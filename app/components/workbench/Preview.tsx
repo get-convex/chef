@@ -319,12 +319,12 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
                 allowFullScreen={true}
               />
             ) : (
-              <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
+              <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-content-primary">
                 <Spinner />
               </div>
             )
           ) : (
-            <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
+            <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-content-primary">
               No preview available
             </div>
           )}

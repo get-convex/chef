@@ -52,18 +52,16 @@ export function UsageCard() {
     <div className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-sm">
       <div className="p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-bolt-elements-textPrimary">Chef Usage</h2>
+          <h2 className="text-xl font-semibold text-content-primary">Chef Usage</h2>
           <div className="ml-auto">
             <TeamSelector selectedTeamSlug={selectedTeamSlug} setSelectedTeamSlug={setSelectedTeamSlug} />
           </div>
         </div>
-        <p className="mb-1 text-sm text-bolt-elements-textSecondary">
-          Your Convex team comes with tokens included for Chef.
-        </p>
-        <p className="mb-1 text-sm text-bolt-elements-textSecondary">
+        <p className="mb-1 text-sm text-content-secondary">Your Convex team comes with tokens included for Chef.</p>
+        <p className="mb-1 text-sm text-content-secondary">
           On paid Convex subscriptions, additional usage will be subject to metered billing.
         </p>
-        <p className="mb-4 text-sm text-bolt-elements-textSecondary">
+        <p className="mb-4 text-sm text-content-secondary">
           On free plans, Chef will not be usable once you hit the limit for the current billing period.
         </p>
         <div className="space-y-4">
@@ -78,13 +76,13 @@ export function UsageCard() {
                   className="h-4 rounded-full bg-blue-500 transition-all duration-300"
                   style={{ width: tokenUsage.tokensQuota ? `${Math.min(100, usagePercentage)}%` : '0%' }}
                 />
-                <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium text-bolt-elements-textPrimary">
+                <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium text-content-primary">
                   {Math.round(usagePercentage)}%
                 </div>
               </div>
             )}
           </div>
-          <p className="text-sm text-bolt-elements-textSecondary">
+          <p className="text-sm text-content-secondary">
             {isLoadingUsage ? (
               <span className="inline-flex gap-1">
                 <span className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />

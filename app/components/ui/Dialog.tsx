@@ -36,7 +36,7 @@ export const DialogButton = memo(({ type, children, onClick, disabled }: DialogB
 export const DialogTitle = memo(({ className, children, ...props }: RadixDialog.DialogTitleProps) => {
   return (
     <RadixDialog.Title
-      className={classNames('text-lg font-medium text-bolt-elements-textPrimary', 'flex items-center gap-2', className)}
+      className={classNames('text-lg font-medium text-content-primary', 'flex items-center gap-2', className)}
       {...props}
     >
       {children}
@@ -46,10 +46,7 @@ export const DialogTitle = memo(({ className, children, ...props }: RadixDialog.
 
 export const DialogDescription = memo(({ className, children, ...props }: RadixDialog.DialogDescriptionProps) => {
   return (
-    <RadixDialog.Description
-      className={classNames('text-sm text-bolt-elements-textSecondary', 'mt-1', className)}
-      {...props}
-    >
+    <RadixDialog.Description className={classNames('text-sm text-content-secondary', 'mt-1', className)} {...props}>
       {children}
     </RadixDialog.Description>
   );
@@ -132,7 +129,7 @@ export const Dialog = memo(
                 <RadixDialog.Close asChild onClick={onClose}>
                   <IconButton
                     icon={<Cross2Icon />}
-                    className="absolute right-3 top-3 text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary"
+                    className="absolute right-3 top-3 text-content-secondary hover:text-content-primary"
                   />
                 </RadixDialog.Close>
               )}

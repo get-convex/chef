@@ -52,7 +52,7 @@ export const PortDropdown = memo(
         <IconButton icon={<Link2Icon />} onClick={() => setIsDropdownOpen(!isDropdownOpen)} />
         {isDropdownOpen && (
           <div className="dropdown-animation absolute right-0 mt-2 min-w-[140px] rounded border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 shadow-sm">
-            <div className="border-b border-bolt-elements-borderColor px-4 py-2 text-sm font-semibold text-bolt-elements-textPrimary">
+            <div className="border-b border-bolt-elements-borderColor px-4 py-2 text-sm font-semibold text-content-primary">
               Ports
             </div>
             {sortedPreviews.map((preview) => (

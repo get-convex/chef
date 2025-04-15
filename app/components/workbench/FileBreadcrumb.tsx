@@ -92,8 +92,8 @@ export const FileBreadcrumb = memo<FileBreadcrumbProps>(({ files, pathSegments =
                     segmentRefs.current[index] = ref;
                   }}
                   className={classNames('flex items-center gap-1.5 cursor-pointer shrink-0', {
-                    'text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary': !isActive,
-                    'text-bolt-elements-textPrimary underline': isActive,
+                    'text-content-tertiary hover:text-content-primary': !isActive,
+                    'text-content-primary underline': isActive,
                     'pr-4': isLast,
                   })}
                   onClick={() => handleSegmentClick(index)}

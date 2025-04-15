@@ -65,9 +65,6 @@ html.light {
   --cvx-background-warning: rgb(250, 228, 171);
   --cvx-background-error: rgb(252, 215, 203);
   --cvx-background-error-secondary: rgb(255, 202, 193);
-  --cvx-content-primary: rgb(42, 40, 37);
-  --cvx-content-secondary: rgb(120, 118, 113);
-  --cvx-content-tertiary: rgb(120, 118, 113);
   --cvx-content-accent: rgb(48, 106, 207);
   --cvx-content-success: rgb(34, 137, 9);
   --cvx-content-warning: rgb(109, 82, 23);
@@ -90,9 +87,6 @@ html.dark {
   --cvx-background-warning: rgb(109, 82, 23);
   --cvx-background-error: rgb(107, 33, 31);
   --cvx-background-error-secondary: rgb(168, 21, 21);
-  --cvx-content-primary: rgb(255, 255, 255);
-  --cvx-content-secondary: rgb(185, 177, 170);
-  --cvx-content-tertiary: rgb(143, 135, 128);
   --cvx-content-accent: rgb(99, 168, 248);
   --cvx-content-success: rgb(180, 236, 146);
   --cvx-content-warning: rgb(230, 226, 168);
@@ -110,10 +104,6 @@ html.dark {
 
   --bolt-elements-bg-depth-1: var(--cvx-background-secondary);
   --bolt-elements-bg-depth-2: var(--cvx-background-primary);
-
-  --bolt-elements-textPrimary: var(--cvx-content-primary);
-  --bolt-elements-textSecondary: var(--cvx-content-secondary);
-  --bolt-elements-textTertiary: var(--cvx-content-tertiary);
 
   --bolt-elements-button-primary-background: var(--cvx-accent);
   --bolt-elements-button-primary-backgroundHover: color-mix(in srgb, var(--cvx-accent) 80%, transparent);
@@ -167,7 +157,7 @@ html.light {
   --bolt-elements-messages-inlineCode-background: theme('colors.gray.200');
   --bolt-elements-messages-inlineCode-text: theme('colors.gray.800');
   --bolt-elements-artifacts-inlineCode-background: theme('colors.gray.100');
-  --bolt-elements-artifacts-inlineCode-text: var(--bolt-elements-textPrimary);
+  --bolt-elements-artifacts-inlineCode-text: var(--content-primary);
 
   --bolt-elements-item-contentDefault: theme('colors.gray.900/0.5');
   --bolt-elements-item-contentActive: theme('colors.gray.950');
@@ -214,7 +204,7 @@ html.dark {
   --bolt-elements-code-text: theme('colors.white');
   --bolt-elements-messages-code-background: theme('colors.gray.900');
   --bolt-elements-messages-inlineCode-background: theme('colors.gray.700');
-  --bolt-elements-messages-inlineCode-text: var(--bolt-elements-textPrimary);
+  --bolt-elements-messages-inlineCode-text: var(--content-primary);
   --bolt-elements-artifacts-inlineCode-background: theme('colors.gray.800');
   --bolt-elements-artifacts-inlineCode-text: theme('colors.white');
 
