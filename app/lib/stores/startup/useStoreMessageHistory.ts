@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import type { Message } from '@ai-sdk/react';
 import { useConvex } from 'convex/react';
 import { api } from '@convex/_generated/api';
@@ -12,13 +12,10 @@ import { toast } from 'sonner';
 
 export function useStoreMessageHistory(chatId: string, initialMessages: SerializedMessage[] | undefined) {
   const convex = useConvex();
-  const [persistedState, setPersistedState] = useState<{
-    lastMessageRank: number;
-    partIndex: number;
-  }>({
-    lastMessageRank: -1,
-    partIndex: 0,
-  });
+  const lastSeenMessageRank = useRef(-1);
+  const lastSeenPartIndex = useRef(-1);
+  const lastPersistedMessageRank = useRef(-1);
+  const lastPersistedPartIndex = useRef(-1);
   const persistInProgress = useRef(false);
   const siteUrl = getConvexSiteUrl();
   useEffect(() => {
@@ -28,7 +25,11 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       };
     }
     const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-      if (persistInProgress.current) {
+      if (
+        persistInProgress.current ||
+        lastSeenMessageRank.current !== lastPersistedMessageRank.current ||
+        lastSeenPartIndex.current !== lastPersistedPartIndex.current
+      ) {
         // Some browsers require both preventDefault and setting returnValue
         e.preventDefault();
         e.returnValue = '';
@@ -42,11 +43,6 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
     };
   }, []);
 
-  // We're not using the identity of useStoreMessageHistory to trigger anything
-  // so no need return a new one when persistedState changes.
-  const persistedStateRef = useRef(persistedState);
-  persistedStateRef.current = persistedState;
-
   return useCallback(
     async (messages: Message[], streamStatus: 'streaming' | 'submitted' | 'ready' | 'error') => {
       if (initialMessages === undefined) {
@@ -55,12 +51,21 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       if (messages.length === 0) {
         return;
       }
+      lastSeenMessageRank.current = messages.length - 1;
+      lastSeenPartIndex.current = (messages[messages.length - 1].parts?.length ?? 0) - 1;
       if (persistInProgress.current) {
         return;
       }
 
       const sessionId = await waitForConvexSessionId('useStoreMessageHistory');
-      const updateResult = shouldUpdateMessages({ messages, persisted: persistedStateRef.current, streamStatus });
+      const updateResult = shouldUpdateMessages({
+        messages,
+        persisted: {
+          lastMessageRank: lastPersistedMessageRank.current,
+          partIndex: lastPersistedPartIndex.current,
+        },
+        streamStatus,
+      });
       if (updateResult.kind === 'noUpdate') {
         return;
       }
@@ -103,7 +108,8 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
         toast.error('Failed to store message history');
         return;
       }
-      setPersistedState(updateResult);
+      lastPersistedMessageRank.current = updateResult.lastMessageRank;
+      lastPersistedPartIndex.current = updateResult.partIndex;
     },
     [convex, chatId, initialMessages, persistInProgress],
   );
