@@ -48,7 +48,7 @@ export function SignInForm() {
           <span className="mx-4 text-slate-400 ">or</span>
           <hr className="my-4 grow" />
         </div>
-        <button className="auth-button" onClick={() => signIn("anonymous")}>
+        <button className="auth-button" onClick={() => void signIn("anonymous")}>
           Sign in anonymously
         </button>
     </div>
