@@ -445,7 +445,7 @@ var require_web_incoming = __commonJS({
     var nativeAgents = { http: httpNative, https: httpsNative };
     module2.exports = {
       /**
-       * Sets `content-length` to '0' if request is of DELETE type.
+       * Sets `content-length` to "0" if request is of DELETE type.
        *
        * @param {ClientRequest} Req Request object
        * @param {IncomingMessage} Res Response object
@@ -649,7 +649,7 @@ var require_ws_incoming = __commonJS({
               head2.push(key + ": " + value[i]);
             }
             return head2;
-          }, [line]).join("\r\n") + "\r\n\r\n";
+          }, [line]).join(String.fromCharCode(13, 10)) + String.fromCharCode(13, 10, 13, 10);
         };
         common.setupSocket(socket);
         if (head && head.length) socket.unshift(head);
@@ -836,19 +836,11 @@ var require_http_proxy3 = __commonJS({
 // proxy.cjs
 var sourcePort = Number(process.argv[2]);
 var targetPort = Number(process.argv[3]);
-console.log({ sourcePort, targetPort });
 var http = require("http");
 var httpProxy = require_http_proxy3();
 var proxy = httpProxy.createProxyServer({});
 proxy.on("error", function(err, req, res) {
-  console.error("Proxy error:", {
-    error: err.message,
-    stack: err.stack,
-    url: req?.url,
-    method: req?.method,
-    headers: req?.headers,
-    code: err.code
-  });
+  console.error("Proxy error:", err);
   if (res.writeHead && !res.headersSent) {
     res.writeHead(502);
   }
@@ -860,24 +852,7 @@ var server = http.createServer(function(req, res) {
   proxy.web(req, res, { target: `http://localhost:${sourcePort}` });
 });
 server.on("upgrade", function(req, socket, head) {
-  console.log("WebSocket upgrade request:", {
-    url: req.url,
-    headers: req.headers,
-    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-    sourcePort,
-    targetPort
-  });
-  socket.on("error", (err) => {
-    console.error("WebSocket socket error:", {
-      error: err.message,
-      stack: err.stack,
-      code: err.code,
-      url: req.url
-    });
-  });
-  proxy.ws(req, socket, head, {
-    target: `ws://localhost:${sourcePort}`
-  });
+  proxy.ws(req, socket, head, { target: `ws://localhost:${sourcePort}` });
 });
 server.listen(targetPort, () => {
   console.log(`Starting proxy server: proxying ${targetPort} \u2192 ${sourcePort}`);

@@ -26,3 +26,14 @@ next to test: can I get this working again?
 What was previously working was
 creating a file and running it.
 The file was the big thing we got by bundling.
+
+tom/fix-hmr doesn't work
+tom/hmr-works works
+
+1. try to write the script, is it getting processed weird?
+2. try the old script, would it work on the new branch?
+
+Huh, writing the same script does not work.
+
+I can't get the old working script into a -e, that's what I
+was trying to do last night.

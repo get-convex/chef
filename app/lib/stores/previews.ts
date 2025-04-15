@@ -97,18 +97,19 @@ export class PreviewsStore {
 
     // Start the HTTP + HMR WebSocket proxy
     const webcontainer = await this.#webcontainer;
-    let proxySource = PROXY_SERVER_SOURCE.replace(
-      '"use strict";',
-      `"use strict";
-process.argv[2] = ${JSON.stringify(sourcePort.toString())};
-process.argv[3] = ${JSON.stringify(targetPort.toString())};
-`,
-    );
 
-    // WebContainer Node.js has trouble with this syntax
-    proxySource = proxySource.replace(`replace(/\\/+/g,`, `replace((new RegExp(String.fromCharCode(92) + '/+', 'g')),`);
-
-    const proxyProcess = await webcontainer.spawn('node', ['-e', proxySource]);
+    const proxyScriptLocation = '/tmp/previewProxy.cjs';
+    //await webcontainer.fs.writeFile(proxyScriptLocation, PROXY_SERVER_SOURCE);
+    const writeProxyProcess = await webcontainer.spawn('sh', [
+      '-c',
+      `echo -n '${PROXY_SERVER_SOURCE}' > ${proxyScriptLocation}`,
+    ]);
+    await writeProxyProcess.exit;
+    const proxyProcess = await webcontainer.spawn('node', [
+      proxyScriptLocation,
+      sourcePort.toString(),
+      targetPort.toString(),
+    ]);
     console.log('starting proxy process');
 
     proxyState.stop = () => {
