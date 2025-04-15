@@ -133,7 +133,7 @@ function openArtifactInWorkbench(filePath: RelativePath) {
   if (workbenchStore.currentView.get() !== 'code') {
     workbenchStore.currentView.set('code');
   }
-
+  workbenchStore.resumeFollowingStreamedCode();
   workbenchStore.setSelectedFile(getAbsolutePath(filePath));
 }
 

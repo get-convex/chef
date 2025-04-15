@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import {
   type OnChangeCallback as OnEditorChange,
   type OnScrollCallback as OnEditorScroll,
+  type OnWheelCallback as OnEditorWheel,
 } from '~/components/editor/codemirror/CodeMirrorEditor';
 import { IconButton } from '~/components/ui/IconButton';
 import { PanelHeaderButton } from '~/components/ui/PanelHeaderButton';
@@ -105,6 +106,11 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
 
   const onEditorScroll = useCallback<OnEditorScroll>((position) => {
     workbenchStore.setCurrentDocumentScrollPosition(position);
+  }, []);
+
+  const onEditorWheel = useCallback<OnEditorWheel>(() => {
+    console.log('wheeeeeel!');
+    workbenchStore.stopFollowingStreamedCode();
   }, []);
 
   const onFileSelect = useCallback((filePath: string | undefined) => {
@@ -239,6 +245,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                       fileHistory={{}}
                       onFileSelect={onFileSelect}
                       onEditorScroll={onEditorScroll}
+                      onEditorWheel={onEditorWheel}
                       onEditorChange={onEditorChange}
                       onFileSave={onFileSave}
                       onFileReset={onFileReset}

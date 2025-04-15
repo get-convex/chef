@@ -62,6 +62,7 @@ interface EditorUpdate {
 
 export type OnChangeCallback = (update: EditorUpdate) => void;
 export type OnScrollCallback = (position: ScrollPosition) => void;
+export type OnWheelCallback = () => void;
 export type OnSaveCallback = () => void;
 
 interface Props {
@@ -75,6 +76,7 @@ interface Props {
   autoFocusOnDocumentChange?: boolean;
   onChange?: OnChangeCallback;
   onScroll?: OnScrollCallback;
+  onWheel?: OnWheelCallback;
   onSave?: OnSaveCallback;
   className?: string;
   settings?: EditorSettings;
@@ -131,6 +133,7 @@ export const CodeMirrorEditor = memo(
     editable = true,
     onScroll,
     onChange,
+    onWheel,
     onSave,
     scrollToDocAppend,
     theme,
@@ -147,6 +150,7 @@ export const CodeMirrorEditor = memo(
     const docRef = useRef<EditorDocument>();
     const editorStatesRef = useRef<EditorStates>();
     const onScrollRef = useRef(onScroll);
+    const onWheelRef = useRef(onWheel);
     const onChangeRef = useRef(onChange);
     const onSaveRef = useRef(onSave);
 
@@ -156,6 +160,7 @@ export const CodeMirrorEditor = memo(
      */
     useEffect(() => {
       onScrollRef.current = onScroll;
+      onWheelRef.current = onWheel;
       onChangeRef.current = onChange;
       onSaveRef.current = onSave;
       docRef.current = doc;
@@ -220,7 +225,7 @@ export const CodeMirrorEditor = memo(
       const theme = themeRef.current!;
 
       if (!doc) {
-        const state = newEditorState('', theme, settings, onScrollRef, debounceScroll, onSaveRef, [
+        const state = newEditorState('', theme, settings, onScrollRef, onWheelRef, debounceScroll, onSaveRef, [
           languageCompartment.of([]),
         ]);
 
@@ -242,7 +247,7 @@ export const CodeMirrorEditor = memo(
       let state = editorStates.get(doc.filePath);
 
       if (!state) {
-        state = newEditorState(doc.value, theme, settings, onScrollRef, debounceScroll, onSaveRef, [
+        state = newEditorState(doc.value, theme, settings, onScrollRef, onWheelRef, debounceScroll, onSaveRef, [
           languageCompartment.of([]),
         ]);
 
@@ -266,7 +271,7 @@ export const CodeMirrorEditor = memo(
         autoFocusOnDocumentChange,
         doc as TextEditorDocument,
         isFileChange,
-        scrollToDocAppend,
+        scrollToDocAppend && simpleAppend,
       );
     }, [doc?.value, editable, doc?.filePath, autoFocusOnDocumentChange, scrollToDocAppend]);
 
@@ -286,6 +291,7 @@ function newEditorState(
   theme: Theme,
   settings: EditorSettings | undefined,
   onScrollRef: MutableRefObject<OnScrollCallback | undefined>,
+  onWheelRef: MutableRefObject<OnWheelCallback | undefined>,
   debounceScroll: number,
   onFileSaveRef: MutableRefObject<OnSaveCallback | undefined>,
   extensions: Extension[],
@@ -301,6 +307,12 @@ function newEditorState(
 
           onScrollRef.current?.({ left: view.scrollDOM.scrollLeft, top: view.scrollDOM.scrollTop });
         }, debounceScroll),
+        wheel: () => {
+          // Wheel is not debounced! So don't do anything intensive.
+          // 'wheel' events are probably being captured somewhere, they don't bubble up to scrollDOM.
+          // Just accept anything.
+          onWheelRef.current?.();
+        },
         keydown: (event, view) => {
           if (view.state.readOnly) {
             view.dispatch({
@@ -388,7 +400,7 @@ function setEditorDocument(
   autoFocus: boolean,
   doc: TextEditorDocument,
   isFileChange: boolean,
-  scrollToDocAppend: boolean,
+  scrollToBottom: boolean,
 ) {
   if (doc.value !== view.state.doc.toString()) {
     view.dispatch({
@@ -433,20 +445,18 @@ function setEditorDocument(
           }
         }
 
-        console.log('scroll restoration for doc change', newTop);
         view.scrollDOM.scrollTo(newLeft, newTop);
       });
     }
-    if (scrollToDocAppend) {
+    if (scrollToBottom) {
       requestAnimationFrame(() => {
         const currentScrollTop = view.scrollDOM.scrollTop;
         const pagesOffscreen =
           (view.scrollDOM.scrollHeight - currentScrollTop - view.scrollDOM.offsetHeight) / view.scrollDOM.offsetHeight;
-        console.log('currently', pagesOffscreen, 'pagesOffscreen');
 
         // There's ~.97 of a viewport of blank space in the document below the last line from the scrollPastEnd() extension.
-        if (pagesOffscreen > 1) {
-          const desiredPagesOffscreen = 0.4;
+        if (pagesOffscreen > 0.9) {
+          const desiredPagesOffscreen = 0.5;
           view.scrollDOM.scrollTo(
             0,
             view.scrollDOM.scrollHeight - view.scrollDOM.offsetHeight * (desiredPagesOffscreen + 1),

@@ -105,6 +105,15 @@ export class WorkbenchStore {
   get followingStreamedCode() {
     return this.#editorStore.followingStreamedCode;
   }
+  resumeFollowingStreamedCode() {
+    this.#editorStore.followingStreamedCode.set(true);
+  }
+  stopFollowingStreamedCode() {
+    const following = this.#editorStore.followingStreamedCode.get();
+    if (following) {
+      this.#editorStore.followingStreamedCode.set(false);
+    }
+  }
 
   get justChangedFiles(): boolean {
     const now = Date.now();
