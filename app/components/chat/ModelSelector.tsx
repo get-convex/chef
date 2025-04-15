@@ -23,13 +23,15 @@ export function ModelSelector(props: ModelSelectorProps) {
       name: 'Claude 3.5 Sonnet',
       icon: svgIcon('/icons/claude.svg'),
     },
-  };
-  if (import.meta.env.VITE_ENABLE_OPENAI) {
-    models['gpt-4.1'] = {
+    'gpt-4.1': {
       name: 'GPT-4.1',
       icon: svgIcon('/icons/openai.svg'),
-    };
-  }
+    },
+    'grok-3-mini': {
+      name: 'Grok 3 Mini',
+      icon: svgIcon('/icons/xai.svg'),
+    },
+  };
   const [open, setOpen] = useState(false);
   const selectedModel = models[props.modelSelection];
   if (!selectedModel) {

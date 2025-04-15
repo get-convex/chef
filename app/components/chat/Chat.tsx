@@ -118,10 +118,14 @@ export const Chat = memo(
     function hasApiKeySet() {
       const useAnthropic = modelSelection === 'claude-3.5-sonnet' || modelSelection === 'auto';
       const useOpenai = modelSelection === 'gpt-4.1';
+      const useXai = modelSelection === 'grok-3-mini';
       if (useAnthropic && apiKey && apiKey.value) {
         return true;
       }
       if (useOpenai && apiKey && apiKey.openai) {
+        return true;
+      }
+      if (useXai && apiKey && apiKey.xai) {
         return true;
       }
       return false;
@@ -185,6 +189,8 @@ export const Chat = memo(
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
           const providers: ModelProvider[] = ['Anthropic', 'Bedrock'];
           modelProvider = providers[(retries.seed + retries.numFailures) % providers.length];
+        } else if (modelSelection === 'grok-3-mini') {
+          modelProvider = 'XAI';
         } else {
           modelProvider = 'OpenAI';
         }

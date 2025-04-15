@@ -11,6 +11,7 @@ import {
 } from 'ai';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
+import { createXai } from '@ai-sdk/xai';
 import { ROLE_SYSTEM_PROMPT, GENERAL_SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from '~/lib/common/prompts/system';
 import { deployTool } from '~/lib/runtime/deployTool';
 import { viewTool } from '~/lib/runtime/viewTool';
@@ -37,7 +38,7 @@ type Provider = {
   model: LanguageModelV1;
 };
 
-export type ModelProvider = 'Anthropic' | 'Bedrock' | 'OpenAI';
+export type ModelProvider = 'Anthropic' | 'Bedrock' | 'OpenAI' | 'XAI';
 
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
 
@@ -63,7 +64,7 @@ export async function convexAgent(
   let model: string;
   // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
   const fetch = undiciFetch as unknown as Fetch;
-  const userKeyApiFetch = (provider: 'Anthropic' | 'OpenAI') => {
+  const userKeyApiFetch = (provider: 'Anthropic' | 'OpenAI' | 'XAI') => {
     return async (input: RequestInfo | URL, init?: RequestInit) => {
       const result = await fetch(input, init);
       if (result.status === 401) {
@@ -110,6 +111,18 @@ export async function convexAgent(
     };
   };
   switch (modelProvider) {
+    case 'XAI': {
+      model = getEnv(env, 'XAI_MODEL') || 'grok-3-mini';
+      const xai = createXai({
+        apiKey: userApiKey || getEnv(env, 'XAI_API_KEY'),
+        fetch: userApiKey ? userKeyApiFetch('XAI') : fetch,
+      });
+      provider = {
+        model: xai(model),
+        maxTokens: 8192,
+      };
+      break;
+    }
     case 'OpenAI': {
       model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4.1';
       const openai = createOpenAI({
