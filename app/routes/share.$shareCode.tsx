@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { Toaster } from '~/components/ui/Toaster';
 import { setSelectedTeamSlug, useSelectedTeamSlug, waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
-import { TeamSelector } from '~/components/convex/TeamSelector';
+import { TeamSelector } from '~/components/convex/TeamSelector.client';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider, useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { useParams } from '@remix-run/react';

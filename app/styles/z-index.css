@@ -10,10 +10,6 @@
   z-index: calc(var(--z-index-max) - 1);
 }
 
-.z-sidebar {
-  z-index: calc(var(--z-index-max) - 2);
-}
-
 .z-port-dropdown {
   z-index: calc(var(--z-index-max) - 3);
 }

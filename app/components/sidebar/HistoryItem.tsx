@@ -2,11 +2,10 @@ import { useParams } from '@remix-run/react';
 import { classNames } from '~/utils/classNames';
 import * as Dialog from '@radix-ui/react-dialog';
 import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
-import WithTooltip from '~/components/ui/Tooltip';
 import { useEditChatDescription } from '~/lib/hooks';
 import { forwardRef, type ForwardedRef } from 'react';
 import { CheckIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
-
+import { Button } from '@convex-dev/design-system/Button';
 interface HistoryItemProps {
   item: ChatHistoryItem;
   handleDeleteClick: (event: React.UIEvent, item: ChatHistoryItem) => void;
@@ -55,9 +54,7 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
         </form>
       ) : (
         <a href={`/chat/${item.urlId ?? item.initialId}`} className="relative flex w-full truncate">
-          <WithTooltip tooltip={description}>
-            <span className="truncate pr-24">{description}</span>
-          </WithTooltip>
+          <span className="truncate pr-24">{description}</span>
           <div
             className={classNames(
               {
@@ -112,16 +109,16 @@ const ChatActionButton = forwardRef(
     ref: ForwardedRef<HTMLButtonElement>,
   ) => {
     return (
-      <WithTooltip tooltip={toolTipContent} position="bottom" sideOffset={4}>
-        <button
-          ref={ref}
-          type="button"
-          className={`bg-transparent text-gray-400 transition-colors hover:text-[var(--cvx-util-accent)] dark:text-gray-500 ${className ? className : ''}`}
-          onClick={onClick}
-        >
-          {icon}
-        </button>
-      </WithTooltip>
+      <Button
+        ref={ref}
+        variant="neutral"
+        icon={icon}
+        inline
+        size="xs"
+        tip={toolTipContent}
+        className={className}
+        onClick={onClick}
+      />
     );
   },
 );

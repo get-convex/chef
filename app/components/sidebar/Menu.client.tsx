@@ -162,7 +162,7 @@ export const Menu = memo(() => {
           'flex flex-col side-menu fixed top-0 h-full',
           'bg-[var(--bolt-elements-sidebar-background)] border-r border-bolt-elements-borderColor',
           'shadow-sm text-sm',
-          'z-sidebar',
+          'z-40',
         )}
       >
         <div className="flex h-[var(--header-height)] items-center justify-between border-b border-bolt-elements-borderColor px-4"></div>

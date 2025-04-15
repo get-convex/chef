@@ -5,7 +5,6 @@ import { Workbench } from '~/components/workbench/Workbench.client';
 import { classNames } from '~/utils/classNames';
 import { Messages } from './Messages.client';
 import { SendButton } from './SendButton.client';
-import * as Tooltip from '@radix-ui/react-tooltip';
 import styles from './BaseChat.module.css';
 import FilePreview from './FilePreview';
 import { ScreenshotStateManager } from './ScreenshotStateManager';
@@ -13,10 +12,10 @@ import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
 import { SuggestionButtons } from './SuggestionButtons';
-import { KeyboardShortcut } from '~/components/ui/KeyboardShortcut';
+import { KeyboardShortcut } from '@convex-dev/design-system/KeyboardShortcut';
 import StreamingIndicator from './StreamingIndicator';
 import type { ToolStatus } from '~/lib/common/types';
-import { TeamSelector } from '~/components/convex/TeamSelector';
+import { TeamSelector } from '~/components/convex/TeamSelector.client';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { useChefAuth } from './ChefAuthWrapper';
@@ -26,6 +25,7 @@ import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Spinner } from '~/components/ui/Spinner';
 import { ModelSelector } from './ModelSelector';
 import type { ModelSelection } from '~/utils/constants';
+import { Button } from '@convex-dev/design-system/Button';
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -275,47 +275,32 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         }
                         translate="no"
                       />
-                      <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                          <div>
-                            <SendButton
-                              show={
-                                input.length > 0 || isStreaming || uploadedFiles.length > 0 || sendMessageInProgress
-                              }
-                              isStreaming={isStreaming}
-                              disabled={
-                                !selectedTeamSlug ||
-                                chefAuthState.kind === 'loading' ||
-                                sendMessageInProgress ||
-                                maintenanceMode
-                              }
-                              onClick={() => {
-                                if (isStreaming) {
-                                  handleStop?.();
-                                  return;
-                                }
-                                if (input.length > 0 || uploadedFiles.length > 0) {
-                                  handleSendMessage?.();
-                                }
-                              }}
-                            />
-                          </div>
-                        </Tooltip.Trigger>
-                        {(chefAuthState.kind === 'unauthenticated' || !selectedTeamSlug) && (
-                          <Tooltip.Portal>
-                            <Tooltip.Content
-                              className="z-50 animate-fadeIn rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 px-3 py-1.5 text-sm shadow-lg"
-                              sideOffset={5}
-                              side="right"
-                            >
-                              {chefAuthState.kind === 'unauthenticated'
-                                ? 'Please sign in to continue'
-                                : 'Please select a team to continue'}
-                              <Tooltip.Arrow className="fill-bolt-elements-borderColor" />
-                            </Tooltip.Content>
-                          </Tooltip.Portal>
-                        )}
-                      </Tooltip.Root>
+                      <SendButton
+                        show={input.length > 0 || isStreaming || uploadedFiles.length > 0 || sendMessageInProgress}
+                        isStreaming={isStreaming}
+                        disabled={
+                          !selectedTeamSlug ||
+                          chefAuthState.kind === 'loading' ||
+                          sendMessageInProgress ||
+                          maintenanceMode
+                        }
+                        onClick={() => {
+                          if (isStreaming) {
+                            handleStop?.();
+                            return;
+                          }
+                          if (input.length > 0 || uploadedFiles.length > 0) {
+                            handleSendMessage?.();
+                          }
+                        }}
+                        tip={
+                          chefAuthState.kind === 'unauthenticated'
+                            ? 'Please sign in to continue'
+                            : !selectedTeamSlug
+                              ? 'Please select a team to continue'
+                              : undefined
+                        }
+                      />
                       <div className="flex items-center justify-end gap-4 p-4 pt-2 text-sm">
                         <div className="text-xs text-bolt-elements-textTertiary">
                           <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
@@ -462,7 +447,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       </div>
     );
 
-    return <Tooltip.Provider delayDuration={200}>{baseChat}</Tooltip.Provider>;
+    return baseChat;
   },
 );
 BaseChat.displayName = 'BaseChat';
@@ -474,24 +459,19 @@ function SignInButton() {
     openSignInWindow();
   }, [setStarted]);
   return (
-    <button
-      className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-button-secondary-backgroundHover"
-      onClick={signIn}
-    >
-      <div className="flex w-full items-center gap-2 p-1.5">
-        {!started && (
-          <>
-            <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
-            <span>Sign in</span>
-          </>
-        )}
-        {started && (
-          <>
-            <Spinner />
-            Signing in...
-          </>
-        )}
-      </div>
-    </button>
+    <Button variant="neutral" onClick={signIn}>
+      {!started && (
+        <>
+          <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+          <span>Sign in</span>
+        </>
+      )}
+      {started && (
+        <>
+          <Spinner />
+          Signing in...
+        </>
+      )}
+    </Button>
   );
 }

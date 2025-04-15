@@ -3,10 +3,9 @@ import { useEffect, useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
-import { TooltipProvider } from '@radix-ui/react-tooltip';
-import WithTooltip from '~/components/ui/Tooltip';
 import { EyeSlashIcon } from '@heroicons/react/24/outline';
 import { EyeOpenIcon, QuestionMarkCircledIcon } from '@radix-ui/react-icons';
+import { Button } from '@convex-dev/design-system/Button';
 
 export function ApiKeyCard() {
   const convex = useConvex();
@@ -240,16 +239,13 @@ function AlwaysUseKeyCheckbox(props: {
       <label htmlFor="always-use-key" className="text-sm text-bolt-elements-textSecondary">
         Always use my API keys
       </label>
-      <TooltipProvider>
-        <WithTooltip tooltip="When unchecked, your API key will only be used if you've run out of tokens built into your Convex plan">
-          <button
-            type="button"
-            className="bg-transparent text-bolt-elements-textTertiary hover:text-bolt-elements-textSecondary"
-          >
-            <QuestionMarkCircledIcon />
-          </button>
-        </WithTooltip>
-      </TooltipProvider>
+      <Button
+        variant="neutral"
+        icon={<QuestionMarkCircledIcon />}
+        inline
+        size="xs"
+        tip="When unchecked, your API key will only be used if you've run out of tokens built into your Convex plan"
+      />
     </div>
   );
 }

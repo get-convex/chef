@@ -71,6 +71,14 @@ export default defineConfig((config) => {
       include: [
         'jose', // discovered late during dev so causes a reload when optimizing
         'classnames', // fix for @convex-dev/design-system to work
+
+        // these are all used by @convex-dev/design-system/Combobox
+        'react-dom',
+        'react-fast-compare',
+        'warning',
+        'lodash/isEqual',
+        'fuzzy/lib/fuzzy',
+        'fuzzy',
       ],
       esbuildOptions: {
         define: {

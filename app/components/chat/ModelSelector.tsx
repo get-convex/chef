@@ -1,7 +1,5 @@
-import { CaretDownIcon, CheckIcon, MagicWandIcon } from '@radix-ui/react-icons';
-import * as Select from '@radix-ui/react-select';
-import { useState } from 'react';
-import { classNames } from '~/utils/classNames';
+import { Combobox } from '@convex-dev/design-system/Combobox';
+import { MagicWandIcon } from '@radix-ui/react-icons';
 import type { ModelSelection } from '~/utils/constants';
 
 function svgIcon(url: string) {
@@ -30,68 +28,32 @@ export function ModelSelector(props: ModelSelectorProps) {
       icon: svgIcon('/icons/openai.svg'),
     };
   }
-  const [open, setOpen] = useState(false);
+
   const selectedModel = models[props.modelSelection];
   if (!selectedModel) {
     throw new Error(`Model ${props.modelSelection} not found`);
   }
+
   return (
-    <div className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor text-sm">
-      <Select.Root
-        value={props.modelSelection}
-        open={open}
-        onOpenChange={setOpen}
-        onValueChange={(value) => {
-          props.setModelSelection(value as ModelSelection);
-        }}
-      >
-        <Select.Trigger
-          className={classNames(
-            'flex items-center gap-2 p-1.5 w-full rounded-md text-left text-bolt-elements-textPrimary bg-bolt-elements-button-secondary-background',
-            'hover:bg-bolt-elements-item-backgroundAccent/90',
-            open ? 'bg-bolt-elements-item-backgroundAccent/90' : '',
-          )}
-          aria-label="Select model"
-        >
-          {selectedModel.icon}
-          <Select.Value placeholder="Select a model...">{selectedModel.name}</Select.Value>
-          <Select.Icon className="ml-auto">
-            <CaretDownIcon className={classNames('transition-all', open ? 'rotate-180' : '')} />
-          </Select.Icon>
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Content
-            className="z-50 max-h-64 min-w-[200px] overflow-y-auto rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-lg"
-            position="popper"
-            sideOffset={5}
-          >
-            <Select.Viewport>
-              <div className="sticky top-0 z-10 border-b border-b-bolt-elements-borderColor bg-bolt-elements-button-secondary-background p-2">
-                <h3 className="text-sm font-medium">Select Model</h3>
-              </div>
-              {Object.entries(models).map(([slug, model]) => (
-                <Select.Item
-                  key={slug}
-                  value={slug}
-                  className={classNames(
-                    'flex items-center gap-2 p-2 cursor-pointer outline-none text-sm',
-                    'data-[highlighted]:bg-bolt-elements-item-backgroundActive data-[highlighted]:text-bolt-elements-item-contentAccent',
-                    'data-[state=checked]:text-bolt-elements-item-contentAccent',
-                  )}
-                >
-                  {model.icon}
-                  <div className="max-w-48 truncate">
-                    <Select.ItemText>{model.name}</Select.ItemText>
-                  </div>
-                  <Select.ItemIndicator className="ml-auto">
-                    <CheckIcon />
-                  </Select.ItemIndicator>
-                </Select.Item>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
-    </div>
+    <Combobox
+      searchPlaceholder="Search models..."
+      label="Select model"
+      options={Object.entries(models).map(([value, model]) => ({
+        label: model.name,
+        value,
+      }))}
+      buttonClasses="w-fit"
+      selectedOption={props.modelSelection}
+      setSelectedOption={(option) => props.setModelSelection(option as ModelSelection)}
+      Option={({ label, value }) => {
+        const model = models[value as ModelSelection];
+        return (
+          <div className="flex items-center gap-2">
+            {model?.icon}
+            <div className="max-w-48 truncate">{label}</div>
+          </div>
+        );
+      }}
+    />
   );
 }
