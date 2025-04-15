@@ -30,8 +30,9 @@ import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { disabledText, getTokenUsage, noTokensText } from '~/lib/convexUsage';
-import { STATUS_MESSAGES } from './StreamingIndicator';
 import { formatDistanceStrict } from 'date-fns';
+import { atom } from 'nanostores';
+import { STATUS_MESSAGES } from './StreamingIndicator';
 
 const logger = createScopedLogger('Chat');
 
@@ -68,6 +69,12 @@ interface ChatProps {
   initialInput?: string;
 }
 
+const retryState = atom({
+  numFailures: 0,
+  nextRetry: Date.now(),
+  seed: Math.random() < 0.5 ? 0 : 1,
+});
+
 export const Chat = memo(
   ({
     initialMessages,
@@ -96,18 +103,12 @@ export const Chat = memo(
 
     const [modelSelection, setModelSelection] = useState<ModelSelection>('auto');
 
-    const [retries, setRetries] = useState<{ numFailures: number; nextRetry: number; seed: number }>({
-      numFailures: 0,
-      nextRetry: Date.now(),
-      seed: Math.random() < 0.5 ? 0 : 1,
-    });
-
     // Reset retries counter every minute
     useEffect(() => {
       const resetInterval = setInterval(() => {
-        setRetries((prev) => ({ ...prev, numFailures: 0, nextRetry: Date.now() }));
+        const { seed } = retryState.get();
+        retryState.set({ numFailures: 0, nextRetry: Date.now(), seed });
       }, 60 * 1000);
-
       return () => clearInterval(resetInterval);
     }, []);
 
@@ -182,6 +183,7 @@ export const Chat = memo(
           throw new Error('No team slug');
         }
         let modelProvider: ModelProvider;
+        const retries = retryState.get();
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
           const providers: ModelProvider[] = ['Anthropic', 'Bedrock'];
           modelProvider = providers[(retries.seed + retries.numFailures) % providers.length];
@@ -234,17 +236,23 @@ export const Chat = memo(
             userHasOwnApiKey: !!apiKey,
           },
         });
-        setRetries((prevRetries) => {
-          logger.error(`Request failed (retries: ${JSON.stringify(prevRetries)})`, e, error);
-          if (prevRetries.numFailures === 0) {
-            logger.info('Retrying immediately on first failure.');
-            setTimeout(() => reload(), 0);
-          }
-          const newRetries = prevRetries.numFailures + 1;
-          const backoff = error?.message.includes(STATUS_MESSAGES.error) ? exponentialBackoff(newRetries) : 0;
-          return { ...prevRetries, numFailures: newRetries, nextRetry: Date.now() + backoff };
+
+        const retries = retryState.get();
+        logger.error(`Request failed (retries: ${JSON.stringify(retries)})`, e, error);
+        const isFirstFailure = retries.numFailures === 0;
+
+        const backoff = error?.message.includes(STATUS_MESSAGES.error)
+          ? exponentialBackoff(retries.numFailures + 1)
+          : 0;
+        retryState.set({
+          numFailures: retries.numFailures + 1,
+          nextRetry: Date.now() + backoff,
+          seed: retries.seed,
         });
 
+        if (isFirstFailure) {
+          reload();
+        }
         await checkTokenUsage();
       },
       onFinish: async (message, response) => {
@@ -253,7 +261,8 @@ export const Chat = memo(
           console.debug('Token usage in response:', usage);
         }
         if (response.finishReason == 'stop') {
-          setRetries((prev) => ({ ...prev, numFailures: 0, nextRetry: Date.now() }));
+          const retries = retryState.get();
+          retryState.set({ numFailures: 0, nextRetry: Date.now(), seed: retries.seed });
         }
         logger.debug('Finished streaming');
 
@@ -333,6 +342,7 @@ export const Chat = memo(
 
     const sendMessage = async (messageInput?: string) => {
       const now = Date.now();
+      const retries = retryState.get();
       if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet()) {
         const remaining = formatDistanceStrict(now, retries.nextRetry);
         toast.error(
