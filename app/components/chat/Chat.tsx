@@ -216,13 +216,11 @@ export const Chat = memo(
           if (lastMessage?.role === 'assistant' && Array.isArray(lastMessage.parts)) {
             const updatedParts = [...lastMessage.parts.slice(0, -1)];
             if (updatedParts.length > 0) {
-              logger.info('Removing last part from last message');
               updatedMessages[updatedMessages.length - 1] = {
                 ...lastMessage,
                 parts: updatedParts,
               };
             } else {
-              logger.info('Removing last message because it has no parts');
               updatedMessages.pop();
             }
           }
