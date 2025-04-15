@@ -120,7 +120,10 @@ export default defineConfig((config) => {
       },
 
       remix({
-        presets: [vercelPreset()],
+        // Vercel presets move build outputs to ./build/server/nodejs-eyABC...
+        // making it harder to serve them locally.
+        // Hopefully it does nothing else important...
+        ...(process.env.VERCEL ? { presets: [vercelPreset()] } : {}),
         future: {
           v3_fetcherPersist: true,
           v3_relativeSplatPath: true,
