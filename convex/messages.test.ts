@@ -2,6 +2,7 @@ import { expect, test, vi } from 'vitest';
 import { api, internal } from './_generated/api';
 import { createChat, setupTest, storeMessages } from './test.setup';
 import type { SerializedMessage } from './messages';
+import type { Id } from './_generated/dataModel';
 
 test('sending messages', async () => {
   vi.useFakeTimers();
@@ -70,7 +71,22 @@ test('rewind chat', async () => {
   expect(rewoundMessagesStorageInfo?.storageId).not.toBeNull();
   expect(rewoundMessagesStorageInfo?.lastMessageRank).toBe(0);
   expect(rewoundMessagesStorageInfo?.partIndex).toBe(0);
-
+  // Should still have higher lastMessageRank state in the table
+  const allChatMessagesStorageStates = await t.run(async (ctx) => {
+    const chatMessagesStorageState = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byStorageId', (q) => q.eq('storageId', rewoundMessagesStorageInfo?.storageId as Id<'_storage'>))
+      .first();
+    if (!chatMessagesStorageState) {
+      throw new Error('chatMessagesStorageState not found');
+    }
+    return ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chatMessagesStorageState?.chatId))
+      .collect();
+  });
+  // Initialize chat record, first message, and second message
+  expect(allChatMessagesStorageStates.length).toBe(3);
   await t.finishAllScheduledFunctions(() => vi.runAllTimers());
   vi.useRealTimers();
 });
