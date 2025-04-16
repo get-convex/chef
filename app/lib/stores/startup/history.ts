@@ -186,7 +186,7 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
         urlHintAndDescription.description,
       );
     }
-    if (messageBlob !== undefined && snapshotBlob !== undefined) {
+    if (messageBlob === undefined && snapshotBlob === undefined) {
       console.info('No updates to chat, skipping sync');
       continue;
     }
