@@ -33,7 +33,7 @@ export function useStoreMessageHistory(chatId: string) {
           lastMessageRank.current === lastPersistedMessageInfo.messageIndex &&
           partIndex.current === lastPersistedMessageInfo.partIndex
         ) {
-          return;
+          return undefined;
         }
         // Some browsers require both preventDefault and setting returnValue
         e.preventDefault();

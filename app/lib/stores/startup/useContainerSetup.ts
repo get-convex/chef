@@ -17,8 +17,8 @@ import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { initializeConvexAuth } from '~/lib/convexAuth';
 import { appendEnvVarIfNotSet } from '~/utils/envFileUtils';
-import { getFileUpdateCounter } from '../fileUpdateCounter';
-import { chatSyncState } from './history';
+import { getFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
+import { chatSyncState } from '~/lib/stores/startup/history';
 
 const TEMPLATE_URL = '/template-snapshot-80c98556.bin';
 

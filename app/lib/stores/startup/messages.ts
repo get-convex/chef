@@ -1,7 +1,7 @@
 import type { Message } from '@ai-sdk/react';
 import { atom } from 'nanostores';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
-import { getKnownUrlId, setKnownInitialId, setKnownUrlId } from '../chatId';
+import { getKnownUrlId, setKnownInitialId, setKnownUrlId } from '~/lib/stores/chatId';
 import type { Id } from '@convex/_generated/dataModel';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
@@ -19,11 +19,19 @@ export async function prepareMessageHistory(args: {
   sessionId: string;
   completeMessageInfo: { messageIndex: number; partIndex: number; allMessages: Message[] } | null;
   persistedMessageInfo: { messageIndex: number; partIndex: number } | null;
-}) {
+}): Promise<{
+  url: URL;
+  update: {
+    compressed: Uint8Array;
+    urlHintAndDescription: { urlHint: string; description: string } | undefined;
+    messageIndex: number;
+    partIndex: number;
+  } | null;
+} | null> {
   const { chatId, sessionId, completeMessageInfo, persistedMessageInfo } = args;
   if (completeMessageInfo === null || persistedMessageInfo === null) {
     // Not initialized yet
-    return;
+    return null;
   }
   const { messageIndex, partIndex, allMessages } = completeMessageInfo;
   const siteUrl = getConvexSiteUrl();

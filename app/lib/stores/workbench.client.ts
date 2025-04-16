@@ -6,14 +6,7 @@ import { webcontainer } from '~/lib/webcontainer';
 import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
 import { unreachable } from '~/utils/unreachable';
 import { EditorStore } from './editor';
-import {
-  FILE_EVENTS_DEBOUNCE_MS,
-  FilesStore,
-  getAbsolutePath,
-  getRelativePath,
-  type AbsolutePath,
-  type FileMap,
-} from './files';
+import { FilesStore, getAbsolutePath, getRelativePath, type AbsolutePath, type FileMap } from './files';
 import { PreviewsStore } from './previews';
 import { TerminalStore } from './terminal';
 import JSZip from 'jszip';
@@ -23,21 +16,13 @@ import { description } from './description';
 import { createSampler } from '~/utils/sampler';
 import type { ActionAlert } from '~/types/actions';
 import type { WebContainer } from '@webcontainer/api';
-import type { Id } from '@convex/_generated/dataModel';
-import { buildUncompressedSnapshot } from '~/lib/snapshot.client';
-import { waitForConvexSessionId } from './sessionId';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './artifacts';
-import { backoffTime, WORK_DIR } from '~/utils/constants';
-import { chatIdStore } from '~/lib/stores/chatId';
-import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from './fileUpdateCounter';
+import { WORK_DIR } from '~/utils/constants';
 import { generateReadmeContent } from '~/lib/download/readmeContent';
-import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { setupMjsContent } from '~/lib/download/setupMjsContent';
 import type { ConvexProject } from './convexProject';
 import { cursorRulesContent } from '~/lib/download/cursorRulesContent';
-
-const BACKUP_DEBOUNCE_MS = 1000;
 
 const { saveAs } = fileSaver;
 

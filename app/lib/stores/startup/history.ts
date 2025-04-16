@@ -1,8 +1,8 @@
 import type { Message } from 'ai';
 import { useConvex, type ConvexReactClient } from 'convex/react';
 import { atom } from 'nanostores';
-import { waitForConvexSessionId } from '../sessionId';
-import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from '../fileUpdateCounter';
+import { waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from '~/lib/stores/fileUpdateCounter';
 import { buildUncompressedSnapshot } from '~/lib/snapshot.client';
 import type { Id } from '@convex/_generated/dataModel';
 import { backoffTime } from '~/utils/constants';
@@ -81,6 +81,7 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
         e.returnValue = '';
         return '';
       }
+      return undefined;
     };
     window.addEventListener('beforeunload', beforeUnloadHandler);
     return () => {
@@ -138,7 +139,7 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
       completeMessageInfo,
       persistedMessageInfo: currentState.persistedMessageInfo,
     });
-    if (messageHistoryResult === undefined) {
+    if (messageHistoryResult === null) {
       continue;
     }
     const { url, update } = messageHistoryResult;
@@ -149,7 +150,7 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
     }
 
     let snapshotBlob: Uint8Array = new Uint8Array();
-    let nextSavedUpdateCounter = getFileUpdateCounter();
+    const nextSavedUpdateCounter = getFileUpdateCounter();
     if (currentState.savedFileUpdateCounter !== nextSavedUpdateCounter) {
       snapshotBlob = await prepareBackup();
     }
@@ -193,12 +194,10 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
     const updates: Partial<BackupSyncState> = {
       lastSync: now,
       numFailures: 0,
+      savedFileUpdateCounter: nextSavedUpdateCounter,
     };
     if (newPersistedMessageInfo !== null) {
       updates.persistedMessageInfo = newPersistedMessageInfo;
-    }
-    if (nextSavedUpdateCounter !== null) {
-      updates.savedFileUpdateCounter = nextSavedUpdateCounter;
     }
     chatSyncState.set({
       ...currentState,

@@ -294,4 +294,4 @@ function convertToBuffer(view: Uint8Array): Buffer {
   return Buffer.from(view.buffer, view.byteOffset, view.byteLength);
 }
 
-export const FILE_EVENTS_DEBOUNCE_MS = 100;
+const FILE_EVENTS_DEBOUNCE_MS = 100;
