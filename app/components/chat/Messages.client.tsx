@@ -62,9 +62,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
                       )}
                     </div>
                   )}
-                  <div className="text-sm">
-                    {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
-                  </div>
+                  {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
                 </div>
               );
             })

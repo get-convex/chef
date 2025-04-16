@@ -31,7 +31,7 @@ export const AssistantMessage = memo(({ message }: AssistantMessageProps) => {
     }
   }
   return (
-    <div className="w-full overflow-hidden">
+    <div className="w-full overflow-hidden text-sm">
       <div className="flex flex-col gap-2">{children}</div>
     </div>
   );
