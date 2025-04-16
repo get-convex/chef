@@ -586,7 +586,7 @@ function getConvexAuthToken(convex: ConvexReactClient): string | null {
 export function noTokensText(selectedTeamSlug: string | null) {
   return (
     <span className="max-w-prose text-pretty">
-      You've used all the tokens included with your free plan! Please{' '}
+      You’ve used all the tokens included with your free plan! Please{' '}
       <a
         href={
           selectedTeamSlug

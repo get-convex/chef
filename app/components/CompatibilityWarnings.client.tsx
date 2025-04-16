@@ -141,7 +141,7 @@ export function CompatibilityWarnings() {
             </>
           ) : experience === 'marketing-page-only-for-desktop-safari' ? (
             <>
-              <h3 className="text-xl font-bold">You're a few keystrokes away from cooking with Chef!</h3>
+              <h3 className="text-xl font-bold">You’re a few keystrokes away from cooking with Chef!</h3>
               <p className="my-2">
                 Chef uses{' '}
                 <a
@@ -155,7 +155,7 @@ export function CompatibilityWarnings() {
             </>
           ) : (
             <>
-              <h3 className="text-xl font-bold">You're a few keystrokes away from cooking with Chef!</h3>
+              <h3 className="text-xl font-bold">You’re a few keystrokes away from cooking with Chef!</h3>
               <p className="my-2">
                 Chef uses{' '}
                 <a

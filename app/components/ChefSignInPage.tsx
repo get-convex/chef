@@ -180,7 +180,7 @@ function OptInsScreen() {
           <input type="checkbox" checked={isChecked} onChange={(e) => setIsChecked(e.target.checked)} />
           <div className="text-sm text-content-primary">
             <span>
-              I've read and accept the{' '}
+              I’ve read and accept the{' '}
               <a
                 href="https://www.convex.dev/legal/tos"
                 target="_blank"
