@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import type { BundledLanguage } from 'shiki';
 import { createScopedLogger } from '~/utils/logger';
 import { rehypePlugins, remarkPlugins, allowedHTMLElements } from '~/utils/markdown';
@@ -20,7 +20,7 @@ interface MarkdownProps {
 export const Markdown = memo(function Markdown({ children, html = false, limitedMarkdown = false }: MarkdownProps) {
   logger.trace('Render');
 
-  const components = useMemo(() => {
+  const components: Components = useMemo(() => {
     return {
       div: ({ className, children, node, ...props }) => {
         if (className?.includes('__boltArtifact__')) {
