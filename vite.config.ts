@@ -7,7 +7,6 @@ import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import MillionLint from '@million/lint';
 
 dotenv.config();
 
@@ -119,8 +118,6 @@ export default defineConfig((config) => {
           }
         },
       },
-
-      MillionLint.vite(),
 
       remix({
         // Vercel presets move build outputs to ./build/server/nodejs-eyABC...
