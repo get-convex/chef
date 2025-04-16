@@ -293,6 +293,7 @@ export const Chat = memo(
       });
     }, [searchParams]);
 
+    // AKA "processed messages," since parsing has side effects
     const { parsedMessages, parseMessages } = useMessageParser(partCache);
 
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
@@ -520,7 +521,7 @@ export const Chat = memo(
         streamStatus={status}
         currentError={error}
         toolStatus={toolStatus}
-        messages={parsedMessages}
+        messages={parsedMessages /* Note that parsedMessages are throttled. */}
         actionAlert={actionAlert}
         clearAlert={() => workbenchStore.clearAlert()}
         terminalInitializationOptions={terminalInitializationOptions}
