@@ -16,10 +16,6 @@ export const create = mutation({
       throw new ConvexError('Chat not found');
     }
 
-    if (!chat.snapshotId) {
-      throw new ConvexError('Your project has never been saved.');
-    }
-
     const code = await generateUniqueCode(ctx.db);
 
     const storageState = await getLatestChatMessageStorageState(ctx, chat);
@@ -33,7 +29,7 @@ export const create = mutation({
 
         // It is safe to use the snapshotId from the chat because the user’s
         // snapshot excludes .env.local.
-        snapshotId: chat.snapshotId,
+        snapshotId: storageState.snapshotId,
 
         chatHistoryId: storageState.storageId,
 
@@ -44,6 +40,9 @@ export const create = mutation({
       });
       return { code };
     } else {
+      if (!chat.snapshotId) {
+        throw new ConvexError('Your project has never been saved.');
+      }
       console.warn('No storage state found for chat, using last message rank');
       const messages = await ctx.db
         .query('chatMessages')

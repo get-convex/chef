@@ -89,3 +89,7 @@ test('cloning a chat forks history', async () => {
 });
 
 // TODO: Test that cloning messages does not leak a more recent snapshot or later messages
+
+test('sharing a chat uses the snapshot in the chatMessagesStorageState table', async () => {
+  // TODO
+});
