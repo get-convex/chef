@@ -18,7 +18,7 @@ import { workbenchStore } from '~/lib/stores/workbench.client';
 import { initializeConvexAuth } from '~/lib/convexAuth';
 import { appendEnvVarIfNotSet } from '~/utils/envFileUtils';
 
-const TEMPLATE_URL = '/template-snapshot-cb4ccf96.bin';
+const TEMPLATE_URL = '/template-snapshot-80c98556.bin';
 
 export function useNewChatContainerSetup() {
   const convex = useConvex();
