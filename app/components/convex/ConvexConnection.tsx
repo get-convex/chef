@@ -26,7 +26,7 @@ export function ConvexConnection() {
 
   return (
     <div className="relative">
-      <Button variant="neutral" onClick={() => setIsOpen(true)}>
+      <Button variant="neutral" onClick={() => setIsOpen(true)} className="font-normal">
         <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
         <ConnectionStatus projectInfo={projectInfo} />
       </Button>
