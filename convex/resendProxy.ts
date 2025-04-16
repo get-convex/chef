@@ -57,7 +57,7 @@ export const resendProxy = httpAction(async (ctx, req) => {
     let waitStart = Date.now();
     let deadline = waitStart + MAX_RATELIMITER_WAIT;
     while (true) {
-        const status = await rateLimiter.check(ctx, "resendProxy");
+        const status = await rateLimiter.limit(ctx, "resendProxy");
         if (status.ok) {
             break;
         }
