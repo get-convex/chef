@@ -5,7 +5,7 @@ import { useConvexChatHomepage } from '~/lib/stores/startup';
 import { Toaster } from '~/components/ui/Toaster';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
 import type { Message } from '@ai-sdk/react';
-import type { PartCache } from '~/lib/hooks';
+import type { PartCache } from '~/lib/hooks/useMessageParser';
 import { UserProvider } from '~/components/UserProvider';
 import { useSearchParams } from '@remix-run/react';
 

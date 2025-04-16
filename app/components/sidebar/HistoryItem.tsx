@@ -1,7 +1,7 @@
 import { useParams } from '@remix-run/react';
 import { classNames } from '~/utils/classNames';
 import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
-import { useEditChatDescription } from '~/lib/hooks';
+import { useEditChatDescription } from '~/lib/hooks/useEditChatDescription';
 import { forwardRef, type ForwardedRef } from 'react';
 import { CheckIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';

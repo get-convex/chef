@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useEditChatDescription } from '~/lib/hooks';
+import { useEditChatDescription } from '~/lib/hooks/useEditChatDescription';
 import { description as descriptionStore } from '~/lib/stores/description';
 import { CheckIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';

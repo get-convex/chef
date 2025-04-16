@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { makePartId } from '~/lib/stores/artifacts';
 import { toast } from 'sonner';
 import { workbenchStore } from '~/lib/stores/workbench.client';
-import { processMessage, type PartCache } from '~/lib/hooks';
+import { processMessage, type PartCache } from '~/lib/hooks/useMessageParser';
 
 export type ReloadedMessages = {
   partCache: PartCache;

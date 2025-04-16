@@ -17,7 +17,7 @@ import { cubicEasingFn } from '~/utils/easings';
 import { renderLogger } from '~/utils/logger';
 import { EditorPanel } from './EditorPanel';
 import { Preview } from './Preview';
-import useViewport from '~/lib/hooks';
+import useViewport from '~/lib/hooks/useViewport';
 import { Dashboard } from './Dashboard';
 import { Allotment } from 'allotment';
 import { convexProjectStore } from '~/lib/stores/convexProject';
