@@ -219,7 +219,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       <textarea
                         ref={textareaRef}
                         className={classNames(
-                          'w-full pl-4 pt-4 pr-16 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
+                          'w-full pl-4 pt-4 pr-16 pb-2 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
                           'focus:outline-none',
                           'disabled:opacity-50 disabled:cursor-not-allowed',
                         )}
@@ -303,7 +303,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                               : undefined
                         }
                       />
-                      <div className="flex items-center justify-end gap-4 p-4 pb-3 pt-2 text-sm">
+                      <div className="flex items-center justify-end gap-4 px-4 pb-3 text-sm">
                         <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
                         <div className="grow" />
                         {input.length > 3 ? (
