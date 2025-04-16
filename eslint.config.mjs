@@ -2,12 +2,15 @@ import blitzPlugin from '@blitz/eslint-plugin';
 import { jsFileExtensions } from '@blitz/eslint-plugin/dist/configs/javascript.js';
 import { getNamingConventionRule, tsFileExtensions } from '@blitz/eslint-plugin/dist/configs/typescript.js';
 import tailwindcss from "eslint-plugin-tailwindcss";
+import reactPlugin from 'eslint-plugin-react';
 
 export default [
   {
     ignores: ['**/dist', '**/node_modules', '**/.wrangler', '**/bolt/build', '**/.history', 'template/**'],
   },
   ...blitzPlugin.configs.recommended(),
+  reactPlugin.configs.flat.recommended,
+  reactPlugin.configs.flat['jsx-runtime'],
   {
     files: [...tsFileExtensions, ...jsFileExtensions],
     rules: {
