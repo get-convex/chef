@@ -60,6 +60,7 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
           messageIndex: initialMessages.length - 1,
           partIndex: lastMessagePartIndex,
           allMessages: initialMessages,
+          hasNextPart: false,
         });
       }
     }
@@ -73,7 +74,8 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
         currentState.persistedMessageInfo !== null &&
         completeMessageInfo !== null &&
         (currentState.persistedMessageInfo.messageIndex !== completeMessageInfo.messageIndex ||
-          currentState.persistedMessageInfo.partIndex !== completeMessageInfo.partIndex);
+          currentState.persistedMessageInfo.partIndex !== completeMessageInfo.partIndex ||
+          completeMessageInfo.hasNextPart);
       const isFileUpdateCounterDirty =
         currentState.savedFileUpdateCounter !== null && currentState.savedFileUpdateCounter !== fileUpdateCounter;
       if (isChatHistoryDirty || isFileUpdateCounterDirty) {
@@ -117,31 +119,52 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
   });
   while (true) {
     const currentState = await waitForInitialized();
-    const newMessagesPromise = waitForNewMessages(
-      currentState.persistedMessageInfo.messageIndex,
-      currentState.persistedMessageInfo.partIndex,
-    );
-    const fileUpdatePromise = waitForFileUpdateCounterChanged(currentState.savedFileUpdateCounter);
-    // wait for one of the things to be invalidated
-    await Promise.race([newMessagesPromise, fileUpdatePromise]);
+    const completeMessageInfo = lastCompleteMessageInfoStore.get();
+    if (completeMessageInfo === null) {
+      console.error('Complete message info not initialized');
+      continue;
+    }
+    const areMessagesUpToDate =
+      completeMessageInfo.partIndex === currentState.persistedMessageInfo.partIndex &&
+      completeMessageInfo.messageIndex === currentState.persistedMessageInfo.messageIndex;
+
+    if (areMessagesUpToDate) {
+      // if between messages, wait for either a file system change or a new message part to start
+      if (!completeMessageInfo.hasNextPart) {
+        const fileUpdatePromise = waitForFileUpdateCounterChanged(currentState.savedFileUpdateCounter);
+        const newMessagesPromise = waitForNewMessages(
+          currentState.persistedMessageInfo.messageIndex,
+          currentState.persistedMessageInfo.partIndex,
+          /* alertOnNextPartStart */ true,
+        );
+        await Promise.race([fileUpdatePromise, newMessagesPromise]);
+      } else {
+        // if the next part has started, ignore file system changes but listen for the next part
+        // to complete
+        const newMessagesPromise = waitForNewMessages(
+          currentState.persistedMessageInfo.messageIndex,
+          currentState.persistedMessageInfo.partIndex,
+          /* alertOnNextPartStart */ false,
+        );
+        await newMessagesPromise;
+      }
+    }
+
     const nextSync = currentState.lastSync + BACKUP_DEBOUNCE_MS;
     const now = Date.now();
     if (now < nextSync) {
       await new Promise((resolve) => setTimeout(resolve, nextSync - now));
     }
-    let messageBlob: Uint8Array = new Uint8Array();
+    let messageBlob: Uint8Array | undefined = undefined;
     let urlHintAndDescription: { urlHint: string; description: string } | null = null;
     let newPersistedMessageInfo: { messageIndex: number; partIndex: number } | null = null;
-    const completeMessageInfo = lastCompleteMessageInfoStore.get();
+
     const messageHistoryResult = await prepareMessageHistory({
       chatId,
       sessionId,
       completeMessageInfo,
       persistedMessageInfo: currentState.persistedMessageInfo,
     });
-    if (messageHistoryResult === null) {
-      continue;
-    }
     const { url, update } = messageHistoryResult;
     if (update !== null) {
       messageBlob = update.compressed;
@@ -149,7 +172,7 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
       newPersistedMessageInfo = { messageIndex: update.messageIndex, partIndex: update.partIndex };
     }
 
-    let snapshotBlob: Uint8Array = new Uint8Array();
+    let snapshotBlob: Uint8Array | undefined = undefined;
     const nextSavedUpdateCounter = getFileUpdateCounter();
     if (currentState.savedFileUpdateCounter !== nextSavedUpdateCounter) {
       snapshotBlob = await prepareBackup();
@@ -163,11 +186,19 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
         urlHintAndDescription.description,
       );
     }
+    if (messageBlob !== undefined && snapshotBlob !== undefined) {
+      console.info('No updates to chat, skipping sync');
+      continue;
+    }
     let response;
     let error: Error | null = null;
     const formData = new FormData();
-    formData.append('messages', new Blob([messageBlob]));
-    formData.append('snapshot', new Blob([snapshotBlob]));
+    if (messageBlob !== undefined) {
+      formData.append('messages', new Blob([messageBlob]));
+    }
+    if (snapshotBlob !== undefined) {
+      formData.append('snapshot', new Blob([snapshotBlob]));
+    }
     try {
       response = await fetch(url, {
         method: 'POST',

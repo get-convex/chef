@@ -133,31 +133,43 @@ httpWithCors.route({
     const chatId = url.searchParams.get('chatId');
     const lastMessageRank = url.searchParams.get('lastMessageRank');
     const partIndex = url.searchParams.get('partIndex');
-    const contentType = request.headers.get('Content-Type');
-    if (contentType === null || !contentType.startsWith('multipart/form-data')) {
-      // Older pathway that sends just messages as a single blob
-      const messageBlob = await request.blob();
-      const storageId = await ctx.storage.store(messageBlob);
-      await ctx.runMutation(internal.messages.updateStorageState, {
-        sessionId: sessionId as Id<'sessions'>,
-        chatId: chatId as Id<'chats'>,
-        lastMessageRank: parseInt(lastMessageRank!),
-        partIndex: parseInt(partIndex!),
-        storageId,
-      });
-      return new Response(null, {
-        status: 200,
-      });
-    }
+    // Older pathway that sends just messages as a single blob
+    const messageBlob = await request.blob();
+    const storageId = await ctx.storage.store(messageBlob);
+    await ctx.runMutation(internal.messages.updateStorageState, {
+      sessionId: sessionId as Id<'sessions'>,
+      chatId: chatId as Id<'chats'>,
+      lastMessageRank: parseInt(lastMessageRank!),
+      partIndex: parseInt(partIndex!),
+      storageId,
+    });
+    return new Response(null, {
+      status: 200,
+    });
+    return new Response(null, {
+      status: 200,
+    });
+  }),
+});
+
+httpWithCors.route({
+  path: '/store_chat',
+  method: 'POST',
+  handler: httpActionWithErrorHandling(async (ctx, request) => {
+    const url = new URL(request.url);
+    const sessionId = url.searchParams.get('sessionId');
+    const chatId = url.searchParams.get('chatId');
+    const lastMessageRank = url.searchParams.get('lastMessageRank');
+    const partIndex = url.searchParams.get('partIndex');
     const formData = await request.formData();
-    const messageBlob = formData.get('messages') as Blob;
     let messageStorageId: Id<'_storage'> | null = null;
-    if (messageBlob.size !== 0) {
+    let snapshotStorageId: Id<'_storage'> | null = null;
+    if (formData.has('messages')) {
+      const messageBlob = formData.get('messages') as Blob;
       messageStorageId = await ctx.storage.store(messageBlob);
     }
-    const snapshotBlob = formData.get('snapshot') as Blob;
-    let snapshotStorageId: Id<'_storage'> | null = null;
-    if (snapshotBlob.size !== 0) {
+    if (formData.has('snapshot')) {
+      const snapshotBlob = formData.get('snapshot') as Blob;
       snapshotStorageId = await ctx.storage.store(snapshotBlob);
     }
     if (messageStorageId !== null) {

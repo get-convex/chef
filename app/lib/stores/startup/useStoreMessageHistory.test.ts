@@ -53,6 +53,7 @@ describe('getLastCompletePart', () => {
     expect(lastCompletePart).toEqual({
       messageIndex: 0,
       partIndex: 0,
+      hasNextPart: false,
     });
   });
 
@@ -62,7 +63,7 @@ describe('getLastCompletePart', () => {
     expect(lastCompletePart).toBeNull();
   });
 
-  test.only('returns null if the last part is not complete', () => {
+  test('returns null if the last part is not complete', () => {
     const assistantMessage = createMessage({
       role: 'assistant',
       parts: [
@@ -91,23 +92,21 @@ describe('getLastCompletePart', () => {
     expect(lastCompletePart).toEqual({
       messageIndex: 1,
       partIndex: 0,
+      hasNextPart: true,
     });
   });
 
   test('returns previous part if the last part is incomplete tool invocation part', () => {
-    const userMessage = createMessage({
-      role: 'user',
+    const messageA = createMessage({
+      role: 'assistant',
       parts: [{ type: 'text', text: 'test' }, createToolInvocationPart({ state: 'partial-call' })],
     });
-    const assistantMessage = createMessage({
-      role: 'assistant',
-      parts: [{ type: 'text', text: 'test' }],
-    });
-    const lastCompletePart = getLastCompletePart([userMessage, assistantMessage], 'streaming');
+    const lastCompletePart = getLastCompletePart([messageA], 'streaming');
 
     expect(lastCompletePart).toEqual({
-      messageIndex: 1,
+      messageIndex: 0,
       partIndex: 0,
+      hasNextPart: true,
     });
   });
 
@@ -125,6 +124,7 @@ describe('getLastCompletePart', () => {
     expect(lastCompletePart).toEqual({
       messageIndex: 0,
       partIndex: 1,
+      hasNextPart: true,
     });
   });
 });

@@ -8,17 +8,20 @@ import { api } from '@convex/_generated/api';
 import { description as descriptionStore } from '~/lib/stores/description';
 import { compressWithLz4 } from '~/lib/compression';
 
-export const lastCompleteMessageInfoStore = atom<{
+type CompleteMessageInfo = {
   messageIndex: number;
   partIndex: number;
+  hasNextPart: boolean;
   allMessages: Message[];
-} | null>(null);
+};
+
+export const lastCompleteMessageInfoStore = atom<CompleteMessageInfo | null>(null);
 
 export async function prepareMessageHistory(args: {
   chatId: string;
   sessionId: string;
-  completeMessageInfo: { messageIndex: number; partIndex: number; allMessages: Message[] } | null;
-  persistedMessageInfo: { messageIndex: number; partIndex: number } | null;
+  completeMessageInfo: CompleteMessageInfo;
+  persistedMessageInfo: { messageIndex: number; partIndex: number };
 }): Promise<{
   url: URL;
   update: {
@@ -27,15 +30,11 @@ export async function prepareMessageHistory(args: {
     messageIndex: number;
     partIndex: number;
   } | null;
-} | null> {
+}> {
   const { chatId, sessionId, completeMessageInfo, persistedMessageInfo } = args;
-  if (completeMessageInfo === null || persistedMessageInfo === null) {
-    // Not initialized yet
-    return null;
-  }
   const { messageIndex, partIndex, allMessages } = completeMessageInfo;
   const siteUrl = getConvexSiteUrl();
-  const url = new URL(`${siteUrl}/store_messages`);
+  const url = new URL(`${siteUrl}/store_chat`);
 
   url.searchParams.set('chatId', chatId);
   url.searchParams.set('sessionId', sessionId);
@@ -74,13 +73,15 @@ export async function handleUrlHintAndDescription(
   }
 }
 
-export async function waitForNewMessages(messageIndex: number, partIndex: number) {
+export async function waitForNewMessages(messageIndex: number, partIndex: number, alertOnNextPartStart: boolean) {
   return new Promise<void>((resolve) => {
     let unsubscribe: (() => void) | null = null;
     unsubscribe = lastCompleteMessageInfoStore.subscribe((lastCompleteMessageInfo) => {
       if (
         lastCompleteMessageInfo !== null &&
-        (lastCompleteMessageInfo.messageIndex !== messageIndex || lastCompleteMessageInfo.partIndex !== partIndex)
+        (lastCompleteMessageInfo.messageIndex !== messageIndex ||
+          lastCompleteMessageInfo.partIndex !== partIndex ||
+          (alertOnNextPartStart && lastCompleteMessageInfo.hasNextPart))
       ) {
         if (unsubscribe !== null) {
           unsubscribe();

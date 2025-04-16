@@ -1,7 +1,6 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import type { Message } from '@ai-sdk/react';
 import { useConvex } from 'convex/react';
-import { chatSyncState } from '~/lib/stores/startup/history';
 import { lastCompleteMessageInfoStore } from '~/lib/stores/startup/messages';
 
 /**
@@ -16,46 +15,12 @@ import { lastCompleteMessageInfoStore } from '~/lib/stores/startup/messages';
  */
 export function useStoreMessageHistory(chatId: string) {
   const convex = useConvex();
-  // Local state that includes incomplete parts too for the beforeunload handler
-  const lastMessageRank = useRef(-1);
-  const partIndex = useRef(-1);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return () => {
-        // No-op
-      };
-    }
-    const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-      const lastPersistedMessageInfo = chatSyncState.get().persistedMessageInfo;
-      if (lastPersistedMessageInfo !== null) {
-        if (
-          lastMessageRank.current === lastPersistedMessageInfo.messageIndex &&
-          partIndex.current === lastPersistedMessageInfo.partIndex
-        ) {
-          return undefined;
-        }
-        // Some browsers require both preventDefault and setting returnValue
-        e.preventDefault();
-        e.returnValue = '';
-        return '';
-      }
-      return undefined;
-    };
-    window.addEventListener('beforeunload', beforeUnloadHandler);
-    return () => {
-      window.removeEventListener('beforeunload', beforeUnloadHandler);
-    };
-  }, []);
 
   return useCallback(
     async (messages: Message[], streamStatus: 'streaming' | 'submitted' | 'ready' | 'error') => {
       if (messages.length === 0) {
         return;
       }
-
-      lastMessageRank.current = messages.length - 1;
-      partIndex.current = (messages[messages.length - 1].parts?.length ?? 0) - 1;
 
       const lastCompleteMessageInfo = getLastCompletePart(messages, streamStatus);
       if (lastCompleteMessageInfo === null) {
@@ -73,6 +38,7 @@ export function useStoreMessageHistory(chatId: string) {
         messageIndex: lastCompleteMessageInfo.messageIndex,
         partIndex: lastCompleteMessageInfo.partIndex,
         allMessages: messages,
+        hasNextPart: lastCompleteMessageInfo.hasNextPart,
       });
     },
     [convex, chatId],
@@ -120,7 +86,7 @@ function getPreceedingPart(
 export function getLastCompletePart(
   messages: Message[],
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
-): { messageIndex: number; partIndex: number } | null {
+): { messageIndex: number; partIndex: number; hasNextPart: boolean } | null {
   if (messages.length === 0) {
     return null;
   }
@@ -133,16 +99,20 @@ export function getLastCompletePart(
   if (lastPart === null) {
     throw new Error('Last part is null');
   }
-  if (lastPart.type === 'tool-invocation') {
-    if (lastPart.toolInvocation.state === 'result') {
-      return { messageIndex: lastPartIndices.messageIndex, partIndex: lastPartIndices.partIndex };
-    } else {
-      return getPreceedingPart(messages, lastPartIndices);
-    }
+
+  const isLastPartComplete =
+    lastPart.type === 'tool-invocation' ? lastPart.toolInvocation.state === 'result' : streamStatus !== 'streaming';
+  if (isLastPartComplete) {
+    return {
+      messageIndex: lastPartIndices.messageIndex,
+      partIndex: lastPartIndices.partIndex,
+      // This handles the edge case where the last message is empty
+      hasNextPart: lastPartIndices.messageIndex !== messages.length - 1,
+    };
   }
-  if (streamStatus !== 'streaming') {
-    return { messageIndex: lastPartIndices.messageIndex, partIndex: lastPartIndices.partIndex };
-  } else {
-    return getPreceedingPart(messages, lastPartIndices);
+  const preceedingPart = getPreceedingPart(messages, lastPartIndices);
+  if (preceedingPart === null) {
+    return null;
   }
+  return { messageIndex: preceedingPart.messageIndex, partIndex: preceedingPart.partIndex, hasNextPart: true };
 }
