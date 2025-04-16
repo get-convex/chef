@@ -40,6 +40,10 @@ export const resendProxy = httpAction(async (ctx, req) => {
         return new Response(JSON.stringify('Convex Resend proxy does not support scheduled emails.'), { status: 400 });
     }
 
+    if (body.headers) {
+        return new Response(JSON.stringify('Convex Resend proxy does not support custom headers.'), { status: 400 });
+    }
+
     const authHeader = headers.get('Authorization');
     if (!authHeader) {
         return new Response(JSON.stringify('Unauthorized'), { status: 401 });
@@ -86,7 +90,6 @@ export const resendProxy = httpAction(async (ctx, req) => {
             scheduled_at: body.scheduled_at,
             reply_to: body.reply_to,
             text: body.text,
-            headers: body.headers,
             attachments: body.attachments,
             tags: body.tags,
         }),
