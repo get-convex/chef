@@ -1,0 +1,27 @@
+{
+  "name": "chefshot",
+  "version": "1.0.0",
+  "description": "Run a prompt through Chef via browser automation",
+  "main": "interact.ts",
+  "type": "module",
+  "scripts": {
+    "interact": "tsx interact.ts",
+    "postinstall": "playwright install chromium"
+  },
+  "bin": {
+    "chefshot": "./chefshot.js"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.42.1",
+    "dotenv": "^16.4.5",
+    "jszip": "^3.10.1",
+    "typescript": "^5.4.2",
+    "tsx": "^4.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.30",
+    "@types/unzipper": "^0.10.9",
+    "commander": "^13.1.0"
+  },
+  "packageManager": "pnpm@9.5.0"
+}

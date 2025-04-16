@@ -3,7 +3,7 @@ import { useChefAuthContext } from './chat/ChefAuthWrapper';
 import { Loading } from './Loading';
 import { useAuth0 } from '@auth0/auth0-react';
 import { toast } from 'sonner';
-import { Link } from '@remix-run/react';
+import { Link, useSearchParams } from '@remix-run/react';
 import { classNames } from '~/utils/classNames';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { useConvex, useConvexAuth } from 'convex/react';
@@ -29,6 +29,7 @@ export const ChefSignInPage = () => {
 function ConvexSignInForm() {
   const { loginWithRedirect } = useAuth0();
   const [started, setStarted] = useState(false);
+  const [query] = useSearchParams();
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4">
       <h1>Connect to Convex</h1>
@@ -39,7 +40,7 @@ function ConvexSignInForm() {
             setStarted(true);
             loginWithRedirect({
               authorizationParams: {
-                connection: 'github',
+                connection: query.get('use-email') ? 'Username-Password-Authentication' : 'github',
                 redirect_uri: `${window.location.origin}/signin`,
               },
             });

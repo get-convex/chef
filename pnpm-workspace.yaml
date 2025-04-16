@@ -1,0 +1,4 @@
+packages:
+  - 'chefshot'
+  # You can add more workspace packages here later if needed
+  # - "packages/*"

@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import React, { type ReactNode, type RefCallback, useCallback, useState } from 'react';
+import React, { type ReactNode, type RefCallback, useCallback, useState, useMemo } from 'react';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import { classNames } from '~/utils/classNames';
@@ -70,6 +70,17 @@ interface BaseChatProps {
   clearAlert: () => void;
 }
 
+function useSerializedMessages(messages: Message[]) {
+  return useMemo(() => {
+    try {
+      return JSON.stringify(messages);
+    } catch {
+      console.log('error stringifying messages');
+      return undefined;
+    }
+  }, [messages]);
+}
+
 export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   (
     {
@@ -104,6 +115,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
+    const messagesString = useSerializedMessages(messages);
 
     const handleSendMessage = (messageInput?: string) => {
       if (sendMessage) {
@@ -122,6 +134,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         ref={ref}
         className={classNames(styles.BaseChat, 'relative flex h-full w-full overflow-hidden')}
         data-chat-visible={showChat}
+        data-messages-for-evals={messagesString}
       >
         <Menu />
         <div ref={scrollRef} className="flex size-full flex-col overflow-y-auto">

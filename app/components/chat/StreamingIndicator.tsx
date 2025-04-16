@@ -122,7 +122,10 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
 
   return (
     <AnimatePresence>
-      <div className={classNames('border', 'rounded-lg relative w-full max-w-chat mx-auto z-prompt')}>
+      <div
+        data-streaming-indicator-stream-status={streamStatus}
+        className={classNames('border', 'rounded-lg relative w-full max-w-chat mx-auto z-prompt')}
+      >
         <div
           className={classNames(
             'bg-background-primary/75 backdrop-blur-md',
