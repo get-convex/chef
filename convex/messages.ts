@@ -172,7 +172,7 @@ export const get = query({
 
 export function getLatestChatMessageStorageState(ctx: QueryCtx, chat: Doc<'chats'>) {
   const indexExpression = chat.lastMessageRank
-    ? (q: any) => q.eq('chatId', chat._id).eq('lastMessageRank', chat.lastMessageRank)
+    ? (q: any) => q.eq('chatId', chat._id).lte('lastMessageRank', chat.lastMessageRank)
     : (q: any) => q.eq('chatId', chat._id);
   return ctx.db.query('chatMessagesStorageState').withIndex('byChatId', indexExpression).order('desc').first();
 }
@@ -323,6 +323,40 @@ export const updateStorageState = internalMutation({
       partIndex,
       snapshotId,
     });
+  },
+});
+
+export const earliestRewindableMessageRank = query({
+  args: {
+    sessionId: v.id('sessions'),
+    chatId: v.string(),
+  },
+  returns: v.number(),
+  handler: async (ctx, args): Promise<number> => {
+    const { chatId, sessionId } = args;
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    if (!chat) {
+      throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
+    }
+    const latestState = await getLatestChatMessageStorageState(ctx, chat);
+    if (!latestState) {
+      throw new ConvexError({ code: 'NotFound', message: 'Chat messages storage state not found' });
+    }
+    const docs = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id).lte('lastMessageRank', latestState.lastMessageRank))
+      .order('asc')
+      .collect();
+
+    console.log('Found docs:', docs);
+    console.log('Latest state:', latestState);
+
+    const docWithSnapshot = docs.find((doc) => doc.snapshotId !== undefined && doc.snapshotId !== null);
+
+    if (!docWithSnapshot) {
+      throw new ConvexError({ code: 'NotFound', message: 'No snapshot found for this chat' });
+    }
+    return docWithSnapshot.lastMessageRank;
   },
 });
 
