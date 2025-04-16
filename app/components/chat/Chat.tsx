@@ -358,7 +358,10 @@ export const Chat = memo(
           message = (
             <>
               {message}
-              <a href="https://chef.convex.dev/settings">here</a>.
+              <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
+                here
+              </a>
+              .
             </>
           );
         } else {
