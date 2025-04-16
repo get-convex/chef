@@ -52,7 +52,11 @@ const workbenchVariants = {
   },
 } satisfies Variants;
 
-export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializationOptions }: WorkspaceProps) => {
+export const Workbench = memo(function Workbench({
+  chatStarted,
+  isStreaming,
+  terminalInitializationOptions,
+}: WorkspaceProps) {
   renderLogger.trace('Workbench');
 
   // const modifiedFiles = Array.from(useStore(workbenchStore.unsavedFiles).keys());
@@ -275,7 +279,7 @@ interface ViewProps extends HTMLMotionProps<'div'> {
   children: JSX.Element;
 }
 
-const View = memo(({ children, ...props }: ViewProps) => {
+const View = memo(function View({ children, ...props }: ViewProps) {
   return (
     <motion.div className="absolute inset-0" transition={viewTransition} {...props}>
       {children}

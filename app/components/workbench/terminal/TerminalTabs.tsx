@@ -19,7 +19,7 @@ import { CaretDownIcon, PlusIcon } from '@radix-ui/react-icons';
 const MAX_TERMINALS = 5;
 export const DEFAULT_TERMINAL_SIZE = 25;
 
-export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitializationOptions) => {
+export const TerminalTabs = memo(function TerminalTabs(terminalInitializationOptions?: TerminalInitializationOptions) {
   const showTerminal = useStore(workbenchStore.showTerminal);
   const theme = useStore(themeStore);
 

@@ -8,7 +8,7 @@ interface ThemeSwitchProps {
   className?: string;
 }
 
-export const ThemeSwitch = memo(({ className }: ThemeSwitchProps) => {
+export const ThemeSwitch = memo(function ThemeSwitch({ className }: ThemeSwitchProps) {
   const theme = useStore(themeStore);
   const [domLoaded, setDomLoaded] = useState(false);
 

@@ -8,7 +8,7 @@ import { UpdateIcon, MobileIcon, ExternalLinkIcon, CrossCircledIcon } from '@rad
 
 type ResizeSide = 'left' | 'right' | null;
 
-export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClose: () => void }) => {
+export const Preview = memo(function Preview({ showClose, onClose }: { showClose: boolean; onClose: () => void }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);

@@ -4,7 +4,7 @@ import { convexProjectStore } from '~/lib/stores/convexProject';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 
-export const Dashboard = memo(() => {
+export const Dashboard = memo(function Dashboard() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 

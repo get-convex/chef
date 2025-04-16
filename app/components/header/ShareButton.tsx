@@ -19,7 +19,7 @@ const Button = forwardRef<
     className?: string;
     title?: string;
   }
->(({ active = false, disabled = false, children, onClick, className, title }, ref) => {
+>(function Button({ active = false, disabled = false, children, onClick, className, title }, ref) {
   return (
     <button
       ref={ref}

@@ -17,7 +17,7 @@ interface MarkdownProps {
   limitedMarkdown?: boolean;
 }
 
-export const Markdown = memo(({ children, html = false, limitedMarkdown = false }: MarkdownProps) => {
+export const Markdown = memo(function Markdown({ children, html = false, limitedMarkdown = false }: MarkdownProps) {
   logger.trace('Render');
 
   const components = useMemo(() => {

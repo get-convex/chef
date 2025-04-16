@@ -85,33 +85,31 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
   );
 }
 
-const ChatActionButton = forwardRef(
-  (
-    {
-      toolTipContent,
-      icon,
-      className,
-      onClick,
-    }: {
-      toolTipContent: string;
-      icon: React.ReactNode;
-      className?: string;
-      onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
-      btnTitle?: string;
-    },
-    ref: ForwardedRef<HTMLButtonElement>,
-  ) => {
-    return (
-      <Button
-        ref={ref}
-        variant="neutral"
-        icon={icon}
-        inline
-        size="xs"
-        tip={toolTipContent}
-        className={className}
-        onClick={onClick}
-      />
-    );
+const ChatActionButton = forwardRef(function ChatActionButton(
+  {
+    toolTipContent,
+    icon,
+    className,
+    onClick,
+  }: {
+    toolTipContent: string;
+    icon: React.ReactNode;
+    className?: string;
+    onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+    btnTitle?: string;
   },
-);
+  ref: ForwardedRef<HTMLButtonElement>,
+) {
+  return (
+    <Button
+      ref={ref}
+      variant="neutral"
+      icon={icon}
+      inline
+      size="xs"
+      tip={toolTipContent}
+      className={className}
+      onClick={onClick}
+    />
+  );
+});

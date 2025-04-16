@@ -6,7 +6,7 @@ interface PanelHeaderProps {
   children: React.ReactNode;
 }
 
-export const PanelHeader = memo(({ className, children }: PanelHeaderProps) => {
+export const PanelHeader = memo(function PanelHeader({ className, children }: PanelHeaderProps) {
   return (
     <div
       className={classNames(

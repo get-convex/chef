@@ -5,7 +5,7 @@ interface UserMessageProps {
   content: string | Array<{ type: string; text?: string; image?: string }>;
 }
 
-export const UserMessage = memo(({ content }: UserMessageProps) => {
+export const UserMessage = memo(function UserMessage({ content }: UserMessageProps) {
   if (Array.isArray(content)) {
     const textItem = content.find((item) => item.type === 'text');
     const textContent = stripMetadata(textItem?.text || '');

@@ -8,7 +8,7 @@ interface AssistantMessageProps {
   message: Message;
 }
 
-export const AssistantMessage = memo(({ message }: AssistantMessageProps) => {
+export const AssistantMessage = memo(function AssistantMessage({ message }: AssistantMessageProps) {
   if (!message.parts) {
     return (
       <div className="w-full overflow-hidden">

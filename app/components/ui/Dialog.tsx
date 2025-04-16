@@ -15,7 +15,7 @@ interface DialogButtonProps {
   disabled?: boolean;
 }
 
-export const DialogButton = memo(({ type, children, onClick, disabled }: DialogButtonProps) => {
+export const DialogButton = memo(function DialogButton({ type, children, onClick, disabled }: DialogButtonProps) {
   return (
     <button
       className={classNames('inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors', {
@@ -33,7 +33,7 @@ export const DialogButton = memo(({ type, children, onClick, disabled }: DialogB
   );
 });
 
-export const DialogTitle = memo(({ className, children, ...props }: RadixDialog.DialogTitleProps) => {
+export const DialogTitle = memo(function DialogTitle({ className, children, ...props }: RadixDialog.DialogTitleProps) {
   return (
     <RadixDialog.Title
       className={classNames('text-lg font-medium text-content-primary', 'flex items-center gap-2', className)}
@@ -44,7 +44,11 @@ export const DialogTitle = memo(({ className, children, ...props }: RadixDialog.
   );
 });
 
-export const DialogDescription = memo(({ className, children, ...props }: RadixDialog.DialogDescriptionProps) => {
+export const DialogDescription = memo(function DialogDescription({
+  className,
+  children,
+  ...props
+}: RadixDialog.DialogDescriptionProps) {
   return (
     <RadixDialog.Description className={classNames('text-sm text-content-secondary', 'mt-1', className)} {...props}>
       {children}
@@ -94,49 +98,54 @@ interface DialogProps {
   onBackdrop?: () => void;
 }
 
-export const Dialog = memo(
-  ({ children, className, innerClassName, showCloseButton = true, onClose, onBackdrop }: DialogProps) => {
-    return (
-      <RadixDialog.Portal>
-        <RadixDialog.Overlay asChild>
-          <motion.div
-            className={classNames('fixed inset-0 z-40', 'bg-[#FAFAFA]/80 dark:bg-[#0A0A0A]/80', 'backdrop-blur-[2px]')}
-            initial="closed"
-            animate="open"
-            exit="closed"
-            variants={dialogBackdropVariants}
-            onClick={onBackdrop}
-          />
-        </RadixDialog.Overlay>
-        <RadixDialog.Content asChild>
-          <motion.div
-            className={classNames(
-              'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
-              'bg-[#FAFAFA] dark:bg-[#0A0A0A]',
-              'rounded-lg shadow-lg',
-              'border border-[#E5E5E5] dark:border-[#1A1A1A]',
-              'z-40 w-[520px]',
-              className,
+export const Dialog = memo(function Dialog({
+  children,
+  className,
+  innerClassName,
+  showCloseButton = true,
+  onClose,
+  onBackdrop,
+}: DialogProps) {
+  return (
+    <RadixDialog.Portal>
+      <RadixDialog.Overlay asChild>
+        <motion.div
+          className={classNames('fixed inset-0 z-40', 'bg-[#FAFAFA]/80 dark:bg-[#0A0A0A]/80', 'backdrop-blur-[2px]')}
+          initial="closed"
+          animate="open"
+          exit="closed"
+          variants={dialogBackdropVariants}
+          onClick={onBackdrop}
+        />
+      </RadixDialog.Overlay>
+      <RadixDialog.Content asChild>
+        <motion.div
+          className={classNames(
+            'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+            'bg-[#FAFAFA] dark:bg-[#0A0A0A]',
+            'rounded-lg shadow-lg',
+            'border border-[#E5E5E5] dark:border-[#1A1A1A]',
+            'z-40 w-[520px]',
+            className,
+          )}
+          initial="closed"
+          animate="open"
+          exit="closed"
+          variants={dialogVariants}
+        >
+          <div className={classNames('flex flex-col', innerClassName)}>
+            {children}
+            {showCloseButton && (
+              <RadixDialog.Close asChild onClick={onClose}>
+                <IconButton
+                  icon={<Cross2Icon />}
+                  className="absolute right-3 top-3 text-content-secondary hover:text-content-primary"
+                />
+              </RadixDialog.Close>
             )}
-            initial="closed"
-            animate="open"
-            exit="closed"
-            variants={dialogVariants}
-          >
-            <div className={classNames('flex flex-col', innerClassName)}>
-              {children}
-              {showCloseButton && (
-                <RadixDialog.Close asChild onClick={onClose}>
-                  <IconButton
-                    icon={<Cross2Icon />}
-                    className="absolute right-3 top-3 text-content-secondary hover:text-content-primary"
-                  />
-                </RadixDialog.Close>
-              )}
-            </div>
-          </motion.div>
-        </RadixDialog.Content>
-      </RadixDialog.Portal>
-    );
-  },
-);
+          </div>
+        </motion.div>
+      </RadixDialog.Content>
+    </RadixDialog.Portal>
+  );
+});

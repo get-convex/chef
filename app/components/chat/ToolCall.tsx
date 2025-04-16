@@ -33,8 +33,7 @@ import type { ZodError } from 'zod';
 import { Spinner } from '@ui/Spinner';
 import { FolderIcon } from '@heroicons/react/24/outline';
 
-export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => {
-  const { partId, toolCallId } = props;
+export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId: PartId; toolCallId: string }) {
   const userToggledAction = useRef(false);
   const [showAction, setShowAction] = useState(false);
 
@@ -123,28 +122,32 @@ export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => 
   );
 });
 
-const ToolUseContents = memo(
-  ({ artifact, invocation }: { artifact: ArtifactState; invocation: ConvexToolInvocation }) => {
-    switch (invocation.toolName) {
-      case 'deploy': {
-        return <DeployTool artifact={artifact} invocation={invocation} />;
-      }
-      case 'view': {
-        return <ViewTool invocation={invocation} />;
-      }
-      case 'npmInstall': {
-        return <NpmInstallTool artifact={artifact} invocation={invocation} />;
-      }
-      case 'edit': {
-        return <EditTool invocation={invocation} />;
-      }
-      default: {
-        // Fallback for other tool types
-        return <pre className="overflow-x-auto whitespace-pre-wrap">{JSON.stringify(invocation, null, 2)}</pre>;
-      }
+const ToolUseContents = memo(function ToolUseContents({
+  artifact,
+  invocation,
+}: {
+  artifact: ArtifactState;
+  invocation: ConvexToolInvocation;
+}) {
+  switch (invocation.toolName) {
+    case 'deploy': {
+      return <DeployTool artifact={artifact} invocation={invocation} />;
     }
-  },
-);
+    case 'view': {
+      return <ViewTool invocation={invocation} />;
+    }
+    case 'npmInstall': {
+      return <NpmInstallTool artifact={artifact} invocation={invocation} />;
+    }
+    case 'edit': {
+      return <EditTool invocation={invocation} />;
+    }
+    default: {
+      // Fallback for other tool types
+      return <pre className="overflow-x-auto whitespace-pre-wrap">{JSON.stringify(invocation, null, 2)}</pre>;
+    }
+  }
+});
 
 function DeployTool({ artifact, invocation }: { artifact: ArtifactState; invocation: ConvexToolInvocation }) {
   if (invocation.toolName !== 'deploy') {
@@ -529,7 +532,11 @@ interface LineNumberViewerProps {
   language?: string;
 }
 
-const LineNumberViewer = memo(({ lines, startLineNumber = 1, language = 'typescript' }: LineNumberViewerProps) => {
+const LineNumberViewer = memo(function LineNumberViewer({
+  lines,
+  startLineNumber = 1,
+  language = 'typescript',
+}: LineNumberViewerProps) {
   const [highlighter, setHighlighter] = useState<any>(null);
   const theme = useStore(themeStore);
 

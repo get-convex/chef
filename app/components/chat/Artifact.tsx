@@ -29,7 +29,7 @@ interface ArtifactProps {
   partId: PartId;
 }
 
-export const Artifact = memo(({ partId }: ArtifactProps) => {
+export const Artifact = memo(function Artifact({ partId }: ArtifactProps) {
   const userToggledActions = useRef(false);
   const [showActions, setShowActions] = useState(false);
   const [allActionFinished, setAllActionFinished] = useState(false);
@@ -137,7 +137,7 @@ function openArtifactInWorkbench(filePath: RelativePath) {
   workbenchStore.setSelectedFile(getAbsolutePath(filePath));
 }
 
-const ActionList = memo(({ actions }: ActionListProps) => {
+const ActionList = memo(function ActionList({ actions }: ActionListProps) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
       <ul className="list-none space-y-2.5">
