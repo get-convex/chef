@@ -200,7 +200,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       {disableChatMessage}
                     </Callout>
                   )}
-                  <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border bg-background-primary/75 backdrop-blur-md transition-all duration-200 focus-within:border-border-selected">
+                  <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border bg-background-primary/75 backdrop-blur-md transition-all duration-200 has-[textarea:focus]:border-border-selected">
                     <FilePreview
                       files={uploadedFiles}
                       imageDataList={imageDataList}
@@ -220,7 +220,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         ref={textareaRef}
                         className={classNames(
                           'w-full pl-4 pt-4 pr-16 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
-                          'focus:ring-0',
+                          'focus:outline-none',
                           'disabled:opacity-50 disabled:cursor-not-allowed',
                         )}
                         disabled={disableChatMessage !== null || maintenanceMode}
