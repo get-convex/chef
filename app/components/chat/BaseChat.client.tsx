@@ -107,13 +107,16 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
     const messagesString = useSerializedMessages(messages);
 
-    const handleSendMessage = (messageInput?: string) => {
-      if (sendMessage) {
-        sendMessage(messageInput).then(() => {
-          handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
-        });
-      }
-    };
+    const handleSendMessage = useCallback(
+      (messageInput?: string) => {
+        if (sendMessage) {
+          sendMessage(messageInput).then(() => {
+            handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
+          });
+        }
+      },
+      [sendMessage, handleInputChange],
+    );
     const sessionId = useConvexSessionIdOrNullOrLoading();
     const chefAuthState = useChefAuth();
 
@@ -125,6 +128,15 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         handleSendMessage?.(lastUserMessage.content);
       }
     }, [lastUserMessage]);
+
+    const handleClickSendButton = useCallback(() => {
+      if (isStreaming) {
+        handleStop?.();
+        return;
+      }
+
+      handleSendMessage?.();
+    }, [isStreaming, handleStop, handleSendMessage]);
 
     const baseChat = (
       <div
@@ -247,15 +259,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           sendMessageInProgress ||
                           maintenanceMode
                         }
-                        onClick={() => {
-                          if (isStreaming) {
-                            handleStop?.();
-                            return;
-                          }
-                          if (input.length > 0) {
-                            handleSendMessage?.();
-                          }
-                        }}
+                        onClick={handleClickSendButton}
                         tip={
                           chefAuthState.kind === 'unauthenticated'
                             ? 'Please sign in to continue'
