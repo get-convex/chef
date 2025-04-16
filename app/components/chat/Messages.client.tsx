@@ -73,6 +73,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                     )}
                   </div>
                 )}
+                {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
                 {earliestRewindableMessageRank !== undefined &&
                   index >= earliestRewindableMessageRank &&
                   isUserMessage && (
@@ -84,7 +85,6 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                       <RotateCounterClockwiseIcon className="size-4" />
                     </button>
                   )}
-                {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
               </div>
             );
           })
