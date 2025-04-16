@@ -52,6 +52,7 @@ interface MessageState {
   currentArtifact?: BoltArtifactData;
   currentAction: BoltActionData;
   actionId: number;
+  hasCreatedArtifact: boolean;
 }
 
 function cleanoutMarkdownSyntax(content: string) {
@@ -103,6 +104,7 @@ export class StreamingMessageParser {
         insideArtifact: false,
         currentAction: { content: '' },
         actionId: 0,
+        hasCreatedArtifact: false,
       };
 
       this.#messages.set(partId, state);
@@ -262,9 +264,15 @@ export class StreamingMessageParser {
 
               this._options.callbacks?.onArtifactOpen?.({ partId, ...currentArtifact });
 
-              const artifactFactory = this._options.artifactElement ?? createArtifactElement;
+              // Sometimes the agent creates multiple artifacts in a single part,
+              // which we don't want. In order to prevent these rendering multiple times,
+              // we'll only add the element for the artifact once.
+              if (!state.hasCreatedArtifact) {
+                const artifactFactory = this._options.artifactElement ?? createArtifactElement;
 
-              output += artifactFactory({ partId });
+                output += artifactFactory({ partId });
+                state.hasCreatedArtifact = true;
+              }
 
               i = openTagEnd + 1;
             } else {
