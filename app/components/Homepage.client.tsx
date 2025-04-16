@@ -43,6 +43,7 @@ const ChatWrapper = ({ initialId }: { initialId: string }) => {
       isReload={false}
       hadSuccessfulDeploy={false}
       initialInput={prefill ?? undefined}
+      earliestRewindableMessageRank={0}
     />
   );
 };
