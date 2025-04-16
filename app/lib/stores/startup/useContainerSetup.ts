@@ -145,7 +145,6 @@ async function setupResendToken(convex: ConvexReactClient, project: ConvexProjec
     return;
   }
   const token = await convex.mutation(api.resendProxy.issueResendToken);
-  console.error('Resend token', token);
   if (token) {
     await setEnvVariables(project, {
       CONVEX_RESEND_API_KEY: token,
