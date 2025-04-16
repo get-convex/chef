@@ -8,6 +8,7 @@ import { ShareButton } from './ShareButton';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { HamburgerMenuIcon } from '@radix-ui/react-icons';
 import { DownloadButton } from './DownloadButton';
+import { OverflowMenu } from './OverflowMenu';
 
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
@@ -50,6 +51,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
           <ClientOnly>
             {() => (
               <div className="flex flex-wrap items-center gap-2">
+                <OverflowMenu />
                 <DownloadButton />
                 <ShareButton />
                 <DeployButton />
