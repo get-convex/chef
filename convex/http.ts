@@ -6,6 +6,7 @@ import { ConvexError } from 'convex/values';
 import { openaiProxy } from './openaiProxy';
 import { corsRouter } from 'convex-helpers/server/cors';
 import { compressMessages } from './compressMessages';
+import { resendProxy } from './resendProxy';
 
 const http = httpRouter();
 const httpWithCors = corsRouter(http, {});
@@ -65,6 +66,12 @@ http.route({
   pathPrefix: '/openai-proxy/',
   method: 'POST',
   handler: openaiProxy,
+});
+
+http.route({
+  pathPrefix: '/resend-proxy/',
+  method: 'POST',
+  handler: resendProxy,
 });
 
 httpWithCors.route({

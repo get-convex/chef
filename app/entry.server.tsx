@@ -11,9 +11,13 @@ const renderToReadableStream = renderToReadableStreamSSR as typeof RenderToReada
 import { Head } from './root';
 import { themeStore } from '~/lib/stores/theme';
 
+const enableSentry =
+  globalThis.process.env.VERCEL_ENV === 'production' || globalThis.process.env.VERCEL_GIT_COMMIT_REF === 'staging';
+
 Sentry.init({
   dsn: 'https://16615d9875b4630cfabeed5d376c4343@o1192621.ingest.us.sentry.io/4509097600811008',
   tracesSampleRate: 1,
+  enabled: enableSentry,
 });
 
 export function handleError(error: Error, { request }: { request: Request }) {

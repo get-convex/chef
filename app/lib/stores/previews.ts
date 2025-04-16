@@ -112,7 +112,6 @@ export class PreviewsStore {
       sourcePort.toString(),
       targetPort.toString(),
     ]);
-    console.log('starting proxy process');
 
     proxyState.stop = () => {
       proxyLogger.info('Stopping proxy');

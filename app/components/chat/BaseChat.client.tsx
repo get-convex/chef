@@ -135,7 +135,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         return;
       }
 
-      handleSendMessage?.();
+      if (input.length > 0) {
+        handleSendMessage?.();
+      }
     }, [isStreaming, handleStop, handleSendMessage]);
 
     const baseChat = (

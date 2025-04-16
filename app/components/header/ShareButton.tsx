@@ -96,7 +96,7 @@ export function ShareButton() {
       <Popover.Trigger asChild>
         <Button active={isOpen}>
           <Share2Icon />
-          <span>Share</span>
+          <span>Share Chat</span>
         </Button>
       </Popover.Trigger>
 

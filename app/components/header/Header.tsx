@@ -4,10 +4,11 @@ import { chatStore } from '~/lib/stores/chatId';
 import { HeaderActionButtons } from './HeaderActionButtons.client';
 import { ChatDescription } from '~/components/header/ChatDescription.client';
 import { DeployButton } from './DeployButton';
-import { FeedbackButton } from './FeedbackButton';
 import { ShareButton } from './ShareButton';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { HamburgerMenuIcon } from '@radix-ui/react-icons';
+import { DownloadButton } from './DownloadButton';
+import { OverflowMenu } from './OverflowMenu';
 
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
@@ -50,7 +51,8 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
           <ClientOnly>
             {() => (
               <div className="flex flex-wrap items-center gap-2">
-                <FeedbackButton />
+                <OverflowMenu />
+                <DownloadButton />
                 <ShareButton />
                 <DeployButton />
                 <div className="mr-1">

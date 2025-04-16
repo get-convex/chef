@@ -24,7 +24,7 @@ import { convexProjectStore } from '~/lib/stores/convexProject';
 import { BackupStatusIndicator } from '~/components/BackupStatusIndicator';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { getAbsolutePath } from '~/lib/stores/files';
-import { PlusIcon, Cross2Icon, DownloadIcon } from '@radix-ui/react-icons';
+import { PlusIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { CommandLineIcon } from '@heroicons/react/24/outline';
 
 interface WorkspaceProps {
@@ -109,7 +109,6 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
   }, []);
 
   const onEditorWheel = useCallback<OnEditorWheel>(() => {
-    console.log('wheeeeeel!');
     workbenchStore.stopFollowingStreamedCode();
   }, []);
 
@@ -193,18 +192,6 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                     <div className="flex overflow-y-auto">
                       <BackupStatusIndicator />
                       <div className="w-4" />
-                      <PanelHeaderButton
-                        className="mr-1 text-sm"
-                        onClick={() => {
-                          const convexProject = convexProjectStore.get();
-                          workbenchStore.downloadZip({
-                            convexProject: convexProject ?? null,
-                          });
-                        }}
-                      >
-                        <DownloadIcon />
-                        Download Code
-                      </PanelHeaderButton>
                       <PanelHeaderButton
                         className="mr-1 text-sm"
                         onClick={() => {
