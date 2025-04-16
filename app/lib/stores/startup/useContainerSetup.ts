@@ -19,6 +19,7 @@ import { initializeConvexAuth } from '~/lib/convexAuth';
 import { appendEnvVarIfNotSet } from '~/utils/envFileUtils';
 import { getFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
 import { chatSyncState } from '~/lib/stores/startup/history';
+import { FILE_EVENTS_DEBOUNCE_MS } from '~/lib/stores/files';
 
 const TEMPLATE_URL = '/template-snapshot-80c98556.bin';
 
@@ -111,12 +112,16 @@ async function setupContainer(
   await initializeConvexAuth(convexProject);
 
   setContainerBootState(ContainerBootState.STARTING_BACKUP);
-  initializeFileSystemBackup();
+  await initializeFileSystemBackup();
 
   setContainerBootState(ContainerBootState.READY);
 }
 
-function initializeFileSystemBackup() {
+async function initializeFileSystemBackup() {
+  // This is a bit racy, but we need to flush the current file events before
+  // deciding that we're synced up to the current update counter. Sleep for
+  // twice the batching interval.
+  await new Promise((resolve) => setTimeout(resolve, FILE_EVENTS_DEBOUNCE_MS * 2));
   const currentChatSyncState = chatSyncState.get();
   if (currentChatSyncState.savedFileUpdateCounter === null) {
     const fileUpdateCounter = getFileUpdateCounter();
