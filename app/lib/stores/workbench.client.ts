@@ -232,8 +232,8 @@ export class WorkbenchStore {
   attachTerminal(terminal: ITerminal) {
     this.#terminalStore.attachTerminal(terminal);
   }
-  attachBoltTerminal(terminal: ITerminal, isReload: boolean) {
-    this.#terminalStore.attachBoltTerminal(terminal, isReload);
+  attachBoltTerminal(terminal: ITerminal) {
+    this.#terminalStore.attachBoltTerminal(terminal);
   }
   attachDeployTerminal(terminal: ITerminal, options?: TerminalInitializationOptions) {
     this.#terminalStore.attachDeployTerminal(terminal, options);

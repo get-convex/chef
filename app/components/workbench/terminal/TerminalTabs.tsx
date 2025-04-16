@@ -132,7 +132,7 @@ export const TerminalTabs = memo((terminalInitializationOptions?: TerminalInitia
               }}
               onTerminalReady={(terminal) => {
                 if (index === VITE_TAB_INDEX) {
-                  workbenchStore.attachBoltTerminal(terminal, terminalInitializationOptions?.isReload ?? false);
+                  workbenchStore.attachBoltTerminal(terminal);
                 } else if (index === CONVEX_DEPLOY_TAB_INDEX) {
                   workbenchStore.attachDeployTerminal(terminal, {
                     ...terminalInitializationOptions,
