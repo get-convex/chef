@@ -17,8 +17,8 @@ export default [
       "react-hooks": reactHooksPlugin,
     },
     rules: {
-      ...reactPlugin.configs.flat.recommended,
-      ...reactPlugin.configs.flat['jsx-runtime'],
+      ...reactPlugin.configs.flat.recommended.rules,
+      ...reactPlugin.configs.flat['jsx-runtime'].rules,
       ...reactHooksPlugin.configs.recommended.rules,
       
       '@blitz/lines-around-comment': 'off',
@@ -62,6 +62,11 @@ export default [
         },
       ],
       'tailwindcss/classnames-order': 'off',
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
     },
   },
   {
