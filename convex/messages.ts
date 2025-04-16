@@ -348,9 +348,6 @@ export const earliestRewindableMessageRank = query({
       .order('asc')
       .collect();
 
-    console.log('Found docs:', docs);
-    console.log('Latest state:', latestState);
-
     const docWithSnapshot = docs.find((doc) => doc.snapshotId !== undefined && doc.snapshotId !== null);
 
     if (!docWithSnapshot) {
@@ -690,11 +687,7 @@ async function _appendMessagesDb(
       }
     }
   }
-  const storageState = await ctx.db
-    .query('chatMessagesStorageState')
-    .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-    .order('desc')
-    .first();
+  const storageState = await getLatestChatMessageStorageState(ctx, chat);
   if (storageState === null) {
     throw new Error('Chat messages should be stored in storage');
   }
