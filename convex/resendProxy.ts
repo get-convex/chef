@@ -171,5 +171,6 @@ function resendProxyEnabled() {
 
 function includedRequests() {
     const fromEnv = process.env.RESEND_INCLUDED_REQUESTS;
-    return fromEnv ? parseInt(fromEnv) : 10;
+    // Resend prices $0.06 for 100 emails.
+    return fromEnv ? parseInt(fromEnv) : 100;
 }
