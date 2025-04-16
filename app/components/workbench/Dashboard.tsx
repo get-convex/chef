@@ -71,7 +71,12 @@ export const Dashboard = memo(() => {
         />
       </div>
       <div className="flex-1 border-t">
-        <iframe ref={iframeRef} className="sentry-mask size-full border-none bg-white" src={actualUrl} />
+        <iframe
+          ref={iframeRef}
+          className="sentry-mask size-full border-none bg-white"
+          src={actualUrl}
+          allow="clipboard-write"
+        />
       </div>
     </div>
   );

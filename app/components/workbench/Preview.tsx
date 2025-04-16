@@ -315,7 +315,7 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
                 className="size-full border-none bg-bolt-elements-background-depth-1"
                 src={iframeUrl}
                 sandbox="allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"
-                allow="*"
+                allow="accelerometer; ambient-light-sensor; autoplay; bluetooth; camera; clipboard-write; compute-pressure; display-capture; fullscreen; gamepad; geolocation; gyroscope; hid; identity-credentials-get; idle-detection; local-fonts; magnetometer; microphone; midi; otp-credentials; payment; picture-in-picture; publickey-credentials-create; publickey-credentials-get; screen-wake-lock; serial; speaker-selection; usb; web-share; window-management; xr-spatial-tracking"
                 allowFullScreen={true}
               />
             ) : (
