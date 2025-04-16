@@ -35,6 +35,8 @@ import { STATUS_MESSAGES } from './StreamingIndicator';
 import { Button } from '@ui/Button';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import type { Id } from 'convex/_generated/dataModel';
 
 const logger = createScopedLogger('Chat');
 
@@ -97,6 +99,41 @@ export const Chat = memo(
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
     const actionAlert = useStore(workbenchStore.alert);
+    const sessionId = useConvexSessionIdOrNullOrLoading();
+    const chatId = chatIdStore.get();
+
+    const earliestRewindableMessageRank = useQuery(
+      api.messages.earliestRewindableMessageRank,
+      chatId && sessionId && typeof sessionId === 'string'
+        ? {
+            sessionId: sessionId as Id<'sessions'>,
+            chatId,
+          }
+        : 'skip',
+    );
+    console.log('earliestRewindableMessageRank', earliestRewindableMessageRank);
+
+    const rewindToMessage = async (messageIndex: number) => {
+      if (sessionId && typeof sessionId === 'string') {
+        const chatId = chatIdStore.get();
+        if (!chatId) {
+          return;
+        }
+
+        try {
+          await convex.mutation(api.messages.rewindChat, {
+            sessionId: sessionId as Id<'sessions'>,
+            chatId,
+            lastMessageRank: messageIndex,
+          });
+          // Reload the chat to show the rewound state
+          window.location.reload();
+        } catch (error) {
+          console.error('Failed to rewind chat:', error);
+          toast.error('Failed to rewind chat');
+        }
+      }
+    };
 
     const title = useStore(description);
 
@@ -501,6 +538,8 @@ export const Chat = memo(
         sendMessageInProgress={sendMessageInProgress}
         modelSelection={modelSelection}
         setModelSelection={setModelSelection}
+        onRewindToMessage={rewindToMessage}
+        earliestRewindableMessageRank={earliestRewindableMessageRank}
       />
     );
   },

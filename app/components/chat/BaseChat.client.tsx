@@ -62,6 +62,10 @@ interface BaseChatProps {
   // Alert related props
   actionAlert: ActionAlert | undefined;
   clearAlert: () => void;
+
+  // Rewind functionality
+  onRewindToMessage?: (index: number) => void;
+  earliestRewindableMessageRank?: number;
 }
 
 function useSerializedMessages(messages: Message[]) {
@@ -98,6 +102,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       disableChatMessage,
       modelSelection,
       setModelSelection,
+      onRewindToMessage,
+      earliestRewindableMessageRank,
     },
     ref,
   ) => {
@@ -173,6 +179,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col pb-6"
                     messages={messages}
                     isStreaming={isStreaming}
+                    onRewindToMessage={onRewindToMessage}
+                    earliestRewindableMessageRank={earliestRewindableMessageRank}
                   />
                 ) : null}
                 <div

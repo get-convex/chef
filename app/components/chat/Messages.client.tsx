@@ -9,16 +9,26 @@ import { forwardRef } from 'react';
 import type { ForwardedRef } from 'react';
 import { SpinnerThreeDots } from '~/components/ui/SpinnerThreeDots';
 import { PersonIcon } from '@radix-ui/react-icons';
+import { RotateCounterClockwiseIcon } from '@radix-ui/react-icons';
 
 interface MessagesProps {
   id?: string;
   className?: string;
   isStreaming?: boolean;
   messages?: Message[];
+  onRewindToMessage?: (index: number) => void;
+  earliestRewindableMessageRank?: number;
 }
 
 export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messages(
-  { id, isStreaming = false, messages = [], className }: MessagesProps,
+  {
+    id,
+    isStreaming = false,
+    messages = [],
+    className,
+    onRewindToMessage,
+    earliestRewindableMessageRank,
+  }: MessagesProps,
   ref: ForwardedRef<HTMLDivElement> | undefined,
 ) {
   const profile = useStore(profileStore);
@@ -63,6 +73,17 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                     )}
                   </div>
                 )}
+                {earliestRewindableMessageRank !== undefined &&
+                  index >= earliestRewindableMessageRank &&
+                  isUserMessage && (
+                    <button
+                      className="absolute right-2 top-2 rounded-lg bg-gray-100 p-1.5 text-gray-500 hover:bg-gray-200"
+                      onClick={() => onRewindToMessage?.(index)}
+                      title="Rewind to here"
+                    >
+                      <RotateCounterClockwiseIcon className="size-4" />
+                    </button>
+                  )}
                 {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
               </div>
             );
