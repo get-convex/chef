@@ -6,19 +6,19 @@ export function OverflowMenu() {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <button className="flex items-center p-1 text-sm rounded-md bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-content-primary hover:text-content-primary">
+        <button className="flex items-center rounded-md bg-bolt-elements-item-backgroundDefault p-1 text-sm text-content-primary hover:bg-bolt-elements-item-backgroundActive hover:text-content-primary">
           <DotsHorizontalIcon />
         </button>
       </DropdownMenu.Trigger>
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          className="z-50 min-w-[200px] animate-fadeIn rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-lg"
+          className="z-50 min-w-[200px] animate-fadeIn rounded-md border border-gray-200 bg-bolt-elements-background-depth-1 shadow-lg dark:border-gray-800"
           sideOffset={5}
           align="end"
         >
           <div className="p-1">
-            <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-bolt-elements-item-contentDefault outline-0 hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive">
+            <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-bolt-elements-item-contentDefault outline-0 hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive">
               <FeedbackButton />
             </DropdownMenu.Item>
           </div>

@@ -15,7 +15,7 @@ function Button({ active = false, disabled = false, children, onClick, className
   return (
     <button
       className={classNames(
-        'flex items-center gap-1 p-1 text-sm border rounded-md',
+        'flex items-center gap-1 p-1 text-sm w-full',
         {
           'text-content-primary hover:text-content-primary': !active,
           'text-bolt-elements-item-contentAccent': active && !disabled,
