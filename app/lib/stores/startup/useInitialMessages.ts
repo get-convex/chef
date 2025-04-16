@@ -15,6 +15,7 @@ export interface InitialMessages {
   loadedChatId: string;
   serialized: SerializedMessage[];
   deserialized: Message[];
+  earliestRewindableMessageRank?: number;
 }
 
 export function useInitialMessages(chatId: string):
@@ -30,6 +31,10 @@ export function useInitialMessages(chatId: string):
         const siteUrl = getConvexSiteUrl();
         const chatInfo = await convex.query(api.messages.get, {
           id: chatId,
+          sessionId,
+        });
+        const earliestRewindableMessageRank = await convex.query(api.messages.earliestRewindableMessageRank, {
+          chatId,
           sessionId,
         });
         if (chatInfo === null) {
@@ -88,6 +93,7 @@ export function useInitialMessages(chatId: string):
           loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
           serialized: transformedMessages,
           deserialized: deserializedMessages,
+          earliestRewindableMessageRank,
         });
         description.set(chatInfo.description);
       } catch (error) {

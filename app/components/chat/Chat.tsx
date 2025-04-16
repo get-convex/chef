@@ -78,6 +78,7 @@ interface ChatProps {
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
   initialInput?: string;
+  earliestRewindableMessageRank?: number;
 }
 
 const retryState = atom({
@@ -94,6 +95,7 @@ export const Chat = memo(
     isReload,
     hadSuccessfulDeploy,
     initialInput,
+    earliestRewindableMessageRank,
   }: ChatProps) => {
     const convex = useConvex();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -101,16 +103,6 @@ export const Chat = memo(
     const actionAlert = useStore(workbenchStore.alert);
     const sessionId = useConvexSessionIdOrNullOrLoading();
     const chatId = chatIdStore.get();
-
-    const earliestRewindableMessageRank = useQuery(
-      api.messages.earliestRewindableMessageRank,
-      chatId && sessionId && typeof sessionId === 'string'
-        ? {
-            sessionId: sessionId as Id<'sessions'>,
-            chatId,
-          }
-        : 'skip',
-    );
     console.log('earliestRewindableMessageRank', earliestRewindableMessageRank);
 
     const rewindToMessage = async (messageIndex: number) => {
