@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import ReactMarkdown, { type Components } from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
 import type { BundledLanguage } from 'shiki';
 import { createScopedLogger } from '~/utils/logger';
 import { rehypePlugins, remarkPlugins, allowedHTMLElements } from '~/utils/markdown';
@@ -37,8 +37,9 @@ export const Markdown = memo(function Markdown({ children, html = false, limited
         );
       },
       pre: (props) => {
+        // eslint-disable-next-line react/prop-types
         const { children, node, ...rest } = props;
-
+        // eslint-disable-next-line react/prop-types
         const [firstChild] = node?.children ?? [];
 
         if (
