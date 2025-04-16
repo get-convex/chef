@@ -61,6 +61,12 @@ export default [
           fixStyle: 'separate-type-imports', // This is also the default, enforces 'import type { Foo }'
         },
       ],
+      "prefer-arrow-callback": [
+        'error',
+        {
+          allowNamedFunctions: true,
+        },
+      ],
       'tailwindcss/classnames-order': 'off',
     },
     settings: {
