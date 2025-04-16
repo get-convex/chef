@@ -17,7 +17,7 @@ body {
 /* Temporary fix to make scrollbars look right in the production build */
 * {
   scrollbar-width: thin !important;
-} 
+}
 
 :root {
   --gradient-opacity: 0.8;

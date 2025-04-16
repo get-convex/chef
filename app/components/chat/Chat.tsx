@@ -29,7 +29,7 @@ import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { disabledText, getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
+import { disabledText, getTokenUsage } from '~/lib/convexUsage';
 import { formatDistanceStrict } from 'date-fns';
 import { atom } from 'nanostores';
 import { STATUS_MESSAGES } from './StreamingIndicator';
