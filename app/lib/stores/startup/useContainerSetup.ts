@@ -104,7 +104,7 @@ async function setupContainer(
   setContainerBootState(ContainerBootState.SETTING_UP_CONVEX_ENV_VARS);
   await setupConvexEnvVars(container, convexProject);
   await setupOpenAIToken(convex, convexProject);
-
+  await setupResendToken(convex, convexProject);
   setContainerBootState(ContainerBootState.CONFIGURING_CONVEX_AUTH);
   await initializeConvexAuth(convexProject);
 
@@ -135,6 +135,21 @@ async function setupOpenAIToken(convex: ConvexReactClient, project: ConvexProjec
     await setEnvVariables(project, {
       CONVEX_OPENAI_API_KEY: token,
       CONVEX_OPENAI_BASE_URL: getConvexSiteUrl() + '/openai-proxy',
+    });
+  }
+}
+
+async function setupResendToken(convex: ConvexReactClient, project: ConvexProject) {
+  const existing = await queryEnvVariable(project, 'CONVEX_RESEND_API_KEY');
+  if (existing) {
+    return;
+  }
+  const token = await convex.mutation(api.resendProxy.issueResendToken);
+  console.error('Resend token', token);
+  if (token) {
+    await setEnvVariables(project, {
+      CONVEX_RESEND_API_KEY: token,
+      RESEND_BASE_URL: getConvexSiteUrl() + '/resend-proxy',
     });
   }
 }

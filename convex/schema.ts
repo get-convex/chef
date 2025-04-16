@@ -127,4 +127,15 @@ export default defineSchema({
   })
     .index('byMemberId', ['memberId'])
     .index('byToken', ['token']),
+
+  resendTokens: defineTable({
+    memberId: v.id("convexMembers"),
+    token: v.string(),
+    verifiedEmail: v.string(),
+    requestsRemaining: v.number(),
+    lastUsedTime: v.union(v.number(), v.null()),
+  })
+    .index('byMemberId', ['memberId'])
+    .index('byToken', ['token']),
+
 });
