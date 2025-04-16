@@ -48,6 +48,8 @@ export const resendProxy = httpAction(async (ctx, req) => {
     if (!result.success) {
         return new Response(JSON.stringify(result.error), { status: 401 });
     }
+
+    const deploymentName = process.env.CONVEX_CLOUD_URL?.replace('https://', '').replace('.convex.cloud', '');
     return await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -55,7 +57,7 @@ export const resendProxy = httpAction(async (ctx, req) => {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            from: 'Convex Chef <thechef@convexchef.app>',
+            from: `Chef Notifications <${deploymentName}@convexchef.app>`,
             to: recipientEmail,
             subject: body.subject,
             html: body.html,
