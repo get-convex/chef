@@ -2,26 +2,6 @@ import { expect, test } from 'vitest';
 import { api, internal } from './_generated/api';
 import { createChat, setupTest, storeMessages } from './test.setup';
 
-test('unreferenced snapshots are deleted', async () => {
-  const t = setupTest();
-  const { sessionId, chatId } = await createChat(t);
-  await storeMessages(t, chatId, sessionId, [
-    { id: '1', role: 'user', parts: [{ text: 'Hello, world!', type: 'text' }], createdAt: Date.now() },
-  ]);
-  const storageId1 = await t.run((ctx) => ctx.storage.store(new Blob(['Hello, world!'])));
-  await t.mutation(internal.snapshot.saveSnapshot, { sessionId, chatId, storageId: storageId1 });
-  const storageId2 = await t.run((ctx) => ctx.storage.store(new Blob(['foobar'])));
-  await t.mutation(internal.snapshot.saveSnapshot, { sessionId, chatId, storageId: storageId2 });
-  // `storageId1` should be deleted because it was overwritten by `storageId2`
-  await expect(t.run((ctx) => ctx.storage.get(storageId1))).resolves.toBeNull();
-  // `storageId2` should not be deleted
-  const blob = await t.run(async (ctx) => {
-    const blob = await ctx.storage.get(storageId2);
-    return blob?.text();
-  });
-  expect(blob).toBe('foobar');
-});
-
 test('referenced snapshots are not deleted', async () => {
   const t = setupTest();
   const { sessionId, chatId } = await createChat(t);

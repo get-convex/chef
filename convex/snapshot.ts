@@ -1,8 +1,6 @@
-import { internalAction, internalMutation, query, type MutationCtx } from './_generated/server';
+import { internalMutation, query } from './_generated/server';
 import { v } from 'convex/values';
-import { getChat, getChatByIdOrUrlIdEnsuringAccess, getLatestChatMessageStorageState } from './messages';
-import type { Id } from './_generated/dataModel';
-import { internal } from './_generated/api';
+import { getChatByIdOrUrlIdEnsuringAccess, getLatestChatMessageStorageState } from './messages';
 
 // Save the snapshot information after successful upload
 export const saveSnapshot = internalMutation({
