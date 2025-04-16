@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import type { Message } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
-import { memo, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useMessageParser, type PartCache } from '~/lib/hooks/useMessageParser';
 import { useSnapScroll } from '~/lib/hooks/useSnapScroll';
 import { description } from '~/lib/stores/description';
@@ -102,6 +102,13 @@ export const Chat = memo(
     const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
 
     const [modelSelection, setModelSelection] = useState<ModelSelection>('auto');
+    const terminalInitializationOptions = useMemo(
+      () => ({
+        isReload,
+        shouldDeployConvexFunctions: hadSuccessfulDeploy,
+      }),
+      [isReload, hadSuccessfulDeploy],
+    );
 
     // Reset retries counter every minute
     useEffect(() => {
@@ -525,10 +532,7 @@ export const Chat = memo(
         })}
         actionAlert={actionAlert}
         clearAlert={() => workbenchStore.clearAlert()}
-        terminalInitializationOptions={{
-          isReload,
-          shouldDeployConvexFunctions: hadSuccessfulDeploy,
-        }}
+        terminalInitializationOptions={terminalInitializationOptions}
         disableChatMessage={
           disableChatMessage?.type === 'ExceededQuota'
             ? noTokensText(

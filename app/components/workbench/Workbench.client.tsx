@@ -161,6 +161,8 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
     [showDashboard],
   );
 
+  const fileHistory = useMemo(() => ({}), []);
+
   return (
     chatStarted && (
       <>
@@ -242,7 +244,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
                       selectedFile={selectedFile}
                       files={files}
                       unsavedFiles={unsavedFiles}
-                      fileHistory={{}}
+                      fileHistory={fileHistory}
                       onFileSelect={onFileSelect}
                       onEditorScroll={onEditorScroll}
                       onEditorWheel={onEditorWheel}

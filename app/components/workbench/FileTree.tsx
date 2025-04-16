@@ -7,6 +7,7 @@ import type { FileHistory } from '~/types/actions';
 import { diffLines, type Change } from 'diff';
 import { DEFAULT_COLLAPSED_FOLDERS } from '~/utils/constants';
 import { CaretRightIcon, CaretDownIcon, FileIcon } from '@radix-ui/react-icons';
+import { useWhatChanged } from '~/lib/hooks/useWhatChanged';
 
 const logger = createScopedLogger('FileTree');
 

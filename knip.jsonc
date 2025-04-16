@@ -10,6 +10,8 @@
     "functions/**",
     "convex/eslint.config.mjs",
     "convex/vitest.config.mts",
+    // for occasional debugging
+    "app/lib/hooks/useWhatChanged.ts",
     "load-context.ts"
   ],
   "project": ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}!"],

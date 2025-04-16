@@ -24,6 +24,8 @@ import { DEFAULT_TERMINAL_SIZE, TerminalTabs } from './terminal/TerminalTabs';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { CheckIcon, ResetIcon } from '@radix-ui/react-icons';
+import { useWhatChanged } from '~/lib/hooks/useWhatChanged';
+import { EditorSelection } from '@codemirror/state';
 
 interface EditorPanelProps {
   files?: FileMap;
@@ -64,6 +66,25 @@ export const EditorPanel = memo(
     terminalInitializationOptions,
   }: EditorPanelProps) => {
     renderLogger.trace('EditorPanel');
+    useWhatChanged(
+      {
+        files,
+        unsavedFiles,
+        editorDocument,
+        selectedFile,
+        isStreaming,
+        scrollToDocAppend,
+        fileHistory,
+        onFileSelect,
+        onEditorChange,
+        onEditorScroll,
+        onEditorWheel,
+        onFileSave,
+        onFileReset,
+        terminalInitializationOptions,
+      },
+      'editorpanel',
+    );
 
     const theme = useStore(themeStore);
     const showTerminal = useStore(workbenchStore.showTerminal);
