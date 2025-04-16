@@ -112,7 +112,7 @@ export const Chat = memo(
 
     const chatContextManager = useRef(new ChatContextManager());
     const [disableChatMessage, setDisableChatMessage] = useState<
-      { type: 'ExceededQuota' } | { type: 'TeamDisabled' } | null
+      { type: 'ExceededQuota' } | { type: 'TeamDisabled'; isPaidPlan: boolean } | null
     >(null);
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
@@ -152,7 +152,7 @@ export const Chat = memo(
         if (centitokensUsed !== undefined && centitokensQuota !== undefined) {
           console.log(`Convex tokens used/quota: ${centitokensUsed} / ${centitokensQuota}`);
           if (isTeamDisabled) {
-            setDisableChatMessage({ type: 'TeamDisabled' });
+            setDisableChatMessage({ type: 'TeamDisabled', isPaidPlan });
           } else if (!isPaidPlan && centitokensUsed > centitokensQuota) {
             setDisableChatMessage({ type: 'ExceededQuota' });
           } else {
@@ -528,7 +528,7 @@ export const Chat = memo(
           disableChatMessage?.type === 'ExceededQuota'
             ? noTokensText(selectedTeamSlugStore.get())
             : disableChatMessage?.type === 'TeamDisabled'
-              ? disabledText
+              ? disabledText(disableChatMessage.isPaidPlan)
               : null
         }
         sendMessageInProgress={sendMessageInProgress}

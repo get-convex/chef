@@ -12,11 +12,14 @@ export type CheckTokenUsageResponse =
       httpBody: string;
     };
 
-export const disabledText =
-  'You have exceeded the free plan limits, ' +
-  'so your deployments have been disabled. ' +
-  'Please upgrade to a Pro plan or reach out to us ' +
-  'at support@convex.dev for help.';
+export function disabledText(isPaidPlan: boolean) {
+  return isPaidPlan
+    ? 'You have reached your spending limit so your deployments have been disabled.'
+    : 'You have exceeded the free plan limits, ' +
+        'so your deployments have been disabled. ' +
+        'Please upgrade to a Pro plan or reach out to us ' +
+        'at support@convex.dev for help.';
+}
 
 // We render centitokens as 100x smaller than their actual amount to get them
 // closer to user's expectations for Claude tokens.

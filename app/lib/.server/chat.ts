@@ -79,7 +79,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     }
     const { centitokensUsed, centitokensQuota, isTeamDisabled, isPaidPlan } = resp;
     if (isTeamDisabled) {
-      return new Response(JSON.stringify({ error: disabledText }), {
+      return new Response(JSON.stringify({ error: disabledText(isPaidPlan) }), {
         status: 402,
       });
     }
