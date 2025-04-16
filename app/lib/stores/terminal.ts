@@ -11,6 +11,7 @@ import {
   VITE_TAB_INDEX,
 } from './terminalTabs';
 import { toast } from 'sonner';
+import { ContainerBootState, waitForBootStepCompleted } from './containerBootState';
 
 export class TerminalStore {
   #webcontainer: Promise<WebContainer>;
@@ -52,6 +53,8 @@ export class TerminalStore {
 
   async deployFunctionsAndRunDevServer(shouldDeployConvexFunctions: boolean) {
     if (shouldDeployConvexFunctions) {
+      // We want all the code to be there, but do not need to wait for "READY"
+      await waitForBootStepCompleted(ContainerBootState.STARTING_BACKUP);
       isConvexDeployTerminalVisibleStore.set(true);
       activeTerminalTabStore.set(CONVEX_DEPLOY_TAB_INDEX);
 
