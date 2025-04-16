@@ -2,6 +2,9 @@ import { v } from "convex/values";
 import { httpAction, internalMutation, mutation } from "./_generated/server";
 import { getCurrentMember } from "./sessions";
 import { internal } from "./_generated/api";
+import { rateLimiter } from "./rateLimiter";
+
+const MAX_RATELIMITER_WAIT = 60 * 1000;
 
 export const resendProxy = httpAction(async (ctx, req) => {
     if (!resendProxyEnabled()) {
@@ -10,6 +13,7 @@ export const resendProxy = httpAction(async (ctx, req) => {
     if (!process.env.RESEND_API_KEY) {
         throw new Error('RESEND_API_KEY is not set');
     }
+
     const url = new URL(req.url);
     if (url.pathname != '/resend-proxy/emails') {
         return new Response(JSON.stringify('Only the /emails API is supported'), { status: 400 });
@@ -47,6 +51,24 @@ export const resendProxy = httpAction(async (ctx, req) => {
     const result = await ctx.runMutation(internal.resendProxy.decrementToken, { token, recipientEmail });
     if (!result.success) {
         return new Response(JSON.stringify(result.error), { status: 401 });
+    }
+
+    // Wait for the rate limiter once we've passed validation.
+    let waitStart = Date.now();
+    let deadline = waitStart + MAX_RATELIMITER_WAIT;
+    while (true) {
+        const status = await rateLimiter.check(ctx, "resendProxy");
+        if (status.ok) {
+            break;
+        }
+        const now = Date.now();
+        if (now > deadline) {
+            return new Response(JSON.stringify('Rate limit exceeded'), { status: 429 });
+        }
+        const remainingTime = deadline - now;
+        const waitTime = Math.min(status.retryAfter * (1 + Math.random()), remainingTime);
+        console.warn(`Rate limit exceeded, waiting ${waitTime}ms`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
     }
 
     const deploymentName = process.env.CONVEX_CLOUD_URL?.replace('https://', '').replace('.convex.cloud', '');
