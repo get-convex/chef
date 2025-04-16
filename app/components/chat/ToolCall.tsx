@@ -61,7 +61,7 @@ export const ToolCall = memo((props: { partId: PartId; toolCallId: string }) => 
     return null;
   }
   return (
-    <div className="artifact flex w-full flex-col overflow-hidden rounded-lg border border-bolt-elements-borderColor duration-150">
+    <div className="artifact flex w-full flex-col overflow-hidden rounded-lg border duration-150">
       <div className="flex">
         <button
           className="flex w-full items-stretch overflow-hidden bg-bolt-elements-artifacts-background hover:bg-bolt-elements-artifacts-backgroundHover"
@@ -154,7 +154,7 @@ function DeployTool({ artifact, invocation }: { artifact: ArtifactState; invocat
   if (invocation.state === 'call') {
     return (
       <div className="space-y-2">
-        <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+        <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
           <Terminal artifact={artifact} invocation={invocation} />
         </div>
       </div>
@@ -163,7 +163,7 @@ function DeployTool({ artifact, invocation }: { artifact: ArtifactState; invocat
   if (invocation.state === 'result') {
     return (
       <div className="space-y-2 ">
-        <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+        <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
           <Terminal artifact={artifact} invocation={invocation} />
         </div>
       </div>
@@ -248,7 +248,7 @@ function NpmInstallTool({ artifact, invocation }: { artifact: ArtifactState; inv
   if (invocation.state === 'call') {
     return (
       <div className="space-y-2">
-        <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+        <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
           <Terminal artifact={artifact} invocation={invocation} />
         </div>
       </div>
@@ -258,7 +258,7 @@ function NpmInstallTool({ artifact, invocation }: { artifact: ArtifactState; inv
     if (invocation.result.startsWith('Error:')) {
       return (
         <div className="space-y-2">
-          <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+          <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
             <Terminal artifact={artifact} invocation={invocation} />
           </div>
         </div>
@@ -481,7 +481,7 @@ function ViewTool({ invocation }: { invocation: ConvexToolInvocation }) {
   }
   if (invocation.result.startsWith('Error:')) {
     return (
-      <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+      <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
         <pre>{invocation.result}</pre>
       </div>
     );
@@ -491,7 +491,7 @@ function ViewTool({ invocation }: { invocation: ConvexToolInvocation }) {
   if (invocation.result.startsWith('Directory:')) {
     const items = invocation.result.split('\n').slice(1);
     return (
-      <div className="space-y-1 rounded-lg border border-bolt-elements-borderColor p-4 font-mono text-sm text-content-primary">
+      <div className="space-y-1 rounded-lg border p-4 font-mono text-sm text-content-primary">
         {items.map((item: string, i: number) => {
           const isDir = item.includes('(dir)');
           const trimmed = item.replace('(dir)', '').replace('(file)', '').replace('- ', '').trim();
@@ -560,13 +560,13 @@ const LineNumberViewer = memo(({ lines, startLineNumber = 1, language = 'typescr
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+    <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
       <div className="max-h-[400px] overflow-auto">
         <table className="w-full border-collapse">
           <tbody>
             {lines.map((line: string, i: number) => (
               <tr key={i} className="group">
-                <td className="w-12 select-none border-r border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 px-4 py-1 text-right text-content-tertiary">
+                <td className="w-12 select-none border-r bg-bolt-elements-background-depth-1 px-4 py-1 text-right text-content-tertiary">
                   {i + startLineNumber}
                 </td>
                 <td className="whitespace-pre py-1 group-hover:bg-bolt-elements-background-depth-2">
@@ -605,7 +605,7 @@ function EditTool({ invocation }: { invocation: ConvexToolInvocation }) {
     return null;
   }
   return (
-    <div className="overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+    <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
       <div className="space-y-4 p-4">
         <div className="space-y-2 overflow-x-auto">
           <div className="flex items-center gap-2">

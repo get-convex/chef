@@ -24,7 +24,7 @@ const Button = forwardRef<
     <button
       ref={ref}
       className={classNames(
-        'flex items-center gap-1 p-1 text-sm border border-bolt-elements-borderColor rounded-md',
+        'flex items-center gap-1 p-1 text-sm border rounded-md',
         {
           'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-content-primary hover:text-content-primary':
             !active,
@@ -102,7 +102,7 @@ export function ShareButton() {
 
       <Popover.Portal>
         <Popover.Content
-          className="z-50 w-[320px] animate-fadeInFromLoading rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-lg"
+          className="z-50 w-[320px] animate-fadeInFromLoading rounded-md border bg-bolt-elements-background-depth-1 shadow-lg"
           sideOffset={5}
           align="end"
         >
@@ -140,11 +140,11 @@ export function ShareButton() {
                     type="text"
                     readOnly
                     value={shareUrl}
-                    className="flex-1 rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
+                    className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
                   />
                   <button
                     onClick={copyToClipboard}
-                    className="rounded-md border border-bolt-elements-borderColor bg-bolt-elements-item-backgroundDefault p-1.5 text-content-primary hover:bg-bolt-elements-item-backgroundActive"
+                    className="rounded-md border bg-bolt-elements-item-backgroundDefault p-1.5 text-content-primary hover:bg-bolt-elements-item-backgroundActive"
                   >
                     <ClipboardIcon />
                   </button>
@@ -153,7 +153,7 @@ export function ShareButton() {
             )}
           </div>
 
-          <Popover.Arrow className="fill-bolt-elements-borderColor" />
+          <Popover.Arrow className="fill-border-transparent" />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

@@ -26,7 +26,7 @@ export function ConvexConnection() {
 
   return (
     <div className="relative">
-      <div className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor text-sm">
+      <div className="flex overflow-hidden rounded-md border text-sm">
         <button
           onClick={() => setIsOpen(true)}
           className={classNames(

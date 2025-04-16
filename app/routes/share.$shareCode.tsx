@@ -95,7 +95,7 @@ function ShareProjectContent() {
   if (chefAuthState.kind !== 'fullyLoggedIn') {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6 rounded-xl border border-bolt-elements-borderColor bg-white p-8">
+        <div className="w-full max-w-md space-y-6 rounded-xl border bg-white p-8">
           <div className="space-y-2 text-center">
             <h1 className="text-center text-3xl font-bold">Sign in to Chef</h1>
             <p className="text-base text-gray-500">
@@ -111,7 +111,7 @@ function ShareProjectContent() {
           </div>
 
           <button
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background px-6 py-3 text-bolt-elements-button-primary-text hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border bg-bolt-elements-button-secondary-background px-6 py-3 text-bolt-elements-button-primary-text hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
             onClick={signIn}
           >
             Sign in
@@ -123,7 +123,7 @@ function ShareProjectContent() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6 rounded-xl border border-bolt-elements-borderColor bg-white p-8">
+      <div className="w-full max-w-md space-y-6 rounded-xl border bg-white p-8">
         <div className="space-y-2 text-center">
           <h1 className="text-center text-3xl font-bold">Clone Project</h1>
           {getShareDescription?.description && (
@@ -138,14 +138,14 @@ function ShareProjectContent() {
           </div>
 
           {chefAuthState.kind === 'fullyLoggedIn' && (
-            <div className="rounded-lg border border-bolt-elements-borderColor p-4">
+            <div className="rounded-lg border p-4">
               <TeamSelector selectedTeamSlug={selectedTeamSlug} setSelectedTeamSlug={setSelectedTeamSlug} />
             </div>
           )}
         </div>
 
         <button
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-button-secondary-background px-6 py-3 text-bolt-elements-button-primary-text hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border bg-bolt-elements-button-secondary-background px-6 py-3 text-bolt-elements-button-primary-text hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
           onClick={handleCloneChat}
           disabled={!selectedTeamSlug}
         >

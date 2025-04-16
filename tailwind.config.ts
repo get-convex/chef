@@ -37,8 +37,6 @@ export default {
         ...TailwindConfig.theme?.extend?.colors,
         bolt: {
           elements: {
-            borderColor: 'var(--bolt-elements-borderColor)',
-            borderColorActive: 'var(--bolt-elements-borderColorActive)',
             background: {
               depth: {
                 1: 'var(--bolt-elements-bg-depth-1)',

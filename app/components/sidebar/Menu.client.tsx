@@ -22,6 +22,7 @@ import { PersonIcon, GearIcon, ExitIcon, PlusIcon } from '@radix-ui/react-icons'
 import { Button } from '@ui/Button';
 import { TextInput } from '@ui/TextInput';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
+import { Checkbox } from '@ui/Checkbox';
 
 const menuVariants = {
   closed: {
@@ -164,12 +165,12 @@ export const Menu = memo(() => {
         style={{ width: '340px' }}
         className={classNames(
           'flex flex-col side-menu fixed top-0 h-full',
-          'bg-[var(--bolt-elements-sidebar-background)] border-r border-bolt-elements-borderColor',
+          'bg-[var(--bolt-elements-sidebar-background)] border-r',
           'shadow-sm text-sm',
           'z-40',
         )}
       >
-        <div className="flex h-[var(--header-height)] items-center justify-between border-b border-bolt-elements-borderColor px-4"></div>
+        <div className="flex h-[var(--header-height)] items-center justify-between border-b px-4"></div>
 
         <div className="flex size-full flex-1 flex-col overflow-hidden">
           <div className="space-y-3 p-4">
@@ -227,20 +228,19 @@ export const Menu = memo(() => {
                     </p>
                     {convexProjectInfo?.kind === 'connected' && (
                       <div className="mt-4 flex items-center gap-2">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           id="delete-convex-project"
                           checked={shouldDeleteConvexProject}
-                          onChange={(e) => setShouldDeleteConvexProject(e.target.checked)}
-                          className="rounded border-bolt-elements-borderColor text-bolt-elements-button-primary-background focus:ring-bolt-elements-borderColorActive"
+                          onChange={() => setShouldDeleteConvexProject(!shouldDeleteConvexProject)}
                         />
+
                         <label htmlFor="delete-convex-project" className="text-pretty text-content-secondary">
                           Also delete the associated Convex project (
                           <a
                             href={`https://dashboard.convex.dev/p/${convexProjectInfo.projectSlug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-bolt-elements-messages-linkColor"
+                            className="text-content-link hover:underline"
                           >
                             {convexProjectInfo.projectSlug}
                           </a>

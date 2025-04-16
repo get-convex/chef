@@ -1,7 +1,6 @@
 import { useStore } from '@nanostores/react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { chatStore } from '~/lib/stores/chatId';
-import { classNames } from '~/utils/classNames';
 import { HeaderActionButtons } from './HeaderActionButtons.client';
 import { ChatDescription } from '~/components/header/ChatDescription.client';
 import { DeployButton } from './DeployButton';
@@ -18,12 +17,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
   const showSidebarIcon = !hideSidebarIcon && isLoggedIn;
 
   return (
-    <header
-      className={classNames('flex items-center p-5 border-b h-[var(--header-height)]', {
-        'border-transparent': !chat.started,
-        'border-bolt-elements-borderColor': chat.started,
-      })}
-    >
+    <header className={'flex h-[var(--header-height)] items-center border-b p-5'}>
       <div className="z-logo flex cursor-pointer items-center gap-4 text-content-primary">
         {showSidebarIcon && <HamburgerMenuIcon />}
         <a href="/" className="flex flex-col text-2xl font-semibold leading-tight">

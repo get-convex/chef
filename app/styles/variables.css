@@ -99,9 +99,6 @@ html.dark {
 
 /* Color Tokens */
 :root {
-  --bolt-elements-borderColor: var(--cvx-border-transparent);
-  --bolt-elements-borderColorActive: var(--cvx-border-selected);
-
   --bolt-elements-bg-depth-1: var(--cvx-background-secondary);
   --bolt-elements-bg-depth-2: var(--cvx-background-primary);
 

@@ -248,7 +248,7 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
           <IconButton icon={<UpdateIcon />} onClick={reloadPreview} />
         </div>
 
-        <div className="flex grow items-center gap-1 rounded-full border border-bolt-elements-borderColor bg-bolt-elements-preview-addressBar-background px-3 py-1 text-sm text-bolt-elements-preview-addressBar-text focus-within:border-bolt-elements-borderColorActive focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:text-bolt-elements-preview-addressBar-textActive hover:bg-bolt-elements-preview-addressBar-backgroundHover hover:focus-within:bg-bolt-elements-preview-addressBar-backgroundActive">
+        <div className="flex grow items-center gap-1 rounded-full border bg-bolt-elements-preview-addressBar-background px-3 py-1 text-sm text-bolt-elements-preview-addressBar-text focus-within:border-border-selected focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:text-bolt-elements-preview-addressBar-textActive hover:bg-bolt-elements-preview-addressBar-backgroundHover hover:focus-within:bg-bolt-elements-preview-addressBar-backgroundActive">
           <input
             title="URL"
             ref={inputRef}
@@ -296,7 +296,7 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
         </div>
       </div>
 
-      <div className="flex flex-1 items-center justify-center overflow-auto border-t border-bolt-elements-borderColor">
+      <div className="flex flex-1 items-center justify-center overflow-auto border-t">
         <div
           style={{
             width: isDeviceModeOn ? `${widthPercent}%` : '100%',

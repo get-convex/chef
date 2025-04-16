@@ -15,7 +15,7 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
 
   return (
     <div className="flex">
-      <div className="flex overflow-hidden rounded-md border border-bolt-elements-borderColor">
+      <div className="flex overflow-hidden rounded-md border">
         <Button
           active={showChat}
           disabled={!canHideChat || isSmallViewport} // expand button is disabled on mobile as it's not needed
@@ -27,7 +27,7 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
         >
           <ChatBubbleIcon />
         </Button>
-        <div className="w-px bg-bolt-elements-borderColor" />
+        <div className="w-px" />
         <Button
           active={showWorkbench}
           onClick={() => {

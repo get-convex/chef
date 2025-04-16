@@ -43,7 +43,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
                 <div
                   key={index}
                   className={classNames('flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)]', {
-                    'bg-bolt-elements-messages-background  border border-bolt-elements-borderColor mx-2': isUserMessage,
+                    'bg-bolt-elements-messages-background  border mx-2': isUserMessage,
                     'mb-4': consecutiveUserMessages,
                   })}
                 >

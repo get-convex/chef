@@ -55,7 +55,7 @@ export const Dashboard = memo(() => {
     <div className="flex size-full flex-col">
       <div className="flex items-center gap-1.5 bg-bolt-elements-background-depth-2 p-2">
         <div
-          className="flex grow items-center gap-1 rounded-full border border-bolt-elements-borderColor bg-bolt-elements-preview-addressBar-background px-3 py-1 text-sm text-bolt-elements-preview-addressBar-text focus-within:border-bolt-elements-borderColorActive focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:text-bolt-elements-preview-addressBar-textActive
+          className="flex grow items-center gap-1 rounded-full border bg-bolt-elements-preview-addressBar-background px-3 py-1 text-sm text-bolt-elements-preview-addressBar-text focus-within:border-border-selected focus-within:bg-bolt-elements-preview-addressBar-backgroundActive focus-within:text-bolt-elements-preview-addressBar-textActive
           hover:bg-bolt-elements-preview-addressBar-backgroundHover hover:focus-within:bg-bolt-elements-preview-addressBar-backgroundActive"
         >
           <input ref={inputRef} className="w-full bg-transparent outline-none" type="text" value={shownUrl} disabled />
@@ -70,7 +70,7 @@ export const Dashboard = memo(() => {
           aria-label={`Open dashboard in new tab`}
         />
       </div>
-      <div className="flex-1 border-t border-bolt-elements-borderColor">
+      <div className="flex-1 border-t">
         <iframe ref={iframeRef} className="sentry-mask size-full border-none bg-white" src={actualUrl} />
       </div>
     </div>

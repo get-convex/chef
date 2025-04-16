@@ -257,9 +257,9 @@ function FileContextMenu({ onCopyPath, onCopyRelativePath, children }: FolderCon
       <ContextMenu.Portal>
         <ContextMenu.Content
           style={{ zIndex: 998 }}
-          className="z-context-menu w-56 rounded-md border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 dark:bg-bolt-elements-background-depth-2"
+          className="z-context-menu w-56 rounded-md border bg-bolt-elements-background-depth-1 dark:bg-bolt-elements-background-depth-2"
         >
-          <ContextMenu.Group className="border-b border-bolt-elements-borderColor p-1">
+          <ContextMenu.Group className="border-b p-1">
             <ContextMenuItem onSelect={onCopyPath}>Copy path</ContextMenuItem>
             <ContextMenuItem onSelect={onCopyRelativePath}>Copy relative path</ContextMenuItem>
           </ContextMenu.Group>
