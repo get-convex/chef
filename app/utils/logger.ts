@@ -49,15 +49,15 @@ function log(level: DebugLevel, scope: string | undefined, messages: any[]) {
     return;
   }
 
-  let labelText = ` ${level.toUpperCase()} `;
+  let labelText = `[${level.toUpperCase()}] `;
   if (scope) {
-    labelText = `${labelText} ${scope} `;
+    labelText = `${labelText}[${scope}] `;
   }
 
   if (typeof window !== 'undefined') {
-    console.log(`${level.toUpperCase()}${scope || ''}`, ...messages);
+    console.log(labelText, ...messages);
   } else {
-    console.log(`${labelText}`, ...messages);
+    console.log(labelText, ...messages);
   }
 }
 
