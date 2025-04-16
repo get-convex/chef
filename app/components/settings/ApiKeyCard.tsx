@@ -18,6 +18,7 @@ export function ApiKeyCard() {
     if (apiKey) {
       setAnthropicKey(apiKey.value || '');
       setOpenaiKey(apiKey.openai || '');
+      setXaiKey(apiKey.xai || '');
       setAlwaysUseKey(apiKey.preference === 'always');
       setIsDirty(false);
     }
@@ -25,6 +26,7 @@ export function ApiKeyCard() {
 
   const [anthropicKey, setAnthropicKey] = useState('');
   const [openaiKey, setOpenaiKey] = useState('');
+  const [xaiKey, setXaiKey] = useState('');
 
   const handleSaveApiKey = async () => {
     setIsSaving(true);
@@ -34,6 +36,7 @@ export function ApiKeyCard() {
           preference: alwaysUseKey ? 'always' : 'quotaExhausted',
           value: anthropicKey,
           openai: openaiKey,
+          xai: xaiKey,
         },
       });
       toast.success('API key saved successfully');
@@ -67,6 +70,18 @@ export function ApiKeyCard() {
     } catch (error) {
       console.error('Failed to remove Anthropic API key:', error);
       toast.error('Failed to remove Anthropic API key');
+    }
+  };
+
+  const handleDeleteXaiApiKey = async () => {
+    try {
+      await convex.mutation(api.apiKeys.deleteXaiApiKeyForCurrentMember);
+      toast.success('xAI API key removed successfully');
+      setXaiKey('');
+      setIsDirty(false);
+    } catch (error) {
+      console.error('Failed to remove XAI API key:', error);
+      toast.error('Failed to remove xAI API key');
     }
   };
 
@@ -133,9 +148,30 @@ export function ApiKeyCard() {
                 handleDelete={handleDeleteOpenaiApiKey}
               />
 
+              <label htmlFor="xai-key" className="mb-1 mt-4 block text-lg font-medium text-content-secondary">
+                xAI API Key
+              </label>
+              <p className="mb-4 text-sm text-content-secondary">
+                See instructions for generating an xAI API key{' '}
+                <a href="https://docs.x.ai/docs/overview#welcome" target="_blank" rel="noopener noreferrer">
+                  here
+                </a>
+                .
+              </p>
+              <ApiKeyInput
+                isLoading={apiKey === undefined}
+                id="xai-key"
+                value={xaiKey}
+                onChange={(value) => {
+                  setXaiKey(value);
+                  setIsDirty(true);
+                }}
+                handleDelete={handleDeleteXaiApiKey}
+              />
+
               <AlwaysUseKeyCheckbox
                 isLoading={apiKey === undefined}
-                disabled={anthropicKey === '' && openaiKey === ''}
+                disabled={anthropicKey === '' && openaiKey === '' && xaiKey === ''}
                 value={alwaysUseKey}
                 onChange={(value) => {
                   setAlwaysUseKey(value);
