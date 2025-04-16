@@ -120,6 +120,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       ui_host: 'https://us.posthog.com/',
       // Set to true to log PostHog events to the console.
       debug: false,
+      enable_recording_console_log: false,
       capture_pageview: true,
       // By default, we use 'cookieless' tracking
       // (https://posthog.com/tutorials/cookieless-tracking) and may change this

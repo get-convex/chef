@@ -153,8 +153,6 @@ export const Menu = memo(() => {
     return null;
   }
 
-  console.log(dialogContent);
-
   return (
     <>
       <motion.div

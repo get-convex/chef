@@ -183,7 +183,7 @@ export class WorkbenchStore {
   }
 
   prewarmWorkdir(container: WebContainer) {
-    this.#filesStore.prewarmWorkdir(container);
+    return this.#filesStore.prewarmWorkdir(container);
   }
 
   async waitOnToolCall(toolCallId: string): Promise<string> {

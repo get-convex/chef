@@ -83,7 +83,7 @@ async function setupContainer(
   await workbenchStore.prewarmWorkdir(container);
 
   setContainerBootState(ContainerBootState.DOWNLOADING_DEPENDENCIES);
-  const npm = await container.spawn('npm', ['install']);
+  const npm = await container.spawn('npm', ['install', '--no-fund', '--no-deprecated']);
   const { output, exitCode } = await streamOutput(npm);
   console.log('NPM output', cleanTerminalOutput(output));
 

@@ -6,10 +6,13 @@ import { useConvexSessionIdOrNullOrLoading, getConvexAuthToken } from '~/lib/sto
 import { useChatId } from '~/lib/stores/chatId';
 import { setProfile } from '~/lib/stores/profile';
 import { getConvexProfile } from '~/lib/convexProfile';
-import { useLDClient, withLDProvider } from 'launchdarkly-react-client-sdk';
+import { useLDClient, withLDProvider, basicLogger } from 'launchdarkly-react-client-sdk';
 
 export const UserProvider = withLDProvider<any>({
   clientSideID: import.meta.env.VITE_LD_CLIENT_SIDE_ID,
+  options: {
+    logger: basicLogger({ level: 'error' }),
+  },
 })(UserProviderInner);
 
 function UserProviderInner({ children }: { children: React.ReactNode }) {

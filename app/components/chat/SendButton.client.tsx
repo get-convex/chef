@@ -14,7 +14,7 @@ interface SendButtonProps {
 
 const customEasingFn = cubicBezier(0.4, 0, 0.2, 1);
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 
 export const SendButton = ({ show, isStreaming, disabled, onClick, tip }: SendButtonProps) => {
   return (
