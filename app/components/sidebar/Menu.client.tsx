@@ -130,8 +130,7 @@ export const Menu = memo(() => {
     };
   }, []);
 
-  const handleDeleteClick = useCallback((event: React.UIEvent, item: ChatHistoryItem) => {
-    event.preventDefault();
+  const handleDeleteClick = useCallback((item: ChatHistoryItem) => {
     setDialogContent({ type: 'delete', item });
   }, []);
 

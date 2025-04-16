@@ -2,14 +2,13 @@ import { useParams } from '@remix-run/react';
 import { classNames } from '~/utils/classNames';
 import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
 import { useEditChatDescription } from '~/lib/hooks/useEditChatDescription';
-import { forwardRef, type ForwardedRef } from 'react';
 import { CheckIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { TextInput } from '@ui/TextInput';
 
 interface HistoryItemProps {
   item: ChatHistoryItem;
-  handleDeleteClick: (event: React.UIEvent, item: ChatHistoryItem) => void;
+  handleDeleteClick: (item: ChatHistoryItem) => void;
 }
 
 export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
@@ -61,22 +60,8 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
             )}
           >
             <div className="flex items-center gap-2.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 dark:text-gray-500">
-              <ChatActionButton
-                toolTipContent="Rename"
-                icon={<Pencil1Icon />}
-                onClick={(event) => {
-                  event.preventDefault();
-                  toggleEditMode();
-                }}
-              />
-              <ChatActionButton
-                toolTipContent="Delete"
-                icon={<TrashIcon />}
-                onClick={(event) => {
-                  event.preventDefault();
-                  handleDeleteClick(event, item);
-                }}
-              />
+              <ChatActionButton toolTipContent="Rename" icon={<Pencil1Icon />} onClick={toggleEditMode} />
+              <ChatActionButton toolTipContent="Delete" icon={<TrashIcon />} onClick={() => handleDeleteClick(item)} />
             </div>
           </div>
         </a>
@@ -85,24 +70,19 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
   );
 }
 
-const ChatActionButton = forwardRef(function ChatActionButton(
-  {
-    toolTipContent,
-    icon,
-    className,
-    onClick,
-  }: {
-    toolTipContent: string;
-    icon: React.ReactNode;
-    className?: string;
-    onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
-    btnTitle?: string;
-  },
-  ref: ForwardedRef<HTMLButtonElement>,
-) {
+const ChatActionButton = ({
+  toolTipContent,
+  icon,
+  className,
+  onClick,
+}: {
+  toolTipContent: string;
+  icon: React.ReactNode;
+  className?: string;
+  onClick: () => void;
+}) => {
   return (
     <Button
-      ref={ref}
       variant="neutral"
       icon={icon}
       inline
@@ -112,4 +92,4 @@ const ChatActionButton = forwardRef(function ChatActionButton(
       onClick={onClick}
     />
   );
-});
+};

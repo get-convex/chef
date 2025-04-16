@@ -2,13 +2,13 @@ import { AnimatePresence, cubicBezier, motion } from 'framer-motion';
 import { ArrowRightIcon, StopIcon } from '@radix-ui/react-icons';
 import { classNames } from '~/utils/classNames';
 import { Button, buttonClasses } from '@ui/Button';
+import React from 'react';
 
 interface SendButtonProps {
   show: boolean;
   isStreaming?: boolean;
   disabled?: boolean;
   onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
-  onImagesSelected?: (images: File[]) => void;
   tip?: string;
 }
 
@@ -16,7 +16,7 @@ const customEasingFn = cubicBezier(0.4, 0, 0.2, 1);
 
 const MotionButton = motion.create(Button);
 
-export const SendButton = ({ show, isStreaming, disabled, onClick, tip }: SendButtonProps) => {
+export const SendButton = React.memo(({ show, isStreaming, disabled, onClick, tip }: SendButtonProps) => {
   return (
     <AnimatePresence>
       {show ? (
@@ -44,4 +44,4 @@ export const SendButton = ({ show, isStreaming, disabled, onClick, tip }: SendBu
       ) : null}
     </AnimatePresence>
   );
-};
+});
