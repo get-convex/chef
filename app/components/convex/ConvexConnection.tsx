@@ -101,6 +101,7 @@ function ConnectedDialogContent({
           className="flex items-center gap-1 text-sm text-content-secondary hover:underline"
           href={`https://dashboard.convex.dev/d/${projectInfo.deploymentName}`}
           target="_blank"
+          rel="noreferrer"
         >
           View in Convex Dashboard
           <ExternalLinkIcon />
