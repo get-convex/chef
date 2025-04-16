@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Dialog, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
-import { classNames } from '~/utils/classNames';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { useChatId } from '~/lib/stores/chatId';
@@ -8,6 +7,7 @@ import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { ConvexConnectButton } from '~/components/convex/ConvexConnectButton';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
 
 export function ConvexConnection() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,18 +26,10 @@ export function ConvexConnection() {
 
   return (
     <div className="relative">
-      <div className="flex overflow-hidden rounded-md border text-sm">
-        <button
-          onClick={() => setIsOpen(true)}
-          className={classNames(
-            'flex items-center gap-2 p-1.5 w-full rounded-md text-left text-content-primary bg-bolt-elements-button-secondary-background',
-            'hover:bg-bolt-elements-item-backgroundAccent/90',
-          )}
-        >
-          <img className="size-4" height="20" width="20" src="/icons/Convex.svg" alt="Convex" />
-          <ConnectionStatus projectInfo={projectInfo} />
-        </button>
-      </div>
+      <Button variant="neutral" onClick={() => setIsOpen(true)}>
+        <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+        <ConnectionStatus projectInfo={projectInfo} />
+      </Button>
 
       <DialogRoot open={isOpen} onOpenChange={setIsOpen}>
         {isOpen && (
