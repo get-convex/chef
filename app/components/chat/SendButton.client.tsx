@@ -8,7 +8,6 @@ interface SendButtonProps {
   isStreaming?: boolean;
   disabled?: boolean;
   onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
-  onImagesSelected?: (images: File[]) => void;
   tip?: string;
 }
 
