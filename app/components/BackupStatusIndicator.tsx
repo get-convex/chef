@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
-import { workbenchStore } from '~/lib/stores/workbench.client';
+import { chatSyncState } from '~/lib/stores/startup/history';
 
 type ToastState = { type: 'idle'; lastCompleted: number } | { type: 'loading'; toastId: string };
 
@@ -11,13 +11,13 @@ const TOAST_COOLDOWN = 5000;
 
 export function BackupStatusIndicator() {
   const toastState = useRef<ToastState>({ type: 'idle', lastCompleted: 0 });
-  const backupState = useStore(workbenchStore.backupState);
+  const backupState = useStore(chatSyncState);
   const fileCounter = useFileUpdateCounter();
   useEffect(() => {
-    if (!backupState.started) {
+    if (backupState.savedFileUpdateCounter === null) {
       return;
     }
-    if (backupState.savedUpdateCounter === fileCounter) {
+    if (backupState.savedFileUpdateCounter === fileCounter) {
       if (toastState.current.type === 'loading') {
         toast.success('Files saved!', {
           id: toastState.current.toastId,

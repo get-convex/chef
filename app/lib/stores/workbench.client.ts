@@ -36,6 +36,7 @@ import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { setupMjsContent } from '~/lib/download/setupMjsContent';
 import type { ConvexProject } from './convexProject';
 import { cursorRulesContent } from '~/lib/download/cursorRulesContent';
+import { chatSyncState } from './startup/history';
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
@@ -52,13 +53,6 @@ export interface ArtifactState {
 type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard';
-
-export type BackupState = {
-  started: boolean;
-  numFailures: number;
-  savedUpdateCounter: number | null;
-  lastSync: number;
-};
 
 export class WorkbenchStore {
   #previewsStore = new PreviewsStore(webcontainer);
@@ -78,14 +72,6 @@ export class WorkbenchStore {
   unsavedFiles: WritableAtom<Set<AbsolutePath>> = import.meta.hot?.data.unsavedFiles ?? atom(new Set<AbsolutePath>());
   actionAlert: WritableAtom<ActionAlert | undefined> =
     import.meta.hot?.data.unsavedFiles ?? atom<ActionAlert | undefined>(undefined);
-  backupState: WritableAtom<BackupState> =
-    import.meta.hot?.data.backupState ??
-    atom<BackupState>({
-      started: false,
-      numFailures: 0,
-      savedUpdateCounter: null,
-      lastSync: 0,
-    });
   modifiedFiles = new Set<string>();
   partIdList: PartId[] = [];
   #globalExecutionQueue = Promise.resolve();
@@ -97,7 +83,6 @@ export class WorkbenchStore {
       import.meta.hot.data.showWorkbench = this.showWorkbench;
       import.meta.hot.data.currentView = this.currentView;
       import.meta.hot.data.actionAlert = this.actionAlert;
-      import.meta.hot.data.backupState = this.backupState;
       import.meta.hot.data.reloadedParts = this.#reloadedParts;
     }
   }
@@ -122,40 +107,6 @@ export class WorkbenchStore {
   }
   setLastChangedFile(): void {
     this._lastChangedFile = Date.now();
-  }
-
-  // Start the backup worker, assuming that the current filesystem state is
-  // fully saved. Therefore, this method must be called early in initialization
-  // after the snapshot has been loaded but before any subsequent changes are
-  // made.
-  async startBackup() {
-    // This is a bit racy, but we need to flush the current file events before
-    // deciding that we're synced up to the current update counter. Sleep for
-    // twice the batching interval.
-    await new Promise((resolve) => setTimeout(resolve, 2 * FILE_EVENTS_DEBOUNCE_MS));
-
-    this.backupState.set({
-      started: true,
-      numFailures: 0,
-      savedUpdateCounter: getFileUpdateCounter(),
-      lastSync: 0,
-    });
-
-    void backupWorker(this.backupState);
-
-    // Add beforeunload event listener to prevent navigation while uploading
-    const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-      const currentState = this.backupState.get();
-      const currentUpdateCounter = getFileUpdateCounter();
-      if (currentState.started && currentState.savedUpdateCounter !== currentUpdateCounter) {
-        // Some browsers require both preventDefault and setting returnValue
-        e.preventDefault();
-        e.returnValue = '';
-        return '';
-      }
-      return undefined;
-    };
-    window.addEventListener('beforeunload', beforeUnloadHandler);
   }
 
   addToExecutionQueue(callback: () => Promise<void>) {

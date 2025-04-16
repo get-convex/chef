@@ -17,6 +17,8 @@ import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { initializeConvexAuth } from '~/lib/convexAuth';
 import { appendEnvVarIfNotSet } from '~/utils/envFileUtils';
+import { getFileUpdateCounter } from '../fileUpdateCounter';
+import { chatSyncState } from './history';
 
 const TEMPLATE_URL = '/template-snapshot-80c98556.bin';
 
@@ -109,9 +111,20 @@ async function setupContainer(
   await initializeConvexAuth(convexProject);
 
   setContainerBootState(ContainerBootState.STARTING_BACKUP);
-  await workbenchStore.startBackup();
+  initializeFileSystemBackup();
 
   setContainerBootState(ContainerBootState.READY);
+}
+
+function initializeFileSystemBackup() {
+  const currentChatSyncState = chatSyncState.get();
+  if (currentChatSyncState.savedFileUpdateCounter === null) {
+    const fileUpdateCounter = getFileUpdateCounter();
+    chatSyncState.set({
+      ...currentChatSyncState,
+      savedFileUpdateCounter: fileUpdateCounter,
+    });
+  }
 }
 
 async function setupConvexEnvVars(webcontainer: WebContainer, convexProject: ConvexProject) {

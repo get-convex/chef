@@ -10,11 +10,7 @@ import * as lz4 from 'lz4-wasm';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { toast } from 'sonner';
 import { atom } from 'nanostores';
-
-const lastCompleteMessageInfoStore = atom<{ messageIndex: number; partIndex: number; allMessages: Message[] } | null>(
-  null,
-);
-const lastPersistedMessageInfoStore = atom<{ messageIndex: number; partIndex: number } | null>(null);
+import { chatSyncState, lastCompleteMessageInfoStore } from './history';
 
 async function handleStoreMessageHistory(chatId: string, convex: ConvexReactClient) {
   const lastCompleteMessageInfo = lastCompleteMessageInfoStore.get();
@@ -96,7 +92,7 @@ export async function waitForNewMessages(messageIndex: number, partIndex: number
   });
 }
 
-export function useStoreMessageHistory(chatId: string, initialMessages: SerializedMessage[] | undefined) {
+export function useStoreMessageHistory(chatId: string) {
   const convex = useConvex();
   // Local state that includes incomplete parts too for the beforeunload handler
   const lastMessageRank = useRef(-1);
@@ -109,7 +105,7 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       };
     }
     const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-      const lastPersistedMessageInfo = lastPersistedMessageInfoStore.get();
+      const lastPersistedMessageInfo = chatSyncState.get().persistedMessageInfo;
       if (lastPersistedMessageInfo !== null) {
         if (
           lastMessageRank.current === lastPersistedMessageInfo.messageIndex &&
@@ -132,20 +128,10 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
 
   return useCallback(
     async (messages: Message[], streamStatus: 'streaming' | 'submitted' | 'ready' | 'error') => {
-      if (initialMessages === undefined) {
-        throw new Error('Storing message history before initial messages are loaded');
-      }
       if (messages.length === 0) {
         return;
       }
-      const lastPersistedMessageInfo = lastPersistedMessageInfoStore.get();
-      if (lastPersistedMessageInfo === null) {
-        lastPersistedMessageInfoStore.set({
-          messageIndex: initialMessages.length - 1,
-          partIndex: (initialMessages[initialMessages.length - 1].parts?.length ?? 0) - 1,
-        });
-        void storeMessageHistoryWorker(chatId, convex);
-      }
+
       lastMessageRank.current = messages.length - 1;
       partIndex.current = (messages[messages.length - 1].parts?.length ?? 0) - 1;
 
@@ -167,7 +153,7 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
         allMessages: messages,
       });
     },
-    [convex, chatId, initialMessages],
+    [convex, chatId],
   );
 }
 

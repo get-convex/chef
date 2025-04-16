@@ -17,6 +17,7 @@ function httpActionWithErrorHandling(handler: (ctx: ActionCtx, request: Request)
     try {
       return await handler(ctx, request);
     } catch (e) {
+      console.error(e);
       return new Response(
         JSON.stringify({ error: e instanceof ConvexError ? e.message : 'An unknown error occurred' }),
         {
@@ -132,15 +133,49 @@ httpWithCors.route({
     const chatId = url.searchParams.get('chatId');
     const lastMessageRank = url.searchParams.get('lastMessageRank');
     const partIndex = url.searchParams.get('partIndex');
-    const blob = await request.blob();
-    const storageId = await ctx.storage.store(blob);
-    await ctx.runMutation(internal.messages.updateStorageState, {
-      sessionId: sessionId as Id<'sessions'>,
-      chatId: chatId as Id<'chats'>,
-      lastMessageRank: parseInt(lastMessageRank!),
-      partIndex: parseInt(partIndex!),
-      storageId,
-    });
+    const contentType = request.headers.get('Content-Type');
+    // if (contentType !== 'multipart/form-data') {
+    //   // Older pathway that sends just messages as a single blob
+    //   const messageBlob = await request.blob();
+    //   const storageId = await ctx.storage.store(messageBlob);
+    //   await ctx.runMutation(internal.messages.updateStorageState, {
+    //     sessionId: sessionId as Id<'sessions'>,
+    //     chatId: chatId as Id<'chats'>,
+    //     lastMessageRank: parseInt(lastMessageRank!),
+    //     partIndex: parseInt(partIndex!),
+    //     storageId,
+    //   });
+    //   return new Response(null, {
+    //     status: 200,
+    //   });
+    // }
+    const formData = await request.formData();
+    const messageBlob = formData.get('messages') as Blob;
+    let messageStorageId: Id<'_storage'> | null = null;
+    if (messageBlob.size !== 0) {
+      messageStorageId = await ctx.storage.store(messageBlob);
+    }
+    const snapshotBlob = formData.get('snapshot') as Blob;
+    let snapshotStorageId: Id<'_storage'> | null = null;
+    if (snapshotBlob.size !== 0) {
+      snapshotStorageId = await ctx.storage.store(snapshotBlob);
+    }
+    if (messageStorageId !== null) {
+      await ctx.runMutation(internal.messages.updateStorageState, {
+        sessionId: sessionId as Id<'sessions'>,
+        chatId: chatId as Id<'chats'>,
+        lastMessageRank: parseInt(lastMessageRank!),
+        partIndex: parseInt(partIndex!),
+        storageId: messageStorageId,
+      });
+    }
+    if (snapshotStorageId !== null) {
+      await ctx.runMutation(internal.snapshot.saveSnapshot, {
+        sessionId: sessionId as Id<'sessions'>,
+        chatId: chatId as Id<'chats'>,
+        storageId: snapshotStorageId,
+      });
+    }
     return new Response(null, {
       status: 200,
     });
