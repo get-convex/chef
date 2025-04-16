@@ -10,6 +10,7 @@ import type { ForwardedRef } from 'react';
 import { SpinnerThreeDots } from '~/components/ui/SpinnerThreeDots';
 import { PersonIcon } from '@radix-ui/react-icons';
 import { RotateCounterClockwiseIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
 
 interface MessagesProps {
   id?: string;
