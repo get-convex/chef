@@ -16,7 +16,13 @@ const customEasingFn = cubicBezier(0.4, 0, 0.2, 1);
 
 const MotionButton = motion.create(Button);
 
-export const SendButton = React.memo(({ show, isStreaming, disabled, onClick, tip }: SendButtonProps) => {
+export const SendButton = React.memo(function SendButton({
+  show,
+  isStreaming,
+  disabled,
+  onClick,
+  tip,
+}: SendButtonProps) {
   return (
     <AnimatePresence>
       {show ? (

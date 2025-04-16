@@ -31,7 +31,10 @@ const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNo
   },
 } as const;
 
-export const ModelSelector = React.memo(({ modelSelection, setModelSelection }: ModelSelectorProps) => {
+export const ModelSelector = React.memo(function ModelSelector({
+  modelSelection,
+  setModelSelection,
+}: ModelSelectorProps) {
   const selectedModel = models[modelSelection];
   if (!selectedModel) {
     throw new Error(`Model ${modelSelection} not found`);
