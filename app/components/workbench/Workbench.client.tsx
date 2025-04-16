@@ -161,6 +161,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
     [showDashboard],
   );
 
+  // TODO get rid of fileHistory since we don't use it
   const fileHistory = useMemo(() => ({}), []);
 
   return (

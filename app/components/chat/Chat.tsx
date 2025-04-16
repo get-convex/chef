@@ -520,16 +520,7 @@ export const Chat = memo(
         streamStatus={status}
         currentError={error}
         toolStatus={toolStatus}
-        messages={messages.map((message, i) => {
-          if (message.role === 'user') {
-            return message;
-          }
-          return {
-            ...message,
-            content: parsedMessages[i]?.content || '',
-            parts: parsedMessages[i]?.parts || [],
-          };
-        })}
+        messages={parsedMessages}
         actionAlert={actionAlert}
         clearAlert={() => workbenchStore.clearAlert()}
         terminalInitializationOptions={terminalInitializationOptions}

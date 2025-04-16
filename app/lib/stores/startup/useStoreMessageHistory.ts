@@ -46,6 +46,11 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
     };
   }, []);
 
+  // We're not using the identity of useStoreMessageHistory to trigger anything
+  // so no need return a new one when persistedState changes.
+  const persistedStateRef = useRef(persistedState);
+  persistedStateRef.current = persistedState;
+
   return useCallback(
     async (messages: Message[]) => {
       if (initialMessages === undefined) {
@@ -59,7 +64,7 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       }
 
       const sessionId = await waitForConvexSessionId('useStoreMessageHistory');
-      const updateResult = shouldUpdateMessages(messages, persistedState);
+      const updateResult = shouldUpdateMessages(messages, persistedStateRef.current);
       if (updateResult.kind === 'noUpdate') {
         return;
       }
@@ -104,7 +109,7 @@ export function useStoreMessageHistory(chatId: string, initialMessages: Serializ
       }
       setPersistedState(updateResult);
     },
-    [convex, chatId, initialMessages, persistedState, persistInProgress],
+    [convex, chatId, initialMessages, persistInProgress],
   );
 }
 
