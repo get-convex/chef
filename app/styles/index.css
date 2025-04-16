@@ -19,6 +19,13 @@ body {
   scrollbar-width: thin !important;
 }
 
+:root {
+  --gradient-opacity: 0.8;
+  --primary-color: rgba(158, 117, 240, var(--gradient-opacity));
+  --secondary-color: rgba(138, 43, 226, var(--gradient-opacity));
+  --accent-color: rgba(128, 59, 239, var(--gradient-opacity));
+}
+
 html.light {
   color-scheme: light;
 }
