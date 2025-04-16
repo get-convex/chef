@@ -153,7 +153,12 @@ export function ApiKeyCard() {
               </label>
               <p className="mb-4 text-sm text-content-secondary">
                 See instructions for generating an xAI API key{' '}
-                <a href="https://docs.x.ai/docs/overview#welcome" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://docs.x.ai/docs/overview#welcome"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                >
                   here
                 </a>
                 .
