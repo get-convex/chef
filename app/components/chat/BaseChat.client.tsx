@@ -6,8 +6,6 @@ import { classNames } from '~/utils/classNames';
 import { Messages } from './Messages.client';
 import { SendButton } from './SendButton.client';
 import styles from './BaseChat.module.css';
-import FilePreview from './FilePreview';
-import { ScreenshotStateManager } from './ScreenshotStateManager';
 import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
 import { ConvexConnection } from '~/components/convex/ConvexConnection';
@@ -42,10 +40,6 @@ interface BaseChatProps {
 
   // Current input props
   input: string;
-  uploadedFiles: File[];
-  setUploadedFiles: (files: File[]) => void;
-  imageDataList: string[];
-  setImageDataList: (dataList: string[]) => void;
 
   // Chat user interactions
   handleInputChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -96,10 +90,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       sendMessage,
       sendMessageInProgress,
       handleStop,
-      uploadedFiles = [],
-      setUploadedFiles,
-      imageDataList = [],
-      setImageDataList,
       messages,
       actionAlert,
       clearAlert,
@@ -203,20 +193,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     </Callout>
                   )}
                   <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border bg-background-primary/75 backdrop-blur-md transition-all duration-200 has-[textarea:focus]:border-border-selected">
-                    <FilePreview
-                      files={uploadedFiles}
-                      imageDataList={imageDataList}
-                      onRemove={(index) => {
-                        setUploadedFiles?.(uploadedFiles.filter((_, i) => i !== index));
-                        setImageDataList?.(imageDataList.filter((_, i) => i !== index));
-                      }}
-                    />
-                    <ScreenshotStateManager
-                      setUploadedFiles={setUploadedFiles}
-                      setImageDataList={setImageDataList}
-                      uploadedFiles={uploadedFiles}
-                      imageDataList={imageDataList}
-                    />
                     <div>
                       <textarea
                         ref={textareaRef}
@@ -226,23 +202,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           'disabled:opacity-50 disabled:cursor-not-allowed',
                         )}
                         disabled={disableChatMessage !== null || maintenanceMode}
-                        onDrop={(e) => {
-                          e.preventDefault();
-
-                          const files = Array.from(e.dataTransfer.files);
-                          files.forEach((file) => {
-                            if (file.type.startsWith('image/')) {
-                              const reader = new FileReader();
-
-                              reader.onload = (e) => {
-                                const base64Image = e.target?.result as string;
-                                setUploadedFiles?.([...uploadedFiles, file]);
-                                setImageDataList?.([...imageDataList, base64Image]);
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          });
-                        }}
                         onKeyDown={(event) => {
                           if (event.key === 'Enter' && selectedTeamSlug) {
                             if (event.shiftKey) {
@@ -280,7 +239,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         translate="no"
                       />
                       <SendButton
-                        show={input.length > 0 || isStreaming || uploadedFiles.length > 0 || sendMessageInProgress}
+                        show={input.length > 0 || isStreaming || sendMessageInProgress}
                         isStreaming={isStreaming}
                         disabled={
                           !selectedTeamSlug ||
@@ -293,7 +252,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                             handleStop?.();
                             return;
                           }
-                          if (input.length > 0 || uploadedFiles.length > 0) {
+                          if (input.length > 0) {
                             handleSendMessage?.();
                           }
                         }}
