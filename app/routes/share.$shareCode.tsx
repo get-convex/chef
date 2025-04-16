@@ -15,6 +15,7 @@ import { useParams } from '@remix-run/react';
 import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Loading } from '~/components/Loading';
 import type { MetaFunction } from '@vercel/remix';
+import { Button } from '@ui/Button';
 
 export const meta: MetaFunction = () => {
   return [
@@ -144,13 +145,13 @@ function ShareProjectContent() {
           )}
         </div>
 
-        <button
-          className="flex w-full items-center justify-center gap-2 rounded-lg border bg-bolt-elements-button-secondary-background px-6 py-3 text-bolt-elements-button-primary-text hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
+        <Button
+          className="flex w-full items-center justify-center gap-2 rounded-lg border bg-bolt-elements-button-secondary-background px-6 py-3 text-gray-900 hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
           onClick={handleCloneChat}
           disabled={!selectedTeamSlug}
         >
           Clone Project
-        </button>
+        </Button>
       </div>
     </div>
   );
