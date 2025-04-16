@@ -320,7 +320,9 @@ export const Preview = memo(({ showClose, onClose }: { showClose: boolean; onClo
               />
             ) : (
               <div className="flex size-full items-center justify-center bg-bolt-elements-background-depth-1 text-content-primary">
-                <Spinner />
+                <div>
+                  <Spinner />
+                </div>
               </div>
             )
           ) : (
