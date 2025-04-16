@@ -134,7 +134,7 @@ httpWithCors.route({
     const lastMessageRank = url.searchParams.get('lastMessageRank');
     const partIndex = url.searchParams.get('partIndex');
     const contentType = request.headers.get('Content-Type');
-    if (!contentType?.startsWith('multipart/form-data')) {
+    if (contentType === null || !contentType.startsWith('multipart/form-data')) {
       // Older pathway that sends just messages as a single blob
       const messageBlob = await request.blob();
       const storageId = await ctx.storage.store(messageBlob);
