@@ -109,7 +109,6 @@ export const Workbench = memo(({ chatStarted, isStreaming, terminalInitializatio
   }, []);
 
   const onEditorWheel = useCallback<OnEditorWheel>(() => {
-    console.log('wheeeeeel!');
     workbenchStore.stopFollowingStreamedCode();
   }, []);
 
