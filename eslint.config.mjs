@@ -3,17 +3,24 @@ import { jsFileExtensions } from '@blitz/eslint-plugin/dist/configs/javascript.j
 import { getNamingConventionRule, tsFileExtensions } from '@blitz/eslint-plugin/dist/configs/typescript.js';
 import tailwindcss from "eslint-plugin-tailwindcss";
 import reactPlugin from 'eslint-plugin-react';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
 export default [
   {
     ignores: ['**/dist', '**/node_modules', '**/.wrangler', '**/bolt/build', '**/.history', 'template/**'],
   },
   ...blitzPlugin.configs.recommended(),
-  reactPlugin.configs.flat.recommended,
-  reactPlugin.configs.flat['jsx-runtime'],
   {
     files: [...tsFileExtensions, ...jsFileExtensions],
+    plugins: {
+      react: reactPlugin,
+      "react-hooks": reactHooksPlugin,
+    },
     rules: {
+      ...reactPlugin.configs.flat.recommended,
+      ...reactPlugin.configs.flat['jsx-runtime'],
+      ...reactHooksPlugin.configs.recommended.rules,
+      
       '@blitz/lines-around-comment': 'off',
       '@blitz/newline-before-return': 'off',
       '@blitz/catch-error-name': 'off',
