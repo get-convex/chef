@@ -285,7 +285,6 @@ export const getInitialMessagesStorageInfo = internalQuery({
     if (!doc) {
       return null;
     }
-    console.log('lastMessageRank', doc.lastMessageRank);
     return {
       storageId: doc.storageId,
       lastMessageRank: doc.lastMessageRank,
