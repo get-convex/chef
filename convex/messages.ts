@@ -170,11 +170,20 @@ export const get = query({
   },
 });
 
-export function getLatestChatMessageStorageState(ctx: QueryCtx, chat: Doc<'chats'>) {
-  const indexExpression = chat.lastMessageRank
-    ? (q: any) => q.eq('chatId', chat._id).lte('lastMessageRank', chat.lastMessageRank)
-    : (q: any) => q.eq('chatId', chat._id);
-  return ctx.db.query('chatMessagesStorageState').withIndex('byChatId', indexExpression).order('desc').first();
+export async function getLatestChatMessageStorageState(ctx: QueryCtx, chat: Doc<'chats'>) {
+  const lastMessageRank = chat.lastMessageRank;
+  if (lastMessageRank === undefined) {
+    return await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .order('desc')
+      .first();
+  }
+  return await ctx.db
+    .query('chatMessagesStorageState')
+    .withIndex('byChatId', (q) => q.eq('chatId', chat._id).lte('lastMessageRank', lastMessageRank))
+    .order('desc')
+    .first();
 }
 
 // This exists for compatibility with old clients
@@ -276,6 +285,7 @@ export const getInitialMessagesStorageInfo = internalQuery({
     if (!doc) {
       return null;
     }
+    console.log('lastMessageRank', doc.lastMessageRank);
     return {
       storageId: doc.storageId,
       lastMessageRank: doc.lastMessageRank,
@@ -298,6 +308,18 @@ export const updateStorageState = internalMutation({
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
       throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
+    }
+    if (chat.lastMessageRank !== undefined) {
+      // Remove the storage state records for future messages on a different branch
+      const storageStatesToDelete = await ctx.db
+        .query('chatMessagesStorageState')
+        .withIndex('byChatId', (q) => q.eq('chatId', chat._id).gt('lastMessageRank', lastMessageRank))
+        .collect();
+      for (const storageState of storageStatesToDelete) {
+        await ctx.db.delete(storageState._id);
+        // TODO: Delete the snapshots and storage blobs
+      }
+      ctx.db.patch(chat._id, { lastMessageRank: undefined });
     }
     const previous = await getLatestChatMessageStorageState(ctx, chat);
     if (!previous) {
