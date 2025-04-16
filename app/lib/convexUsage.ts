@@ -4,6 +4,7 @@ export type CheckTokenUsageResponse =
       centitokensUsed: number;
       centitokensQuota: number;
       isTeamDisabled: boolean;
+      isPaidPlan: boolean;
     }
   | {
       status: 'error';
@@ -61,6 +62,14 @@ export async function getTokenUsage(
     centitokensUsed,
     centitokensQuota,
     isTeamDisabled,
-  }: { centitokensUsed: number; centitokensQuota: number; isTeamDisabled: boolean } = await response.json();
-  return { status: 'success', centitokensUsed, centitokensQuota, isTeamDisabled };
+    isPaidPlan,
+  }: { centitokensUsed: number; centitokensQuota: number; isTeamDisabled: boolean; isPaidPlan: boolean } =
+    await response.json();
+  return {
+    status: 'success',
+    centitokensUsed,
+    centitokensQuota,
+    isTeamDisabled,
+    isPaidPlan,
+  };
 }

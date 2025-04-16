@@ -77,19 +77,16 @@ export async function chatAction({ request }: ActionFunctionArgs) {
         status: resp.httpStatus,
       });
     }
-    if (resp.isTeamDisabled) {
+    const { centitokensUsed, centitokensQuota, isTeamDisabled, isPaidPlan } = resp;
+    if (isTeamDisabled) {
       return new Response(JSON.stringify({ error: disabledText }), {
         status: 402,
       });
     }
-    if (resp.centitokensQuota === 50000000) {
-      // TODO(nipunn) Hack for launch day
-      resp.centitokensQuota = resp.centitokensQuota * 10000;
-    }
-    if (resp.centitokensUsed >= resp.centitokensQuota) {
+    if (!isPaidPlan && centitokensUsed >= centitokensQuota) {
       if (body.userApiKey?.preference !== 'quotaExhausted') {
-        logger.error(`No tokens available for ${deploymentName}: ${resp.centitokensUsed} of ${resp.centitokensQuota}`);
-        return new Response(JSON.stringify({ error: noTokensText(resp.centitokensUsed, resp.centitokensQuota) }), {
+        logger.error(`No tokens available for ${deploymentName}: ${centitokensUsed} of ${centitokensQuota}`);
+        return new Response(JSON.stringify({ error: noTokensText(centitokensUsed, centitokensQuota) }), {
           status: 402,
         });
       }

@@ -3,10 +3,11 @@ import { useConvex } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
-import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
+import { noTokensText, VITE_PROVISION_HOST } from '~/components/chat/Chat';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
 import { TeamSelector } from '~/components/convex/TeamSelector';
+import { Callout } from '@ui/Callout';
 
 export function UsageCard() {
   const convex = useConvex();
@@ -20,7 +21,11 @@ export function UsageCard() {
   const [selectedTeamSlug, setSelectedTeamSlug] = useState(useSelectedTeamSlug() ?? teams?.[0]?.slug ?? null);
 
   const [isLoadingUsage, setIsLoadingUsage] = useState(true);
-  const [tokenUsage, setTokenUsage] = useState<{ centitokensUsed?: number; centitokensQuota?: number }>({});
+  const [tokenUsage, setTokenUsage] = useState<{
+    centitokensUsed: number;
+    centitokensQuota: number;
+    isPaidPlan: boolean;
+  } | null>(null);
   useEffect(() => {
     async function fetchTokenUsage() {
       if (!selectedTeamSlug) {
@@ -46,9 +51,7 @@ export function UsageCard() {
     void fetchTokenUsage();
   }, [selectedTeamSlug, convex]);
 
-  const usagePercentage = tokenUsage.centitokensQuota
-    ? ((tokenUsage.centitokensUsed || 0) / tokenUsage.centitokensQuota) * 100
-    : 0;
+  const usagePercentage = tokenUsage ? (tokenUsage.centitokensUsed / tokenUsage.centitokensQuota) * 100 : 0;
 
   return (
     <div className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 shadow-sm">
@@ -76,7 +79,7 @@ export function UsageCard() {
               <div>
                 <div
                   className="h-4 rounded-full bg-blue-500 transition-all duration-300"
-                  style={{ width: tokenUsage.centitokensQuota ? `${Math.min(100, usagePercentage)}%` : '0%' }}
+                  style={{ width: tokenUsage?.centitokensQuota ? `${Math.min(100, usagePercentage)}%` : '0%' }}
                 />
                 <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium text-content-primary">
                   {Math.round(usagePercentage)}%
@@ -94,10 +97,17 @@ export function UsageCard() {
               </span>
             ) : (
               <span>
-                {`${renderTokenCount(tokenUsage.centitokensUsed || 0)} / ${renderTokenCount(tokenUsage.centitokensQuota || 0)} included tokens used this billing period.`}
+                {`${renderTokenCount(tokenUsage?.centitokensUsed || 0)} / ${renderTokenCount(
+                  tokenUsage?.centitokensQuota || 0,
+                )} included tokens used this billing period.`}
               </span>
             )}
           </p>
+          {tokenUsage && !tokenUsage.isPaidPlan && tokenUsage.centitokensUsed > tokenUsage.centitokensQuota && (
+            <Callout variant="upsell" className="min-w-full rounded-md">
+              {noTokensText(selectedTeamSlug)}
+            </Callout>
+          )}
         </div>
       </div>
     </div>
