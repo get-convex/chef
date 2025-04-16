@@ -24,7 +24,7 @@ import { createSampler } from '~/utils/sampler';
 import type { ActionAlert } from '~/types/actions';
 import type { WebContainer } from '@webcontainer/api';
 import type { Id } from '@convex/_generated/dataModel';
-import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot.client';
+import { buildUncompressedSnapshot } from '~/lib/snapshot.client';
 import { waitForConvexSessionId } from './sessionId';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './artifacts';
@@ -36,7 +36,6 @@ import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { setupMjsContent } from '~/lib/download/setupMjsContent';
 import type { ConvexProject } from './convexProject';
 import { cursorRulesContent } from '~/lib/download/cursorRulesContent';
-import { chatSyncState } from './startup/history';
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
@@ -561,56 +560,3 @@ export class WorkbenchStore {
 }
 
 export const workbenchStore = new WorkbenchStore();
-
-async function backupWorker(backupState: WritableAtom<BackupState>) {
-  const sessionId = await waitForConvexSessionId('backupWorker');
-  while (true) {
-    const currentState = backupState.get();
-    if (currentState.savedUpdateCounter !== null) {
-      await waitForFileUpdateCounterChanged(currentState.savedUpdateCounter);
-    }
-    const nextSync = currentState.lastSync + BACKUP_DEBOUNCE_MS;
-    const now = Date.now();
-    if (now < nextSync) {
-      await new Promise((resolve) => setTimeout(resolve, nextSync - now));
-    }
-    const nextUpdateCounter = getFileUpdateCounter();
-    try {
-      await performBackup(sessionId);
-    } catch (error) {
-      console.error('Failed to upload snapshot:', error);
-      backupState.set({
-        ...currentState,
-        numFailures: currentState.numFailures + 1,
-      });
-      const sleepTime = backoffTime(currentState.numFailures);
-      console.error(
-        `Failed to upload snapshot (num failures: ${currentState.numFailures}), sleeping for ${sleepTime.toFixed(2)}ms`,
-        error,
-      );
-      await new Promise((resolve) => setTimeout(resolve, sleepTime));
-      continue;
-    }
-    backupState.set({
-      ...currentState,
-      savedUpdateCounter: nextUpdateCounter,
-      lastSync: now,
-      numFailures: 0,
-    });
-  }
-}
-
-async function performBackup(sessionId: Id<'sessions'>) {
-  const convexSiteUrl = getConvexSiteUrl();
-  const chatId = chatIdStore.get();
-  const binarySnapshot = await buildUncompressedSnapshot();
-  const compressed = await compressSnapshot(binarySnapshot);
-
-  const uploadUrl = `${convexSiteUrl}/upload_snapshot?sessionId=${sessionId}&chatId=${chatId}`;
-  const result = await fetch(uploadUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/octet-stream' },
-    body: compressed,
-  });
-  console.log('Uploaded snapshot', result);
-}

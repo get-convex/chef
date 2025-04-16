@@ -6,7 +6,7 @@ import { sessionIdStore } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
 import type { ConvexReactClient } from 'convex/react';
 import { useConvex } from 'convex/react';
-import { decompressSnapshot } from '~/lib/snapshot.client';
+import { decompressWithLz4 } from '~/lib/compression';
 import { streamOutput } from '~/utils/process';
 import { cleanTerminalOutput } from '~/utils/shell';
 import { toast } from 'sonner';
@@ -75,7 +75,7 @@ async function setupContainer(
     throw new Error(`Failed to download snapshot (${resp.statusText}): ${resp.statusText}`);
   }
   const compressed = await resp.arrayBuffer();
-  const decompressed = await decompressSnapshot(new Uint8Array(compressed));
+  const decompressed = decompressWithLz4(new Uint8Array(compressed));
 
   const container = await webcontainer;
   await container.mount(decompressed);

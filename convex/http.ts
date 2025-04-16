@@ -134,21 +134,21 @@ httpWithCors.route({
     const lastMessageRank = url.searchParams.get('lastMessageRank');
     const partIndex = url.searchParams.get('partIndex');
     const contentType = request.headers.get('Content-Type');
-    // if (contentType !== 'multipart/form-data') {
-    //   // Older pathway that sends just messages as a single blob
-    //   const messageBlob = await request.blob();
-    //   const storageId = await ctx.storage.store(messageBlob);
-    //   await ctx.runMutation(internal.messages.updateStorageState, {
-    //     sessionId: sessionId as Id<'sessions'>,
-    //     chatId: chatId as Id<'chats'>,
-    //     lastMessageRank: parseInt(lastMessageRank!),
-    //     partIndex: parseInt(partIndex!),
-    //     storageId,
-    //   });
-    //   return new Response(null, {
-    //     status: 200,
-    //   });
-    // }
+    if (!contentType?.startsWith('multipart/form-data')) {
+      // Older pathway that sends just messages as a single blob
+      const messageBlob = await request.blob();
+      const storageId = await ctx.storage.store(messageBlob);
+      await ctx.runMutation(internal.messages.updateStorageState, {
+        sessionId: sessionId as Id<'sessions'>,
+        chatId: chatId as Id<'chats'>,
+        lastMessageRank: parseInt(lastMessageRank!),
+        partIndex: parseInt(partIndex!),
+        storageId,
+      });
+      return new Response(null, {
+        status: 200,
+      });
+    }
     const formData = await request.formData();
     const messageBlob = formData.get('messages') as Blob;
     let messageStorageId: Id<'_storage'> | null = null;
