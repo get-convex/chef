@@ -151,12 +151,11 @@ function DeployTool({ artifact, invocation }: { artifact: ArtifactState; invocat
     throw new Error('Terminal can only be used for the deploy tool');
   }
 
-  if (invocation.state === 'call') {
+  if (invocation.state === 'call' || invocation.state === 'result') {
     return <Terminal artifact={artifact} invocation={invocation} />;
   }
-  if (invocation.state === 'result') {
-    return <Terminal artifact={artifact} invocation={invocation} />;
-  }
+
+  return null;
 }
 
 const Terminal = memo(
@@ -237,14 +236,11 @@ function NpmInstallTool({ artifact, invocation }: { artifact: ArtifactState; inv
     throw new Error('Terminal can only be used for the npmInstall tool');
   }
 
-  if (invocation.state === 'call') {
+  if (invocation.state === 'call' || (invocation.state === 'result' && invocation.result.startsWith('Error:'))) {
     return <Terminal artifact={artifact} invocation={invocation} />;
   }
-  if (invocation.state === 'result') {
-    if (invocation.result.startsWith('Error:')) {
-      return <Terminal artifact={artifact} invocation={invocation} />;
-    }
-  }
+
+  return null;
 }
 
 function parseToolInvocation(
