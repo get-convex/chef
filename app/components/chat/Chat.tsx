@@ -88,8 +88,6 @@ export const Chat = memo(
     const convex = useConvex();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
-    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-    const [imageDataList, setImageDataList] = useState<string[]>([]);
     const [searchParams, setSearchParams] = useSearchParams();
     const actionAlert = useStore(workbenchStore.alert);
 
@@ -414,11 +412,6 @@ export const Chat = memo(
                   type: 'text',
                   text: messageContent,
                 },
-                ...imageDataList.map((imageData) => ({
-                  type: 'file' as const,
-                  mimeType: 'image/png',
-                  data: imageData,
-                })),
               ],
             },
           ]);
@@ -439,11 +432,6 @@ export const Chat = memo(
                 type: 'text',
                 text: `${userUpdateArtifact}${messageContent}`,
               },
-              ...imageDataList.map((imageData) => ({
-                type: 'file' as const,
-                mimeType: 'image/png',
-                data: imageData,
-              })),
             ],
           });
 
@@ -457,20 +445,12 @@ export const Chat = memo(
                 type: 'text',
                 text: messageContent,
               },
-              ...imageDataList.map((imageData) => ({
-                type: 'file' as const,
-                mimeType: 'image/png',
-                data: imageData,
-              })),
             ],
           });
         }
 
         setInput('');
         Cookies.remove(PROMPT_COOKIE_KEY);
-
-        setUploadedFiles([]);
-        setImageDataList([]);
 
         textareaRef.current?.blur();
       } finally {
@@ -510,10 +490,6 @@ export const Chat = memo(
         chatStarted={chatStarted}
         description={title}
         input={input}
-        uploadedFiles={uploadedFiles}
-        setUploadedFiles={setUploadedFiles}
-        imageDataList={imageDataList}
-        setImageDataList={setImageDataList}
         handleInputChange={(e) => {
           onTextareaChange(e);
           debouncedCachePrompt(e);
