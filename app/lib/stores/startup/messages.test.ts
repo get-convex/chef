@@ -1,7 +1,11 @@
-import { expect, test, describe } from 'vitest';
-
+import { expect, test, describe, vi } from 'vitest';
 import type { Message } from '@ai-sdk/react';
 import { serializeMessageForConvex } from './messages';
+
+vi.mock('lz4-wasm', () => ({
+  compress: (data: Uint8Array) => data,
+  decompress: (data: Uint8Array) => data,
+}));
 
 describe('serializeMessageForConvex', () => {
   test('removes file content from bolt actions while preserving tags', () => {

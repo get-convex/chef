@@ -1,6 +1,11 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import type { Message } from '@ai-sdk/react';
 import { getLastCompletePart } from './useStoreMessageHistory';
+
+vi.mock('lz4-wasm', () => ({
+  compress: (data: Uint8Array) => data,
+  decompress: (data: Uint8Array) => data,
+}));
 
 function createMessage(overrides: Partial<Message> = {}): Message {
   return {
