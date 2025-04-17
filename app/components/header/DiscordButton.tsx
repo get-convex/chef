@@ -10,7 +10,7 @@ export function DiscordButton() {
     <OverflowMenuButton onClick={handleDiscordClick}>
       {/* Margin top is needed to visually align the icon with the text */}
       <DiscordLogoIcon style={{ marginTop: '3px' }} />
-      <span>Community support</span>
+      <span>Community Support</span>
     </OverflowMenuButton>
   );
 }
