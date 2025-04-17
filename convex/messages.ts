@@ -300,7 +300,7 @@ export const updateStorageState = internalMutation({
     storageId: v.union(v.id('_storage'), v.null()),
     lastMessageRank: v.number(),
     partIndex: v.number(),
-    snapshotId: v.union(v.id('_storage'), v.null()),
+    snapshotId: v.optional(v.union(v.id('_storage'), v.null())),
   },
   handler: async (ctx, args): Promise<void> => {
     const { chatId, storageId, lastMessageRank, partIndex, snapshotId, sessionId } = args;
