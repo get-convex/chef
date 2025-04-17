@@ -77,7 +77,6 @@ interface Props {
   onWheel?: OnWheelCallback;
   onSave?: OnSaveCallback;
   className?: string;
-  settings?: EditorSettings;
 }
 
 type EditorStates = Map<string, EditorState>;
@@ -136,12 +135,11 @@ export const CodeMirrorEditor = memo(
     onSave,
     scrollToDocAppend,
     theme,
-    settings,
     className = '',
   }: Props) => {
     renderLogger.trace('CodeMirrorEditor');
 
-    const [languageCompartment] = useState(new Compartment());
+    const [languageCompartment] = useState(() => new Compartment());
 
     const containerRef = useRef<HTMLDivElement | null>(null);
     const viewRef = useRef<EditorView>();
@@ -218,12 +216,15 @@ export const CodeMirrorEditor = memo(
       editorStatesRef.current = new Map<string, EditorState>();
     }, [id]);
 
+    const isDocumentSet = doc !== undefined;
     useEffect(() => {
       const editorStates = editorStatesRef.current!;
       const view = viewRef.current!;
       const theme = themeRef.current!;
 
-      if (!doc) {
+      const settings: EditorSettings = { tabSize: 2 };
+
+      if (!isDocumentSet) {
         const state = newEditorState('', theme, settings, onScrollRef, onWheelRef, onSaveRef, [
           languageCompartment.of([]),
         ]);
@@ -273,13 +274,13 @@ export const CodeMirrorEditor = memo(
         scrollToDocAppend && simpleAppend,
       );
     }, [
-      doc,
+      isDocumentSet,
+      doc?.isBinary,
       doc?.value,
-      editable,
       doc?.filePath,
+      editable,
       autoFocusOnDocumentChange,
       scrollToDocAppend,
-      settings,
       languageCompartment,
     ]);
 
