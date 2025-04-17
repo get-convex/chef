@@ -401,6 +401,8 @@ export const Chat = memo(
       try {
         setSendMessageInProgress(true);
 
+        enableAutoScroll();
+
         await initializeChat();
         runAnimation();
 
@@ -481,7 +483,7 @@ export const Chat = memo(
       [],
     );
 
-    const [messageRef, scrollRef] = useSnapScroll();
+    const { messageRef, scrollRef, enableAutoScroll } = useSnapScroll();
 
     return (
       <BaseChat
