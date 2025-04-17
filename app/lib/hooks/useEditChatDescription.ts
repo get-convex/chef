@@ -135,7 +135,7 @@ export function useEditChatDescription({
 
       toggleEditMode();
     },
-    [currentDescription, convex, chatId, initialDescription, customChatId, toggleEditMode],
+    [currentDescription, convex, chatId, initialDescription, toggleEditMode, syncWithGlobalStore, sessionId],
   );
 
   const handleKeyDown = useCallback(
