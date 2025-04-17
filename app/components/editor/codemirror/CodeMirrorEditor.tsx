@@ -272,8 +272,11 @@ export const CodeMirrorEditor = memo(
         isFileChange,
         scrollToDocAppend && simpleAppend,
       );
+      // We don’t want this to run when `doc` changes without a change in isBinary/filePath/value
+      // (i.e. a change when only `scroll` changes). While `setEditorDocument` uses the scroll
+      // position, it only needs it when `isFileChange` is set to true.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
-      doc,
       doc?.isBinary,
       doc?.value,
       doc?.filePath,
