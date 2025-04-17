@@ -50,8 +50,6 @@ export function useHomepageInitializeChat(chatId: string) {
 
 export function useExistingInitializeChat(chatId: string) {
   const convex = useConvex();
-  const chefAuthState = useChefAuth();
-  const isFullyLoggedIn = chefAuthState.kind === 'fullyLoggedIn';
   return useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
