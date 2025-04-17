@@ -61,6 +61,7 @@ export const create = mutation({
           lastMessageRank: lastMessage?.rank ?? -1,
           partIndex,
           description: chat.description,
+          snapshotId: chat.snapshotId,
         },
         compressedMessages: compressedMessages.buffer,
       });
@@ -76,6 +77,7 @@ export const intializeShareWithStorage = internalAction({
       lastMessageRank: v.number(),
       partIndex: v.number(),
       description: v.optional(v.string()),
+      snapshotId: v.id('_storage'),
     }),
     compressedMessages: v.bytes(),
   },
@@ -96,6 +98,7 @@ export const updateShareWithStorage = internalMutation({
       lastMessageRank: v.number(),
       partIndex: v.number(),
       description: v.optional(v.string()),
+      snapshotId: v.id('_storage'),
     }),
     storageId: v.id('_storage'),
   },
@@ -108,6 +111,7 @@ export const updateShareWithStorage = internalMutation({
       partIndex: shareFields.partIndex,
       description: shareFields.description,
       chatHistoryId: storageId,
+      snapshotId: shareFields.snapshotId,
     });
   },
 });
