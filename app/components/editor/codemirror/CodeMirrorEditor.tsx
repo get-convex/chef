@@ -216,7 +216,6 @@ export const CodeMirrorEditor = memo(
       editorStatesRef.current = new Map<string, EditorState>();
     }, [id]);
 
-    const isDocumentSet = doc !== undefined;
     useEffect(() => {
       const editorStates = editorStatesRef.current!;
       const view = viewRef.current!;
@@ -224,7 +223,7 @@ export const CodeMirrorEditor = memo(
 
       const settings: EditorSettings = { tabSize: 2 };
 
-      if (!isDocumentSet) {
+      if (!doc) {
         const state = newEditorState('', theme, settings, onScrollRef, onWheelRef, onSaveRef, [
           languageCompartment.of([]),
         ]);
@@ -274,7 +273,7 @@ export const CodeMirrorEditor = memo(
         scrollToDocAppend && simpleAppend,
       );
     }, [
-      isDocumentSet,
+      doc,
       doc?.isBinary,
       doc?.value,
       doc?.filePath,
