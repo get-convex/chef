@@ -91,7 +91,7 @@ export default defineSchema({
     partIndex: v.number(),
     snapshotId: v.optional(v.id('_storage')),
   })
-    .index('byChatId', ['chatId', 'lastMessageRank'])
+    .index('byChatId', ['chatId', 'lastMessageRank', 'partIndex'])
     .index('byStorageId', ['storageId']),
   inviteCodes: defineTable({
     code: v.string(),
