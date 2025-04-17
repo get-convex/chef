@@ -3,6 +3,9 @@ import schema from './schema';
 import { api } from './_generated/api';
 import { compressMessages } from './compressMessages';
 import type { SerializedMessage } from './messages';
+import type { Id } from './_generated/dataModel';
+import type { GenericMutationCtx } from 'convex/server';
+import { expect } from 'vitest';
 
 // TODO -- for some reason, parameterizing on the generated `DataModel` does not work
 export type TestConvex = TestConvexForDataModel<any>;
@@ -80,4 +83,15 @@ export async function storeChat(
     method: 'POST',
     body: formData,
   });
+}
+
+export async function verifyStoredContent(t: TestConvex, storageId: Id<'_storage'>, expectedContent: string) {
+  await t.run(
+    async (ctx: GenericMutationCtx<any> & { storage: { get: (id: Id<'_storage'>) => Promise<Blob | null> } }) => {
+      const blob = await ctx.storage.get(storageId);
+      if (!blob) throw new Error('Failed to retrieve snapshot');
+      const content = await blob.text();
+      expect(content).toBe(expectedContent);
+    },
+  );
 }

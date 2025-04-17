@@ -1,6 +1,6 @@
 import { expect, test, vi } from 'vitest';
 import { api, internal } from './_generated/api';
-import { createChat, setupTest, storeMessages, storeChat, type TestConvex } from './test.setup';
+import { createChat, setupTest, storeMessages, storeChat, type TestConvex, verifyStoredContent } from './test.setup';
 import type { SerializedMessage } from './messages';
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
@@ -12,17 +12,6 @@ const storageInfoWithSnapshot = v.object({
   partIndex: v.number(),
   snapshotId: v.optional(v.id('_storage')),
 });
-
-async function verifyStoredContent(t: TestConvex, snapshotId: Id<'_storage'>, expectedContent: string) {
-  await t.run(
-    async (ctx: GenericMutationCtx<any> & { storage: { get: (id: Id<'_storage'>) => Promise<Blob | null> } }) => {
-      const blob = await ctx.storage.get(snapshotId);
-      if (!blob) throw new Error('Failed to retrieve snapshot');
-      const content = await blob.text();
-      expect(content).toBe(expectedContent);
-    },
-  );
-}
 
 test('sending messages', async () => {
   vi.useFakeTimers();

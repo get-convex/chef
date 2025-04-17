@@ -1,15 +1,21 @@
 import { expect, test } from 'vitest';
 import { api, internal } from './_generated/api';
-import { createChat, setupTest, testProjectInitParams, storeMessages, type TestConvex } from './test.setup';
+import {
+  createChat,
+  setupTest,
+  testProjectInitParams,
+  storeMessages,
+  type TestConvex,
+  storeChat,
+  verifyStoredContent,
+} from './test.setup';
 import type { SerializedMessage } from './messages';
 import { decompressMessages } from './compressMessages';
 
 test('sharing a chat fails if there is no snapshot', async () => {
   const t = setupTest();
   const { sessionId } = await createChat(t);
-  await expect(t.mutation(api.share.create, { sessionId, id: 'test' })).rejects.toThrow(
-    'Your project has never been saved.',
-  );
+  await expect(t.mutation(api.share.create, { sessionId, id: 'test' })).rejects.toThrow('Chat history not found');
 });
 
 async function initializeChat(t: TestConvex, initialMessage?: SerializedMessage) {
@@ -91,5 +97,62 @@ test('cloning a chat forks history', async () => {
 // TODO: Test that cloning messages does not leak a more recent snapshot or later messages
 
 test('sharing a chat uses the snapshot in the chatMessagesStorageState table', async () => {
-  // TODO
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
+
+  // First, create an old snapshot and store it in the chats table
+  const oldSnapshotContent = 'old snapshot content';
+  const oldSnapshotId = await t.run(async (ctx) => {
+    return ctx.storage.store(new Blob([oldSnapshotContent]));
+  });
+  await t.mutation(internal.snapshot.saveSnapshot, {
+    sessionId,
+    chatId,
+    storageId: oldSnapshotId,
+  });
+  await verifyStoredContent(t, oldSnapshotId, oldSnapshotContent);
+
+  // Store a message with a new snapshot using storeChat
+  const message: SerializedMessage = {
+    id: '1',
+    role: 'user',
+    parts: [{ text: 'Hello, world!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  const newSnapshotContent = 'new snapshot content';
+  await storeChat(t, chatId, sessionId, {
+    messages: [message],
+    snapshot: new Blob([newSnapshotContent]),
+  });
+
+  // Get the storage info to verify the new snapshot was stored
+  const storageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+    sessionId,
+    chatId,
+  });
+  expect(storageInfo).not.toBeNull();
+  expect(storageInfo?.snapshotId).not.toBeNull();
+  expect(storageInfo?.snapshotId).not.toBe(oldSnapshotId);
+
+  // Create a share and verify it uses the new snapshot
+  const { code } = await t.mutation(api.share.create, { sessionId, id: chatId });
+  expect(code).toBeDefined();
+
+  // Get the share and verify it has the new snapshot ID
+  const share = await t.run(async (ctx) => {
+    return ctx.db
+      .query('shares')
+      .withIndex('byCode', (q) => q.eq('code', code))
+      .first();
+  });
+  expect(share).not.toBeNull();
+  if (!share) throw new Error('Share not found');
+  if (!storageInfo?.snapshotId) throw new Error('No snapshot ID');
+
+  // Verify the share uses the new snapshot from chatMessagesStorageState
+  expect(share.snapshotId).toBe(storageInfo.snapshotId);
+  expect(share.snapshotId).not.toBe(oldSnapshotId);
+
+  if (!share.snapshotId) throw new Error('No snapshot ID');
+  await verifyStoredContent(t, share.snapshotId, newSnapshotContent);
 });
