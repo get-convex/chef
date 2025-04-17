@@ -14,8 +14,9 @@ const messageParser = new StreamingMessageParser({
       workbenchStore.updateArtifact(data, { closed: true });
     },
     onActionOpen: (data) => {
-      // we only add shell actions when when the close tag got parsed because only then we have the content
-      if (data.action.type === 'file') {
+      // We only add shell actions when when the close tag got parsed because only then we have the content. We also
+      // want to prevent the LLM from modifying `convex/auth.ts`
+      if (data.action.type === 'file' && !data.action.filePath.includes('convex/http.ts')) {
         workbenchStore.addAction(data);
       }
     },
