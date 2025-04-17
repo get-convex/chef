@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import * as Popover from '@radix-ui/react-popover';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { useConvexSessionId, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { useConvexSessionId } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
 import { Share2Icon, ClipboardIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@ui/Spinner';
