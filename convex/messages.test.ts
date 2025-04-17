@@ -1,9 +1,10 @@
 import { expect, test, vi } from 'vitest';
 import { api, internal } from './_generated/api';
-import { createChat, setupTest, storeMessages, storeChat } from './test.setup';
+import { createChat, setupTest, storeMessages, storeChat, type TestConvex } from './test.setup';
 import type { SerializedMessage } from './messages';
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
+import { type GenericMutationCtx } from 'convex/server';
 
 const storageInfoWithSnapshot = v.object({
   storageId: v.union(v.id('_storage'), v.null()),
@@ -11,6 +12,17 @@ const storageInfoWithSnapshot = v.object({
   partIndex: v.number(),
   snapshotId: v.optional(v.id('_storage')),
 });
+
+async function verifyStoredContent(t: TestConvex, snapshotId: Id<'_storage'>, expectedContent: string) {
+  await t.run(
+    async (ctx: GenericMutationCtx<any> & { storage: { get: (id: Id<'_storage'>) => Promise<Blob | null> } }) => {
+      const blob = await ctx.storage.get(snapshotId);
+      if (!blob) throw new Error('Failed to retrieve snapshot');
+      const content = await blob.text();
+      expect(content).toBe(expectedContent);
+    },
+  );
+}
 
 test('sending messages', async () => {
   vi.useFakeTimers();
@@ -56,7 +68,7 @@ test('store messages', async () => {
   vi.useRealTimers();
 });
 
-test('rewind chat', async () => {
+test('rewind chat with snapshot', async () => {
   vi.useFakeTimers();
   const t = setupTest();
   const { sessionId, chatId } = await createChat(t);
@@ -67,7 +79,8 @@ test('rewind chat', async () => {
     createdAt: Date.now(),
   };
 
-  const snapshotBlob = new Blob(['initial snapshot']);
+  const initialSnapshotContent = 'initial snapshot';
+  const snapshotBlob = new Blob([initialSnapshotContent]);
   await storeChat(t, chatId, sessionId, {
     messages: [firstMessage],
     snapshot: snapshotBlob,
@@ -83,6 +96,10 @@ test('rewind chat', async () => {
   expect(initialMessagesStorageInfo?.lastMessageRank).toBe(0);
   expect(initialMessagesStorageInfo?.partIndex).toBe(0);
 
+  // Verify initial snapshot content
+  if (!initialMessagesStorageInfo?.snapshotId) throw new Error('No snapshot ID');
+  await verifyStoredContent(t, initialMessagesStorageInfo.snapshotId, initialSnapshotContent);
+
   const secondMessage: SerializedMessage = {
     id: '2',
     role: 'user',
@@ -90,7 +107,8 @@ test('rewind chat', async () => {
     createdAt: Date.now(),
   };
 
-  const updatedSnapshotBlob = new Blob(['updated snapshot']);
+  const updatedSnapshotContent = 'updated snapshot';
+  const updatedSnapshotBlob = new Blob([updatedSnapshotContent]);
   await storeChat(t, chatId, sessionId, {
     messages: [firstMessage, secondMessage],
     snapshot: updatedSnapshotBlob,
@@ -106,6 +124,10 @@ test('rewind chat', async () => {
   expect(nextMessagesStorageInfo?.lastMessageRank).toBe(1);
   expect(nextMessagesStorageInfo?.partIndex).toBe(0);
 
+  // Verify updated snapshot content
+  if (!nextMessagesStorageInfo?.snapshotId) throw new Error('No snapshot ID');
+  await verifyStoredContent(t, nextMessagesStorageInfo.snapshotId, updatedSnapshotContent);
+
   // Should see lower lastMessageRank after rewinding
   await t.mutation(api.messages.rewindChat, { sessionId, chatId, lastMessageRank: 0 });
   const rewoundMessagesStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
@@ -117,6 +139,10 @@ test('rewind chat', async () => {
   expect(rewoundMessagesStorageInfo?.snapshotId).not.toBeNull();
   expect(rewoundMessagesStorageInfo?.lastMessageRank).toBe(0);
   expect(rewoundMessagesStorageInfo?.partIndex).toBe(0);
+
+  // Verify that after rewind we're back to the initial snapshot
+  if (!rewoundMessagesStorageInfo?.snapshotId) throw new Error('No snapshot ID');
+  await verifyStoredContent(t, rewoundMessagesStorageInfo.snapshotId, initialSnapshotContent);
 
   // Should still have higher lastMessageRank state in the table
   const allChatMessagesStorageStates = await t.run(async (ctx) => {
