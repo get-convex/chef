@@ -63,7 +63,7 @@ export const Terminal = memo(
           resizeObserver.disconnect();
           terminal.dispose();
         };
-      }, []);
+      }, [id, onTerminalReady, onTerminalResize, readonly]);
 
       useEffect(() => {
         const terminal = terminalRef.current!;
