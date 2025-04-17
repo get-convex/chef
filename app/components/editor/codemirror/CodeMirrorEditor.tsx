@@ -71,7 +71,6 @@ interface Props {
   doc?: EditorDocument;
   scrollToDocAppend: boolean;
   editable?: boolean;
-  debounceScroll?: number;
   autoFocusOnDocumentChange?: boolean;
   onChange?: OnChangeCallback;
   onScroll?: OnScrollCallback;
@@ -123,12 +122,12 @@ const editableStateField = StateField.define<boolean>({
 });
 
 const DEBOUNCE_CHANGE = 150;
+const DEBOUNCE_SCROLL = 100;
 
 export const CodeMirrorEditor = memo(
   ({
     id,
     doc,
-    debounceScroll = 100,
     autoFocusOnDocumentChange = false,
     editable = true,
     onScroll,
@@ -225,7 +224,7 @@ export const CodeMirrorEditor = memo(
       const theme = themeRef.current!;
 
       if (!doc) {
-        const state = newEditorState('', theme, settings, onScrollRef, onWheelRef, debounceScroll, onSaveRef, [
+        const state = newEditorState('', theme, settings, onScrollRef, onWheelRef, onSaveRef, [
           languageCompartment.of([]),
         ]);
 
@@ -247,7 +246,7 @@ export const CodeMirrorEditor = memo(
       let state = editorStates.get(doc.filePath);
 
       if (!state) {
-        state = newEditorState(doc.value, theme, settings, onScrollRef, onWheelRef, debounceScroll, onSaveRef, [
+        state = newEditorState(doc.value, theme, settings, onScrollRef, onWheelRef, onSaveRef, [
           languageCompartment.of([]),
         ]);
 
@@ -292,7 +291,6 @@ function newEditorState(
   settings: EditorSettings | undefined,
   onScrollRef: MutableRefObject<OnScrollCallback | undefined>,
   onWheelRef: MutableRefObject<OnWheelCallback | undefined>,
-  debounceScroll: number,
   onFileSaveRef: MutableRefObject<OnSaveCallback | undefined>,
   extensions: Extension[],
 ) {
@@ -306,7 +304,7 @@ function newEditorState(
           }
 
           onScrollRef.current?.({ left: view.scrollDOM.scrollLeft, top: view.scrollDOM.scrollTop });
-        }, debounceScroll),
+        }, DEBOUNCE_SCROLL),
         wheel: () => {
           // Wheel is not debounced! So don't do anything intensive.
           // 'wheel' events are probably being captured somewhere, they don't bubble up to scrollDOM.
