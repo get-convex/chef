@@ -2,18 +2,16 @@ import { useStore } from '@nanostores/react';
 import type { Message } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useMessageParser, type PartCache } from '~/lib/hooks/useMessageParser';
 import { useSnapScroll } from '~/lib/hooks/useSnapScroll';
 import { description } from '~/lib/stores/description';
 import { chatStore } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench.client';
-import { PROMPT_COOKIE_KEY, type ModelSelection } from '~/utils/constants';
+import { type ModelSelection } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger } from '~/utils/logger';
 import { BaseChat } from './BaseChat.client';
-import Cookies from 'js-cookie';
-import { debounce } from '~/utils/debounce';
 import { useSearchParams } from '@remix-run/react';
 import { createSampler } from '~/utils/sampler';
 import { filesToArtifacts } from '~/utils/fileUtils';
@@ -34,7 +32,6 @@ import { disabledText, getTokenUsage } from '~/lib/convexUsage';
 import { formatDistanceStrict } from 'date-fns';
 import { atom } from 'nanostores';
 import { STATUS_MESSAGES } from './StreamingIndicator';
-import { messageInputStore } from '~/lib/stores/messageInput';
 
 const logger = createScopedLogger('Chat');
 
@@ -84,7 +81,6 @@ export const Chat = memo(function Chat({
   hadSuccessfulDeploy,
 }: ChatProps) {
   const convex = useConvex();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
   const [searchParams, setSearchParams] = useSearchParams();
   const actionAlert = useStore(workbenchStore.alert);
@@ -291,8 +287,6 @@ export const Chat = memo(function Chat({
   // AKA "processed messages," since parsing has side effects
   const { parsedMessages, parseMessages } = useMessageParser(partCache);
 
-  const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
-
   useEffect(() => {
     chatStore.setKey('started', initialMessages.length > 0);
   }, []);
@@ -312,25 +306,6 @@ export const Chat = memo(function Chat({
     workbenchStore.abortAllActions();
   };
 
-  const input = useStore(messageInputStore);
-  useEffect(() => {
-    const textarea = textareaRef.current;
-
-    if (textarea) {
-      textarea.style.height = 'auto';
-
-      const scrollHeight = textarea.scrollHeight;
-
-      textarea.style.height = `${Math.min(scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
-      textarea.style.overflowY = scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
-    }
-  }, [input, textareaRef]);
-
-  // Set the initial input value
-  useEffect(() => {
-    messageInputStore.set(searchParams.get('prefill') || Cookies.get(PROMPT_COOKIE_KEY) || '');
-  }, []);
-
   const toolStatus = useCurrentToolStatus();
 
   const runAnimation = async () => {
@@ -349,7 +324,7 @@ export const Chat = memo(function Chat({
     setChatStarted(true);
   };
 
-  const sendMessage = async (messageInput?: string) => {
+  const sendMessage = async (messageInput: string) => {
     const now = Date.now();
     const retries = retryState.get();
     if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet()) {
@@ -383,9 +358,7 @@ export const Chat = memo(function Chat({
       return;
     }
 
-    const messageContent = messageInput || input;
-
-    if (!messageContent?.trim()) {
+    if (!messageInput.trim()) {
       return;
     }
 
@@ -410,11 +383,11 @@ export const Chat = memo(function Chat({
           {
             id: `${new Date().getTime()}`,
             role: 'user',
-            content: messageContent,
+            content: messageInput,
             parts: [
               {
                 type: 'text',
-                text: messageContent,
+                text: messageInput,
               },
             ],
           },
@@ -430,11 +403,11 @@ export const Chat = memo(function Chat({
         const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
         append({
           role: 'user',
-          content: messageContent,
+          content: messageInput,
           parts: [
             {
               type: 'text',
-              text: `${userUpdateArtifact}${messageContent}`,
+              text: `${userUpdateArtifact}${messageInput}`,
             },
           ],
         });
@@ -443,36 +416,19 @@ export const Chat = memo(function Chat({
       } else {
         append({
           role: 'user',
-          content: messageContent,
+          content: messageInput,
           parts: [
             {
               type: 'text',
-              text: messageContent,
+              text: messageInput,
             },
           ],
         });
       }
-
-      messageInputStore.set('');
-      Cookies.remove(PROMPT_COOKIE_KEY);
-
-      textareaRef.current?.blur();
     } finally {
       setSendMessageInProgress(false);
     }
   };
-
-  /**
-   * Debounced function to cache the prompt in cookies.
-   * Caches the trimmed value of the textarea input after a delay to optimize performance.
-   */
-  const debouncedCachePrompt = useCallback(
-    debounce((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const trimmedValue = event.target.value.trim();
-      Cookies.set(PROMPT_COOKIE_KEY, trimmedValue, { expires: 30 });
-    }, 1000),
-    [],
-  );
 
   const [messageRef, scrollRef] = useSnapScroll();
 
@@ -480,16 +436,10 @@ export const Chat = memo(function Chat({
     <BaseChat
       ref={animationScope}
       messageRef={messageRef}
-      textareaRef={textareaRef}
       scrollRef={scrollRef}
       showChat={showChat}
       chatStarted={chatStarted}
       description={title}
-      input={input}
-      handleInputChange={(e) => {
-        messageInputStore.set(e.target.value);
-        debouncedCachePrompt(e);
-      }}
       handleStop={abort}
       sendMessage={sendMessage}
       streamStatus={status}

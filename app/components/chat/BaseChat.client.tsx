@@ -1,35 +1,24 @@
 import type { Message } from 'ai';
-import React, { type ReactNode, type RefCallback, useCallback, useState, useMemo } from 'react';
+import React, { type ReactNode, type RefCallback, useCallback, useMemo } from 'react';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import { classNames } from '~/utils/classNames';
 import { Messages } from './Messages.client';
-import { SendButton } from './SendButton.client';
 import styles from './BaseChat.module.css';
 import type { ActionAlert } from '~/types/actions';
 import ChatAlert from './ChatAlert';
-import { ConvexConnection } from '~/components/convex/ConvexConnection';
 import { SuggestionButtons } from './SuggestionButtons';
-import { KeyboardShortcut } from '@ui/KeyboardShortcut';
 import StreamingIndicator from './StreamingIndicator';
 import type { ToolStatus } from '~/lib/common/types';
-import { TeamSelector } from '~/components/convex/TeamSelector';
 import type { TerminalInitializationOptions } from '~/types/terminal';
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
-import { useChefAuth } from './ChefAuthWrapper';
-import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useFlags } from 'launchdarkly-react-client-sdk';
-import { openSignInWindow } from '~/components/ChefSignInPage';
-import { Spinner } from '@ui/Spinner';
-import { ModelSelector } from './ModelSelector';
 import type { ModelSelection } from '~/utils/constants';
-import { Button } from '@ui/Button';
 import { Callout } from '@ui/Callout';
-const TEXTAREA_MIN_HEIGHT = 76;
+import { MessageInput } from './MessageInput';
+import { messageInputStore } from '~/lib/stores/messageInput';
 
 interface BaseChatProps {
   // Refs
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
   messageRef: RefCallback<HTMLDivElement> | undefined;
   scrollRef: RefCallback<HTMLDivElement> | undefined;
 
@@ -38,13 +27,9 @@ interface BaseChatProps {
   chatStarted: boolean;
   description: string | undefined;
 
-  // Current input props
-  input: string;
-
   // Chat user interactions
-  handleInputChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleStop: () => void;
-  sendMessage: (messageInput?: string) => Promise<void>;
+  sendMessage: (messageInput: string) => Promise<void>;
   sendMessageInProgress: boolean;
 
   // Current chat history props
@@ -78,15 +63,12 @@ function useSerializedMessages(messages: Message[]) {
 export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   (
     {
-      textareaRef,
       messageRef,
       scrollRef,
       showChat = true,
       chatStarted = false,
       streamStatus = 'ready',
-      input = '',
       currentError,
-      handleInputChange,
       sendMessage,
       sendMessageInProgress,
       handleStop,
@@ -102,43 +84,17 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     ref,
   ) => {
     const { maintenanceMode } = useFlags();
-    const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
     const messagesString = useSerializedMessages(messages);
 
-    const handleSendMessage = useCallback(
-      (messageInput?: string) => {
-        if (sendMessage) {
-          sendMessage(messageInput).then(() => {
-            handleInputChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
-          });
-        }
-      },
-      [sendMessage, handleInputChange],
-    );
-    const sessionId = useConvexSessionIdOrNullOrLoading();
-    const chefAuthState = useChefAuth();
-
-    const selectedTeamSlug = useSelectedTeamSlug();
-
     const lastUserMessage = messages.findLast((message) => message.role === 'user');
-    const resendMessage = useCallback(() => {
+    const resendMessage = useCallback(async () => {
       if (lastUserMessage) {
-        handleSendMessage?.(lastUserMessage.content);
+        await sendMessage?.(lastUserMessage.content);
+        messageInputStore.set('');
       }
     }, [lastUserMessage]);
-
-    const handleClickSendButton = useCallback(() => {
-      if (isStreaming) {
-        handleStop?.();
-        return;
-      }
-
-      if (input.length > 0) {
-        handleSendMessage?.();
-      }
-    }, [isStreaming, handleStop, handleSendMessage]);
 
     const baseChat = (
       <div
@@ -186,7 +142,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         alert={actionAlert}
                         clearAlert={() => clearAlert?.()}
                         postMessage={(message) => {
-                          handleSendMessage?.(message);
+                          sendMessage?.(message);
                           clearAlert?.();
                         }}
                       />
@@ -206,91 +162,16 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       {disableChatMessage}
                     </Callout>
                   )}
-                  <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border bg-background-primary/75 backdrop-blur-md transition-all duration-200 has-[textarea:focus]:border-border-selected">
-                    <div>
-                      <textarea
-                        ref={textareaRef}
-                        className={classNames(
-                          'w-full pl-4 pt-4 pr-16 pb-2 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
-                          'focus:outline-none',
-                          'disabled:opacity-50 disabled:cursor-not-allowed',
-                        )}
-                        disabled={disableChatMessage !== null || maintenanceMode}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' && selectedTeamSlug) {
-                            if (event.shiftKey) {
-                              return;
-                            }
-
-                            event.preventDefault();
-
-                            if (isStreaming) {
-                              handleStop?.();
-                              return;
-                            }
-
-                            // ignore if using input method engine
-                            if (event.nativeEvent.isComposing) {
-                              return;
-                            }
-
-                            handleSendMessage();
-                          }
-                        }}
-                        value={input}
-                        onChange={(event) => {
-                          handleInputChange?.(event);
-                        }}
-                        style={{
-                          minHeight: TEXTAREA_MIN_HEIGHT,
-                          maxHeight: TEXTAREA_MAX_HEIGHT,
-                        }}
-                        placeholder={
-                          chatStarted
-                            ? 'Request changes by sending another message...'
-                            : 'What app do you want to serve?'
-                        }
-                        translate="no"
-                      />
-                      <SendButton
-                        show={input.length > 0 || isStreaming || sendMessageInProgress}
-                        isStreaming={isStreaming}
-                        disabled={
-                          !selectedTeamSlug ||
-                          chefAuthState.kind === 'loading' ||
-                          sendMessageInProgress ||
-                          maintenanceMode
-                        }
-                        onClick={handleClickSendButton}
-                        tip={
-                          chefAuthState.kind === 'unauthenticated'
-                            ? 'Please sign in to continue'
-                            : !selectedTeamSlug
-                              ? 'Please select a team to continue'
-                              : undefined
-                        }
-                      />
-                      <div className="flex items-center justify-end gap-4 px-4 pb-3 text-sm">
-                        <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
-                        <div className="grow" />
-                        {input.length > 3 ? (
-                          <div className="text-xs text-content-tertiary">
-                            <KeyboardShortcut value={['Shift', 'Return']} className="mr-0.5 font-semibold" /> for new
-                            line
-                          </div>
-                        ) : null}
-                        {chatStarted && <ConvexConnection />}
-                        {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
-                        {!chatStarted && sessionId && (
-                          <TeamSelector
-                            description="Your project will be created in this Convex team"
-                            selectedTeamSlug={selectedTeamSlug}
-                            setSelectedTeamSlug={setSelectedTeamSlug}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <MessageInput
+                    chatStarted={chatStarted}
+                    isStreaming={isStreaming}
+                    sendMessageInProgress={sendMessageInProgress}
+                    disabled={disableChatMessage !== null || maintenanceMode}
+                    modelSelection={modelSelection}
+                    setModelSelection={setModelSelection}
+                    onAbort={handleStop}
+                    onSend={sendMessage}
+                  />
                 </div>
               </div>
               {maintenanceMode && (
@@ -307,7 +188,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 disabled={disableChatMessage !== null}
                 chatStarted={chatStarted}
                 onSuggestionClick={(suggestion) => {
-                  handleInputChange?.({ target: { value: suggestion } } as React.ChangeEvent<HTMLTextAreaElement>);
+                  messageInputStore.set(suggestion);
                 }}
               />
             </div>
@@ -415,27 +296,3 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   },
 );
 BaseChat.displayName = 'BaseChat';
-
-function SignInButton() {
-  const [started, setStarted] = useState(false);
-  const signIn = useCallback(() => {
-    setStarted(true);
-    openSignInWindow();
-  }, [setStarted]);
-  return (
-    <Button variant="neutral" onClick={signIn}>
-      {!started && (
-        <>
-          <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
-          <span>Sign in</span>
-        </>
-      )}
-      {started && (
-        <>
-          <Spinner />
-          Signing in...
-        </>
-      )}
-    </Button>
-  );
-}
