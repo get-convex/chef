@@ -116,6 +116,7 @@ export default defineSchema({
     description: v.optional(v.string()),
   })
     .index('byCode', ['code'])
+    .index('byChatId', ['chatId'])
     .index('bySnapshotId', ['snapshotId'])
     .index('byChatHistoryId', ['chatHistoryId']),
 
@@ -129,7 +130,7 @@ export default defineSchema({
     .index('byToken', ['token']),
 
   resendTokens: defineTable({
-    memberId: v.id("convexMembers"),
+    memberId: v.id('convexMembers'),
     token: v.string(),
     verifiedEmail: v.string(),
     requestsRemaining: v.number(),
@@ -137,5 +138,4 @@ export default defineSchema({
   })
     .index('byMemberId', ['memberId'])
     .index('byToken', ['token']),
-
 });
