@@ -202,7 +202,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     />
                   )}
                   {disableChatMessage && (
-                    <Callout variant="upsell" className="min-w-full rounded-lg absolute bottom-0 z-40 bg-util-accent/50 backdrop-blur-md h-fit animate-fadeInFromLoading">
+                    <Callout
+                      variant="upsell"
+                      className="absolute bottom-0 z-40 h-fit min-w-full animate-fadeInFromLoading rounded-lg bg-util-accent/50 backdrop-blur-md"
+                    >
                       {disableChatMessage}
                     </Callout>
                   )}

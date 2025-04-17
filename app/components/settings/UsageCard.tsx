@@ -3,7 +3,7 @@ import { useConvex } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
-import {  VITE_PROVISION_HOST } from '~/components/chat/Chat';
+import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
 import { TeamSelector } from '~/components/convex/TeamSelector';
@@ -107,18 +107,16 @@ export function UsageCard() {
           </p>
           {tokenUsage && !tokenUsage.isPaidPlan && tokenUsage.centitokensUsed > tokenUsage.centitokensQuota && (
             <Callout variant="upsell" className="min-w-full rounded-md">
-              <div className="flex flex-col gap-4 w-full">
-                <h3>You've used all the tokens included with your free plan.</h3>
-                <div className="flex gap-2 flex-wrap items-center">
+              <div className="flex w-full flex-col gap-4">
+                <h3>You&apos;ve used all the tokens included with your free plan.</h3>
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     href={`https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`}
                     icon={<ExternalLinkIcon />}
                   >
                     Upgrade to a paid plan
                   </Button>
-                  <span>
-                    or add your own API key below to send more messages.
-                  </span>
+                  <span>or add your own API key below to send more messages.</span>
                 </div>
               </div>
             </Callout>

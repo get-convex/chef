@@ -10,6 +10,10 @@ export default {
   theme: {
     extend: {
       ...TailwindConfig.theme?.extend,
+      borderColor: {
+        ...TailwindConfig.theme?.extend?.borderColor,
+        DEFAULT: 'rgba(var(--border-transparent))',
+      },
       keyframes: TailwindConfig.theme?.extend?.keyframes,
       animation: TailwindConfig.theme?.extend?.animation,
       fontFamily: {

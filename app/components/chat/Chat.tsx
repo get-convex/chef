@@ -14,11 +14,9 @@ import { createScopedLogger } from '~/utils/logger';
 import { BaseChat } from './BaseChat.client';
 import Cookies from 'js-cookie';
 import { debounce } from '~/utils/debounce';
-import { useSearchParams } from '@remix-run/react';
 import { createSampler } from '~/utils/sampler';
 import { filesToArtifacts } from '~/utils/fileUtils';
 import { ChatContextManager } from '~/lib/ChatContextManager';
-import { webcontainer } from '~/lib/webcontainer';
 import { selectedTeamSlugStore, setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
@@ -98,7 +96,6 @@ export const Chat = memo(
     const convex = useConvex();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
-    const [searchParams, setSearchParams] = useSearchParams();
     const actionAlert = useStore(workbenchStore.alert);
 
     const title = useStore(description);
@@ -286,22 +283,6 @@ export const Chat = memo(
         await checkTokenUsage();
       },
     });
-
-    useEffect(() => {
-      const prompt = searchParams.get('prompt');
-
-      if (!prompt || prompt.trim() === '') {
-        return;
-      }
-
-      setSearchParams({});
-      runAnimation();
-
-      // Wait for the WebContainer to fully finish booting before sending a message.
-      webcontainer.then(() => {
-        append({ role: 'user', content: prompt });
-      });
-    }, [searchParams]);
 
     // AKA "processed messages," since parsing has side effects
     const { parsedMessages, parseMessages } = useMessageParser(partCache);
@@ -520,11 +501,14 @@ export const Chat = memo(
         clearAlert={() => workbenchStore.clearAlert()}
         terminalInitializationOptions={terminalInitializationOptions}
         disableChatMessage={
-          disableChatMessage?.type === 'ExceededQuota'
-            ? <NoTokensText resetDisableChatMessage={() => setDisableChatMessage(null)} />
-            : disableChatMessage?.type === 'TeamDisabled'
-              ? <DisabledText isPaidPlan={disableChatMessage.isPaidPlan} resetDisableChatMessage={() => setDisableChatMessage(null)} />
-              : null
+          disableChatMessage?.type === 'ExceededQuota' ? (
+            <NoTokensText resetDisableChatMessage={() => setDisableChatMessage(null)} />
+          ) : disableChatMessage?.type === 'TeamDisabled' ? (
+            <DisabledText
+              isPaidPlan={disableChatMessage.isPaidPlan}
+              resetDisableChatMessage={() => setDisableChatMessage(null)}
+            />
+          ) : null
         }
         sendMessageInProgress={sendMessageInProgress}
         modelSelection={modelSelection}
@@ -599,16 +583,12 @@ function getConvexAuthToken(convex: ConvexReactClient): string | null {
   return token;
 }
 
-export function NoTokensText({
-  resetDisableChatMessage,
-}: {
-  resetDisableChatMessage: () => void;
-}) {
+export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMessage: () => void }) {
   const selectedTeamSlug = useSelectedTeamSlug();
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <h3>You've used all the tokens included with your free plan.</h3>
-      <div className="flex gap-2 items-center flex-wrap">
+    <div className="flex w-full flex-col gap-4">
+      <h3>You&apos;ve used all the tokens included with your free plan.</h3>
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           href={
             selectedTeamSlug
@@ -630,9 +610,9 @@ export function NoTokensText({
         </span>
       </div>
       <div className="ml-auto">
-      <TeamSelector
-        description="Your project will be created in this Convex team"
-        selectedTeamSlug={selectedTeamSlug}
+        <TeamSelector
+          description="Your project will be created in this Convex team"
+          selectedTeamSlug={selectedTeamSlug}
           setSelectedTeamSlug={(slug) => {
             setSelectedTeamSlug(slug);
             resetDisableChatMessage();
@@ -652,13 +632,13 @@ export function DisabledText({
 }) {
   const selectedTeamSlug = useSelectedTeamSlug();
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <h3 >
+    <div className="flex w-full flex-col gap-4">
+      <h3>
         {isPaidPlan
           ? "You've exceeded your spending limits, so your deployments have been disabled."
           : "You've exceeded the free plan limits, so your deployments have been disabled."}
       </h3>
-      <div className="flex gap-2 flex-wrap items-center">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           href={
             selectedTeamSlug
