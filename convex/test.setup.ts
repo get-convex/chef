@@ -57,10 +57,11 @@ export async function storeChat(
   args: {
     messages?: SerializedMessage[];
     snapshot?: Blob;
+    doNotUpdateMessages?: boolean;
   },
 ) {
   const formData = new FormData();
-  if (args.messages) {
+  if (args.messages && !args.doNotUpdateMessages) {
     formData.append('messages', new Blob([JSON.stringify(args.messages)]));
   }
   if (args.snapshot) {
