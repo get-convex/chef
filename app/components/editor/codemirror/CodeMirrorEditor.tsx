@@ -136,7 +136,6 @@ export const CodeMirrorEditor = memo(
     onSave,
     scrollToDocAppend,
     theme,
-    settings,
     className = '',
   }: Props) => {
     renderLogger.trace('CodeMirrorEditor');
@@ -223,6 +222,8 @@ export const CodeMirrorEditor = memo(
       const view = viewRef.current!;
       const theme = themeRef.current!;
 
+      const settings: EditorSettings = { tabSize: 2 };
+
       if (!doc) {
         const state = newEditorState('', theme, settings, onScrollRef, onWheelRef, onSaveRef, [
           languageCompartment.of([]),
@@ -272,16 +273,7 @@ export const CodeMirrorEditor = memo(
         isFileChange,
         scrollToDocAppend && simpleAppend,
       );
-    }, [
-      doc,
-      doc?.value,
-      editable,
-      doc?.filePath,
-      autoFocusOnDocumentChange,
-      scrollToDocAppend,
-      settings,
-      languageCompartment,
-    ]);
+    }, [doc, doc?.value, editable, doc?.filePath, autoFocusOnDocumentChange, scrollToDocAppend, languageCompartment]);
 
     return (
       <div className={classNames('relative h-full', className)}>
