@@ -268,7 +268,7 @@ export const CodeMirrorEditor = memo(
         editable,
         languageCompartment,
         autoFocusOnDocumentChange,
-        doc as TextEditorDocument,
+        doc,
         isFileChange,
         scrollToDocAppend && simpleAppend,
       );
