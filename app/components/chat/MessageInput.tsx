@@ -107,27 +107,30 @@ export const MessageInput = memo(function MessageInput({
     handleSend();
   }, [handleSend, isStreaming, input]);
 
-  const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useCallback((event) => {
-    if (event.key === 'Enter' && selectedTeamSlug) {
-      if (event.shiftKey) {
-        return;
+  const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useCallback(
+    (event) => {
+      if (event.key === 'Enter' && selectedTeamSlug) {
+        if (event.shiftKey) {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (isStreaming) {
+          onAbort?.();
+          return;
+        }
+
+        // ignore if using input method engine
+        if (event.nativeEvent.isComposing) {
+          return;
+        }
+
+        handleSend();
       }
-
-      event.preventDefault();
-
-      if (isStreaming) {
-        onAbort?.();
-        return;
-      }
-
-      // ignore if using input method engine
-      if (event.nativeEvent.isComposing) {
-        return;
-      }
-
-      handleSend();
-    }
-  }, []);
+    },
+    [selectedTeamSlug],
+  );
 
   const cachePrompt = useCallback(
     debounce((value: string) => {
