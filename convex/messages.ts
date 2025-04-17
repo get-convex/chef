@@ -383,6 +383,7 @@ export const handleStorageStateMigration = internalMutation({
     });
     await ctx.scheduler.runAfter(0, internal.messages.cleanupChatMessages, {
       chatId: chat._id,
+      assertStorageStateExists: true,
     });
   },
 });
@@ -513,14 +514,16 @@ export const removeChatInner = internalMutation({
 
     // This doesn't delete the snapshot, and it also will break if the chat was ever shared.
     // We might want soft deletion instead, but for now, let's just delete more stuff.
-    await ctx.scheduler.runAfter(0, internal.messages.cleanupChatMessages, {
-      chatId: existing._id,
-    });
     const storageState = await ctx.db
       .query('chatMessagesStorageState')
       .withIndex('byChatId', (q) => q.eq('chatId', existing._id))
       .unique();
-    if (storageState !== null) {
+    if (storageState === null) {
+      await ctx.scheduler.runAfter(0, internal.messages.cleanupChatMessages, {
+        chatId: existing._id,
+        assertStorageStateExists: false,
+      });
+    } else {
       if (storageState.storageId !== null) {
         await ctx.scheduler.runAfter(0, internal.messages.maybeCleanupStaleChatHistory, {
           storageId: storageState.storageId,
@@ -547,17 +550,20 @@ export const removeChatInner = internalMutation({
 export const cleanupChatMessages = internalMutation({
   args: {
     chatId: v.id('chats'),
+    assertStorageStateExists: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const { chatId } = args;
-    const storageState = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chatId))
-      .unique();
-    if (storageState === null) {
-      throw new Error(
-        'Chat messages storage state not found -- should not clean up messages from DB if they are not stored',
-      );
+    const { chatId, assertStorageStateExists } = args;
+    if (assertStorageStateExists) {
+      const storageState = await ctx.db
+        .query('chatMessagesStorageState')
+        .withIndex('byChatId', (q) => q.eq('chatId', chatId))
+        .unique();
+      if (storageState === null) {
+        throw new Error(
+          'Chat messages storage state not found -- should not clean up messages from DB if they are not stored',
+        );
+      }
     }
     const messages = await ctx.db
       .query('chatMessages')

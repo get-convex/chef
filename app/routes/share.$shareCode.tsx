@@ -15,6 +15,7 @@ import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Loading } from '~/components/Loading';
 import type { MetaFunction } from '@vercel/remix';
 import { Button } from '@ui/Button';
+import { ConvexError } from 'convex/values';
 
 export const meta: MetaFunction = () => {
   return [
@@ -78,8 +79,16 @@ function ShareProjectContent() {
       teamSlug,
       auth0AccessToken,
     };
-    const { id: chatId } = await cloneChat({ shareCode, sessionId, projectInitParams });
-    window.location.href = `/chat/${chatId}`;
+    try {
+      const { id: chatId } = await cloneChat({ shareCode, sessionId, projectInitParams });
+      window.location.href = `/chat/${chatId}`;
+    } catch (e) {
+      if (e instanceof ConvexError) {
+        toast.error(`Error cloning chat: ${e.data.message}`);
+      } else {
+        toast.error('Unexpected error cloning chat');
+      }
+    }
   }, [convex, cloneChat, shareCode]);
   const signIn = useCallback(() => {
     openSignInWindow();
