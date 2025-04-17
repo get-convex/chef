@@ -554,5 +554,20 @@ describe('messages', () => {
       expectedLastMessageRank: 0,
       expectedPartIndex: 0,
     });
+||||||| parent of 83ea96a5 (Use convex linter in deploy tool)
+test('sending messages', async () => {
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
+
+  const chats = await t.query(api.messages.getAll, {
+    sessionId,
+=======
+test("sending messages", async () => {
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
+
+  const chats = await t.query(api.messages.getAll, {
+    sessionId,
+>>>>>>> 83ea96a5 (Use convex linter in deploy tool)
   });
 });

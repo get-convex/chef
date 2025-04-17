@@ -21,7 +21,7 @@ import { getFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
 import { chatSyncState } from '~/lib/stores/startup/history';
 import { FILE_EVENTS_DEBOUNCE_MS } from '~/lib/stores/files';
 
-const TEMPLATE_URL = '/template-snapshot-80c98556.bin';
+const TEMPLATE_URL = '/template-snapshot-dbe070eb.bin';
 
 export function useNewChatContainerSetup() {
   const convex = useConvex();
@@ -84,6 +84,8 @@ async function setupContainer(
   // After loading the snapshot, we need to load the files into the FilesStore since
   // we won't receive file events for snapshot files.
   await workbenchStore.prewarmWorkdir(container);
+
+  (window as any).chefWebContainer = container;
 
   setContainerBootState(ContainerBootState.DOWNLOADING_DEPENDENCIES);
   const npm = await container.spawn('npm', ['install', '--no-fund', '--no-deprecated']);

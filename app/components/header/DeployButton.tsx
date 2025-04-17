@@ -101,7 +101,7 @@ export function DeployButton() {
       const container = await webcontainer;
 
       // Run the build command
-      const buildProcess = await container.spawn('npx', ['vite', 'build', '--mode', 'development']);
+      const buildProcess = await container.spawn('vite', ['build', '--mode', 'development']);
       const { output, exitCode } = await streamOutput(buildProcess);
       if (exitCode !== 0) {
         throw new Error(`Build failed: ${output}`);

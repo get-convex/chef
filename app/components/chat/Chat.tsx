@@ -321,8 +321,12 @@ export const Chat = memo(
       },
     });
 
+    (window as any).chefMessages = messages;
+
     // AKA "processed messages," since parsing has side effects
     const { parsedMessages, parseMessages } = useMessageParser(partCache);
+
+    (window as any).chefParsedMessages = parsedMessages;
 
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
 

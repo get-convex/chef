@@ -1,10 +1,12 @@
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
+import convexPlugin from '@convex-dev/eslint-plugin';
 
 export default [
   {
     ignores: ['**/dist', '**/node_modules', 'convex/_generated/**'],
   },
+  ...convexPlugin.configs.recommmended,
   {
     files: ['**/*.ts'],
     plugins: {
