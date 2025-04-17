@@ -75,7 +75,7 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
       }
     }
     void updateProfile();
-  }, [user, convex]);
+  }, [launchdarkly, user, convex]);
 
   return children;
 }
