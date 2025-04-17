@@ -60,8 +60,16 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
             )}
           >
             <div className="flex items-center gap-2.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 dark:text-gray-500">
-              <ChatActionButton toolTipContent="Rename" icon={<Pencil1Icon />} onClick={toggleEditMode} />
-              <ChatActionButton toolTipContent="Delete" icon={<TrashIcon />} onClick={() => handleDeleteClick(item)} />
+              <ChatActionButton toolTipContent="Rename" icon={<Pencil1Icon />} onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                toggleEditMode();
+              }} />
+              <ChatActionButton toolTipContent="Delete" icon={<TrashIcon />} onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleDeleteClick(item);
+              }} />
             </div>
           </div>
         </a>
@@ -79,7 +87,7 @@ const ChatActionButton = ({
   toolTipContent: string;
   icon: React.ReactNode;
   className?: string;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
 }) => {
   return (
     <Button
