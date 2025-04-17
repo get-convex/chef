@@ -39,6 +39,7 @@ test('rewind chat', async () => {
     sessionId,
     chatId,
   });
+  console.log('initialMessagesStorageInfo', initialMessagesStorageInfo);
   expect(initialMessagesStorageInfo).not.toBeNull();
   expect(initialMessagesStorageInfo?.storageId).not.toBeNull();
   expect(initialMessagesStorageInfo?.lastMessageRank).toBe(0);

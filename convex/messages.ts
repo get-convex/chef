@@ -297,7 +297,7 @@ export const updateStorageState = internalMutation({
   args: {
     sessionId: v.id('sessions'),
     chatId: v.string(),
-    storageId: v.id('_storage'),
+    storageId: v.union(v.id('_storage'), v.null()),
     lastMessageRank: v.number(),
     partIndex: v.number(),
     snapshotId: v.union(v.id('_storage'), v.null()),
@@ -334,6 +334,23 @@ export const updateStorageState = internalMutation({
       console.warn(
         `Stale update -- stored parts in message ${previous.lastMessageRank} up to part ${previous.partIndex} but received update up to part ${partIndex}`,
       );
+      return;
+    }
+
+    if (previous.lastMessageRank === lastMessageRank && previous.partIndex === partIndex) {
+      if (storageId !== null) {
+        // Should this error?
+        console.warn(
+          `Received non-null storageId for message ${lastMessageRank} part ${partIndex} that is already saved`,
+        );
+        return;
+      }
+      if (snapshotId === null) {
+        throw new Error('Received null snapshotId for message that is already saved and has no storageId');
+      }
+      await ctx.db.patch(previous._id, {
+        snapshotId,
+      });
       return;
     }
 
