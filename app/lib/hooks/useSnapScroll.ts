@@ -10,14 +10,6 @@ export function useSnapScroll() {
   const observerRef = useRef<ResizeObserver>();
   const lastScrollTopRef = useRef<number>(0);
 
-  const isScrolledToBottom = useCallback(
-    (element: HTMLDivElement): boolean => {
-      const { scrollTop, scrollHeight, clientHeight } = element;
-      return scrollHeight - scrollTop - clientHeight <= BOTTOM_THRESHOLD;
-    },
-    [],
-  );
-
   const messageRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (node) {
@@ -76,8 +68,13 @@ export function useSnapScroll() {
         onScrollRef.current = undefined;
       }
     },
-    [isScrolledToBottom],
+    [],
   );
 
   return [messageRef, scrollRef] as const;
+}
+
+function isScrolledToBottom(element: HTMLDivElement): boolean {
+  const { scrollTop, scrollHeight, clientHeight } = element;
+  return scrollHeight - scrollTop - clientHeight <= BOTTOM_THRESHOLD;
 }
