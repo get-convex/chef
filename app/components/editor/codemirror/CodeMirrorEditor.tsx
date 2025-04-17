@@ -71,7 +71,6 @@ interface Props {
   doc?: EditorDocument;
   scrollToDocAppend: boolean;
   editable?: boolean;
-  debounceChange?: number;
   debounceScroll?: number;
   autoFocusOnDocumentChange?: boolean;
   onChange?: OnChangeCallback;
@@ -123,12 +122,13 @@ const editableStateField = StateField.define<boolean>({
   },
 });
 
+const DEBOUNCE_CHANGE = 150;
+
 export const CodeMirrorEditor = memo(
   ({
     id,
     doc,
     debounceScroll = 100,
-    debounceChange = 150,
     autoFocusOnDocumentChange = false,
     editable = true,
     onScroll,
@@ -170,7 +170,7 @@ export const CodeMirrorEditor = memo(
     useEffect(() => {
       const onUpdate = debounce((update: EditorUpdate) => {
         onChangeRef.current?.(update);
-      }, debounceChange);
+      }, DEBOUNCE_CHANGE);
 
       const view = new EditorView({
         parent: containerRef.current!,
