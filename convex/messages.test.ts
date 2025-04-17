@@ -1,8 +1,16 @@
 import { expect, test, vi } from 'vitest';
 import { api, internal } from './_generated/api';
-import { createChat, setupTest, storeMessages } from './test.setup';
+import { createChat, setupTest, storeMessages, storeChat } from './test.setup';
 import type { SerializedMessage } from './messages';
 import type { Id } from './_generated/dataModel';
+import { v } from 'convex/values';
+
+const storageInfoWithSnapshot = v.object({
+  storageId: v.union(v.id('_storage'), v.null()),
+  lastMessageRank: v.number(),
+  partIndex: v.number(),
+  snapshotId: v.optional(v.id('_storage')),
+});
 
 test('sending messages', async () => {
   vi.useFakeTimers();
@@ -23,7 +31,7 @@ test('sending messages', async () => {
   vi.useRealTimers();
 });
 
-test('rewind chat', async () => {
+test('store messages', async () => {
   vi.useFakeTimers();
   const t = setupTest();
   const { sessionId, chatId } = await createChat(t);
@@ -44,6 +52,37 @@ test('rewind chat', async () => {
   expect(initialMessagesStorageInfo?.storageId).not.toBeNull();
   expect(initialMessagesStorageInfo?.lastMessageRank).toBe(0);
   expect(initialMessagesStorageInfo?.partIndex).toBe(0);
+  await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+  vi.useRealTimers();
+});
+
+test('rewind chat', async () => {
+  vi.useFakeTimers();
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
+  const firstMessage: SerializedMessage = {
+    id: '1',
+    role: 'user',
+    parts: [{ text: 'Hello, world!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+
+  const snapshotBlob = new Blob(['initial snapshot']);
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage],
+    snapshot: snapshotBlob,
+  });
+
+  const initialMessagesStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+    sessionId,
+    chatId,
+  });
+  expect(initialMessagesStorageInfo).not.toBeNull();
+  expect(initialMessagesStorageInfo?.storageId).not.toBeNull();
+  expect(initialMessagesStorageInfo?.snapshotId).not.toBeNull();
+  expect(initialMessagesStorageInfo?.lastMessageRank).toBe(0);
+  expect(initialMessagesStorageInfo?.partIndex).toBe(0);
+
   const secondMessage: SerializedMessage = {
     id: '2',
     role: 'user',
@@ -51,14 +90,19 @@ test('rewind chat', async () => {
     createdAt: Date.now(),
   };
 
-  // Should see higher lastMessageRank after storing new messages
-  await storeMessages(t, chatId, sessionId, [firstMessage, secondMessage]);
+  const updatedSnapshotBlob = new Blob(['updated snapshot']);
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage, secondMessage],
+    snapshot: updatedSnapshotBlob,
+  });
+
   const nextMessagesStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
     sessionId,
     chatId,
   });
   expect(nextMessagesStorageInfo).not.toBeNull();
   expect(nextMessagesStorageInfo?.storageId).not.toBeNull();
+  expect(nextMessagesStorageInfo?.snapshotId).not.toBeNull();
   expect(nextMessagesStorageInfo?.lastMessageRank).toBe(1);
   expect(nextMessagesStorageInfo?.partIndex).toBe(0);
 
@@ -70,8 +114,10 @@ test('rewind chat', async () => {
   });
   expect(rewoundMessagesStorageInfo).not.toBeNull();
   expect(rewoundMessagesStorageInfo?.storageId).not.toBeNull();
+  expect(rewoundMessagesStorageInfo?.snapshotId).not.toBeNull();
   expect(rewoundMessagesStorageInfo?.lastMessageRank).toBe(0);
   expect(rewoundMessagesStorageInfo?.partIndex).toBe(0);
+
   // Should still have higher lastMessageRank state in the table
   const allChatMessagesStorageStates = await t.run(async (ctx) => {
     const chatMessagesStorageState = await ctx.db
@@ -86,7 +132,7 @@ test('rewind chat', async () => {
       .withIndex('byChatId', (q) => q.eq('chatId', chatMessagesStorageState?.chatId))
       .collect();
   });
-  // Initialize chat record, first message, and second message
+  // Initialize chat record, first message with snapshot, and second message with updated snapshot
   expect(allChatMessagesStorageStates.length).toBe(3);
   await t.finishAllScheduledFunctions(() => vi.runAllTimers());
   vi.useRealTimers();

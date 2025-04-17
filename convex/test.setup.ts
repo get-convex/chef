@@ -49,3 +49,35 @@ export async function storeMessages(t: TestConvex, chatId: string, sessionId: st
     body: new Blob([compressedMessages]),
   });
 }
+
+export async function storeChat(
+  t: TestConvex,
+  chatId: string,
+  sessionId: string,
+  args: {
+    messages?: SerializedMessage[];
+    snapshot?: Blob;
+  },
+) {
+  const formData = new FormData();
+  if (args.messages) {
+    const compressedMessages = await compressMessages(args.messages);
+    formData.append('messages', new Blob([compressedMessages]));
+  }
+  if (args.snapshot) {
+    formData.append('snapshot', args.snapshot);
+  }
+
+  const url = new URL('/store_chat', 'http://localhost:3000');
+  url.searchParams.set('sessionId', sessionId);
+  url.searchParams.set('chatId', chatId);
+  if (args.messages) {
+    url.searchParams.set('lastMessageRank', (args.messages.length - 1).toString());
+    url.searchParams.set('partIndex', ((args.messages.at(-1)?.parts?.length ?? 0) - 1).toString());
+  }
+
+  await t.fetch(url.pathname + url.search, {
+    method: 'POST',
+    body: formData,
+  });
+}

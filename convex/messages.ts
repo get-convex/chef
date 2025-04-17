@@ -265,6 +265,7 @@ const storageInfo = v.object({
   storageId: v.union(v.id('_storage'), v.null()),
   lastMessageRank: v.number(),
   partIndex: v.number(),
+  snapshotId: v.optional(v.id('_storage')),
 });
 
 type StorageInfo = Infer<typeof storageInfo>;
@@ -289,6 +290,7 @@ export const getInitialMessagesStorageInfo = internalQuery({
       storageId: doc.storageId,
       lastMessageRank: doc.lastMessageRank,
       partIndex: doc.partIndex,
+      snapshotId: doc.snapshotId,
     };
   },
 });
