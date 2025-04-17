@@ -1,10 +1,12 @@
 import { useRef, useCallback } from 'react';
 
+/** Pixels from bottom to consider “scrolled to bottom” */
+const BOTTOM_THRESHOLD = 50;
+
 interface ScrollOptions {
   duration?: number;
   easing?: 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'cubic-bezier';
   cubicBezier?: [number, number, number, number];
-  bottomThreshold?: number;
 }
 
 export function useSnapScroll(options: ScrollOptions = {}) {
@@ -12,7 +14,6 @@ export function useSnapScroll(options: ScrollOptions = {}) {
     duration = 800,
     easing = 'ease-in-out',
     cubicBezier = [0.42, 0, 0.58, 1],
-    bottomThreshold = 50, // pixels from bottom to consider "scrolled to bottom"
   } = options;
 
   const autoScrollRef = useRef(true);
@@ -78,9 +79,9 @@ export function useSnapScroll(options: ScrollOptions = {}) {
   const isScrolledToBottom = useCallback(
     (element: HTMLDivElement): boolean => {
       const { scrollTop, scrollHeight, clientHeight } = element;
-      return scrollHeight - scrollTop - clientHeight <= bottomThreshold;
+      return scrollHeight - scrollTop - clientHeight <= BOTTOM_THRESHOLD;
     },
-    [bottomThreshold],
+    [],
   );
 
   const messageRef = useCallback(
