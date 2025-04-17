@@ -24,7 +24,6 @@ export const create = mutation({
       if (storageState.storageId === null) {
         throw new ConvexError('Chat history not found');
       }
-      // TODO: test coverage for having no snapshotId in storageState and falling back to chat.snapshotId
       const snapshotId = storageState.snapshotId ?? chat.snapshotId;
       if (!snapshotId) {
         throw new ConvexError('Your project has never been saved.');
@@ -34,7 +33,7 @@ export const create = mutation({
 
         // It is safe to use the snapshotId from the chat because the user’s
         // snapshot excludes .env.local.
-        snapshotId: storageState.snapshotId,
+        snapshotId,
 
         chatHistoryId: storageState.storageId,
 

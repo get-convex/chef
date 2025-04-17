@@ -156,3 +156,60 @@ test('sharing a chat uses the snapshot in the chatMessagesStorageState table', a
   if (!share.snapshotId) throw new Error('No snapshot ID');
   await verifyStoredContent(t, share.snapshotId, newSnapshotContent);
 });
+
+test('sharing falls back to chat.snapshotId when storageState has no snapshot', async () => {
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
+
+  // Create a snapshot and store it in the chats table
+  const snapshotContent = 'snapshot from chats table';
+  const snapshotId = await t.run(async (ctx) => {
+    return ctx.storage.store(new Blob([snapshotContent]));
+  });
+  await t.mutation(internal.snapshot.saveSnapshot, {
+    sessionId,
+    chatId,
+    storageId: snapshotId,
+  });
+
+  // Store a message without a snapshot to create storageState
+  const message: SerializedMessage = {
+    id: '1',
+    role: 'user',
+    parts: [{ text: 'Hello, world!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  await storeChat(t, chatId, sessionId, {
+    messages: [message],
+  });
+
+  // Verify we have storageState but no snapshot in it
+  const storageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+    sessionId,
+    chatId,
+  });
+  expect(storageInfo).not.toBeNull();
+  expect(storageInfo?.storageId).not.toBeNull();
+  expect(storageInfo?.snapshotId).toBeUndefined();
+
+  // Create a share and verify it uses the snapshot from chats table
+  const { code } = await t.mutation(api.share.create, { sessionId, id: chatId });
+  expect(code).toBeDefined();
+
+  // Get the share and verify it has the snapshot ID from chats table
+  const share = await t.run(async (ctx) => {
+    return ctx.db
+      .query('shares')
+      .withIndex('byCode', (q) => q.eq('code', code))
+      .first();
+  });
+  expect(share).not.toBeNull();
+  if (!share) throw new Error('Share not found');
+  if (!share.snapshotId) throw new Error('No snapshot ID in share');
+
+  // Verify the share uses the snapshot from chats table
+  expect(share.snapshotId).toBe(snapshotId);
+
+  // Verify the actual content of the snapshot
+  await verifyStoredContent(t, share.snapshotId, snapshotContent);
+});
