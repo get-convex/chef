@@ -3,6 +3,7 @@ import { jsFileExtensions } from '@blitz/eslint-plugin/dist/configs/javascript.j
 import { getNamingConventionRule, tsFileExtensions } from '@blitz/eslint-plugin/dist/configs/typescript.js';
 import tailwindcss from "eslint-plugin-tailwindcss";
 import reactPlugin from 'eslint-plugin-react';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
 export default [
   {
@@ -13,6 +14,7 @@ export default [
     files: [...tsFileExtensions, ...jsFileExtensions],
     plugins: {
       react: reactPlugin,
+      "react-hooks": reactHooksPlugin,
     },
     rules: {
       ...reactPlugin.configs.flat.recommended.rules,
