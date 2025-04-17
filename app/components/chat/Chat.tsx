@@ -320,7 +320,7 @@ export const Chat = memo(
         textarea.style.height = `${Math.min(scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
         textarea.style.overflowY = scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
       }
-    }, [input, textareaRef]);
+    }, [input, textareaRef, TEXTAREA_MAX_HEIGHT]);
 
     const toolStatus = useCurrentToolStatus();
 
