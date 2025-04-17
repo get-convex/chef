@@ -176,8 +176,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   />
                 ) : null}
                 <div
-                  className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt mb-6', {
-                    'sticky bottom-2': chatStarted,
+                  className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt', {
+                    'sticky bottom-4': chatStarted,
                   })}
                 >
                   <div className="bg-bolt-elements-background-depth-2">
