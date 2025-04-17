@@ -1,5 +1,4 @@
-import { useStore } from '@nanostores/react';
-import { getConvexAuthToken, sessionIdStore, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
 import { useMutation, useConvex, useQuery } from 'convex/react';
@@ -62,7 +61,6 @@ function ShareProjectContent() {
   useTeamsInitializer();
   const chefAuthState = useChefAuth();
 
-  const sessionId = useStore(sessionIdStore);
   const cloneChat = useMutation(api.share.clone);
   const convex = useConvex();
   const getShareDescription = useQuery(api.share.getShareDescription, { code: shareCode });
@@ -82,7 +80,7 @@ function ShareProjectContent() {
     };
     const { id: chatId } = await cloneChat({ shareCode, sessionId, projectInitParams });
     window.location.href = `/chat/${chatId}`;
-  }, [sessionId, convex]);
+  }, [convex, cloneChat, shareCode]);
   const signIn = useCallback(() => {
     openSignInWindow();
   }, []);
