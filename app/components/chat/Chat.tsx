@@ -291,7 +291,7 @@ export const Chat = memo(
 
     useEffect(() => {
       chatStore.setKey('started', initialMessages.length > 0);
-    }, []);
+    }, [initialMessages.length]);
 
     useEffect(() => {
       processSampledMessages({
