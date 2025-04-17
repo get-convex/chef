@@ -47,7 +47,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
         workbenchStore.stopProxy(proxyPort);
       }
     };
-  }, [activePreview?.port]);
+  }, [activePreview, activePreview?.port]);
 
   const [url, setUrl] = useState('');
   const [iframeUrl, setIframeUrl] = useState<string | undefined>();
@@ -94,7 +94,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
 
       return false;
     },
-    [activePreview],
+    [proxyBaseUrl],
   );
 
   const findMinPortIndex = useCallback(

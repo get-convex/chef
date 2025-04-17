@@ -73,5 +73,5 @@ export function useExistingInitializeChat(chatId: string) {
 
     // We don't need to wait for container boot here since we don't mount
     // the UI until it's fully ready.
-  }, [convex, chatId, isFullyLoggedIn]);
+  }, [convex, chatId]);
 }

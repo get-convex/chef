@@ -7,10 +7,10 @@ export const meta: MetaFunction = () => {
   return [{ title: 'Loading | Chef' }];
 };
 
+const dashboardHost = import.meta.env.VITE_DASHBOARD_HOST || 'https://dashboard.convex.dev';
+
 export default function ConvexConnect() {
   const [searchParams] = useSearchParams();
-
-  const dashboardHost = import.meta.env.VITE_DASHBOARD_HOST || 'https://dashboard.convex.dev';
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
