@@ -9,6 +9,9 @@ and the app is complete. Do NOT execute this tool if the app isn't in a working 
 
 After initially writing the app, you MUST execute this tool after making any changes
 to the filesystem.
+
+If this tool fails with esbuild bundler errors, a library or API that require NOde.js
+may be being used; that's probably the thinkg to fix.
 `;
 
 export const deployTool: Tool = {

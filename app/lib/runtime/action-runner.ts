@@ -430,7 +430,7 @@ function cleanConvexOutput(output: string) {
   const normalizedNewlines = output.replace('\r\n', '\n').replace('\r', '\n');
   const rawLines = normalizedNewlines.split('\n');
   let lastSpinnerLine: string | null = null;
-  const lines = [];
+  let lines = [];
   for (const line of rawLines) {
     if (BANNED_LINES.some((bannedLine) => line.includes(bannedLine))) {
       continue;
@@ -446,6 +446,17 @@ function cleanConvexOutput(output: string) {
     }
     lines.push(line);
   }
+
+  // Remove all esbuild "could not resolve" errors except the last one
+  const firstEsbuildNodeErrror = lines.findIndex((line) => line.includes('[ERROR] Could not resolve'));
+  if (firstEsbuildNodeErrror !== -1) {
+    const lastEsbuildNodeError = lines.findLastIndex((line) => line.includes('[ERROR] Could not resolve'));
+    if (lastEsbuildNodeError !== -1) {
+      // just keep the last one
+      lines = [...lines.slice(0, firstEsbuildNodeErrror), ...lines.slice(lastEsbuildNodeError)];
+    }
+  }
+
   const result = lines.join('\n');
   if (output !== result) {
     console.log(`Sanitized output: ${output.length} -> ${result.length}`);
