@@ -332,7 +332,7 @@ export const Chat = memo(
     // Set the initial input value
     useEffect(() => {
       messageInputStore.set(
-        (Cookies.get(PROMPT_COOKIE_KEY) ?? searchParams.get('prefill')) ?? ''
+        searchParams.get('prefill') || Cookies.get(PROMPT_COOKIE_KEY) || ''
       );
     }, []);
 
