@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import type { Message } from '@ai-sdk/react';
-import { useConvex } from 'convex/react';
 import { lastCompleteMessageInfoStore } from '~/lib/stores/startup/messages';
 
 /**
@@ -13,36 +12,31 @@ import { lastCompleteMessageInfoStore } from '~/lib/stores/startup/messages';
  * messages it's observed (including incomplete parts) is beyond the persisted
  * state to prevent the user from closing the tab too early.
  */
-export function useStoreMessageHistory(chatId: string) {
-  const convex = useConvex();
+export function useStoreMessageHistory() {
+  return useCallback(async (messages: Message[], streamStatus: 'streaming' | 'submitted' | 'ready' | 'error') => {
+    if (messages.length === 0) {
+      return;
+    }
 
-  return useCallback(
-    async (messages: Message[], streamStatus: 'streaming' | 'submitted' | 'ready' | 'error') => {
-      if (messages.length === 0) {
-        return;
-      }
-
-      const lastCompleteMessageInfo = getLastCompletePart(messages, streamStatus);
-      if (lastCompleteMessageInfo === null) {
-        return;
-      }
-      const currentLastCompleteMessageInfo = lastCompleteMessageInfoStore.get();
-      if (
-        currentLastCompleteMessageInfo !== null &&
-        lastCompleteMessageInfo.messageIndex === currentLastCompleteMessageInfo.messageIndex &&
-        lastCompleteMessageInfo.partIndex === currentLastCompleteMessageInfo.partIndex
-      ) {
-        return;
-      }
-      lastCompleteMessageInfoStore.set({
-        messageIndex: lastCompleteMessageInfo.messageIndex,
-        partIndex: lastCompleteMessageInfo.partIndex,
-        allMessages: messages,
-        hasNextPart: lastCompleteMessageInfo.hasNextPart,
-      });
-    },
-    [convex, chatId],
-  );
+    const lastCompleteMessageInfo = getLastCompletePart(messages, streamStatus);
+    if (lastCompleteMessageInfo === null) {
+      return;
+    }
+    const currentLastCompleteMessageInfo = lastCompleteMessageInfoStore.get();
+    if (
+      currentLastCompleteMessageInfo !== null &&
+      lastCompleteMessageInfo.messageIndex === currentLastCompleteMessageInfo.messageIndex &&
+      lastCompleteMessageInfo.partIndex === currentLastCompleteMessageInfo.partIndex
+    ) {
+      return;
+    }
+    lastCompleteMessageInfoStore.set({
+      messageIndex: lastCompleteMessageInfo.messageIndex,
+      partIndex: lastCompleteMessageInfo.partIndex,
+      allMessages: messages,
+      hasNextPart: lastCompleteMessageInfo.hasNextPart,
+    });
+  }, []);
 }
 
 function getPreceedingPart(
