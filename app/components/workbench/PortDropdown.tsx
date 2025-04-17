@@ -43,7 +43,7 @@ export const PortDropdown = memo(function PortDropdown({
     return () => {
       window.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, setIsDropdownOpen]);
 
   return (
     <div className="z-port-dropdown relative" ref={dropdownRef}>

@@ -127,7 +127,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       if (lastUserMessage) {
         handleSendMessage?.(lastUserMessage.content);
       }
-    }, [lastUserMessage]);
+    }, [lastUserMessage, handleSendMessage]);
 
     const handleClickSendButton = useCallback(() => {
       if (isStreaming) {
