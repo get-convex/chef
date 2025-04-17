@@ -101,7 +101,14 @@ export const Menu = memo(() => {
           logger.error(error);
         });
     },
-    [sessionId, shouldDeleteConvexProject, convexProjectInfo],
+    [
+      convex,
+      sessionId,
+      convexProjectInfo?.teamSlug,
+      convexProjectInfo?.projectSlug,
+      convexProjectInfo?.kind,
+      shouldDeleteConvexProject,
+    ],
   );
 
   const closeDialog = () => {

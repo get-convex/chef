@@ -94,7 +94,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
 
       return false;
     },
-    [activePreview],
+    [proxyBaseUrl],
   );
 
   const findMinPortIndex = useCallback(
