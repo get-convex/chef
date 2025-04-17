@@ -77,7 +77,6 @@ interface Props {
   onWheel?: OnWheelCallback;
   onSave?: OnSaveCallback;
   className?: string;
-  settings?: EditorSettings;
 }
 
 type EditorStates = Map<string, EditorState>;
