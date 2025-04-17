@@ -272,7 +272,16 @@ export const CodeMirrorEditor = memo(
         isFileChange,
         scrollToDocAppend && simpleAppend,
       );
-    }, [doc?.value, editable, doc?.filePath, autoFocusOnDocumentChange, scrollToDocAppend]);
+    }, [
+      doc,
+      doc?.value,
+      editable,
+      doc?.filePath,
+      autoFocusOnDocumentChange,
+      scrollToDocAppend,
+      settings,
+      languageCompartment,
+    ]);
 
     return (
       <div className={classNames('relative h-full', className)}>
