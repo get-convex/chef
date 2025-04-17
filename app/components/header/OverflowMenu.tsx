@@ -1,6 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { FeedbackButton } from './FeedbackButton';
+import { DiscordButton } from './DiscordButton';
 
 export function OverflowMenu() {
   return (
@@ -18,8 +19,11 @@ export function OverflowMenu() {
           align="end"
         >
           <div className="p-1">
-            <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-bolt-elements-item-contentDefault outline-0 hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive">
+            <DropdownMenu.Item className="flex cursor-pointer items-center outline-0 hover:bg-bolt-elements-item-backgroundActive">
               <FeedbackButton />
+            </DropdownMenu.Item>
+            <DropdownMenu.Item className="flex cursor-pointer items-center outline-0 hover:bg-bolt-elements-item-backgroundActive">
+              <DiscordButton />
             </DropdownMenu.Item>
           </div>
         </DropdownMenu.Content>
