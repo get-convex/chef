@@ -14,11 +14,9 @@ import { createScopedLogger } from '~/utils/logger';
 import { BaseChat } from './BaseChat.client';
 import Cookies from 'js-cookie';
 import { debounce } from '~/utils/debounce';
-import { useSearchParams } from '@remix-run/react';
 import { createSampler } from '~/utils/sampler';
 import { filesToArtifacts } from '~/utils/fileUtils';
 import { ChatContextManager } from '~/lib/ChatContextManager';
-import { webcontainer } from '~/lib/webcontainer';
 import { selectedTeamSlugStore } from '~/lib/stores/convexTeams';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
@@ -95,7 +93,6 @@ export const Chat = memo(
     const convex = useConvex();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
-    const [searchParams, setSearchParams] = useSearchParams();
     const actionAlert = useStore(workbenchStore.alert);
 
     const title = useStore(description);
@@ -283,22 +280,6 @@ export const Chat = memo(
         await checkTokenUsage();
       },
     });
-
-    useEffect(() => {
-      const prompt = searchParams.get('prompt');
-
-      if (!prompt || prompt.trim() === '') {
-        return;
-      }
-
-      setSearchParams({});
-      runAnimation();
-
-      // Wait for the WebContainer to fully finish booting before sending a message.
-      webcontainer.then(() => {
-        append({ role: 'user', content: prompt });
-      });
-    }, [searchParams]);
 
     // AKA "processed messages," since parsing has side effects
     const { parsedMessages, parseMessages } = useMessageParser(partCache);
