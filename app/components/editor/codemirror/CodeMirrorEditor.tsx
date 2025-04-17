@@ -217,6 +217,7 @@ export const CodeMirrorEditor = memo(
       editorStatesRef.current = new Map<string, EditorState>();
     }, [id]);
 
+    const isDocumentSet = doc !== undefined;
     useEffect(() => {
       const editorStates = editorStatesRef.current!;
       const view = viewRef.current!;
@@ -224,7 +225,7 @@ export const CodeMirrorEditor = memo(
 
       const settings: EditorSettings = { tabSize: 2 };
 
-      if (!doc) {
+      if (!isDocumentSet) {
         const state = newEditorState('', theme, settings, onScrollRef, onWheelRef, onSaveRef, [
           languageCompartment.of([]),
         ]);
@@ -273,7 +274,16 @@ export const CodeMirrorEditor = memo(
         isFileChange,
         scrollToDocAppend && simpleAppend,
       );
-    }, [doc, doc?.value, editable, doc?.filePath, autoFocusOnDocumentChange, scrollToDocAppend, languageCompartment]);
+    }, [
+      isDocumentSet,
+      doc?.isBinary,
+      doc?.value,
+      doc?.filePath,
+      editable,
+      autoFocusOnDocumentChange,
+      scrollToDocAppend,
+      languageCompartment,
+    ]);
 
     return (
       <div className={classNames('relative h-full', className)}>
