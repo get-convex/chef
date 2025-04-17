@@ -463,18 +463,6 @@ export const Chat = memo(
       handleInputChange(event);
     };
 
-    /**
-     * Debounced function to cache the prompt in cookies.
-     * Caches the trimmed value of the textarea input after a delay to optimize performance.
-     */
-    const debouncedCachePrompt = useCallback(
-      debounce((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const trimmedValue = event.target.value.trim();
-        Cookies.set(PROMPT_COOKIE_KEY, trimmedValue, { expires: 30 });
-      }, 1000),
-      [],
-    );
-
     const { messageRef, scrollRef, enableAutoScroll } = useSnapScroll();
 
     return (
@@ -489,7 +477,7 @@ export const Chat = memo(
         input={input}
         handleInputChange={(e) => {
           onTextareaChange(e);
-          debouncedCachePrompt(e);
+          cachePrompt(e.target.value);
         }}
         handleStop={abort}
         sendMessage={sendMessage}
@@ -666,3 +654,11 @@ export function DisabledText({
     </div>
   );
 }
+
+/**
+ * Debounced function to cache the prompt in cookies.
+ * Caches the trimmed value of the textarea input after a delay to optimize performance.
+ */
+const cachePrompt = debounce(function cachePrompt(prompt: string) {
+  Cookies.set(PROMPT_COOKIE_KEY, prompt.trim(), { expires: 30 });
+}, 1000);
