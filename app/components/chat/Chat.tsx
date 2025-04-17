@@ -34,6 +34,7 @@ import { disabledText, getTokenUsage } from '~/lib/convexUsage';
 import { formatDistanceStrict } from 'date-fns';
 import { atom } from 'nanostores';
 import { STATUS_MESSAGES } from './StreamingIndicator';
+import { messageInputStore } from '~/lib/stores/messageInput';
 
 const logger = createScopedLogger('Chat');
 
@@ -67,7 +68,6 @@ interface ChatProps {
 
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
-  initialInput?: string;
 }
 
 const retryState = atom({
@@ -83,7 +83,6 @@ export const Chat = memo(
     initializeChat,
     isReload,
     hadSuccessfulDeploy,
-    initialInput,
   }: ChatProps) {
     const convex = useConvex();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -172,9 +171,8 @@ export const Chat = memo(
       }
     }
 
-    const { messages, status, input, handleInputChange, setInput, stop, append, setMessages, reload, error } = useChat({
+    const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
-      initialInput: Cookies.get(PROMPT_COOKIE_KEY) || initialInput || '',
       api: '/api/chat',
       sendExtraMessageFields: true,
       experimental_prepareRequestBody: ({ messages }) => {
@@ -317,6 +315,7 @@ export const Chat = memo(
       workbenchStore.abortAllActions();
     };
 
+    const input = useStore(messageInputStore);
     useEffect(() => {
       const textarea = textareaRef.current;
 
@@ -329,6 +328,13 @@ export const Chat = memo(
         textarea.style.overflowY = scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
       }
     }, [input, textareaRef]);
+
+    // Set the initial input value
+    useEffect(() => {
+      messageInputStore.set(
+        (Cookies.get(PROMPT_COOKIE_KEY) ?? searchParams.get('prefill')) ?? ''
+      );
+    }, []);
 
     const toolStatus = useCurrentToolStatus();
 
@@ -452,21 +458,13 @@ export const Chat = memo(
           });
         }
 
-        setInput('');
+        messageInputStore.set('');
         Cookies.remove(PROMPT_COOKIE_KEY);
 
         textareaRef.current?.blur();
       } finally {
         setSendMessageInProgress(false);
       }
-    };
-
-    /**
-     * Handles the change event for the textarea and updates the input state.
-     * @param event - The change event from the textarea.
-     */
-    const onTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-      handleInputChange(event);
     };
 
     /**
@@ -494,7 +492,7 @@ export const Chat = memo(
         description={title}
         input={input}
         handleInputChange={(e) => {
-          onTextareaChange(e);
+          messageInputStore.set(e.target.value);
           debouncedCachePrompt(e);
         }}
         handleStop={abort}
