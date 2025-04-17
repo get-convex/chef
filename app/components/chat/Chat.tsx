@@ -301,7 +301,7 @@ export const Chat = memo(
         storeMessageHistory,
         streamStatus: status,
       });
-    }, [messages, parseMessages, status]);
+    }, [initialMessages, messages, parseMessages, status, storeMessageHistory]);
 
     const abort = () => {
       stop();
