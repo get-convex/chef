@@ -300,7 +300,7 @@ export const updateStorageState = internalMutation({
     storageId: v.id('_storage'),
     lastMessageRank: v.number(),
     partIndex: v.number(),
-    snapshotId: v.optional(v.id('_storage')),
+    snapshotId: v.union(v.id('_storage'), v.null()),
   },
   handler: async (ctx, args): Promise<void> => {
     const { chatId, storageId, lastMessageRank, partIndex, snapshotId, sessionId } = args;
@@ -342,7 +342,8 @@ export const updateStorageState = internalMutation({
       storageId,
       lastMessageRank,
       partIndex,
-      snapshotId,
+      // Should we be using null here to distinguish between not having a snapshot and records written before we also recorded snapshots here?
+      snapshotId: snapshotId ?? previous.snapshotId,
     });
   },
 });
@@ -352,8 +353,9 @@ export const earliestRewindableMessageRank = query({
     sessionId: v.id('sessions'),
     chatId: v.string(),
   },
-  returns: v.number(),
-  handler: async (ctx, args): Promise<number> => {
+  // Return null if there is no snapshot stored in chatMessagesStorageState (possible for older chats)
+  returns: v.union(v.null(), v.number()),
+  handler: async (ctx, args): Promise<number | null> => {
     const { chatId, sessionId } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
@@ -372,7 +374,7 @@ export const earliestRewindableMessageRank = query({
     const docWithSnapshot = docs.find((doc) => doc.snapshotId !== undefined && doc.snapshotId !== null);
 
     if (!docWithSnapshot) {
-      throw new ConvexError({ code: 'NotFound', message: 'No snapshot found for this chat' });
+      return null;
     }
     return docWithSnapshot.lastMessageRank;
   },

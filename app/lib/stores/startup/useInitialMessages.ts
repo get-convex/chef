@@ -93,7 +93,7 @@ export function useInitialMessages(chatId: string):
           loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
           serialized: transformedMessages,
           deserialized: deserializedMessages,
-          earliestRewindableMessageRank,
+          earliestRewindableMessageRank: earliestRewindableMessageRank ?? undefined,
         });
         description.set(chatInfo.description);
       } catch (error) {

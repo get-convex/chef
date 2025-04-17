@@ -177,19 +177,14 @@ httpWithCors.route({
       snapshotStorageId = await ctx.storage.store(snapshotBlob);
     }
     if (messageStorageId !== null) {
+      console.log('snapshotStorageId', snapshotStorageId);
       await ctx.runMutation(internal.messages.updateStorageState, {
         sessionId: sessionId as Id<'sessions'>,
         chatId: chatId as Id<'chats'>,
         lastMessageRank: parseInt(lastMessageRank!),
         partIndex: parseInt(partIndex!),
         storageId: messageStorageId,
-      });
-    }
-    if (snapshotStorageId !== null) {
-      await ctx.runMutation(internal.snapshot.saveSnapshot, {
-        sessionId: sessionId as Id<'sessions'>,
-        chatId: chatId as Id<'chats'>,
-        storageId: snapshotStorageId,
+        snapshotId: snapshotStorageId,
       });
     }
     return new Response(null, {
