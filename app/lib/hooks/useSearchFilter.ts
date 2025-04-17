@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { debounce } from '~/utils/debounce';
 import type { ChatHistoryItem } from '~/types/ChatHistoryItem';
+import { useDebounce } from '@uidotdev/usehooks';
 
 interface UseSearchFilterOptions {
   items: ChatHistoryItem[];
@@ -14,22 +15,18 @@ export function useSearchFilter({
   debounceMs = 300,
 }: UseSearchFilterOptions) {
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, debounceMs);
 
-  const debouncedSetSearch = useCallback(debounce(setSearchQuery, debounceMs), []);
-
-  const handleSearchChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      debouncedSetSearch(event.target.value);
-    },
-    [debouncedSetSearch],
-  );
+  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  }, []);
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) {
+    if (!debouncedSearchQuery.trim()) {
       return items;
     }
 
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase();
 
     return items.filter((item) =>
       searchFields.some((field) => {
@@ -42,7 +39,7 @@ export function useSearchFilter({
         return false;
       }),
     );
-  }, [items, searchQuery, searchFields]);
+  }, [items, debouncedSearchQuery, searchFields]);
 
   return {
     searchQuery,
