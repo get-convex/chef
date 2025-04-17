@@ -140,7 +140,7 @@ export const CodeMirrorEditor = memo(
   }: Props) => {
     renderLogger.trace('CodeMirrorEditor');
 
-    const [languageCompartment] = useState(new Compartment());
+    const [languageCompartment] = useState(() => new Compartment());
 
     const containerRef = useRef<HTMLDivElement | null>(null);
     const viewRef = useRef<EditorView>();
