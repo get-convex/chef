@@ -126,7 +126,10 @@ export const clone = mutation({
 
     const parentChat = await ctx.db.get(getShare.chatId);
     if (!parentChat) {
-      throw new Error('Parent chat not found');
+      throw new ConvexError({
+        code: 'NotFound',
+        message: 'The original chat was not found. It may have been deleted.',
+      });
     }
     const chatId = crypto.randomUUID();
     const clonedChat = {
