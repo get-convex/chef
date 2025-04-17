@@ -176,7 +176,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   />
                 ) : null}
                 <div
-                  className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt', {
+                  className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt relative', {
                     'sticky bottom-4': chatStarted,
                   })}
                 >
@@ -202,7 +202,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     />
                   )}
                   {disableChatMessage && (
-                    <Callout variant="upsell" className="min-w-full rounded-md">
+                    <Callout variant="upsell" className="min-w-full rounded-lg absolute bottom-0 z-40 bg-util-accent/50 backdrop-blur-md h-fit animate-fadeInFromLoading">
                       {disableChatMessage}
                     </Callout>
                   )}
