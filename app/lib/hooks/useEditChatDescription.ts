@@ -74,7 +74,7 @@ export function useEditChatDescription({
       console.error('Failed to fetch latest description:', error);
       return initialDescription;
     }
-  }, [convex, chatId, initialDescription]);
+  }, [chatId, sessionId, initialDescription, convex]);
 
   const handleBlur = useCallback(async () => {
     const latestDescription = await fetchLatestDescription();
