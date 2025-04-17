@@ -82,38 +82,35 @@ export function useEditChatDescription({
     toggleEditMode();
   }, [fetchLatestDescription, toggleEditMode]);
 
-  const isValidDescription = useCallback(
-    (desc: string): boolean => {
-      const trimmedDesc = desc.trim();
-
-      if (trimmedDesc === initialDescription) {
-        toggleEditMode();
-        return false; // No change, skip validation
-      }
-
-      const lengthValid = trimmedDesc.length > 0 && trimmedDesc.length <= 100;
-
-      // Allow letters, numbers, spaces, and common punctuation but exclude characters that could cause issues
-      const characterValid = /^[a-zA-Z0-9\s\-_.,!?()[\]{}'"]+$/.test(trimmedDesc);
-
-      if (!lengthValid) {
-        toast.error('Description must be between 1 and 100 characters.');
-        return false;
-      }
-
-      if (!characterValid) {
-        toast.error('Description can only contain letters, numbers, spaces, and basic punctuation.');
-        return false;
-      }
-
-      return true;
-    },
-    [initialDescription, toggleEditMode],
-  );
-
   const handleSubmit = useCallback(
     async (event: React.FormEvent) => {
       event.preventDefault();
+
+      const isValidDescription = (desc: string): boolean => {
+        const trimmedDesc = desc.trim();
+
+        if (trimmedDesc === initialDescription) {
+          toggleEditMode();
+          return false; // No change, skip validation
+        }
+
+        const lengthValid = trimmedDesc.length > 0 && trimmedDesc.length <= 100;
+
+        // Allow letters, numbers, spaces, and common punctuation but exclude characters that could cause issues
+        const characterValid = /^[a-zA-Z0-9\s\-_.,!?()[\]{}'"]+$/.test(trimmedDesc);
+
+        if (!lengthValid) {
+          toast.error('Description must be between 1 and 100 characters.');
+          return false;
+        }
+
+        if (!characterValid) {
+          toast.error('Description can only contain letters, numbers, spaces, and basic punctuation.');
+          return false;
+        }
+
+        return true;
+      };
 
       if (!isValidDescription(currentDescription)) {
         return;
@@ -138,7 +135,7 @@ export function useEditChatDescription({
 
       toggleEditMode();
     },
-    [isValidDescription, currentDescription, toggleEditMode, chatId, sessionId, convex, syncWithGlobalStore],
+    [currentDescription, convex, chatId, initialDescription, toggleEditMode, syncWithGlobalStore, sessionId],
   );
 
   const handleKeyDown = useCallback(
