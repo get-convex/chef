@@ -61,8 +61,7 @@ export async function storeChat(
 ) {
   const formData = new FormData();
   if (args.messages) {
-    const compressedMessages = await compressMessages(args.messages);
-    formData.append('messages', new Blob([compressedMessages]));
+    formData.append('messages', new Blob([JSON.stringify(args.messages)]));
   }
   if (args.snapshot) {
     formData.append('snapshot', args.snapshot);

@@ -68,6 +68,82 @@ test('store messages', async () => {
   vi.useRealTimers();
 });
 
+test('store chat without snapshot', async () => {
+  vi.useFakeTimers();
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
+
+  const firstMessage: SerializedMessage = {
+    id: '1',
+    role: 'user',
+    parts: [{ text: 'Hello, world!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage],
+  });
+
+  const initialMessagesStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+    sessionId,
+    chatId,
+  });
+  expect(initialMessagesStorageInfo).not.toBeNull();
+  expect(initialMessagesStorageInfo?.storageId).not.toBeNull();
+  expect(initialMessagesStorageInfo?.snapshotId).toBeUndefined();
+  expect(initialMessagesStorageInfo?.lastMessageRank).toBe(0);
+  expect(initialMessagesStorageInfo?.partIndex).toBe(0);
+
+  // Verify initial message content
+  if (!initialMessagesStorageInfo?.storageId) throw new Error('No storage ID');
+  await verifyStoredContent(t, initialMessagesStorageInfo.storageId, JSON.stringify([firstMessage]));
+
+  const secondMessage: SerializedMessage = {
+    id: '2',
+    role: 'assistant',
+    parts: [{ text: 'How can I help you today?', type: 'text' }],
+    createdAt: Date.now(),
+  };
+
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage, secondMessage],
+  });
+
+  const nextMessagesStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+    sessionId,
+    chatId,
+  });
+  expect(nextMessagesStorageInfo).not.toBeNull();
+  expect(nextMessagesStorageInfo?.storageId).not.toBeNull();
+  expect(nextMessagesStorageInfo?.snapshotId).toBeUndefined();
+  expect(nextMessagesStorageInfo?.lastMessageRank).toBe(1);
+  expect(nextMessagesStorageInfo?.partIndex).toBe(0);
+
+  // Verify updated message content
+  if (!nextMessagesStorageInfo?.storageId) throw new Error('No storage ID');
+  await verifyStoredContent(t, nextMessagesStorageInfo.storageId, JSON.stringify([firstMessage, secondMessage]));
+
+  // Should still have both message states in the table
+  const allChatMessagesStorageStates = await t.run(async (ctx) => {
+    const chatMessagesStorageState = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byStorageId', (q) => q.eq('storageId', nextMessagesStorageInfo?.storageId as Id<'_storage'>))
+      .first();
+    if (!chatMessagesStorageState) {
+      throw new Error('chatMessagesStorageState not found');
+    }
+    return ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chatMessagesStorageState?.chatId))
+      .collect();
+  });
+  // Initialize chat record and two message states
+  expect(allChatMessagesStorageStates.length).toBe(3);
+
+  await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+  vi.useRealTimers();
+});
+
 test('rewind chat with snapshot', async () => {
   vi.useFakeTimers();
   const t = setupTest();
