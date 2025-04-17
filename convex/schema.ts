@@ -117,7 +117,8 @@ export default defineSchema({
   })
     .index('byCode', ['code'])
     .index('bySnapshotId', ['snapshotId'])
-    .index('byChatHistoryId', ['chatHistoryId']),
+    .index('byChatHistoryId', ['chatHistoryId'])
+    .index('byChatId', ['chatId']),
 
   memberOpenAITokens: defineTable({
     memberId: v.id('convexMembers'),

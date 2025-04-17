@@ -361,19 +361,39 @@ export const handleStorageStateMigration = internalMutation({
     storageId: v.id('_storage'),
     lastMessageRank: v.number(),
     partIndex: v.number(),
+    checkRanksMatch: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<void> => {
-    const { chatId, storageId, lastMessageRank, partIndex, sessionId } = args;
+    const { chatId, storageId, lastMessageRank, partIndex, sessionId, checkRanksMatch } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
-      throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
+      throw new ConvexError({ code: 'NotFound', message: `Chat ID: ${chatId} not found` });
     }
     const doc = await ctx.db
       .query('chatMessagesStorageState')
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
       .unique();
     if (doc) {
-      throw new Error('Chat messages storage state already exists');
+      throw new Error(`Chat ID: ${chat._id} Chat messages storage state already exists`);
+    }
+    if (checkRanksMatch) {
+      const lastMessage = await ctx.db
+        .query('chatMessages')
+        .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+        .order('desc')
+        .first();
+      if (lastMessage === null) {
+        throw new Error(`Chat ID: ${chat._id} No messages found for chat`);
+      }
+      console.log(`Last message rank: ${lastMessage.rank}, expected rank: ${lastMessageRank}`);
+      if (lastMessage.rank !== lastMessageRank) {
+        throw new Error(`Chat ID: ${chat._id} Last message rank does not match`);
+      }
+      const lastMessagePartIndex = (lastMessage.content?.parts?.length ?? 0) - 1;
+      console.log(`Last message part index: ${lastMessagePartIndex}, expected part index: ${partIndex}`);
+      if (lastMessagePartIndex !== partIndex) {
+        throw new Error(`Chat ID: ${chat._id} Last message part index does not match`);
+      }
     }
     await ctx.db.insert('chatMessagesStorageState', {
       chatId: chat._id,

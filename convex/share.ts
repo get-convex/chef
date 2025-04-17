@@ -47,6 +47,7 @@ export const create = mutation({
       });
       return { code };
     } else {
+      console.warn('No storage state found for chat, using last message rank');
       const messages = await ctx.db
         .query('chatMessages')
         .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
