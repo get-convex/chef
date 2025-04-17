@@ -291,7 +291,7 @@ export const Chat = memo(
 
     useEffect(() => {
       chatStore.setKey('started', initialMessages.length > 0);
-    }, []);
+    }, [initialMessages.length]);
 
     useEffect(() => {
       processSampledMessages({
@@ -301,7 +301,7 @@ export const Chat = memo(
         storeMessageHistory,
         streamStatus: status,
       });
-    }, [messages, parseMessages, status]);
+    }, [initialMessages, messages, parseMessages, status, storeMessageHistory]);
 
     const abort = () => {
       stop();
