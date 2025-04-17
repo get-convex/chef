@@ -335,7 +335,7 @@ function cleanupAssistantMessages(messages: Messages) {
       content = content.replace(/<think>.*?<\/think>/s, '');
       console.log('Content', content);
       // We prevent the LLM from modifying `convex/auth.ts`
-      content = content.replace(/<boltAction type="file" filePath="convex\/http\.ts"[^>]*>[\s\S]*?<\/boltAction>/g, '');
+      content = content.replace(/<boltAction type="file" filePath="convex\/auth\.ts"[^>]*>[\s\S]*?<\/boltAction>/g, '');
       console.log('Replaced content', content);
       return { ...message, content };
     } else {
