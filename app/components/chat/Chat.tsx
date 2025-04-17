@@ -76,7 +76,7 @@ const retryState = atom({
 });
 
 export const Chat = memo(
-  ({
+  function Chat({
     initialMessages,
     partCache,
     storeMessageHistory,
@@ -84,7 +84,7 @@ export const Chat = memo(
     isReload,
     hadSuccessfulDeploy,
     initialInput,
-  }: ChatProps) => {
+  }: ChatProps) {
     const convex = useConvex();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
@@ -520,7 +520,6 @@ export const Chat = memo(
     );
   },
 );
-Chat.displayName = 'Chat';
 
 function useCurrentToolStatus() {
   const [toolStatus, setToolStatus] = useState<Record<string, ActionStatus>>({});
