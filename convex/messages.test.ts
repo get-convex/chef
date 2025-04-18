@@ -1,7 +1,7 @@
 import { expect, test, vi } from 'vitest';
 import { api, internal } from './_generated/api';
 import { createChat, setupTest, storeMessages, storeChat, type TestConvex, verifyStoredContent } from './test.setup';
-import type { SerializedMessage } from './messages';
+import { getChatByIdOrUrlIdEnsuringAccess, type SerializedMessage } from './messages';
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { type GenericMutationCtx } from 'convex/server';
@@ -337,5 +337,181 @@ test('rewind chat with snapshot', async () => {
   vi.useRealTimers();
 });
 
-// TODO: Test that sending a message after rewinding deletes future records and their storage blobs iff there is no share.
-// Share should use message storage blob because it may change with rewinds.
+test('sending message after rewind deletes future records when no share exists', async () => {
+  vi.useFakeTimers();
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
+
+  // Store first message with snapshot
+  const firstMessage: SerializedMessage = {
+    id: '1',
+    role: 'user',
+    parts: [{ text: 'Hello, world!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  const initialSnapshotContent = 'initial snapshot';
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage],
+    snapshot: new Blob([initialSnapshotContent]),
+  });
+
+  // Store second message with updated snapshot
+  const secondMessage: SerializedMessage = {
+    id: '2',
+    role: 'assistant',
+    parts: [{ text: 'Hi there!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  const updatedSnapshotContent = 'updated snapshot';
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage, secondMessage],
+    snapshot: new Blob([updatedSnapshotContent]),
+  });
+
+  // Get the storage info before rewinding
+  const preRewindInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+    sessionId,
+    chatId,
+  });
+  expect(preRewindInfo).not.toBeNull();
+  if (!preRewindInfo?.storageId) throw new Error('No storage ID');
+  if (!preRewindInfo?.snapshotId) throw new Error('No snapshot ID');
+  const preRewindStorageId = preRewindInfo.storageId;
+  const preRewindSnapshotId = preRewindInfo.snapshotId;
+
+  // Rewind to first message
+  await t.mutation(api.messages.rewindChat, { sessionId, chatId, lastMessageRank: 0 });
+
+  // Send a new message after rewinding
+  const newMessage: SerializedMessage = {
+    id: '3',
+    role: 'user',
+    parts: [{ text: 'New direction!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  const newSnapshotContent = 'new snapshot';
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage, newMessage],
+    snapshot: new Blob([newSnapshotContent]),
+  });
+
+  // Verify that the old storage and snapshot blobs are deleted
+  await t.run(async (ctx) => {
+    const oldStorageBlob = await ctx.storage.get(preRewindStorageId);
+    const oldSnapshotBlob = await ctx.storage.get(preRewindSnapshotId);
+    expect(oldStorageBlob).toBeNull();
+    expect(oldSnapshotBlob).toBeNull();
+  });
+
+  // Verify that old storage states are deleted
+  const finalStorageStates = await t.run(async (ctx) => {
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    if (!chat) throw new Error('Chat not found');
+    return ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .collect();
+  });
+  // Should only have: initialize chat, first message, and new message states
+  expect(finalStorageStates.length).toBe(3);
+
+  await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+  vi.useRealTimers();
+});
+
+test('sending message after rewind preserves future records when share exists', async () => {
+  vi.useFakeTimers();
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
+
+  // Store first message with snapshot
+  const firstMessage: SerializedMessage = {
+    id: '1',
+    role: 'user',
+    parts: [{ text: 'Hello, world!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  const initialSnapshotContent = 'initial snapshot';
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage],
+    snapshot: new Blob([initialSnapshotContent]),
+  });
+
+  // Store second message with updated snapshot
+  const secondMessage: SerializedMessage = {
+    id: '2',
+    role: 'assistant',
+    parts: [{ text: 'Hi there!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  const updatedSnapshotContent = 'updated snapshot';
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage, secondMessage],
+    snapshot: new Blob([updatedSnapshotContent]),
+  });
+
+  // Create a share of the chat
+  const { code } = await t.mutation(api.share.create, { sessionId, id: chatId });
+  expect(code).toBeDefined();
+
+  // Get the storage info before rewinding
+  const preRewindInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+    sessionId,
+    chatId,
+  });
+  expect(preRewindInfo).not.toBeNull();
+  if (!preRewindInfo?.storageId) throw new Error('No storage ID');
+  if (!preRewindInfo?.snapshotId) throw new Error('No snapshot ID');
+  const preRewindStorageId = preRewindInfo.storageId;
+  const preRewindSnapshotId = preRewindInfo.snapshotId;
+
+  // Rewind to first message
+  await t.mutation(api.messages.rewindChat, { sessionId, chatId, lastMessageRank: 0 });
+
+  // Send a new message after rewinding
+  const newMessage: SerializedMessage = {
+    id: '3',
+    role: 'user',
+    parts: [{ text: 'New direction!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  const newSnapshotContent = 'new snapshot';
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage, newMessage],
+    snapshot: new Blob([newSnapshotContent]),
+  });
+
+  // Verify that the old storage and snapshot blobs still exist
+  await t.run(async (ctx) => {
+    const oldStorageBlob = await ctx.storage.get(preRewindStorageId);
+    const oldSnapshotBlob = await ctx.storage.get(preRewindSnapshotId);
+    expect(oldStorageBlob).not.toBeNull();
+    expect(oldSnapshotBlob).not.toBeNull();
+
+    if (oldStorageBlob) {
+      const content = await oldStorageBlob.text();
+      expect(JSON.parse(content)).toEqual([firstMessage, secondMessage]);
+    }
+    if (oldSnapshotBlob) {
+      const content = await oldSnapshotBlob.text();
+      expect(content).toBe(updatedSnapshotContent);
+    }
+  });
+
+  const finalStorageStates = await t.run(async (ctx) => {
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    if (!chat) throw new Error('Chat not found');
+    return ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .collect();
+  });
+  // Should have: initialize chat, first message, and new message overriding the second message
+  expect(finalStorageStates.length).toBe(3);
+  const newestMessage = finalStorageStates[2];
+  if (!newestMessage?.storageId) throw new Error('No storage ID');
+  verifyStoredContent(t, newestMessage.storageId, JSON.stringify([firstMessage, newMessage]));
+
+  await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+  vi.useRealTimers();
+});

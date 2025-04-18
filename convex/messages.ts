@@ -310,15 +310,41 @@ export const updateStorageState = internalMutation({
     if (!chat) {
       throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
     }
-    if (chat.lastMessageRank !== undefined) {
+    console.log('chat', chat);
+    const chatLastMessageRank = chat.lastMessageRank;
+    if (chatLastMessageRank !== undefined) {
       // Remove the storage state records for future messages on a different branch
       const storageStatesToDelete = await ctx.db
         .query('chatMessagesStorageState')
-        .withIndex('byChatId', (q) => q.eq('chatId', chat._id).gt('lastMessageRank', lastMessageRank))
+        .withIndex('byChatId', (q) => q.eq('chatId', chat._id).gt('lastMessageRank', chatLastMessageRank))
         .collect();
+      console.log('storageStatesToDelete', storageStatesToDelete);
       for (const storageState of storageStatesToDelete) {
         await ctx.db.delete(storageState._id);
-        // TODO: Delete the snapshots and storage blobs
+        const chatStorageId = storageState.storageId;
+        if (chatStorageId) {
+          console.log('chatStorageId', chatStorageId);
+          const shareRef = await ctx.db
+            .query('shares')
+            .withIndex('byChatHistoryId', (q) => q.eq('chatHistoryId', chatStorageId))
+            .first();
+          if (shareRef === null) {
+            console.log('deleting chatStorageId', chatStorageId);
+            await ctx.storage.delete(chatStorageId);
+          }
+        }
+        const snapshotId = storageState.snapshotId;
+        if (snapshotId) {
+          console.log('snapshotId', snapshotId);
+          const shareRef = await ctx.db
+            .query('shares')
+            .withIndex('bySnapshotId', (q) => q.eq('snapshotId', snapshotId))
+            .first();
+          if (shareRef === null) {
+            console.log('deleting snapshotId', snapshotId);
+            await ctx.storage.delete(snapshotId);
+          }
+        }
       }
       ctx.db.patch(chat._id, { lastMessageRank: undefined });
     }
