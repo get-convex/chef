@@ -386,9 +386,9 @@ export const Chat = memo(
           message = (
             <>
               {message}
-              Please enter your own API key{' '}
+              Please{' '}
               <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
-                here
+                enter your own API key
               </a>
               .
             </>
@@ -398,9 +398,9 @@ export const Chat = memo(
           message = (
             <>
               {message}
-              Please try again in {remaining} or enter your own API key
+              Please try again in {remaining} or{' '}
               <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
-                here
+                enter your own API key
               </a>
               .
             </>
