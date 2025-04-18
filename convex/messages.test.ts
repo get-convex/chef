@@ -515,3 +515,96 @@ test('sending message after rewind preserves future records when share exists', 
   await t.finishAllScheduledFunctions(() => vi.runAllTimers());
   vi.useRealTimers();
 });
+
+test('sending message after rewind preserves snapshots referenced by previous chatMessageStorageState', async () => {
+  vi.useFakeTimers();
+  const t = setupTest();
+  const { sessionId, chatId } = await createChat(t);
+
+  // Store first message with snapshot
+  const firstMessage: SerializedMessage = {
+    id: '1',
+    role: 'user',
+    parts: [{ text: 'Hello, world!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  const sharedSnapshotContent = 'shared snapshot content';
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage],
+    snapshot: new Blob([sharedSnapshotContent]),
+  });
+
+  // Get the first storage state to verify its snapshot later
+  const firstStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+    sessionId,
+    chatId,
+  });
+  expect(firstStorageInfo).not.toBeNull();
+  expect(firstStorageInfo?.snapshotId).not.toBeNull();
+  const sharedSnapshotId = firstStorageInfo?.snapshotId;
+
+  // Store second message with the same snapshot (using doNotUpdateMessages to keep the snapshot reference)
+  const secondMessage: SerializedMessage = {
+    id: '2',
+    role: 'assistant',
+    parts: [{ text: 'Hi there!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage, secondMessage],
+  });
+
+  // Verify both states have the same snapshot ID
+  const secondStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+    sessionId,
+    chatId,
+  });
+  expect(secondStorageInfo).not.toBeNull();
+  expect(secondStorageInfo?.snapshotId).toBe(sharedSnapshotId);
+
+  // Rewind to first message
+  await t.mutation(api.messages.rewindChat, { sessionId, chatId, lastMessageRank: 0 });
+
+  // Send a new message with a different snapshot
+  const newMessage: SerializedMessage = {
+    id: '3',
+    role: 'user',
+    parts: [{ text: 'New direction!', type: 'text' }],
+    createdAt: Date.now(),
+  };
+  const newSnapshotContent = 'new snapshot content';
+  await storeChat(t, chatId, sessionId, {
+    messages: [firstMessage, newMessage],
+    snapshot: new Blob([newSnapshotContent]),
+  });
+
+  // Verify the shared snapshot still exists and contains the original content
+  await t.run(async (ctx) => {
+    if (!sharedSnapshotId) throw new Error('No shared snapshot ID');
+    const sharedSnapshotBlob = await ctx.storage.get(sharedSnapshotId);
+    expect(sharedSnapshotBlob).not.toBeNull();
+    if (!sharedSnapshotBlob) throw new Error('Shared snapshot was deleted');
+    const content = await sharedSnapshotBlob.text();
+    expect(content).toBe(sharedSnapshotContent);
+  });
+
+  // Verify we have the expected number of storage states
+  const finalStorageStates = await t.run(async (ctx) => {
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    if (!chat) throw new Error('Chat not found');
+    return ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .collect();
+  });
+  // Should have: initialize chat, first message, and new message states
+  expect(finalStorageStates.length).toBe(3);
+
+  // Verify the newest message has the new snapshot content
+  const newestMessage = finalStorageStates[2];
+  if (!newestMessage?.snapshotId) throw new Error('No snapshot ID');
+  await verifyStoredContent(t, newestMessage.snapshotId, newSnapshotContent);
+
+  await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+  vi.useRealTimers();
+});

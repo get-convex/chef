@@ -339,12 +339,15 @@ export const updateStorageState = internalMutation({
         }
         const snapshotId = storageState.snapshotId;
         if (snapshotId) {
-          
+          const chatHistoryRef = await ctx.db
+            .query('chatMessagesStorageState')
+            .withIndex('bySnapshotId', (q) => q.eq('snapshotId', snapshotId))
+            .first();
           const shareRef = await ctx.db
             .query('shares')
             .withIndex('bySnapshotId', (q) => q.eq('snapshotId', snapshotId))
             .first();
-          if (shareRef === null) {
+          if (shareRef === null && chatHistoryRef === null) {
             console.log('deleting snapshotId', snapshotId);
             await ctx.storage.delete(snapshotId);
           }
