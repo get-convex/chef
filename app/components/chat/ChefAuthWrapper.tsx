@@ -7,11 +7,11 @@ import { sessionIdStore } from '~/lib/stores/sessionId';
 
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import type { Id } from '@convex/_generated/dataModel';
-import { useLocalStorage } from '@uidotdev/usehooks';
 import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
 import { useAuth0 } from '@auth0/auth0-react';
 import { fetchOptIns } from '~/lib/convexOptins';
+
 type ChefAuthState =
   | {
       kind: 'loading';
