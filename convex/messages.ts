@@ -324,18 +324,22 @@ export const updateStorageState = internalMutation({
         const chatStorageId = storageState.storageId;
         if (chatStorageId) {
           console.log('chatStorageId', chatStorageId);
+          const chatHistoryRef = await ctx.db
+            .query('chatMessagesStorageState')
+            .withIndex('byStorageId', (q) => q.eq('storageId', chatStorageId))
+            .first();
           const shareRef = await ctx.db
             .query('shares')
             .withIndex('byChatHistoryId', (q) => q.eq('chatHistoryId', chatStorageId))
             .first();
-          if (shareRef === null) {
+          if (shareRef === null && chatHistoryRef === null) {
             console.log('deleting chatStorageId', chatStorageId);
             await ctx.storage.delete(chatStorageId);
           }
         }
         const snapshotId = storageState.snapshotId;
         if (snapshotId) {
-          console.log('snapshotId', snapshotId);
+          
           const shareRef = await ctx.db
             .query('shares')
             .withIndex('bySnapshotId', (q) => q.eq('snapshotId', snapshotId))
