@@ -1,7 +1,6 @@
 import { convexTest, type TestConvexForDataModel } from 'convex-test';
 import schema from './schema';
 import { api } from './_generated/api';
-import { compressMessages } from './compressMessages';
 import type { SerializedMessage } from './messages';
 import type { Id } from './_generated/dataModel';
 import type { GenericMutationCtx } from 'convex/server';

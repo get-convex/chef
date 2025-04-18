@@ -118,7 +118,7 @@ function ConnectedDialogContent({
 function ErrorDialogContent({ errorMessage }: { errorMessage: string }) {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex w-full flex-col gap-4">
       <Callout variant="error">
         <p>Error: {errorMessage}</p>
       </Callout>

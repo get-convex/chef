@@ -54,14 +54,14 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
         >
           <div className="flex flex-col gap-2">
             <h2>Rewind to previous version</h2>
-            <p className="text-content-primary text-sm">
+            <p className="text-sm text-content-primary">
               This will undo all changes after this message. Your current work will be lost and cannot be recovered.
             </p>
-            <p className="text-content-primary text-sm">
+            <p className="text-sm text-content-primary">
               Your Convex data will be unaffected, so you may need to either clear or migrate your data in order to use
               this previous version.
             </p>
-            <p className="text-content-primary text-sm">Are you sure you want to continue?</p>
+            <p className="text-sm text-content-primary">Are you sure you want to continue?</p>
             <div className="flex justify-end gap-2">
               <Button
                 variant="neutral"
@@ -125,7 +125,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                   index >= earliestRewindableMessageRank &&
                   index !== messages.length - 1 && (
                     <Button
-                      className="absolute right-[-5px] bottom-[-5px] bg-bolt-elements-background-depth-2 hover:bg-bolt-elements-background-depth-3"
+                      className="absolute bottom-[-5px] right-[-5px] bg-bolt-elements-background-depth-2 hover:bg-bolt-elements-background-depth-3"
                       onClick={() => {
                         setIsModalOpen(true);
                         setSelectedMessageIndex(index);

@@ -3,7 +3,6 @@ import { api, internal } from './_generated/api';
 import {
   createChat,
   setupTest,
-  storeMessages,
   storeChat,
   verifyStoredContent,
   verifyStoredMessages,
