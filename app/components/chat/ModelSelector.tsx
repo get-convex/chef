@@ -29,6 +29,10 @@ const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNo
     name: 'Grok 3 Mini',
     icon: svgIcon('/icons/xai.svg'),
   },
+  'gemini-2.5-pro': {
+    name: 'Gemini 2.5 Pro',
+    icon: svgIcon('/icons/google.svg'),
+  },
 } as const;
 
 export const ModelSelector = React.memo(function ModelSelector({

@@ -719,7 +719,26 @@ export const listMessages = query({
     await getLoggedInUser(ctx);
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
+      .withIndex("by_channel_and_author", (q) => q.eq("channelId", args.channelId).eq("authorId", args.authorId))
+      .order("desc")
+      .take(10);
+    return messages;
+  },
+});
+
+/**
+ List the 10 most recent messages from a specific user within a specific channel
+ */
+export const listMessagesByUser = query({
+  args: {
+    channelId: v.id("channels"),
+    authorId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await getLoggedInUser(ctx);
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_channel_and_author", (q) => q.eq("channelId", args.channelId).eq("authorId", args.authorId))
       .order("desc")
       .take(10);
     return messages;
@@ -796,7 +815,7 @@ export const loadContext = internalQuery({
     }
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
+      .withIndex("by_channel_and_author", (q) => q.eq("channelId", args.channelId).eq("authorId", args.authorId))
       .order("desc")
       .take(10);
 
@@ -849,7 +868,7 @@ const applicationTables = {
     channelId: v.id("channels"),
     authorId: v.optional(v.id("users")),
     content: v.string(),
-  }).index("by_channel", ["channelId"]),
+  }).index("by_channel_and_author", ["channelId", "authorId"]),
 };
 
 export default defineSchema({
