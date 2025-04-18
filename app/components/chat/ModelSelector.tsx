@@ -70,7 +70,7 @@ export const ModelSelector = React.memo(function ModelSelector({
             <div className="max-w-48 truncate">{label}</div>
             {model?.experimental && (
               <Tooltip className="ml-auto" side="right" tip="This model's performance has not been thoroughly tested.">
-                <div className="text-content-secondary text-xs">Experimental</div>
+                <div className="text-xs text-content-secondary">Experimental</div>
               </Tooltip>
             )}
           </div>
