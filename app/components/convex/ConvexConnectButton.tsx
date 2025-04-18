@@ -1,4 +1,3 @@
-import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { getConvexAuthToken, useConvexSessionId } from '~/lib/stores/sessionId';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
