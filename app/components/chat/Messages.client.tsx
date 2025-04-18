@@ -77,13 +77,13 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                 <div className="">{index}</div>
                 {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
                 {earliestRewindableMessageRank !== undefined && index >= earliestRewindableMessageRank && (
-                  <button
+                  <Button
                     className="absolute right-2 top-2 rounded-lg bg-gray-100 p-1.5 text-gray-500 hover:bg-gray-200"
                     onClick={() => onRewindToMessage?.(index)}
                     title="Rewind to here"
                   >
                     <RotateCounterClockwiseIcon className="size-4" />
-                  </button>
+                  </Button>
                 )}
               </div>
             );

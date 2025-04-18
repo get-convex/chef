@@ -102,7 +102,6 @@ export const Chat = memo(
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
     const actionAlert = useStore(workbenchStore.alert);
     const sessionId = useConvexSessionIdOrNullOrLoading();
-    const chatId = chatIdStore.get();
     console.log('earliestRewindableMessageRank', earliestRewindableMessageRank);
 
     const rewindToMessage = async (messageIndex: number) => {

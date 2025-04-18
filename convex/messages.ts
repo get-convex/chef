@@ -310,7 +310,6 @@ export const updateStorageState = internalMutation({
     if (!chat) {
       throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
     }
-    console.log('chat', chat);
     const chatLastMessageRank = chat.lastMessageRank;
     if (chatLastMessageRank !== undefined) {
       // Remove the storage state records for future messages on a different branch
@@ -318,22 +317,25 @@ export const updateStorageState = internalMutation({
         .query('chatMessagesStorageState')
         .withIndex('byChatId', (q) => q.eq('chatId', chat._id).gt('lastMessageRank', chatLastMessageRank))
         .collect();
-      console.log('storageStatesToDelete', storageStatesToDelete);
       for (const storageState of storageStatesToDelete) {
         await ctx.db.delete(storageState._id);
         const chatStorageId = storageState.storageId;
         if (chatStorageId) {
-          console.log('chatStorageId', chatStorageId);
           const chatHistoryRef = await ctx.db
             .query('chatMessagesStorageState')
             .withIndex('byStorageId', (q) => q.eq('storageId', chatStorageId))
             .first();
+          if (chatHistoryRef) {
+            // I don't think it's possible in the current data model to have a duplicate storageId
+            // here because there should not be duplicate rows for the same chatId, lastMessageRank,
+            //  and partIndex. Newer snapshots should be patched.
+            console.warn('Unexpectedly found chatHistoryRef for storageId', chatStorageId);
+          }
           const shareRef = await ctx.db
             .query('shares')
             .withIndex('byChatHistoryId', (q) => q.eq('chatHistoryId', chatStorageId))
             .first();
           if (shareRef === null && chatHistoryRef === null) {
-            console.log('deleting chatStorageId', chatStorageId);
             await ctx.storage.delete(chatStorageId);
           }
         }
@@ -348,7 +350,6 @@ export const updateStorageState = internalMutation({
             .withIndex('bySnapshotId', (q) => q.eq('snapshotId', snapshotId))
             .first();
           if (shareRef === null && chatHistoryRef === null) {
-            console.log('deleting snapshotId', snapshotId);
             await ctx.storage.delete(snapshotId);
           }
         }
