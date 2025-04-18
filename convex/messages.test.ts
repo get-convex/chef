@@ -1,9 +1,21 @@
 import { expect, test, vi } from 'vitest';
 import { api, internal } from './_generated/api';
-import { createChat, setupTest, storeMessages, storeChat, verifyStoredContent } from './test.setup';
+import { createChat, setupTest, storeMessages, storeChat, verifyStoredContent, type TestConvex } from './test.setup';
 import { getChatByIdOrUrlIdEnsuringAccess, type SerializedMessage } from './messages';
 import type { Id } from './_generated/dataModel';
 
+function getChatStorageStates(t: TestConvex, chatId: string, sessionId: Id<'sessions'>) {
+  return t.run(async (ctx) => {
+    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    if (!chat) {
+      throw new Error('Chat not found');
+    }
+    return ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
+      .collect();
+  });
+}
 test('sending messages', async () => {
   vi.useFakeTimers();
   const t = setupTest();
@@ -107,19 +119,7 @@ test('store chat without snapshot', async () => {
   await verifyStoredContent(t, nextMessagesStorageInfo.storageId, JSON.stringify([firstMessage, secondMessage]));
 
   // Should still have both message states in the table
-  const allChatMessagesStorageStates = await t.run(async (ctx) => {
-    const chatMessagesStorageState = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byStorageId', (q) => q.eq('storageId', nextMessagesStorageInfo?.storageId as Id<'_storage'>))
-      .first();
-    if (!chatMessagesStorageState) {
-      throw new Error('chatMessagesStorageState not found');
-    }
-    return ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chatMessagesStorageState?.chatId))
-      .collect();
-  });
+  const allChatMessagesStorageStates = await getChatStorageStates(t, chatId, sessionId);
   // Initialize chat record and two message states
   expect(allChatMessagesStorageStates.length).toBe(3);
 
@@ -228,19 +228,7 @@ test('store chat with snapshot', async () => {
   await verifyStoredContent(t, finalMessagesStorageInfo.snapshotId, updatedSnapshotContent);
 
   // Should have all states in the table
-  const allChatMessagesStorageStates = await t.run(async (ctx) => {
-    const chatMessagesStorageState = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byStorageId', (q) => q.eq('storageId', finalMessagesStorageInfo?.storageId as Id<'_storage'>))
-      .first();
-    if (!chatMessagesStorageState) {
-      throw new Error('chatMessagesStorageState not found');
-    }
-    return ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chatMessagesStorageState?.chatId))
-      .collect();
-  });
+  const allChatMessagesStorageStates = await getChatStorageStates(t, chatId, sessionId);
   // Initialize chat record, first message with snapshot, second message with old snapshot that later gets updated
   expect(allChatMessagesStorageStates.length).toBe(3);
 
@@ -331,19 +319,7 @@ test('rewind chat with snapshot', async () => {
   await verifyStoredContent(t, rewoundMessagesStorageInfo.snapshotId, initialSnapshotContent);
 
   // Should still have higher lastMessageRank state in the table
-  const allChatMessagesStorageStates = await t.run(async (ctx) => {
-    const chatMessagesStorageState = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byStorageId', (q) => q.eq('storageId', rewoundMessagesStorageInfo?.storageId as Id<'_storage'>))
-      .first();
-    if (!chatMessagesStorageState) {
-      throw new Error('chatMessagesStorageState not found');
-    }
-    return ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chatMessagesStorageState?.chatId))
-      .collect();
-  });
+  const allChatMessagesStorageStates = await getChatStorageStates(t, chatId, sessionId);
   // Initialize chat record, first message with snapshot, and second message with updated snapshot
   expect(allChatMessagesStorageStates.length).toBe(3);
   await t.finishAllScheduledFunctions(() => vi.runAllTimers());
@@ -421,16 +397,7 @@ test('sending message after rewind deletes future records when no share exists',
   });
 
   // Verify that old storage states are deleted
-  const finalStorageStates = await t.run(async (ctx) => {
-    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
-    if (!chat) {
-      throw new Error('Chat not found');
-    }
-    return ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .collect();
-  });
+  const finalStorageStates = await getChatStorageStates(t, chatId, sessionId);
   // Should only have: initialize chat, first message, and new message states
   expect(finalStorageStates.length).toBe(3);
 
@@ -521,16 +488,7 @@ test('sending message after rewind preserves future records when share exists', 
     }
   });
 
-  const finalStorageStates = await t.run(async (ctx) => {
-    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
-    if (!chat) {
-      throw new Error('Chat not found');
-    }
-    return ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .collect();
-  });
+  const finalStorageStates = await getChatStorageStates(t, chatId, sessionId);
   // Should have: initialize chat, first message, and new message overriding the second message
   expect(finalStorageStates.length).toBe(3);
   const newestMessage = finalStorageStates[2];
@@ -620,17 +578,7 @@ test('sending message after rewind preserves snapshots referenced by previous ch
   });
 
   // Verify we have the expected number of storage states
-  const finalStorageStates = await t.run(async (ctx) => {
-    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
-    if (!chat) {
-      throw new Error('Chat not found');
-    }
-    return ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .collect();
-  });
-  // Should have: initialize chat, first message, and new message states
+  const finalStorageStates = await getChatStorageStates(t, chatId, sessionId);
   expect(finalStorageStates.length).toBe(3);
 
   // Verify the newest message has the new snapshot content
