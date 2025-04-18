@@ -112,7 +112,8 @@ export const TerminalTabs = memo(function TerminalTabs(terminalInitializationOpt
               key={index}
               index={index}
               activeTerminal={activeTerminal}
-              terminalInitializationOptions={terminalInitializationOptions}
+              isReload={terminalInitializationOptions?.isReload}
+              shouldDeployConvexFunctions={terminalInitializationOptions?.shouldDeployConvexFunctions}
             />
           ))}
         </div>
@@ -124,11 +125,13 @@ export const TerminalTabs = memo(function TerminalTabs(terminalInitializationOpt
 function TerminalWrapper({
   index,
   activeTerminal,
-  terminalInitializationOptions,
+  isReload,
+  shouldDeployConvexFunctions,
 }: {
   index: number;
   activeTerminal: number;
-  terminalInitializationOptions?: TerminalInitializationOptions;
+  isReload?: boolean;
+  shouldDeployConvexFunctions?: boolean;
 }) {
   const theme = useStore(themeStore);
 
@@ -138,13 +141,14 @@ function TerminalWrapper({
         workbenchStore.attachBoltTerminal(terminal);
       } else if (index === CONVEX_DEPLOY_TAB_INDEX) {
         workbenchStore.attachDeployTerminal(terminal, {
-          ...terminalInitializationOptions,
+          isReload,
+          shouldDeployConvexFunctions,
         });
       } else {
         workbenchStore.attachTerminal(terminal);
       }
     },
-    [index, terminalInitializationOptions],
+    [index, isReload, shouldDeployConvexFunctions],
   );
 
   const onTerminalResize = useCallback((cols: number, rows: number) => {
