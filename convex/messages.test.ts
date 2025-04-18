@@ -477,7 +477,7 @@ describe('messages', () => {
     });
   });
 
-  test.only('sending message after rewind preserves snapshots referenced by previous chatMessageStorageState', async () => {
+  test('sending message after rewind preserves snapshots referenced by previous chatMessageStorageState', async () => {
     const { sessionId, chatId } = await createChat(t);
 
     // Store first message with snapshot
