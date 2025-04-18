@@ -381,12 +381,12 @@ export const Chat = memo(
       const now = Date.now();
       const retries = retryState.get();
       if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet()) {
-        let message: string | ReactNode = 'Chef is too busy cooking right now.';
+        let message: string | ReactNode = 'Chef is too busy cooking right now. ';
         if (retries.numFailures >= MAX_RETRIES) {
-          message += ' Please enter your own API key ';
           message = (
             <>
               {message}
+              Please enter your own API key{' '}
               <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
                 here
               </a>
@@ -395,10 +395,10 @@ export const Chat = memo(
           );
         } else {
           const remaining = formatDistanceStrict(now, retries.nextRetry);
-          message += ` Please try again in ${remaining} or enter your own API key `;
           message = (
             <>
               {message}
+              Please try again in {remaining} or enter your own API key
               <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
                 here
               </a>
