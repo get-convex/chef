@@ -89,7 +89,7 @@ export async function verifyStoredContent(t: TestConvex, storageId: Id<'_storage
   await t.run(
     async (ctx: GenericMutationCtx<any> & { storage: { get: (id: Id<'_storage'>) => Promise<Blob | null> } }) => {
       const blob = await ctx.storage.get(storageId);
-      if (!blob) throw new Error('Failed to retrieve snapshot');
+      if (!blob) {throw new Error('Failed to retrieve snapshot');}
       const content = await blob.text();
       expect(content).toBe(expectedContent);
     },

@@ -1,17 +1,8 @@
 import { expect, test, vi } from 'vitest';
 import { api, internal } from './_generated/api';
-import { createChat, setupTest, storeMessages, storeChat, type TestConvex, verifyStoredContent } from './test.setup';
+import { createChat, setupTest, storeMessages, storeChat, verifyStoredContent } from './test.setup';
 import { getChatByIdOrUrlIdEnsuringAccess, type SerializedMessage } from './messages';
 import type { Id } from './_generated/dataModel';
-import { v } from 'convex/values';
-import { type GenericMutationCtx } from 'convex/server';
-
-const storageInfoWithSnapshot = v.object({
-  storageId: v.union(v.id('_storage'), v.null()),
-  lastMessageRank: v.number(),
-  partIndex: v.number(),
-  snapshotId: v.optional(v.id('_storage')),
-});
 
 test('sending messages', async () => {
   vi.useFakeTimers();
@@ -83,7 +74,9 @@ test('store chat without snapshot', async () => {
   expect(initialMessagesStorageInfo?.partIndex).toBe(0);
 
   // Verify initial message content
-  if (!initialMessagesStorageInfo?.storageId) throw new Error('No storage ID');
+  if (!initialMessagesStorageInfo?.storageId) {
+    throw new Error('No storage ID');
+  }
   await verifyStoredContent(t, initialMessagesStorageInfo.storageId, JSON.stringify([firstMessage]));
 
   const secondMessage: SerializedMessage = {
@@ -108,7 +101,9 @@ test('store chat without snapshot', async () => {
   expect(nextMessagesStorageInfo?.partIndex).toBe(0);
 
   // Verify updated message content
-  if (!nextMessagesStorageInfo?.storageId) throw new Error('No storage ID');
+  if (!nextMessagesStorageInfo?.storageId) {
+    throw new Error('No storage ID');
+  }
   await verifyStoredContent(t, nextMessagesStorageInfo.storageId, JSON.stringify([firstMessage, secondMessage]));
 
   // Should still have both message states in the table
@@ -162,8 +157,12 @@ test('store chat with snapshot', async () => {
   expect(initialMessagesStorageInfo?.partIndex).toBe(0);
 
   // Verify initial content
-  if (!initialMessagesStorageInfo?.storageId) throw new Error('No storage ID');
-  if (!initialMessagesStorageInfo?.snapshotId) throw new Error('No snapshot ID');
+  if (!initialMessagesStorageInfo?.storageId) {
+    throw new Error('No storage ID');
+  }
+  if (!initialMessagesStorageInfo?.snapshotId) {
+    throw new Error('No snapshot ID');
+  }
   await verifyStoredContent(t, initialMessagesStorageInfo.storageId, JSON.stringify([firstMessage]));
   await verifyStoredContent(t, initialMessagesStorageInfo.snapshotId, initialSnapshotContent);
 
@@ -190,8 +189,12 @@ test('store chat with snapshot', async () => {
   expect(nextMessagesStorageInfo?.partIndex).toBe(0);
 
   // Verify that messages were updated but snapshot remains the same
-  if (!nextMessagesStorageInfo?.storageId) throw new Error('No storage ID');
-  if (!nextMessagesStorageInfo?.snapshotId) throw new Error('No snapshot ID');
+  if (!nextMessagesStorageInfo?.storageId) {
+    throw new Error('No storage ID');
+  }
+  if (!nextMessagesStorageInfo?.snapshotId) {
+    throw new Error('No snapshot ID');
+  }
   await verifyStoredContent(t, nextMessagesStorageInfo.storageId, JSON.stringify([firstMessage, secondMessage]));
   await verifyStoredContent(t, nextMessagesStorageInfo.snapshotId, initialSnapshotContent);
 
@@ -215,8 +218,12 @@ test('store chat with snapshot', async () => {
   expect(finalMessagesStorageInfo?.partIndex).toBe(0);
 
   // Verify that messages remain the same but snapshot is updated
-  if (!finalMessagesStorageInfo?.storageId) throw new Error('No storage ID');
-  if (!finalMessagesStorageInfo?.snapshotId) throw new Error('No snapshot ID');
+  if (!finalMessagesStorageInfo?.storageId) {
+    throw new Error('No storage ID');
+  }
+  if (!finalMessagesStorageInfo?.snapshotId) {
+    throw new Error('No snapshot ID');
+  }
   await verifyStoredContent(t, finalMessagesStorageInfo.storageId, JSON.stringify([firstMessage, secondMessage]));
   await verifyStoredContent(t, finalMessagesStorageInfo.snapshotId, updatedSnapshotContent);
 
@@ -270,7 +277,9 @@ test('rewind chat with snapshot', async () => {
   expect(initialMessagesStorageInfo?.partIndex).toBe(0);
 
   // Verify initial snapshot content
-  if (!initialMessagesStorageInfo?.snapshotId) throw new Error('No snapshot ID');
+  if (!initialMessagesStorageInfo?.snapshotId) {
+    throw new Error('No snapshot ID');
+  }
   await verifyStoredContent(t, initialMessagesStorageInfo.snapshotId, initialSnapshotContent);
 
   const secondMessage: SerializedMessage = {
@@ -298,7 +307,9 @@ test('rewind chat with snapshot', async () => {
   expect(nextMessagesStorageInfo?.partIndex).toBe(0);
 
   // Verify updated snapshot content
-  if (!nextMessagesStorageInfo?.snapshotId) throw new Error('No snapshot ID');
+  if (!nextMessagesStorageInfo?.snapshotId) {
+    throw new Error('No snapshot ID');
+  }
   await verifyStoredContent(t, nextMessagesStorageInfo.snapshotId, updatedSnapshotContent);
 
   // Should see lower lastMessageRank after rewinding
@@ -314,7 +325,9 @@ test('rewind chat with snapshot', async () => {
   expect(rewoundMessagesStorageInfo?.partIndex).toBe(0);
 
   // Verify that after rewind we're back to the initial snapshot
-  if (!rewoundMessagesStorageInfo?.snapshotId) throw new Error('No snapshot ID');
+  if (!rewoundMessagesStorageInfo?.snapshotId) {
+    throw new Error('No snapshot ID');
+  }
   await verifyStoredContent(t, rewoundMessagesStorageInfo.snapshotId, initialSnapshotContent);
 
   // Should still have higher lastMessageRank state in the table
@@ -374,8 +387,12 @@ test('sending message after rewind deletes future records when no share exists',
     chatId,
   });
   expect(preRewindInfo).not.toBeNull();
-  if (!preRewindInfo?.storageId) throw new Error('No storage ID');
-  if (!preRewindInfo?.snapshotId) throw new Error('No snapshot ID');
+  if (!preRewindInfo?.storageId) {
+    throw new Error('No storage ID');
+  }
+  if (!preRewindInfo?.snapshotId) {
+    throw new Error('No snapshot ID');
+  }
   const preRewindStorageId = preRewindInfo.storageId;
   const preRewindSnapshotId = preRewindInfo.snapshotId;
 
@@ -406,7 +423,9 @@ test('sending message after rewind deletes future records when no share exists',
   // Verify that old storage states are deleted
   const finalStorageStates = await t.run(async (ctx) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
-    if (!chat) throw new Error('Chat not found');
+    if (!chat) {
+      throw new Error('Chat not found');
+    }
     return ctx.db
       .query('chatMessagesStorageState')
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
@@ -460,8 +479,12 @@ test('sending message after rewind preserves future records when share exists', 
     chatId,
   });
   expect(preRewindInfo).not.toBeNull();
-  if (!preRewindInfo?.storageId) throw new Error('No storage ID');
-  if (!preRewindInfo?.snapshotId) throw new Error('No snapshot ID');
+  if (!preRewindInfo?.storageId) {
+    throw new Error('No storage ID');
+  }
+  if (!preRewindInfo?.snapshotId) {
+    throw new Error('No snapshot ID');
+  }
   const preRewindStorageId = preRewindInfo.storageId;
   const preRewindSnapshotId = preRewindInfo.snapshotId;
 
@@ -500,7 +523,9 @@ test('sending message after rewind preserves future records when share exists', 
 
   const finalStorageStates = await t.run(async (ctx) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
-    if (!chat) throw new Error('Chat not found');
+    if (!chat) {
+      throw new Error('Chat not found');
+    }
     return ctx.db
       .query('chatMessagesStorageState')
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
@@ -509,7 +534,9 @@ test('sending message after rewind preserves future records when share exists', 
   // Should have: initialize chat, first message, and new message overriding the second message
   expect(finalStorageStates.length).toBe(3);
   const newestMessage = finalStorageStates[2];
-  if (!newestMessage?.storageId) throw new Error('No storage ID');
+  if (!newestMessage?.storageId) {
+    throw new Error('No storage ID');
+  }
   verifyStoredContent(t, newestMessage.storageId, JSON.stringify([firstMessage, newMessage]));
 
   await t.finishAllScheduledFunctions(() => vi.runAllTimers());
@@ -580,10 +607,14 @@ test('sending message after rewind preserves snapshots referenced by previous ch
 
   // Verify the shared snapshot still exists and contains the original content
   await t.run(async (ctx) => {
-    if (!sharedSnapshotId) throw new Error('No shared snapshot ID');
+    if (!sharedSnapshotId) {
+      throw new Error('No shared snapshot ID');
+    }
     const sharedSnapshotBlob = await ctx.storage.get(sharedSnapshotId);
     expect(sharedSnapshotBlob).not.toBeNull();
-    if (!sharedSnapshotBlob) throw new Error('Shared snapshot was deleted');
+    if (!sharedSnapshotBlob) {
+      throw new Error('Shared snapshot was deleted');
+    }
     const content = await sharedSnapshotBlob.text();
     expect(content).toBe(sharedSnapshotContent);
   });
@@ -591,7 +622,9 @@ test('sending message after rewind preserves snapshots referenced by previous ch
   // Verify we have the expected number of storage states
   const finalStorageStates = await t.run(async (ctx) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
-    if (!chat) throw new Error('Chat not found');
+    if (!chat) {
+      throw new Error('Chat not found');
+    }
     return ctx.db
       .query('chatMessagesStorageState')
       .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
@@ -602,7 +635,9 @@ test('sending message after rewind preserves snapshots referenced by previous ch
 
   // Verify the newest message has the new snapshot content
   const newestMessage = finalStorageStates[2];
-  if (!newestMessage?.snapshotId) throw new Error('No snapshot ID');
+  if (!newestMessage?.snapshotId) {
+    throw new Error('No snapshot ID');
+  }
   await verifyStoredContent(t, newestMessage.snapshotId, newSnapshotContent);
 
   await t.finishAllScheduledFunctions(() => vi.runAllTimers());

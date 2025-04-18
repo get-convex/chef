@@ -146,14 +146,14 @@ test('sharing a chat uses the snapshot in the chatMessagesStorageState table', a
       .first();
   });
   expect(share).not.toBeNull();
-  if (!share) throw new Error('Share not found');
-  if (!storageInfo?.snapshotId) throw new Error('No snapshot ID');
+  if (!share) {throw new Error('Share not found');}
+  if (!storageInfo?.snapshotId) {throw new Error('No snapshot ID');}
 
   // Verify the share uses the new snapshot from chatMessagesStorageState
   expect(share.snapshotId).toBe(storageInfo.snapshotId);
   expect(share.snapshotId).not.toBe(oldSnapshotId);
 
-  if (!share.snapshotId) throw new Error('No snapshot ID');
+  if (!share.snapshotId) {throw new Error('No snapshot ID');}
   await verifyStoredContent(t, share.snapshotId, newSnapshotContent);
 });
 
@@ -204,8 +204,8 @@ test('sharing falls back to chat.snapshotId when storageState has no snapshot', 
       .first();
   });
   expect(share).not.toBeNull();
-  if (!share) throw new Error('Share not found');
-  if (!share.snapshotId) throw new Error('No snapshot ID in share');
+  if (!share) {throw new Error('Share not found');}
+  if (!share.snapshotId) {throw new Error('No snapshot ID in share');}
 
   // Verify the share uses the snapshot from chats table
   expect(share.snapshotId).toBe(snapshotId);
