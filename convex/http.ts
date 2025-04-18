@@ -176,7 +176,6 @@ httpWithCors.route({
       const snapshotBlob = formData.get('snapshot') as Blob;
       snapshotStorageId = await ctx.storage.store(snapshotBlob);
     }
-    console.log('snapshotStorageId', snapshotStorageId);
     await ctx.runMutation(internal.messages.updateStorageState, {
       sessionId: sessionId as Id<'sessions'>,
       chatId: chatId as Id<'chats'>,
