@@ -40,19 +40,6 @@ export const testProjectInitParams = {
   auth0AccessToken: 'test',
 };
 
-export async function storeMessages(t: TestConvex, chatId: string, sessionId: string, messages: SerializedMessage[]) {
-  const compressedMessages = await compressMessages(messages);
-  const url = new URL('/store_messages', 'http://localhost:3000');
-  url.searchParams.set('sessionId', sessionId);
-  url.searchParams.set('chatId', chatId);
-  url.searchParams.set('lastMessageRank', (messages.length - 1).toString());
-  url.searchParams.set('partIndex', ((messages.at(-1)?.parts?.length ?? 0) - 1).toString());
-  await t.fetch(url.pathname + url.search, {
-    method: 'POST',
-    body: new Blob([compressedMessages]),
-  });
-}
-
 export async function storeChat(
   t: TestConvex,
   chatId: string,
@@ -65,6 +52,7 @@ export async function storeChat(
 ) {
   const formData = new FormData();
   if (args.messages && !args.doNotUpdateMessages) {
+    // NB: normally, we'd lz4 compress the string, but for testing, we'll skip that
     formData.append('messages', new Blob([JSON.stringify(args.messages)]));
   }
   if (args.snapshot) {
@@ -89,9 +77,29 @@ export async function verifyStoredContent(t: TestConvex, storageId: Id<'_storage
   await t.run(
     async (ctx: GenericMutationCtx<any> & { storage: { get: (id: Id<'_storage'>) => Promise<Blob | null> } }) => {
       const blob = await ctx.storage.get(storageId);
-      if (!blob) {throw new Error('Failed to retrieve snapshot');}
+      if (!blob) {
+        throw new Error('Failed to retrieve snapshot');
+      }
       const content = await blob.text();
       expect(content).toBe(expectedContent);
+    },
+  );
+}
+
+export async function verifyStoredMessages(
+  t: TestConvex,
+  storageId: Id<'_storage'>,
+  expectedMessages: SerializedMessage[],
+) {
+  await t.run(
+    async (ctx: GenericMutationCtx<any> & { storage: { get: (id: Id<'_storage'>) => Promise<Blob | null> } }) => {
+      const blob = await ctx.storage.get(storageId);
+      if (!blob) {
+        throw new Error('Failed to retrieve snapshot');
+      }
+      const content = await blob.text();
+      const messages = JSON.parse(content) as SerializedMessage[];
+      expect(messages).toEqual(expectedMessages);
     },
   );
 }

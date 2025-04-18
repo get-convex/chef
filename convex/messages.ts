@@ -170,7 +170,10 @@ export const get = query({
   },
 });
 
-export async function getLatestChatMessageStorageState(ctx: QueryCtx, chat: Doc<'chats'>) {
+export async function getLatestChatMessageStorageState(
+  ctx: QueryCtx,
+  chat: { _id: Id<'chats'>; lastMessageRank?: number },
+) {
   const lastMessageRank = chat.lastMessageRank;
   if (lastMessageRank === undefined) {
     return await ctx.db
@@ -261,14 +264,14 @@ async function _getInitialMessages(ctx: QueryCtx, args: { id: string; sessionId:
   };
 }
 
-const storageInfo = v.object({
+export const storageInfo = v.object({
   storageId: v.union(v.id('_storage'), v.null()),
   lastMessageRank: v.number(),
   partIndex: v.number(),
   snapshotId: v.optional(v.id('_storage')),
 });
 
-type StorageInfo = Infer<typeof storageInfo>;
+export type StorageInfo = Infer<typeof storageInfo>;
 
 export const getInitialMessagesStorageInfo = internalQuery({
   args: {
@@ -306,56 +309,12 @@ export const updateStorageState = internalMutation({
   },
   handler: async (ctx, args): Promise<void> => {
     const { chatId, storageId, lastMessageRank, partIndex, snapshotId, sessionId } = args;
+    const messageHistoryStorageId = storageId;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
       throw new ConvexError({ code: 'NotFound', message: 'Chat not found' });
     }
-    const chatLastMessageRank = chat.lastMessageRank;
-    if (chatLastMessageRank !== undefined) {
-      // Remove the storage state records for future messages on a different branch
-      const storageStatesToDelete = await ctx.db
-        .query('chatMessagesStorageState')
-        .withIndex('byChatId', (q) => q.eq('chatId', chat._id).gt('lastMessageRank', chatLastMessageRank))
-        .collect();
-      for (const storageState of storageStatesToDelete) {
-        await ctx.db.delete(storageState._id);
-        const chatStorageId = storageState.storageId;
-        if (chatStorageId) {
-          const chatHistoryRef = await ctx.db
-            .query('chatMessagesStorageState')
-            .withIndex('byStorageId', (q) => q.eq('storageId', chatStorageId))
-            .first();
-          if (chatHistoryRef) {
-            // I don't think it's possible in the current data model to have a duplicate storageId
-            // here because there should not be duplicate rows for the same chatId, lastMessageRank,
-            //  and partIndex. Newer snapshots should be patched.
-            console.warn('Unexpectedly found chatHistoryRef for storageId', chatStorageId);
-          }
-          const shareRef = await ctx.db
-            .query('shares')
-            .withIndex('byChatHistoryId', (q) => q.eq('chatHistoryId', chatStorageId))
-            .first();
-          if (shareRef === null && chatHistoryRef === null) {
-            await ctx.storage.delete(chatStorageId);
-          }
-        }
-        const snapshotId = storageState.snapshotId;
-        if (snapshotId) {
-          const chatHistoryRef = await ctx.db
-            .query('chatMessagesStorageState')
-            .withIndex('bySnapshotId', (q) => q.eq('snapshotId', snapshotId))
-            .first();
-          const shareRef = await ctx.db
-            .query('shares')
-            .withIndex('bySnapshotId', (q) => q.eq('snapshotId', snapshotId))
-            .first();
-          if (shareRef === null && chatHistoryRef === null) {
-            await ctx.storage.delete(snapshotId);
-          }
-        }
-      }
-      ctx.db.patch(chat._id, { lastMessageRank: undefined });
-    }
+    await deletePreviousStorageStates(ctx, { chat });
     const previous = await getLatestChatMessageStorageState(ctx, chat);
     if (!previous) {
       throw new Error('Chat messages storage state not found');
@@ -374,10 +333,10 @@ export const updateStorageState = internalMutation({
     }
 
     if (previous.lastMessageRank === lastMessageRank && previous.partIndex === partIndex) {
-      if (storageId !== null) {
+      if (messageHistoryStorageId !== null) {
         // Should this error?
         console.warn(
-          `Received non-null storageId for message ${lastMessageRank} part ${partIndex} that is already saved`,
+          `Received duplicate update for message hitsory, message ${lastMessageRank} part ${partIndex}, ignoring`,
         );
         return;
       }
@@ -400,6 +359,61 @@ export const updateStorageState = internalMutation({
     });
   },
 });
+
+async function deletePreviousStorageStates(
+  ctx: MutationCtx,
+  args: {
+    chat: Doc<'chats'>;
+  },
+) {
+  const { chat } = args;
+  const chatLastMessageRank = chat.lastMessageRank;
+  if (chatLastMessageRank !== undefined) {
+    // Remove the storage state records for future messages on a different branch
+    const storageStatesToDelete = await ctx.db
+      .query('chatMessagesStorageState')
+      .withIndex('byChatId', (q) => q.eq('chatId', chat._id).gt('lastMessageRank', chatLastMessageRank))
+      .collect();
+    for (const storageState of storageStatesToDelete) {
+      await ctx.db.delete(storageState._id);
+      const chatStorageId = storageState.storageId;
+      if (chatStorageId) {
+        const chatHistoryRef = await ctx.db
+          .query('chatMessagesStorageState')
+          .withIndex('byStorageId', (q) => q.eq('storageId', chatStorageId))
+          .first();
+        if (chatHistoryRef) {
+          // I don't think it's possible in the current data model to have a duplicate storageId
+          // here because there should not be duplicate rows for the same chatId, lastMessageRank,
+          //  and partIndex. Newer snapshots should be patched.
+          console.warn('Unexpectedly found chatHistoryRef for storageId', chatStorageId);
+        }
+        const shareRef = await ctx.db
+          .query('shares')
+          .withIndex('byChatHistoryId', (q) => q.eq('chatHistoryId', chatStorageId))
+          .first();
+        if (shareRef === null && chatHistoryRef === null) {
+          await ctx.storage.delete(chatStorageId);
+        }
+      }
+      const snapshotId = storageState.snapshotId;
+      if (snapshotId) {
+        const chatHistoryRef = await ctx.db
+          .query('chatMessagesStorageState')
+          .withIndex('bySnapshotId', (q) => q.eq('snapshotId', snapshotId))
+          .first();
+        const shareRef = await ctx.db
+          .query('shares')
+          .withIndex('bySnapshotId', (q) => q.eq('snapshotId', snapshotId))
+          .first();
+        if (shareRef === null && chatHistoryRef === null) {
+          await ctx.storage.delete(snapshotId);
+        }
+      }
+    }
+    ctx.db.patch(chat._id, { lastMessageRank: undefined });
+  }
+}
 
 export const earliestRewindableMessageRank = query({
   args: {
@@ -449,11 +463,11 @@ export const rewindChat = mutation({
     if (chat.lastMessageRank !== undefined && chat.lastMessageRank < lastMessageRank) {
       throw new ConvexError({
         code: 'RewindToFuture',
-        message:
-          'Cannot rewind to a future message rank, received ' +
-          lastMessageRank +
-          ' but current last message rank is ' +
-          chat.lastMessageRank,
+        message: 'Cannot rewind to a future message',
+        data: {
+          lastMessageRank,
+          currentLastMessageRank: chat.lastMessageRank,
+        },
       });
     }
     ctx.db.patch(chat._id, { lastMessageRank });
@@ -704,10 +718,11 @@ export const cleanupChatMessages = internalMutation({
     const { chatId, assertStorageStateExists } = args;
     if (assertStorageStateExists) {
       const chat = await ctx.db.get(chatId);
-      if (!chat) {
-        return;
-      }
-      const storageState = await getLatestChatMessageStorageState(ctx, chat);
+      // Allow the chat to not exist since it might have been deleted
+      const storageState = await getLatestChatMessageStorageState(ctx, {
+        _id: chatId,
+        lastMessageRank: chat?.lastMessageRank,
+      });
       if (storageState === null) {
         throw new Error(
           'Chat messages storage state not found -- should not clean up messages from DB if they are not stored',
