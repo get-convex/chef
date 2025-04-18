@@ -176,7 +176,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 {chatStarted ? (
                   <Messages
                     ref={messageRef}
-                    className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col pb-6"
+                    className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
                     messages={messages}
                     isStreaming={isStreaming}
                     onRewindToMessage={onRewindToMessage}

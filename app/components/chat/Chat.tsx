@@ -102,7 +102,6 @@ export const Chat = memo(
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
     const actionAlert = useStore(workbenchStore.alert);
     const sessionId = useConvexSessionIdOrNullOrLoading();
-    console.log('earliestRewindableMessageRank', earliestRewindableMessageRank);
 
     const rewindToMessage = async (messageIndex: number) => {
       if (sessionId && typeof sessionId === 'string') {
@@ -111,6 +110,9 @@ export const Chat = memo(
           return;
         }
 
+        const url = new URL(window.location.href);
+        url.searchParams.set('rewind', 'true');
+
         try {
           await convex.mutation(api.messages.rewindChat, {
             sessionId: sessionId as Id<'sessions'>,
@@ -118,7 +120,7 @@ export const Chat = memo(
             lastMessageRank: messageIndex,
           });
           // Reload the chat to show the rewound state
-          window.location.reload();
+          window.location.replace(url.href);
         } catch (error) {
           console.error('Failed to rewind chat:', error);
           toast.error('Failed to rewind chat');
@@ -142,6 +144,13 @@ export const Chat = memo(
       }),
       [isReload, hadSuccessfulDeploy],
     );
+
+    useEffect(() => {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('rewind') === 'true') {
+        toast.info('Successfully reverted changes. You may need to clear or migrate your Convex data.');
+      }
+    }, []);
 
     // Reset retries counter every minute
     useEffect(() => {
