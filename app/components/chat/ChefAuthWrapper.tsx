@@ -44,6 +44,8 @@ export function useChefAuthContext() {
   return state;
 }
 
+export const SESSION_ID_KEY = 'sessionIdForConvex';
+
 export const ChefAuthProvider = ({
   children,
   redirectIfUnauthenticated,
@@ -54,12 +56,16 @@ export const ChefAuthProvider = ({
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
   const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
+  const [sessionIdFromLocalStorage, setSessionIdFromLocalStorage] = useLocalStorage<Id<'sessions'> | null>(
+    SESSION_ID_KEY,
+    null,
+  );
   const hasAlertedAboutOptIns = useRef(false);
   const { getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
     function setSessionId(sessionId: Id<'sessions'> | null) {
-      setSessionIdInLocalStorage(sessionId);
+      setSessionIdFromLocalStorage(sessionId);
       sessionIdStore.set(sessionId);
     }
 
@@ -76,8 +82,7 @@ export const ChefAuthProvider = ({
     }
 
     async function verifySession() {
-      const sessionId = getSessionIdFromLocalStorage();
-      if (sessionId) {
+      if (sessionIdFromLocalStorage) {
         // Seems like Auth0 does not automatically refresh its state, so call this to kick it
         try {
           // Call this to prove that Auth0 is set up
@@ -95,7 +100,7 @@ export const ChefAuthProvider = ({
         let isValid: boolean = false;
         try {
           isValid = await convex.query(api.sessions.verifySession, {
-            sessionId,
+            sessionId: sessionIdFromLocalStorage as Id<'sessions'>,
             flexAuthMode: 'ConvexOAuth',
           });
         } catch (error) {
@@ -106,7 +111,7 @@ export const ChefAuthProvider = ({
         if (isValid) {
           const optIns = await fetchOptIns(convex);
           if (optIns.kind === 'loaded' && optIns.optIns.length === 0) {
-            setSessionId(sessionId);
+            setSessionId(sessionIdFromLocalStorage as Id<'sessions'>);
           }
           if (!hasAlertedAboutOptIns.current && optIns.kind === 'loaded' && optIns.optIns.length > 0) {
             toast.info('Please accept the Convex Terms of Service to continue');
@@ -133,7 +138,15 @@ export const ChefAuthProvider = ({
       }
     }
     void verifySession();
-  }, [convex, sessionId, isAuthenticated, isConvexAuthLoading, getAccessTokenSilently]);
+  }, [
+    convex,
+    sessionId,
+    isAuthenticated,
+    isConvexAuthLoading,
+    sessionIdFromLocalStorage,
+    setSessionIdFromLocalStorage,
+    getAccessTokenSilently,
+  ]);
 
   const isLoading = sessionId === undefined || isConvexAuthLoading;
   const isUnauthenticated = sessionId === null || !isAuthenticated;
@@ -151,21 +164,3 @@ export const ChefAuthProvider = ({
 
   return <ChefAuthContext.Provider value={{ state }}>{children}</ChefAuthContext.Provider>;
 };
-
-export const SESSION_ID_KEY = 'sessionIdForConvex';
-
-function getSessionIdFromLocalStorage() {
-  const sessionId = localStorage.getItem(SESSION_ID_KEY);
-  if (sessionId === null) {
-    return null;
-  }
-  return sessionId as Id<'sessions'>;
-}
-
-function setSessionIdInLocalStorage(sessionId: Id<'sessions'> | null) {
-  if (sessionId === null) {
-    localStorage.removeItem(SESSION_ID_KEY);
-  } else {
-    localStorage.setItem(SESSION_ID_KEY, sessionId);
-  }
-}
