@@ -23,7 +23,7 @@ export async function checkTokenUsage(
   return tokenUsage;
 }
 
-const annotationValidator = z.discriminatedUnion('type', [
+export const annotationValidator = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('usage'),
     usage: z.object({
@@ -32,13 +32,26 @@ const annotationValidator = z.discriminatedUnion('type', [
   }),
 ]);
 
-const usageValidator = z.object({
+export const usageValidator = z.object({
   toolCallId: z.string().optional(),
   completionTokens: z.number(),
   promptTokens: z.number(),
   totalTokens: z.number(),
-  cacheCreationInputTokens: z.number(),
-  cacheReadInputTokens: z.number(),
+  providerMetadata: z
+    .object({
+      openai: z
+        .object({
+          cachedPromptTokens: z.number(),
+        })
+        .optional(),
+      anthropic: z
+        .object({
+          cacheCreationInputTokens: z.number(),
+          cacheReadInputTokens: z.number(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 type Usage = z.infer<typeof usageValidator>;
 
@@ -52,8 +65,7 @@ export function encodeUsageAnnotation(
     completionTokens: usage.completionTokens,
     promptTokens: usage.promptTokens,
     totalTokens: usage.totalTokens,
-    cacheCreationInputTokens: Number(providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0),
-    cacheReadInputTokens: Number(providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
+    providerMetadata,
   };
   const serialized = JSON.stringify(payload);
   return { payload: serialized };
@@ -71,8 +83,12 @@ export async function recordUsage(
     completionTokens: finalGeneration.usage.completionTokens,
     promptTokens: finalGeneration.usage.promptTokens,
     totalTokens: finalGeneration.usage.totalTokens,
-    cacheCreationInputTokens: Number(finalGeneration.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0),
-    cacheReadInputTokens: Number(finalGeneration.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
+    providerMetadata: finalGeneration.providerMetadata,
+    anthropicCacheCreationInputTokens: Number(
+      finalGeneration.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0,
+    ),
+    anthropicCacheReadInputTokens: Number(finalGeneration.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
+    openaiCachedPromptTokens: Number(finalGeneration.providerMetadata?.openai?.cachedPromptTokens ?? 0),
   };
 
   const failedToolCalls: Set<string> = new Set();
@@ -109,17 +125,27 @@ export async function recordUsage(
       totalUsage.completionTokens += payload.completionTokens;
       totalUsage.promptTokens += payload.promptTokens;
       totalUsage.totalTokens += payload.totalTokens;
-      totalUsage.cacheCreationInputTokens += payload.cacheCreationInputTokens;
-      totalUsage.cacheReadInputTokens += payload.cacheReadInputTokens;
+      totalUsage.anthropicCacheCreationInputTokens +=
+        payload.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0;
+      totalUsage.anthropicCacheReadInputTokens += payload.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0;
+      totalUsage.openaiCachedPromptTokens += payload.providerMetadata?.openai?.cachedPromptTokens ?? 0;
     }
   }
-  logger.info('Logging total usage', JSON.stringify(totalUsage));
 
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/record_tokens`;
   // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
-  let chefTokens = totalUsage.promptTokens * 40 + totalUsage.completionTokens * 200;
-  chefTokens += totalUsage.cacheCreationInputTokens * 40 + totalUsage.cacheReadInputTokens * 3;
+  let chefTokens = 0;
+  if (finalGeneration.providerMetadata?.anthropic) {
+    chefTokens = totalUsage.promptTokens * 40 + totalUsage.completionTokens * 200;
+    chefTokens += totalUsage.anthropicCacheCreationInputTokens * 40 + totalUsage.anthropicCacheReadInputTokens * 3;
+  }
+  if (finalGeneration.providerMetadata?.openai) {
+    chefTokens += totalUsage.completionTokens * 100;
+    chefTokens += totalUsage.openaiCachedPromptTokens * 5;
+    chefTokens += (totalUsage.promptTokens - totalUsage.openaiCachedPromptTokens) * 26;
+  }
+  logger.info('Logging total usage', JSON.stringify(totalUsage), 'corresponding to chef tokens', chefTokens);
   const response = await fetch(url, {
     method: 'POST',
     headers: {

@@ -128,6 +128,7 @@ export async function convexAgent(
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv(env, 'OPENAI_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
+        compatibility: 'strict',
       });
       provider = {
         model: openai(model),
