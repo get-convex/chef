@@ -151,6 +151,10 @@ function TerminalWrapper({
     [index, isReload, shouldDeployConvexFunctions],
   );
 
+  const onTerminalResize = useCallback((cols: number, rows: number) => {
+    workbenchStore.onTerminalResize(cols, rows);
+  }, []);
+
   return (
     <Terminal
       id={`terminal_${index}`}
@@ -158,7 +162,7 @@ function TerminalWrapper({
         hidden: activeTerminal !== index,
       })}
       onTerminalReady={onTerminalReady}
-      onTerminalResize={workbenchStore.onTerminalResize}
+      onTerminalResize={onTerminalResize}
       theme={theme}
       readonly={index === CONVEX_DEPLOY_TAB_INDEX}
     />
