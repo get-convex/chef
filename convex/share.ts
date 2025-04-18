@@ -69,7 +69,7 @@ export const create = mutation({
         shareId,
         compressedMessages: compressedMessages.buffer,
       });
-      return { code: null };
+      return { code };
     }
   },
 });
