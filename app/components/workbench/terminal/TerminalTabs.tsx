@@ -1,11 +1,11 @@
 import { useStore } from '@nanostores/react';
-import React, { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Panel, type ImperativePanelHandle } from 'react-resizable-panels';
 import { IconButton } from '~/components/ui/IconButton';
 import { themeStore } from '~/lib/stores/theme';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { classNames } from '~/utils/classNames';
-import { Terminal, type TerminalRef } from './Terminal';
+import { Terminal } from './Terminal';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import {
   activeTerminalTabStore,
@@ -23,7 +23,6 @@ export const TerminalTabs = memo(function TerminalTabs(terminalInitializationOpt
   const showTerminal = useStore(workbenchStore.showTerminal);
   const theme = useStore(themeStore);
 
-  const terminalRefs = useRef<Array<TerminalRef | null>>([]);
   const terminalPanelRef = useRef<ImperativePanelHandle>(null);
 
   const activeTerminal = useStore(activeTerminalTabStore);
@@ -53,18 +52,6 @@ export const TerminalTabs = memo(function TerminalTabs(terminalInitializationOpt
       terminal.resize(DEFAULT_TERMINAL_SIZE);
     }
   }, [showTerminal]);
-
-  useEffect(() => {
-    const unsubscribeFromThemeStore = themeStore.subscribe(() => {
-      for (const ref of Object.values(terminalRefs.current)) {
-        ref?.reloadStyles();
-      }
-    });
-
-    return () => {
-      unsubscribeFromThemeStore();
-    };
-  }, []);
 
   return (
     <Panel
@@ -127,9 +114,6 @@ export const TerminalTabs = memo(function TerminalTabs(terminalInitializationOpt
               className={classNames('h-full overflow-hidden', {
                 hidden: activeTerminal !== index,
               })}
-              ref={(ref) => {
-                terminalRefs.current.push(ref);
-              }}
               onTerminalReady={(terminal) => {
                 if (index === VITE_TAB_INDEX) {
                   workbenchStore.attachBoltTerminal(terminal);
