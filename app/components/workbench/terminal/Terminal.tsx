@@ -8,10 +8,6 @@ import { getTerminalTheme } from './theme';
 
 const logger = createScopedLogger('Terminal');
 
-export interface TerminalRef {
-  reloadStyles: () => void;
-}
-
 export const Terminal = memo(function Terminal({
   className,
   theme,
