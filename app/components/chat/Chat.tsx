@@ -21,7 +21,7 @@ import { selectedTeamSlugStore, setSelectedTeamSlug, useSelectedTeamSlug } from 
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
 import type { PartId } from '~/lib/stores/artifacts';
-import { captureException } from '@sentry/remix';
+import { captureMessage } from '@sentry/remix';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import { chatIdStore } from '~/lib/stores/chatId';
 import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
@@ -282,7 +282,7 @@ export const Chat = memo(
 
           return updatedMessages;
         });
-        captureException('Failed to process chat request: ' + e.message, {
+        captureMessage('Failed to process chat request: ' + e.message, {
           level: 'error',
           extra: {
             error: e,
@@ -407,7 +407,7 @@ export const Chat = memo(
           );
         }
         toast.error(message);
-        captureException('User tried to send message but chef is too busy');
+        captureMessage('User tried to send message but chef is too busy');
         return;
       }
 
