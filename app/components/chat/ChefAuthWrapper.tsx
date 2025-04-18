@@ -1,7 +1,7 @@
 import { useConvex } from 'convex/react';
 
 import { useConvexAuth } from 'convex/react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 import { sessionIdStore } from '~/lib/stores/sessionId';
 
@@ -60,7 +60,7 @@ export const ChefAuthProvider = ({
     SESSION_ID_KEY,
     null,
   );
-  const [hasAlertedAboutOptIns, setHasAlertedAboutOptIns] = useState(false);
+  const hasAlertedAboutOptIns = useRef(false);
   const { getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
@@ -113,11 +113,11 @@ export const ChefAuthProvider = ({
           if (optIns.kind === 'loaded' && optIns.optIns.length === 0) {
             setSessionId(sessionIdFromLocalStorage as Id<'sessions'>);
           }
-          if (!hasAlertedAboutOptIns && optIns.kind === 'loaded' && optIns.optIns.length > 0) {
+          if (!hasAlertedAboutOptIns.current && optIns.kind === 'loaded' && optIns.optIns.length > 0) {
             toast.info('Please accept the Convex Terms of Service to continue');
-            setHasAlertedAboutOptIns(true);
+            hasAlertedAboutOptIns.current = true;
           }
-          if (hasAlertedAboutOptIns && optIns.kind === 'error') {
+          if (hasAlertedAboutOptIns.current && optIns.kind === 'error') {
             toast.error('Unexpected error setting up your account.');
           }
         } else {
@@ -139,6 +139,7 @@ export const ChefAuthProvider = ({
     }
     void verifySession();
   }, [
+    convex,
     sessionId,
     isAuthenticated,
     isConvexAuthLoading,
