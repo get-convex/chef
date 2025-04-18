@@ -50,6 +50,11 @@ export const usageValidator = z.object({
           cacheReadInputTokens: z.number(),
         })
         .optional(),
+      xai: z
+        .object({
+          cachedPromptTokens: z.number(),
+        })
+        .optional(),
     })
     .optional(),
 });
@@ -89,6 +94,7 @@ export async function recordUsage(
     ),
     anthropicCacheReadInputTokens: Number(finalGeneration.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
     openaiCachedPromptTokens: Number(finalGeneration.providerMetadata?.openai?.cachedPromptTokens ?? 0),
+    xaiCachedPromptTokens: Number(finalGeneration.providerMetadata?.xai?.cachedPromptTokens ?? 0),
   };
 
   const failedToolCalls: Set<string> = new Set();
@@ -129,6 +135,7 @@ export async function recordUsage(
         payload.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0;
       totalUsage.anthropicCacheReadInputTokens += payload.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0;
       totalUsage.openaiCachedPromptTokens += payload.providerMetadata?.openai?.cachedPromptTokens ?? 0;
+      totalUsage.xaiCachedPromptTokens += payload.providerMetadata?.xai?.cachedPromptTokens ?? 0;
     }
   }
 
@@ -137,13 +144,24 @@ export async function recordUsage(
   // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
   let chefTokens = 0;
   if (finalGeneration.providerMetadata?.anthropic) {
-    chefTokens = totalUsage.promptTokens * 40 + totalUsage.completionTokens * 200;
+    chefTokens += totalUsage.completionTokens * 200;
+    chefTokens += totalUsage.promptTokens * 40;
     chefTokens += totalUsage.anthropicCacheCreationInputTokens * 40 + totalUsage.anthropicCacheReadInputTokens * 3;
-  }
-  if (finalGeneration.providerMetadata?.openai) {
+  } else if (finalGeneration.providerMetadata?.openai) {
     chefTokens += totalUsage.completionTokens * 100;
     chefTokens += totalUsage.openaiCachedPromptTokens * 5;
     chefTokens += (totalUsage.promptTokens - totalUsage.openaiCachedPromptTokens) * 26;
+  } else if (finalGeneration.providerMetadata?.xai) {
+    // TODO: This is a guess. Billing like openai
+    chefTokens += totalUsage.completionTokens * 200;
+    chefTokens += totalUsage.promptTokens * 40;
+    // TODO - never seen xai set this field to anything but 0, so holding off until we understand.
+    //chefTokens += totalUsage.xaiCachedPromptTokens * 3;
+  } else {
+    console.error(
+      'WARNING: Unknown provider. Not recording usage. Giving away for free.',
+      finalGeneration.providerMetadata,
+    );
   }
   logger.info('Logging total usage', JSON.stringify(totalUsage), 'corresponding to chef tokens', chefTokens);
   const response = await fetch(url, {

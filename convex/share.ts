@@ -1,7 +1,9 @@
 import { ConvexError, v } from 'convex/values';
-import { mutation, query, type DatabaseReader } from './_generated/server';
-import { getChatByIdOrUrlIdEnsuringAccess } from './messages';
+import { internalAction, internalMutation, mutation, query, type DatabaseReader } from './_generated/server';
+import { getChatByIdOrUrlIdEnsuringAccess, type SerializedMessage } from './messages';
 import { startProvisionConvexProjectHelper } from './convexProjects';
+import { internal } from './_generated/api';
+import { compressMessages } from './compressMessages';
 
 export const create = mutation({
   args: {
@@ -43,29 +45,75 @@ export const create = mutation({
         partIndex: storageState.partIndex,
         description: chat.description,
       });
+      return { code };
     } else {
-      const lastMessage = await ctx.db
+      const messages = await ctx.db
         .query('chatMessages')
         .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
         .order('desc')
-        .first();
-
-      await ctx.db.insert('shares', {
+        .collect();
+      const compressedMessages = await compressMessages(messages.map((m) => m.content));
+      const lastMessage = messages[messages.length - 1];
+      const partIndex = ((lastMessage?.content as SerializedMessage)?.parts?.length ?? 0) - 1;
+      const shareId = await ctx.db.insert('shares', {
         chatId: chat._id,
-
-        // It is safe to use the snapshotId from the chat because the user’s
-        // snapshot excludes .env.local.
-        snapshotId: chat.snapshotId,
-
-        chatHistoryId: undefined,
-
         code,
-        lastMessageRank: lastMessage ? lastMessage.rank : 0,
+        chatHistoryId: null,
+        lastMessageRank: lastMessage?.rank ?? -1,
+        partIndex,
         description: chat.description,
+        snapshotId: chat.snapshotId,
       });
+      await ctx.scheduler.runAfter(0, internal.share.intializeShareWithStorage, {
+        shareId,
+        compressedMessages: compressedMessages.buffer,
+      });
+      return { code: null };
     }
+  },
+});
 
-    return { code };
+export const intializeShareWithStorage = internalAction({
+  args: {
+    shareId: v.id('shares'),
+    compressedMessages: v.bytes(),
+  },
+  handler: async (ctx, { shareId, compressedMessages }) => {
+    const blob = new Blob([compressedMessages]);
+    const storageId = await ctx.storage.store(blob);
+    await ctx.runMutation(internal.share.updateShareWithStorage, {
+      shareId,
+      storageId,
+    });
+  },
+});
+
+export const updateShareWithStorage = internalMutation({
+  args: {
+    shareId: v.id('shares'),
+    storageId: v.id('_storage'),
+  },
+  handler: async (ctx, { shareId, storageId }) => {
+    await ctx.db.patch(shareId, {
+      chatHistoryId: storageId,
+    });
+  },
+});
+
+export const isShareReady = query({
+  args: {
+    code: v.string(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, { code }) => {
+    const share = await ctx.db
+      .query('shares')
+      .withIndex('byCode', (q) => q.eq('code', code))
+      .unique();
+    if (!share) {
+      return false;
+    }
+    return share.chatHistoryId !== null;
   },
 });
 

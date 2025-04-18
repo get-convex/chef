@@ -33,8 +33,8 @@ async function initializeChat(t: TestConvex, initialMessage?: SerializedMessage)
 test('sharing a chat works if there is a snapshot + message', async () => {
   const t = setupTest();
   const { sessionId, chatId } = await initializeChat(t);
-  const code = await t.mutation(api.share.create, { sessionId, id: chatId });
-  expect(code).toBeDefined();
+  const { code } = await t.mutation(api.share.create, { sessionId, id: chatId });
+  expect(code).not.toBeNull();
 });
 
 test('getShareDescription works', async () => {
@@ -47,8 +47,8 @@ test('getShareDescription works', async () => {
     description: 'This is a test chat',
   });
   const { code } = await t.mutation(api.share.create, { sessionId, id: 'test' });
-  expect(code).toBeDefined();
-  const { description } = await t.query(api.share.getShareDescription, { code });
+  expect(code).not.toBeNull();
+  const { description } = await t.query(api.share.getShareDescription, { code: code! });
   expect(description).toBe('This is a test chat');
 });
 
@@ -62,10 +62,10 @@ test('cloning a chat forks history', async () => {
   };
   const { sessionId, chatId } = await initializeChat(t, firstMessage);
   const { code } = await t.mutation(api.share.create, { sessionId, id: 'test' });
-  expect(code).toBeDefined();
+  expect(code).not.toBeNull();
   const { id: clonedChatId } = await t.mutation(api.share.clone, {
     sessionId,
-    shareCode: code,
+    shareCode: code!,
     projectInitParams: testProjectInitParams,
   });
   expect(clonedChatId).toBeDefined();
