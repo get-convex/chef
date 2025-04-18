@@ -55,14 +55,17 @@ export const create = mutation({
       const compressedMessages = await compressMessages(messages.map((m) => m.content));
       const lastMessage = messages[messages.length - 1];
       const partIndex = ((lastMessage?.content as SerializedMessage)?.parts?.length ?? 0) - 1;
+      const shareId = await ctx.db.insert('shares', {
+        chatId: chat._id,
+        code,
+        chatHistoryId: null,
+        lastMessageRank: lastMessage?.rank ?? -1,
+        partIndex,
+        description: chat.description,
+        snapshotId: chat.snapshotId,
+      });
       await ctx.scheduler.runAfter(0, internal.share.intializeShareWithStorage, {
-        shareFields: {
-          chatId: chat._id,
-          lastMessageRank: lastMessage?.rank ?? -1,
-          partIndex,
-          description: chat.description,
-          snapshotId: chat.snapshotId,
-        },
+        shareId,
         compressedMessages: compressedMessages.buffer,
       });
       return { code: null };
@@ -72,20 +75,14 @@ export const create = mutation({
 
 export const intializeShareWithStorage = internalAction({
   args: {
-    shareFields: v.object({
-      chatId: v.id('chats'),
-      lastMessageRank: v.number(),
-      partIndex: v.number(),
-      description: v.optional(v.string()),
-      snapshotId: v.id('_storage'),
-    }),
+    shareId: v.id('shares'),
     compressedMessages: v.bytes(),
   },
-  handler: async (ctx, { shareFields, compressedMessages }) => {
+  handler: async (ctx, { shareId, compressedMessages }) => {
     const blob = new Blob([compressedMessages]);
     const storageId = await ctx.storage.store(blob);
     await ctx.runMutation(internal.share.updateShareWithStorage, {
-      shareFields,
+      shareId,
       storageId,
     });
   },
@@ -93,48 +90,30 @@ export const intializeShareWithStorage = internalAction({
 
 export const updateShareWithStorage = internalMutation({
   args: {
-    shareFields: v.object({
-      chatId: v.id('chats'),
-      lastMessageRank: v.number(),
-      partIndex: v.number(),
-      description: v.optional(v.string()),
-      snapshotId: v.id('_storage'),
-    }),
+    shareId: v.id('shares'),
     storageId: v.id('_storage'),
   },
-  handler: async (ctx, { shareFields, storageId }) => {
-    const code = await generateUniqueCode(ctx.db);
-    await ctx.db.insert('shares', {
-      chatId: shareFields.chatId,
-      code,
-      lastMessageRank: shareFields.lastMessageRank,
-      partIndex: shareFields.partIndex,
-      description: shareFields.description,
+  handler: async (ctx, { shareId, storageId }) => {
+    await ctx.db.patch(shareId, {
       chatHistoryId: storageId,
-      snapshotId: shareFields.snapshotId,
     });
   },
 });
 
-export const getCodeForChat = query({
+export const isShareReady = query({
   args: {
-    chatId: v.string(),
-    sessionId: v.id('sessions'),
+    code: v.string(),
   },
-  returns: v.union(v.string(), v.null()),
-  handler: async (ctx, { chatId, sessionId }) => {
-    const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
-    if (!chat) {
-      return null;
-    }
+  returns: v.boolean(),
+  handler: async (ctx, { code }) => {
     const share = await ctx.db
       .query('shares')
-      .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-      .first();
+      .withIndex('byCode', (q) => q.eq('code', code))
+      .unique();
     if (!share) {
-      return null;
+      return false;
     }
-    return share.code;
+    return share.chatHistoryId !== null;
   },
 });
 

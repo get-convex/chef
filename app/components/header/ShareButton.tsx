@@ -48,10 +48,11 @@ type ShareStatus = 'idle' | 'loading' | 'success';
 export function ShareButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<ShareStatus>('idle');
+  const [shareCode, setShareCode] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState('');
   const chatId = useChatId();
   const sessionId = useConvexSessionId();
-  const shareCode = useQuery(api.share.getCodeForChat, status === 'idle' ? 'skip' : { chatId, sessionId });
+  const isShareReady = useQuery(api.share.isShareReady, shareCode ? { code: shareCode } : 'skip');
 
   const createShare = useMutation(api.share.create);
 
@@ -65,8 +66,7 @@ export function ShareButton() {
       });
 
       if (result.code) {
-        setShareUrl(`${window.location.origin}/share/${result.code}`);
-        setStatus('success');
+        setShareCode(result.code);
       }
     } catch (error) {
       toast.error('Failed to share. Please try again.');
@@ -91,7 +91,7 @@ export function ShareButton() {
   };
 
   useEffect(() => {
-    if (status === 'loading' && shareCode) {
+    if (status === 'loading' && isShareReady) {
       const { origin } = window.location;
       const url =
         origin === 'https://chef.convex.dev' ? `https://chef.show/${shareCode}` : `${origin}/share/${shareCode}`;
@@ -99,7 +99,7 @@ export function ShareButton() {
       setShareUrl(url);
       setStatus('success');
     }
-  }, [shareCode, status]);
+  }, [shareCode, status, isShareReady]);
 
   return (
     <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>

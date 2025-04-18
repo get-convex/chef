@@ -116,7 +116,6 @@ export default defineSchema({
     description: v.optional(v.string()),
   })
     .index('byCode', ['code'])
-    .index('byChatId', ['chatId'])
     .index('bySnapshotId', ['snapshotId'])
     .index('byChatHistoryId', ['chatHistoryId']),
 
