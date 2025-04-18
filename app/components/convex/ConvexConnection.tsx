@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Dialog, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { useChatId } from '~/lib/stores/chatId';
@@ -8,6 +7,7 @@ import { api } from '@convex/_generated/api';
 import { ConvexConnectButton } from '~/components/convex/ConvexConnectButton';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
+import { Modal } from '@ui/Modal';
 
 export function ConvexConnection() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,34 +31,30 @@ export function ConvexConnection() {
         <ConnectionStatus projectInfo={projectInfo} />
       </Button>
 
-      <DialogRoot open={isOpen} onOpenChange={setIsOpen}>
-        {isOpen && (
-          <Dialog className="max-w-[520px] p-6" showCloseButton>
-            <div className="space-y-4">
-              <DialogTitle>
-                <div className="px-3">
-                  {projectInfo?.kind === 'connected'
-                    ? 'Connected Convex Project'
-                    : projectInfo?.kind === 'connecting'
-                      ? 'Connecting to Convex...'
-                      : projectInfo?.kind === 'failed'
-                        ? 'Failed to connect to Convex'
-                        : 'Connect a Convex Project'}
-                </div>
-              </DialogTitle>
-              <div className="mx-3 flex items-center justify-between rounded-lg">
-                {projectInfo?.kind === 'connected' ? (
-                  <ConnectedDialogContent projectInfo={projectInfo} />
-                ) : projectInfo?.kind === 'failed' ? (
-                  <ErrorDialogContent errorMessage={projectInfo.errorMessage} />
-                ) : (
-                  <div className="flex justify-end gap-2">{sessionId && chatId ? <ConvexConnectButton /> : null}</div>
-                )}
-              </div>
-            </div>
-          </Dialog>
-        )}
-      </DialogRoot>
+      {isOpen && (
+        <Modal
+          title={
+            projectInfo?.kind === 'connected'
+              ? 'Connected Convex Project'
+              : projectInfo?.kind === 'connecting'
+                ? 'Connecting to Convex...'
+                : projectInfo?.kind === 'failed'
+                  ? 'Failed to connect to Convex'
+                  : 'Connect a Convex Project'
+          }
+          onClose={() => setIsOpen(false)}
+        >
+          <div className="mx-3 flex items-center justify-between rounded-lg">
+            {projectInfo?.kind === 'connected' ? (
+              <ConnectedDialogContent projectInfo={projectInfo} />
+            ) : projectInfo?.kind === 'failed' ? (
+              <ErrorDialogContent errorMessage={projectInfo.errorMessage} />
+            ) : (
+              <div className="flex justify-end gap-2">{sessionId && chatId ? <ConvexConnectButton /> : null}</div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
