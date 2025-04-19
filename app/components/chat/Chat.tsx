@@ -21,7 +21,7 @@ import { selectedTeamSlugStore, setSelectedTeamSlug, useSelectedTeamSlug } from 
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
 import type { PartId } from '~/lib/stores/artifacts';
-import { captureException } from '@sentry/remix';
+import { captureMessage } from '@sentry/remix';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import { chatIdStore } from '~/lib/stores/chatId';
 import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
@@ -35,6 +35,8 @@ import { STATUS_MESSAGES } from './StreamingIndicator';
 import { Button } from '@ui/Button';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import type { Id } from 'convex/_generated/dataModel';
 
 const logger = createScopedLogger('Chat');
 
@@ -76,6 +78,7 @@ interface ChatProps {
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
   initialInput?: string;
+  earliestRewindableMessageRank?: number;
 }
 
 const retryState = atom({
@@ -92,11 +95,38 @@ export const Chat = memo(
     isReload,
     hadSuccessfulDeploy,
     initialInput,
+    earliestRewindableMessageRank,
   }: ChatProps) => {
     const convex = useConvex();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
     const actionAlert = useStore(workbenchStore.alert);
+    const sessionId = useConvexSessionIdOrNullOrLoading();
+
+    const rewindToMessage = async (messageIndex: number) => {
+      if (sessionId && typeof sessionId === 'string') {
+        const chatId = chatIdStore.get();
+        if (!chatId) {
+          return;
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('rewind', 'true');
+
+        try {
+          await convex.mutation(api.messages.rewindChat, {
+            sessionId: sessionId as Id<'sessions'>,
+            chatId,
+            lastMessageRank: messageIndex,
+          });
+          // Reload the chat to show the rewound state
+          window.location.replace(url.href);
+        } catch (error) {
+          console.error('Failed to rewind chat:', error);
+          toast.error('Failed to rewind chat');
+        }
+      }
+    };
 
     const title = useStore(description);
 
@@ -114,6 +144,13 @@ export const Chat = memo(
       }),
       [isReload, hadSuccessfulDeploy],
     );
+
+    useEffect(() => {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('rewind') === 'true') {
+        toast.info('Successfully reverted changes. You may need to clear or migrate your Convex data.');
+      }
+    }, []);
 
     // Reset retries counter every minute
     useEffect(() => {
@@ -245,7 +282,7 @@ export const Chat = memo(
 
           return updatedMessages;
         });
-        captureException('Failed to process chat request: ' + e.message, {
+        captureMessage('Failed to process chat request: ' + e.message, {
           level: 'error',
           extra: {
             error: e,
@@ -344,33 +381,33 @@ export const Chat = memo(
       const now = Date.now();
       const retries = retryState.get();
       if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet()) {
-        let message: string | ReactNode = 'Chef is too busy cooking right now.';
+        let message: string | ReactNode = 'Chef is too busy cooking right now. ';
         if (retries.numFailures >= MAX_RETRIES) {
-          message += ' Please enter your own API key ';
           message = (
             <>
               {message}
+              Please{' '}
               <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
-                here
+                enter your own API key
               </a>
               .
             </>
           );
         } else {
           const remaining = formatDistanceStrict(now, retries.nextRetry);
-          message += ` Please try again in ${remaining} or enter your own API key `;
           message = (
             <>
               {message}
+              Please try again in {remaining} or{' '}
               <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
-                here
+                enter your own API key
               </a>
               .
             </>
           );
         }
         toast.error(message);
-        captureException('User tried to send message but chef is too busy');
+        captureMessage('User tried to send message but chef is too busy');
         return;
       }
 
@@ -501,6 +538,8 @@ export const Chat = memo(
         sendMessageInProgress={sendMessageInProgress}
         modelSelection={modelSelection}
         setModelSelection={setModelSelection}
+        onRewindToMessage={rewindToMessage}
+        earliestRewindableMessageRank={earliestRewindableMessageRank}
       />
     );
   },

@@ -62,6 +62,10 @@ interface BaseChatProps {
   // Alert related props
   actionAlert: ActionAlert | undefined;
   clearAlert: () => void;
+
+  // Rewind functionality
+  onRewindToMessage?: (index: number) => void;
+  earliestRewindableMessageRank?: number;
 }
 
 function useSerializedMessages(messages: Message[]) {
@@ -98,6 +102,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       disableChatMessage,
       modelSelection,
       setModelSelection,
+      onRewindToMessage,
+      earliestRewindableMessageRank,
     },
     ref,
   ) => {
@@ -170,9 +176,11 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 {chatStarted ? (
                   <Messages
                     ref={messageRef}
-                    className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col pb-6"
+                    className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
                     messages={messages}
                     isStreaming={isStreaming}
+                    onRewindToMessage={onRewindToMessage}
+                    earliestRewindableMessageRank={earliestRewindableMessageRank}
                   />
                 ) : null}
                 <div
@@ -297,7 +305,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 </div>
               </div>
               {maintenanceMode && (
-                <div className="mx-auto mb-4 max-w-chat">
+                <div className="mx-auto my-4 max-w-chat">
                   <div className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700 dark:border-red-600 dark:bg-red-900 dark:text-red-200">
                     <p className="font-bold">Chef is temporarily unavailable</p>
                     <p className="text-sm">

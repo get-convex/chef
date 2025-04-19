@@ -153,9 +153,6 @@ httpWithCors.route({
     return new Response(null, {
       status: 200,
     });
-    return new Response(null, {
-      status: 200,
-    });
   }),
 });
 
@@ -179,22 +176,14 @@ httpWithCors.route({
       const snapshotBlob = formData.get('snapshot') as Blob;
       snapshotStorageId = await ctx.storage.store(snapshotBlob);
     }
-    if (messageStorageId !== null) {
-      await ctx.runMutation(internal.messages.updateStorageState, {
-        sessionId: sessionId as Id<'sessions'>,
-        chatId: chatId as Id<'chats'>,
-        lastMessageRank: parseInt(lastMessageRank!),
-        partIndex: parseInt(partIndex!),
-        storageId: messageStorageId,
-      });
-    }
-    if (snapshotStorageId !== null) {
-      await ctx.runMutation(internal.snapshot.saveSnapshot, {
-        sessionId: sessionId as Id<'sessions'>,
-        chatId: chatId as Id<'chats'>,
-        storageId: snapshotStorageId,
-      });
-    }
+    await ctx.runMutation(internal.messages.updateStorageState, {
+      sessionId: sessionId as Id<'sessions'>,
+      chatId: chatId as Id<'chats'>,
+      lastMessageRank: parseInt(lastMessageRank!),
+      partIndex: parseInt(partIndex!),
+      storageId: messageStorageId,
+      snapshotId: snapshotStorageId,
+    });
     return new Response(null, {
       status: 200,
     });

@@ -1,7 +1,7 @@
 import { useConvex } from 'convex/react';
 
 import { useConvexAuth } from 'convex/react';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef } from 'react';
 
 import { sessionIdStore } from '~/lib/stores/sessionId';
 

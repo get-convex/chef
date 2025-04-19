@@ -31,7 +31,8 @@ export function ExistingChat({ chatId }: { chatId: string }) {
 
 function ExistingChatWrapper({ chatId }: { chatId: string }) {
   const sessionId = useStore(sessionIdStore);
-  const { initialMessages, storeMessageHistory, initializeChat } = useConvexChatExisting(chatId);
+  const { initialMessages, storeMessageHistory, initializeChat, earliestRewindableMessageRank } =
+    useConvexChatExisting(chatId);
 
   const reloadState = useReloadMessages(initialMessages ?? undefined);
   const bootState = useContainerBootState();
@@ -92,6 +93,7 @@ function ExistingChatWrapper({ chatId }: { chatId: string }) {
           initializeChat={initializeChat}
           isReload={true}
           hadSuccessfulDeploy={!!hadSuccessfulDeploy}
+          earliestRewindableMessageRank={earliestRewindableMessageRank}
         />
       )}
     </>

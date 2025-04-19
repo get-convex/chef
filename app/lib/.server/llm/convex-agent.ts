@@ -36,6 +36,11 @@ type Messages = Message[];
 type Provider = {
   maxTokens: number;
   model: LanguageModelV1;
+  options?: {
+    xai: {
+      stream_options: { include_usage: true };
+    };
+  };
 };
 
 export type ModelProvider = 'Anthropic' | 'Bedrock' | 'OpenAI' | 'XAI';
@@ -120,6 +125,11 @@ export async function convexAgent(
       provider = {
         model: xai(model),
         maxTokens: 8192,
+        options: {
+          xai: {
+            stream_options: { include_usage: true },
+          },
+        },
       };
       break;
     }
@@ -128,10 +138,12 @@ export async function convexAgent(
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv(env, 'OPENAI_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
+        compatibility: 'strict',
       });
       provider = {
         model: openai(model),
         maxTokens: 8192,
+        options: undefined,
       };
       break;
     }
@@ -151,6 +163,7 @@ export async function convexAgent(
       provider = {
         model: bedrock(model),
         maxTokens: 8192,
+        options: undefined,
       };
       break;
     }
@@ -243,6 +256,7 @@ export async function convexAgent(
       const result = streamText({
         model: provider.model,
         maxTokens: provider.maxTokens,
+        providerOptions: provider.options,
         messages: [
           {
             role: 'system',

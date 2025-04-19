@@ -182,7 +182,7 @@ export const Workbench = memo(function Workbench({
               {
                 'w-full': isSmallViewport,
                 'left-0': showWorkbench && isSmallViewport,
-                'left-[var(--workbench-left)]': showWorkbench,
+                'left-[var(--workbench-left)]': showWorkbench && !isSmallViewport,
                 'left-[100%]': !showWorkbench,
               },
             )}

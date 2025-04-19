@@ -70,7 +70,10 @@
 
   --cm-search-button-textColor: var(--bolt-elements-editor-search-button-textColor, rgb(var(--content-secondary)));
 
-  --cm-search-button-textColorHover: var(--bolt-elements-editor-search-button-textColorHover, rgb(var(--content-primary)));
+  --cm-search-button-textColorHover: var(
+    --bolt-elements-editor-search-button-textColorHover,
+    rgb(var(--content-primary))
+  );
 
   --cm-search-button-borderColor: var(--bolt-elements-editor-search-button-borderColor, transparent);
   --cm-search-button-borderColorHover: var(--bolt-elements-editor-search-button-borderColorHover, transparent);

@@ -1,51 +1,45 @@
-import { expect, test } from 'vitest';
+import { test } from 'vitest';
 import { api, internal } from './_generated/api';
-import { createChat, setupTest, storeMessages } from './test.setup';
-
-test('unreferenced snapshots are deleted', async () => {
-  const t = setupTest();
-  const { sessionId, chatId } = await createChat(t);
-  await storeMessages(t, chatId, sessionId, [
-    { id: '1', role: 'user', parts: [{ text: 'Hello, world!', type: 'text' }], createdAt: Date.now() },
-  ]);
-  const storageId1 = await t.run((ctx) => ctx.storage.store(new Blob(['Hello, world!'])));
-  await t.mutation(internal.snapshot.saveSnapshot, { sessionId, chatId, storageId: storageId1 });
-  const storageId2 = await t.run((ctx) => ctx.storage.store(new Blob(['foobar'])));
-  await t.mutation(internal.snapshot.saveSnapshot, { sessionId, chatId, storageId: storageId2 });
-  // `storageId1` should be deleted because it was overwritten by `storageId2`
-  await expect(t.run((ctx) => ctx.storage.get(storageId1))).resolves.toBeNull();
-  // `storageId2` should not be deleted
-  const blob = await t.run(async (ctx) => {
-    const blob = await ctx.storage.get(storageId2);
-    return blob?.text();
-  });
-  expect(blob).toBe('foobar');
-});
+import { createChat, setupTest, storeChat, verifyStoredContent } from './test.setup';
 
 test('referenced snapshots are not deleted', async () => {
   const t = setupTest();
   const { sessionId, chatId } = await createChat(t);
-  await storeMessages(t, chatId, sessionId, [
-    { id: '1', role: 'user', parts: [{ text: 'Hello, world!', type: 'text' }], createdAt: Date.now() },
-  ]);
-  const storageId1 = await t.run((ctx) => ctx.storage.store(new Blob(['Hello, world!'])));
-  await t.mutation(internal.snapshot.saveSnapshot, { sessionId, chatId, storageId: storageId1 });
+  await storeChat(t, chatId, sessionId, {
+    messages: [{ id: '1', role: 'user', parts: [{ text: 'Hello, world!', type: 'text' }], createdAt: Date.now() }],
+    snapshot: new Blob(['Hello, world!']),
+  });
 
-  await t.mutation(api.share.create, { sessionId, id: chatId });
-  const storageId2 = await t.run((ctx) => ctx.storage.store(new Blob(['foobar'])));
-  await t.mutation(internal.snapshot.saveSnapshot, { sessionId, chatId, storageId: storageId2 });
+  const { code } = await t.mutation(api.share.create, { sessionId, id: chatId });
+  await storeChat(t, chatId, sessionId, {
+    snapshot: new Blob(['foobar']),
+  });
 
   // `storageId1` should not be deleted because it is referenced by the share
-  const blob1 = await t.run(async (ctx) => {
-    const blob = await ctx.storage.get(storageId1);
-    return blob?.text();
+  const shareSnapshotId = await t.run(async (ctx) => {
+    const share = await ctx.db
+      .query('shares')
+      .withIndex('byCode', (q) => q.eq('code', code))
+      .first();
+    if (!share) {
+      throw new Error('Share not found');
+    }
+    if (!share.snapshotId) {
+      throw new Error('Share has no snapshot');
+    }
+    return share.snapshotId;
   });
-  expect(blob1).toBe('Hello, world!');
+  await verifyStoredContent(t, shareSnapshotId, 'Hello, world!');
 
-  // `storageId2` should not be deleted
-  const blob2 = await t.run(async (ctx) => {
-    const blob = await ctx.storage.get(storageId2);
-    return blob?.text();
+  const storageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+    sessionId,
+    chatId,
   });
-  expect(blob2).toBe('foobar');
+  if (!storageInfo) {
+    throw new Error('Storage info not found');
+  }
+  if (!storageInfo.snapshotId) {
+    throw new Error('Storage info has no snapshot');
+  }
+  await verifyStoredContent(t, storageInfo.snapshotId, 'foobar');
 });
