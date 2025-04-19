@@ -60,6 +60,8 @@ export const Artifact = memo(function Artifact({ partId }: ArtifactProps) {
         setAllActionFinished(finished);
       }
     }
+    // We only want to run this when `actions` changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actions]);
 
   return (

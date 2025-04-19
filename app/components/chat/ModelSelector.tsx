@@ -2,6 +2,7 @@ import { Combobox } from '@ui/Combobox';
 import { MagicWandIcon } from '@radix-ui/react-icons';
 import type { ModelSelection } from '~/utils/constants';
 import React from 'react';
+import { Tooltip } from '@ui/Tooltip';
 
 function svgIcon(url: string) {
   return <img className="size-4" height="16" width="16" src={url} alt="" />;
@@ -12,18 +13,21 @@ export interface ModelSelectorProps {
   setModelSelection: (modelSelection: ModelSelection) => void;
 }
 
-const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNode }>> = {
+const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNode; experimental: boolean }>> = {
   auto: {
     name: 'Auto',
     icon: <MagicWandIcon />,
+    experimental: false,
   },
   'claude-3.5-sonnet': {
     name: 'Claude 3.5 Sonnet',
     icon: svgIcon('/icons/claude.svg'),
+    experimental: false,
   },
   'gpt-4.1': {
     name: 'GPT-4.1',
     icon: svgIcon('/icons/openai.svg'),
+    experimental: true,
   },
   'grok-3-mini': {
     name: 'Grok 3 Mini',
@@ -32,6 +36,7 @@ const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNo
   'gemini-2.5-pro': {
     name: 'Gemini 2.5 Pro',
     icon: svgIcon('/icons/gemini.svg'),
+    experimental: true,
   },
 } as const;
 
@@ -67,6 +72,11 @@ export const ModelSelector = React.memo(function ModelSelector({
           <div className="flex items-center gap-2">
             {model?.icon}
             <div className="max-w-48 truncate">{label}</div>
+            {model?.experimental && (
+              <Tooltip className="ml-auto" side="right" tip="This model's performance has not been thoroughly tested.">
+                <div className="text-xs text-content-secondary">Experimental</div>
+              </Tooltip>
+            )}
           </div>
         );
       }}

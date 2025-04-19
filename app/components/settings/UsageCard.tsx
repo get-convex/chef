@@ -15,12 +15,14 @@ export function UsageCard() {
   const convex = useConvex();
 
   const teams = useStore(convexTeamsStore);
+  const [selectedTeamSlug, setSelectedTeamSlug] = useState(useSelectedTeamSlug() ?? teams?.[0]?.slug ?? null);
   useEffect(() => {
     if (teams && !selectedTeamSlug) {
       setSelectedTeamSlug(teams[0]?.slug);
     }
+    // No need to run if only `selectedTeamSlug` changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teams]);
-  const [selectedTeamSlug, setSelectedTeamSlug] = useState(useSelectedTeamSlug() ?? teams?.[0]?.slug ?? null);
 
   const [isLoadingUsage, setIsLoadingUsage] = useState(true);
   const [tokenUsage, setTokenUsage] = useState<{

@@ -154,6 +154,7 @@
     "convex-test": "^0.0.36",
     "eslint": "9.20.1",
     "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-tailwindcss": "^3.18.0",
     "events": "^3.3.0",
     "fast-glob": "^3.3.2",

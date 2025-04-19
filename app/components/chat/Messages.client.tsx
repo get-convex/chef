@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import { Fragment } from 'react';
+import { Fragment, useCallback, useState } from 'react';
 import { classNames } from '~/utils/classNames';
 import { AssistantMessage } from './AssistantMessage';
 import { UserMessage } from './UserMessage';
@@ -9,21 +9,85 @@ import { forwardRef } from 'react';
 import type { ForwardedRef } from 'react';
 import { SpinnerThreeDots } from '~/components/ui/SpinnerThreeDots';
 import { PersonIcon } from '@radix-ui/react-icons';
+import { ResetIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
+import { Modal } from '@ui/Modal';
+import { useFlags } from 'launchdarkly-react-client-sdk';
 
 interface MessagesProps {
   id?: string;
   className?: string;
   isStreaming?: boolean;
   messages?: Message[];
+  onRewindToMessage?: (index: number) => void;
+  earliestRewindableMessageRank?: number;
 }
 
 export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messages(
-  { id, isStreaming = false, messages = [], className }: MessagesProps,
+  {
+    id,
+    isStreaming = false,
+    messages = [],
+    className,
+    onRewindToMessage,
+    earliestRewindableMessageRank,
+  }: MessagesProps,
   ref: ForwardedRef<HTMLDivElement> | undefined,
 ) {
+  const { rewindButton } = useFlags();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMessageIndex, setSelectedMessageIndex] = useState<number | null>(null);
+  const handleRewindToMessage = useCallback(
+    (index: number) => {
+      onRewindToMessage?.(index);
+    },
+    [onRewindToMessage],
+  );
   const profile = useStore(profileStore);
   return (
     <div id={id} className={className} ref={ref}>
+      {isModalOpen && selectedMessageIndex !== null && (
+        <Modal
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedMessageIndex(null);
+          }}
+          title={<div className="sr-only">Rewind to message</div>}
+        >
+          <div className="flex flex-col gap-2">
+            <h2>Rewind to previous version</h2>
+            <p className="text-sm text-content-primary">
+              This will undo all changes after this message. Your current work will be lost and cannot be recovered.
+            </p>
+            <p className="text-sm text-content-primary">
+              Your Convex data will be unaffected, so you may need to either clear or migrate your data in order to use
+              this previous version.
+            </p>
+            <p className="text-sm text-content-primary">Are you sure you want to continue?</p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="neutral"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setSelectedMessageIndex(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  handleRewindToMessage(selectedMessageIndex);
+                }}
+              >
+                Rewind
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
       {messages.length > 0
         ? messages.map((message, index) => {
             const { role, content, annotations } = message;
@@ -34,19 +98,15 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
               return <Fragment key={index} />;
             }
 
-            // When the agent hits an error, we can have two user messages
-            // back to back without spacing. Add `mb-4` in this condition.
-            let consecutiveUserMessages = false;
-            if (isUserMessage && index < messages.length - 1) {
-              consecutiveUserMessages = messages[index + 1].role === 'user';
-            }
             return (
               <div
                 key={index}
-                className={classNames('flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)]', {
-                  'bg-bolt-elements-messages-background  border mx-2': isUserMessage,
-                  'mb-4': consecutiveUserMessages,
-                })}
+                className={classNames(
+                  'flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)] relative mx-2 border border-neutral-200 dark:border-neutral-700',
+                  {
+                    'bg-bolt-elements-messages-background': isUserMessage,
+                  },
+                )}
               >
                 {isUserMessage && (
                   <div className="flex size-[40px] shrink-0 items-center justify-center self-start overflow-hidden rounded-full bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-500">
@@ -64,12 +124,31 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                   </div>
                 )}
                 {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
+                {rewindButton &&
+                  earliestRewindableMessageRank !== undefined &&
+                  !isUserMessage &&
+                  index >= earliestRewindableMessageRank &&
+                  index !== messages.length - 1 && (
+                    <Button
+                      className="absolute bottom-[-5px] right-[-5px] bg-bolt-elements-background-depth-2 hover:bg-bolt-elements-background-depth-3"
+                      onClick={() => {
+                        setIsModalOpen(true);
+                        setSelectedMessageIndex(index);
+                      }}
+                      variant="neutral"
+                      size="xs"
+                      tip="Rewind to this message"
+                      title="Rewind to here"
+                    >
+                      <ResetIcon className="size-4 text-content-primary" />
+                    </Button>
+                  )}
               </div>
             );
           })
         : null}
       {isStreaming && (
-        <div className="mt-4 flex w-full justify-center text-content-secondary">
+        <div className="flex w-full justify-center text-content-secondary">
           <SpinnerThreeDots className="size-9" />
         </div>
       )}
