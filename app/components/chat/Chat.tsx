@@ -73,7 +73,15 @@ const retryState = atom({
 });
 
 export const Chat = memo(
-  ({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy }: ChatProps) => {
+  ({
+    // TODO Remove this comment
+    initialMessages,
+    partCache,
+    storeMessageHistory,
+    initializeChat,
+    isReload,
+    hadSuccessfulDeploy,
+  }: ChatProps) => {
     const convex = useConvex();
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
     const [searchParams, setSearchParams] = useSearchParams();
@@ -459,6 +467,7 @@ export const Chat = memo(
     );
   },
 );
+Chat.displayName = 'Chat';
 
 function useCurrentToolStatus() {
   const [toolStatus, setToolStatus] = useState<Record<string, ActionStatus>>({});
