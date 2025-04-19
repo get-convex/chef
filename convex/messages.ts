@@ -676,23 +676,9 @@ export const removeChatInner = internalMutation({
 
     // This doesn't delete the snapshot, and it also will break if the chat was ever shared.
     // We might want soft deletion instead, but for now, let's just delete more stuff.
-    const storageState = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', existing._id))
-      .unique();
-    if (storageState === null) {
-      await ctx.scheduler.runAfter(0, internal.messages.cleanupChatMessages, {
-        chatId: existing._id,
-        assertStorageStateExists: false,
-      });
-    } else {
-      if (storageState.storageId !== null) {
-        await ctx.scheduler.runAfter(0, internal.messages.maybeCleanupStaleChatHistory, {
-          storageId: storageState.storageId,
-        });
-      }
-      await ctx.db.delete(storageState._id);
-    }
+
+    // TODO(sarah) -- test that this works and is the desired behavior on deletion
+    // await deletePreviousStorageStates(ctx, { chat: existing });
     const convexProject = existing.convexProject;
     if (convexProject !== undefined && convexProject.kind === 'connected') {
       const credentials = await ctx.db
