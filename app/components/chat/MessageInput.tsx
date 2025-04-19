@@ -60,7 +60,7 @@ export const MessageInput = memo(function MessageInput({
   const [searchParams] = useSearchParams();
   useEffect(() => {
     messageInputStore.set(searchParams.get('prefill') || Cookies.get(PROMPT_COOKIE_KEY) || '');
-  }, []);
+  }, [searchParams]);
 
   // Textarea auto-sizing
   const TEXTAREA_MIN_HEIGHT = 76;
@@ -76,13 +76,13 @@ export const MessageInput = memo(function MessageInput({
       textarea.style.height = `${Math.min(scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
       textarea.style.overflowY = scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
     }
-  }, [input, textareaRef]);
+  }, [input, textareaRef, TEXTAREA_MAX_HEIGHT]);
   const textareaStyle = useMemo(
     () => ({
       minHeight: TEXTAREA_MIN_HEIGHT,
       maxHeight: TEXTAREA_MAX_HEIGHT,
     }),
-    [],
+    [TEXTAREA_MAX_HEIGHT],
   );
 
   // Send messages
@@ -96,7 +96,7 @@ export const MessageInput = memo(function MessageInput({
     Cookies.remove(PROMPT_COOKIE_KEY);
     messageInputStore.set('');
     textareaRef.current?.blur();
-  }, [input]);
+  }, [input, onSend]);
 
   const handleClickButton = useCallback(() => {
     if (isStreaming) {
@@ -105,7 +105,7 @@ export const MessageInput = memo(function MessageInput({
     }
 
     handleSend();
-  }, [handleSend, isStreaming, input]);
+  }, [handleSend, isStreaming, onAbort]);
 
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useCallback(
     (event) => {
@@ -129,27 +129,14 @@ export const MessageInput = memo(function MessageInput({
         handleSend();
       }
     },
-    [selectedTeamSlug],
+    [selectedTeamSlug, handleSend, isStreaming, onAbort],
   );
 
-  const cachePrompt = useCallback(
-    debounce((value: string) => {
-      Cookies.set(PROMPT_COOKIE_KEY, value.trim(), { expires: 30 });
-    }, 1000),
-    [],
-  );
-
-  const handleChange: ChangeEventHandler<HTMLTextAreaElement> = useCallback(
-    (event) => {
-      const value = event.target.value;
-      messageInputStore.set(value);
-
-      // Debounced function to cache the prompt in cookies.
-      // Caches the trimmed value of the textarea input after a delay to optimize performance.
-      cachePrompt(value);
-    },
-    [cachePrompt],
-  );
+  const handleChange: ChangeEventHandler<HTMLTextAreaElement> = useCallback((event) => {
+    const value = event.target.value;
+    messageInputStore.set(value);
+    cachePrompt(value);
+  }, []);
 
   return (
     <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border bg-background-primary/75 backdrop-blur-md transition-all duration-200 has-[textarea:focus]:border-border-selected">
@@ -228,3 +215,11 @@ function SignInButton() {
     </Button>
   );
 }
+
+/**
+ * Debounced function to cache the prompt in cookies.
+ * Caches the trimmed value of the textarea input after a delay to optimize performance.
+ */
+const cachePrompt = debounce(function cachePrompt(prompt: string) {
+  Cookies.set(PROMPT_COOKIE_KEY, prompt.trim(), { expires: 30 });
+}, 1000);
