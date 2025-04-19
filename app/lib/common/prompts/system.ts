@@ -9,7 +9,6 @@ import { outputInstructions } from './outputInstructions';
 import { openaiProxyGuidelines } from './openaiProxyGuidelines';
 import { openAi } from './openAi';
 import { resendProxyGuidelines } from './resendProxyGuidelines';
-import { docs } from './docs';
 
 // This is the very first part of the system prompt that tells the model what
 // role to play.

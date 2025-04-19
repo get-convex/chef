@@ -27,11 +27,11 @@ const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNo
   },
   'grok-3-mini': {
     name: 'Grok 3 Mini',
-    icon: svgIcon('/icons/xai.svg'),
+    icon: svgIcon('/icons/grok.svg'),
   },
   'gemini-2.5-pro': {
     name: 'Gemini 2.5 Pro',
-    icon: svgIcon('/icons/google.svg'),
+    icon: svgIcon('/icons/gemini.svg'),
   },
 } as const;
 
