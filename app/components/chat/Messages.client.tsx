@@ -126,6 +126,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                 {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
                 {rewindButton &&
                   earliestRewindableMessageRank !== undefined &&
+                  !isUserMessage &&
                   index >= earliestRewindableMessageRank &&
                   index !== messages.length - 1 && (
                     <Button
