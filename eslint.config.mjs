@@ -68,6 +68,13 @@ export default [
         },
       ],
       'tailwindcss/classnames-order': 'off',
+      'no-restricted-syntax': [
+        'error',
+        {
+          message: '.bottom-4 is blocked on convex.dev by easylist_cookie; use .bottom-four instead',
+          selector: 'Literal[value=/bottom-4(?:\D|$)/i]',
+        },
+      ],
     },
     settings: {
       react: {
