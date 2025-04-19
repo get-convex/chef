@@ -13,5 +13,13 @@ export function google(options: SystemPromptOptions) {
   3. Execute: Write the a complete frontend and backendto solve the problem.
   4. Deploy: Deploy the code.
   5. Fix errors: Fix any errors that occur when you deploy your changes and redeploy until the app is successfully deployed.
+
+  <reminders>
+    - You MUST use the deploy tool to deploy your changes.
+    - You MUST fix any errors that occur when you deploy your changes.
+    - You MUST write the whole frontend and backend.
+    - You MUST end every turn with a tool call to deploy your changes.
+    - You can use the deploy tool as many times as you need to.
+  </reminders>
   `;
 }
