@@ -2,6 +2,10 @@ import { stripIndents } from '~/utils/stripIndent';
 import type { SystemPromptOptions } from './types';
 
 export function openAi(options: SystemPromptOptions) {
+  if (!options.usingOpenAi) {
+    return '';
+  }
+
   return stripIndents`
   <critical_reminders>
     Your goal is to help the user build and deploy a fully-functional web application. You MUST make sure that

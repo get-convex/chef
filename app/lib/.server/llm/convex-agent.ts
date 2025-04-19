@@ -253,6 +253,7 @@ export async function convexAgent(
     includeTemplate: true,
     openaiProxyEnabled: getEnv(env, 'OPENAI_PROXY_ENABLED') == '1',
     usingOpenAi: modelProvider == 'OpenAI',
+    usingGoogle: modelProvider == 'Google',
     resendProxyEnabled: getEnv(env, 'RESEND_PROXY_ENABLED') == '1',
   };
   const tools: ConvexToolSet = {
