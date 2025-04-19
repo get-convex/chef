@@ -47,6 +47,10 @@ interface BaseChatProps {
   // Alert related props
   actionAlert: ActionAlert | undefined;
   clearAlert: () => void;
+
+  // Rewind functionality
+  onRewindToMessage?: (index: number) => void;
+  earliestRewindableMessageRank?: number;
 }
 
 function useSerializedMessages(messages: Message[]) {
@@ -80,6 +84,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       disableChatMessage,
       modelSelection,
       setModelSelection,
+      onRewindToMessage,
+      earliestRewindableMessageRank,
     },
     ref,
   ) => {
@@ -94,7 +100,18 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         await sendMessage?.(lastUserMessage.content);
         messageInputStore.set('');
       }
-    }, [lastUserMessage]);
+    }, [lastUserMessage, handleSendMessage]);
+
+    const handleClickSendButton = useCallback(() => {
+      if (isStreaming) {
+        handleStop?.();
+        return;
+      }
+
+      if (input.length > 0) {
+        handleSendMessage?.();
+      }
+    }, [isStreaming, handleStop, handleSendMessage, input.length]);
 
     const baseChat = (
       <div
@@ -126,14 +143,16 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 {chatStarted ? (
                   <Messages
                     ref={messageRef}
-                    className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col pb-6"
+                    className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
                     messages={messages}
                     isStreaming={isStreaming}
+                    onRewindToMessage={onRewindToMessage}
+                    earliestRewindableMessageRank={earliestRewindableMessageRank}
                   />
                 ) : null}
                 <div
-                  className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt mb-6', {
-                    'sticky bottom-2': chatStarted,
+                  className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt relative', {
+                    'sticky bottom-4': chatStarted,
                   })}
                 >
                   <div className="bg-bolt-elements-background-depth-2">
@@ -158,7 +177,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     />
                   )}
                   {disableChatMessage && (
-                    <Callout variant="upsell" className="min-w-full rounded-md">
+                    <Callout
+                      variant="upsell"
+                      className="absolute bottom-0 z-40 h-fit min-w-full animate-fadeInFromLoading rounded-lg bg-util-accent/50 backdrop-blur-md"
+                    >
                       {disableChatMessage}
                     </Callout>
                   )}
@@ -175,7 +197,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 </div>
               </div>
               {maintenanceMode && (
-                <div className="mx-auto mb-4 max-w-chat">
+                <div className="mx-auto my-4 max-w-chat">
                   <div className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700 dark:border-red-600 dark:bg-red-900 dark:text-red-200">
                     <p className="font-bold">Chef is temporarily unavailable</p>
                     <p className="text-sm">

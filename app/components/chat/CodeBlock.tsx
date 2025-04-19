@@ -51,7 +51,7 @@ export const CodeBlock = memo(function CodeBlock({
     };
 
     processCode();
-  }, [code]);
+  }, [code, language, theme]);
 
   return (
     <div className={classNames('relative group', className)}>

@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { EyeSlashIcon } from '@heroicons/react/24/outline';
 import { EyeOpenIcon, QuestionMarkCircledIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
+import { TextInput } from '@ui/TextInput';
+import { Checkbox } from '@ui/Checkbox';
 
 export function ApiKeyCard() {
   const convex = useConvex();
@@ -95,23 +97,21 @@ export function ApiKeyCard() {
         </p>
         <div className="space-y-4">
           <div>
-            <div>
-              <label htmlFor="anthropic-key" className="mb-1 block text-lg font-medium text-content-secondary">
-                Anthropic API Key
-              </label>
-              <p className="mb-4 text-sm text-content-secondary">
-                See instructions for generating an Anthropic API key{' '}
-                <a
-                  href="https://docs.anthropic.com/en/api/getting-started#accessing-the-api"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  here
-                </a>
-                .
-              </p>
+            <div className="flex flex-col gap-4">
               <ApiKeyInput
+                label="Anthropic API key"
+                description={
+                  <>
+                    <a
+                      href="https://docs.anthropic.com/en/api/getting-started#accessing-the-api"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-content-link hover:underline"
+                    >
+                      See instructions for generating an Anthropic API key
+                    </a>
+                  </>
+                }
                 isLoading={apiKey === undefined}
                 id="anthropic-key"
                 value={anthropicKey}
@@ -122,24 +122,22 @@ export function ApiKeyCard() {
                 handleDelete={handleDeleteAnthropicApiKey}
               />
 
-              <label htmlFor="openai-key" className="mb-1 mt-4 block text-lg font-medium text-content-secondary">
-                OpenAI API Key
-              </label>
-              <p className="mb-4 text-sm text-content-secondary">
-                See instructions for generating an OpenAI API key{' '}
-                <a
-                  href="https://platform.openai.com/docs/api-reference/introduction"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  here
-                </a>
-                .
-              </p>
               <ApiKeyInput
                 isLoading={apiKey === undefined}
                 id="openai-key"
+                label="OpenAI API key"
+                description={
+                  <>
+                    <a
+                      href="https://platform.openai.com/docs/api-reference/introduction"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-content-link hover:underline"
+                    >
+                      See instructions for generating an OpenAI API key
+                    </a>
+                  </>
+                }
                 value={openaiKey}
                 onChange={(value) => {
                   setOpenaiKey(value);
@@ -147,25 +145,22 @@ export function ApiKeyCard() {
                 }}
                 handleDelete={handleDeleteOpenaiApiKey}
               />
-
-              <label htmlFor="xai-key" className="mb-1 mt-4 block text-lg font-medium text-content-secondary">
-                xAI API Key
-              </label>
-              <p className="mb-4 text-sm text-content-secondary">
-                See instructions for generating an xAI API key{' '}
-                <a
-                  href="https://docs.x.ai/docs/overview#welcome"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  here
-                </a>
-                .
-              </p>
               <ApiKeyInput
                 isLoading={apiKey === undefined}
                 id="xai-key"
+                label="xAI API key"
+                description={
+                  <>
+                    <a
+                      href="https://docs.x.ai/docs/overview#welcome"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-content-link hover:underline"
+                    >
+                      See instructions for generating an xAI API key
+                    </a>
+                  </>
+                }
                 value={xaiKey}
                 onChange={(value) => {
                   setXaiKey(value);
@@ -173,25 +168,20 @@ export function ApiKeyCard() {
                 }}
                 handleDelete={handleDeleteXaiApiKey}
               />
-
-              <AlwaysUseKeyCheckbox
-                isLoading={apiKey === undefined}
-                disabled={anthropicKey === '' && openaiKey === '' && xaiKey === ''}
-                value={alwaysUseKey}
-                onChange={(value) => {
-                  setAlwaysUseKey(value);
-                  setIsDirty(true);
-                }}
-              />
-              <div className="mt-4 flex items-center gap-2">
-                <button
-                  onClick={handleSaveApiKey}
-                  disabled={apiKey === undefined || isSaving || !isDirty}
-                  className="w-fit rounded-md bg-bolt-elements-button-primary-background px-2 py-1.5 text-bolt-elements-button-primary-text transition-colors hover:bg-bolt-elements-button-primary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-bolt-elements-button-primary-background"
-                >
-                  {isSaving ? 'Saving...' : 'Save'}
-                </button>
-              </div>
+            </div>
+            <AlwaysUseKeyCheckbox
+              isLoading={apiKey === undefined}
+              disabled={anthropicKey === '' && openaiKey === '' && xaiKey === ''}
+              value={alwaysUseKey}
+              onChange={(value) => {
+                setAlwaysUseKey(value);
+                setIsDirty(true);
+              }}
+            />
+            <div className="mt-4 flex items-center gap-2">
+              <Button onClick={handleSaveApiKey} disabled={apiKey === undefined || isSaving || !isDirty}>
+                {isSaving ? 'Saving...' : 'Save'}
+              </Button>
             </div>
           </div>
         </div>
@@ -201,6 +191,8 @@ export function ApiKeyCard() {
 }
 
 function ApiKeyInput(props: {
+  label: string;
+  description: React.ReactNode;
   isLoading: boolean;
   id: string;
   value: string;
@@ -209,36 +201,32 @@ function ApiKeyInput(props: {
 }) {
   const [showKey, setShowKey] = useState(false);
   if (props.isLoading) {
-    return <div className="h-[42px] w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />;
+    return <div className="h-[78px] w-80 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />;
   }
   return (
     <div className="flex items-center gap-2">
-      <div className="relative flex-1">
-        <input
+      <div className="w-80">
+        <TextInput
           type={showKey ? 'text' : 'password'}
-          id={props.id}
+          id={props.label}
+          description={props.description}
           value={props.value}
           onChange={(e) => {
             props.onChange(e.target.value);
           }}
-          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 pr-10 text-content-primary dark:border-gray-800 dark:bg-gray-900"
-          placeholder="sk-..."
+          placeholder={`Enter your ${props.label}`}
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-expect-error Unclear issue with typing of design system
+          action={(): void => {
+            setShowKey(!showKey);
+          }}
+          icon={showKey ? <EyeSlashIcon /> : <EyeOpenIcon />}
         />
-        <button
-          type="button"
-          onClick={() => setShowKey(!showKey)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent text-content-tertiary hover:text-content-secondary"
-        >
-          {showKey ? <EyeSlashIcon /> : <EyeOpenIcon />}
-        </button>
       </div>
       {props.value && (
-        <button
-          onClick={props.handleDelete}
-          className="w-fit rounded-md bg-bolt-elements-button-danger-background p-2 text-bolt-elements-button-danger-text transition-colors hover:bg-bolt-elements-button-danger-backgroundHover"
-        >
+        <Button variant="danger" onClick={props.handleDelete} className="mt-[3px]">
           Remove key
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -261,15 +249,13 @@ function AlwaysUseKeyCheckbox(props: {
   }
   return (
     <div className="mt-4 flex items-center gap-2">
-      <input
-        type="checkbox"
-        id="always-use-key"
+      <Checkbox
         checked={props.value}
-        onChange={(e) => {
-          props.onChange(e.target.checked);
+        onChange={() => {
+          props.onChange(!props.value);
         }}
         disabled={props.disabled}
-        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        id="always-use-key"
       />
       <label htmlFor="always-use-key" className="text-sm text-content-secondary">
         Always use my API keys

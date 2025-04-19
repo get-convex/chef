@@ -18,12 +18,13 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
   const hasSelectedPreview = useRef(false);
   const previews = useStore(workbenchStore.previews);
   const activePreview = previews[activePreviewIndex];
+  const isActivePreviewSet = activePreview !== undefined;
 
   const [proxyBaseUrl, setProxyUrl] = useState<string | null>(null);
   useEffect(() => {
     setProxyUrl(null);
 
-    if (!activePreview) {
+    if (!isActivePreviewSet) {
       return undefined;
     }
 
@@ -47,7 +48,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
         workbenchStore.stopProxy(proxyPort);
       }
     };
-  }, [activePreview?.port]);
+  }, [isActivePreviewSet, activePreview?.port]);
 
   const [url, setUrl] = useState('');
   const [iframeUrl, setIframeUrl] = useState<string | undefined>();
@@ -94,7 +95,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
 
       return false;
     },
-    [activePreview],
+    [proxyBaseUrl],
   );
 
   const findMinPortIndex = useCallback(

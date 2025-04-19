@@ -1,11 +1,12 @@
 import { useStore } from '@nanostores/react';
-import React, { memo, useEffect, useRef, useState } from 'react';
+import type { Terminal as XTerm } from '@xterm/xterm';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Panel, type ImperativePanelHandle } from 'react-resizable-panels';
 import { IconButton } from '~/components/ui/IconButton';
 import { themeStore } from '~/lib/stores/theme';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { classNames } from '~/utils/classNames';
-import { Terminal, type TerminalRef } from './Terminal';
+import { Terminal } from './Terminal';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import {
   activeTerminalTabStore,
@@ -21,9 +22,7 @@ export const DEFAULT_TERMINAL_SIZE = 25;
 
 export const TerminalTabs = memo(function TerminalTabs(terminalInitializationOptions?: TerminalInitializationOptions) {
   const showTerminal = useStore(workbenchStore.showTerminal);
-  const theme = useStore(themeStore);
 
-  const terminalRefs = useRef<Array<TerminalRef | null>>([]);
   const terminalPanelRef = useRef<ImperativePanelHandle>(null);
 
   const activeTerminal = useStore(activeTerminalTabStore);
@@ -53,18 +52,6 @@ export const TerminalTabs = memo(function TerminalTabs(terminalInitializationOpt
       terminal.resize(DEFAULT_TERMINAL_SIZE);
     }
   }, [showTerminal]);
-
-  useEffect(() => {
-    const unsubscribeFromThemeStore = themeStore.subscribe(() => {
-      for (const ref of Object.values(terminalRefs.current)) {
-        ref?.reloadStyles();
-      }
-    });
-
-    return () => {
-      unsubscribeFromThemeStore();
-    };
-  }, []);
 
   return (
     <Panel
@@ -121,29 +108,12 @@ export const TerminalTabs = memo(function TerminalTabs(terminalInitializationOpt
             />
           </div>
           {Array.from({ length: terminalCount + 1 }, (_, index) => (
-            <Terminal
+            <TerminalWrapper
               key={index}
-              id={`terminal_${index}`}
-              className={classNames('h-full overflow-hidden', {
-                hidden: activeTerminal !== index,
-              })}
-              ref={(ref) => {
-                terminalRefs.current.push(ref);
-              }}
-              onTerminalReady={(terminal) => {
-                if (index === VITE_TAB_INDEX) {
-                  workbenchStore.attachBoltTerminal(terminal);
-                } else if (index === CONVEX_DEPLOY_TAB_INDEX) {
-                  workbenchStore.attachDeployTerminal(terminal, {
-                    ...terminalInitializationOptions,
-                  });
-                } else {
-                  workbenchStore.attachTerminal(terminal);
-                }
-              }}
-              onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
-              theme={theme}
-              readonly={index === CONVEX_DEPLOY_TAB_INDEX}
+              index={index}
+              activeTerminal={activeTerminal}
+              isReload={terminalInitializationOptions?.isReload}
+              shouldDeployConvexFunctions={terminalInitializationOptions?.shouldDeployConvexFunctions}
             />
           ))}
         </div>
@@ -151,3 +121,50 @@ export const TerminalTabs = memo(function TerminalTabs(terminalInitializationOpt
     </Panel>
   );
 });
+
+function TerminalWrapper({
+  index,
+  activeTerminal,
+  isReload,
+  shouldDeployConvexFunctions,
+}: {
+  index: number;
+  activeTerminal: number;
+  isReload?: boolean;
+  shouldDeployConvexFunctions?: boolean;
+}) {
+  const theme = useStore(themeStore);
+
+  const onTerminalReady = useCallback(
+    (terminal: XTerm) => {
+      if (index === VITE_TAB_INDEX) {
+        workbenchStore.attachBoltTerminal(terminal);
+      } else if (index === CONVEX_DEPLOY_TAB_INDEX) {
+        workbenchStore.attachDeployTerminal(terminal, {
+          isReload,
+          shouldDeployConvexFunctions,
+        });
+      } else {
+        workbenchStore.attachTerminal(terminal);
+      }
+    },
+    [index, isReload, shouldDeployConvexFunctions],
+  );
+
+  const onTerminalResize = useCallback((cols: number, rows: number) => {
+    workbenchStore.onTerminalResize(cols, rows);
+  }, []);
+
+  return (
+    <Terminal
+      id={`terminal_${index}`}
+      className={classNames('h-full overflow-hidden', {
+        hidden: activeTerminal !== index,
+      })}
+      onTerminalReady={onTerminalReady}
+      onTerminalResize={onTerminalResize}
+      theme={theme}
+      readonly={index === CONVEX_DEPLOY_TAB_INDEX}
+    />
+  );
+}

@@ -1,10 +1,10 @@
-import { useState, forwardRef } from 'react';
+import { useState, forwardRef, useEffect } from 'react';
 import { classNames } from '~/utils/classNames';
 import { toast } from 'sonner';
 import * as Popover from '@radix-ui/react-popover';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { useConvexSessionId } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
 import { Share2Icon, ClipboardIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@ui/Spinner';
@@ -48,8 +48,11 @@ type ShareStatus = 'idle' | 'loading' | 'success';
 export function ShareButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<ShareStatus>('idle');
+  const [shareCode, setShareCode] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState('');
   const chatId = useChatId();
+  const sessionId = useConvexSessionId();
+  const isShareReady = useQuery(api.share.isShareReady, shareCode ? { code: shareCode } : 'skip');
 
   const createShare = useMutation(api.share.create);
 
@@ -57,18 +60,14 @@ export function ShareButton() {
     try {
       setStatus('loading');
 
-      const sessionId = await waitForConvexSessionId('ShareButton');
-
-      const { code } = await createShare({
+      const result = await createShare({
         id: chatId,
         sessionId,
       });
 
-      const { origin } = window.location;
-      const url = origin === 'https://chef.convex.dev' ? `https://chef.show/${code}` : `${origin}/share/${code}`;
-
-      setShareUrl(url);
-      setStatus('success');
+      if (result.code) {
+        setShareCode(result.code);
+      }
     } catch (error) {
       toast.error('Failed to share. Please try again.');
       console.error('Share error:', error);
@@ -90,6 +89,17 @@ export function ShareButton() {
       }, 200);
     }
   };
+
+  useEffect(() => {
+    if (status === 'loading' && isShareReady) {
+      const { origin } = window.location;
+      const url =
+        origin === 'https://chef.convex.dev' ? `https://chef.show/${shareCode}` : `${origin}/share/${shareCode}`;
+
+      setShareUrl(url);
+      setStatus('success');
+    }
+  }, [shareCode, status, isShareReady]);
 
   return (
     <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>

@@ -12,26 +12,31 @@ import { type ModelSelection } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger } from '~/utils/logger';
 import { BaseChat } from './BaseChat.client';
-import { useSearchParams } from '@remix-run/react';
+import Cookies from 'js-cookie';
+import { debounce } from '~/utils/debounce';
 import { createSampler } from '~/utils/sampler';
 import { filesToArtifacts } from '~/utils/fileUtils';
 import { ChatContextManager } from '~/lib/ChatContextManager';
-import { webcontainer } from '~/lib/webcontainer';
-import { selectedTeamSlugStore } from '~/lib/stores/convexTeams';
+import { selectedTeamSlugStore, setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
 import type { PartId } from '~/lib/stores/artifacts';
-import { captureException } from '@sentry/remix';
+import { captureMessage } from '@sentry/remix';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import { chatIdStore } from '~/lib/stores/chatId';
 import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { disabledText, getTokenUsage } from '~/lib/convexUsage';
+import { getTokenUsage } from '~/lib/convexUsage';
 import { formatDistanceStrict } from 'date-fns';
 import { atom } from 'nanostores';
 import { STATUS_MESSAGES } from './StreamingIndicator';
+import { Button } from '@ui/Button';
+import { TeamSelector } from '~/components/convex/TeamSelector';
+import { ExternalLinkIcon } from '@radix-ui/react-icons';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import type { Id } from 'convex/_generated/dataModel';
 
 const logger = createScopedLogger('Chat');
 
@@ -44,13 +49,17 @@ const processSampledMessages = createSampler(
     messages: Message[];
     initialMessages: Message[];
     parseMessages: (messages: Message[]) => void;
-    storeMessageHistory: (messages: Message[]) => Promise<void>;
+    streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
+    storeMessageHistory: (
+      messages: Message[],
+      streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
+    ) => Promise<void>;
   }) => {
-    const { messages, initialMessages, parseMessages, storeMessageHistory } = options;
+    const { messages, initialMessages, parseMessages, storeMessageHistory, streamStatus } = options;
     parseMessages(messages);
 
     if (messages.length > initialMessages.length) {
-      storeMessageHistory(messages).catch((error) => toast.error(error.message));
+      storeMessageHistory(messages, streamStatus).catch((error) => toast.error(error.message));
     }
   },
   50,
@@ -59,12 +68,16 @@ const processSampledMessages = createSampler(
 interface ChatProps {
   initialMessages: Message[];
   partCache: PartCache;
-  storeMessageHistory: (messages: Message[]) => Promise<void>;
+  storeMessageHistory: (
+    messages: Message[],
+    streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
+  ) => Promise<void>;
   initializeChat: () => Promise<void>;
   description?: string;
 
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
+  earliestRewindableMessageRank?: number;
 }
 
 const retryState = atom({
@@ -81,11 +94,37 @@ export const Chat = memo(
     initializeChat,
     isReload,
     hadSuccessfulDeploy,
+    earliestRewindableMessageRank,
   }: ChatProps) => {
     const convex = useConvex();
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
-    const [searchParams, setSearchParams] = useSearchParams();
     const actionAlert = useStore(workbenchStore.alert);
+    const sessionId = useConvexSessionIdOrNullOrLoading();
+
+    const rewindToMessage = async (messageIndex: number) => {
+      if (sessionId && typeof sessionId === 'string') {
+        const chatId = chatIdStore.get();
+        if (!chatId) {
+          return;
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('rewind', 'true');
+
+        try {
+          await convex.mutation(api.messages.rewindChat, {
+            sessionId: sessionId as Id<'sessions'>,
+            chatId,
+            lastMessageRank: messageIndex,
+          });
+          // Reload the chat to show the rewound state
+          window.location.replace(url.href);
+        } catch (error) {
+          console.error('Failed to rewind chat:', error);
+          toast.error('Failed to rewind chat');
+        }
+      }
+    };
 
     const title = useStore(description);
 
@@ -103,6 +142,13 @@ export const Chat = memo(
       }),
       [isReload, hadSuccessfulDeploy],
     );
+
+    useEffect(() => {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('rewind') === 'true') {
+        toast.info('Successfully reverted changes. You may need to clear or migrate your Convex data.');
+      }
+    }, []);
 
     // Reset retries counter every minute
     useEffect(() => {
@@ -233,7 +279,7 @@ export const Chat = memo(
 
           return updatedMessages;
         });
-        captureException('Failed to process chat request: ' + e.message, {
+        captureMessage('Failed to process chat request: ' + e.message, {
           level: 'error',
           extra: {
             error: e,
@@ -272,28 +318,12 @@ export const Chat = memo(
       },
     });
 
-    useEffect(() => {
-      const prompt = searchParams.get('prompt');
-
-      if (!prompt || prompt.trim() === '') {
-        return;
-      }
-
-      setSearchParams({});
-      runAnimation();
-
-      // Wait for the WebContainer to fully finish booting before sending a message.
-      webcontainer.then(() => {
-        append({ role: 'user', content: prompt });
-      });
-    }, [searchParams]);
-
     // AKA "processed messages," since parsing has side effects
     const { parsedMessages, parseMessages } = useMessageParser(partCache);
 
     useEffect(() => {
       chatStore.setKey('started', initialMessages.length > 0);
-    }, []);
+    }, [initialMessages.length]);
 
     useEffect(() => {
       processSampledMessages({
@@ -301,8 +331,9 @@ export const Chat = memo(
         initialMessages,
         parseMessages,
         storeMessageHistory,
+        streamStatus: status,
       });
-    }, [messages, parseMessages]);
+    }, [initialMessages, messages, parseMessages, status, storeMessageHistory]);
 
     const abort = () => {
       stop();
@@ -332,33 +363,33 @@ export const Chat = memo(
       const now = Date.now();
       const retries = retryState.get();
       if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet()) {
-        let message: string | ReactNode = 'Chef is too busy cooking right now.';
+        let message: string | ReactNode = 'Chef is too busy cooking right now. ';
         if (retries.numFailures >= MAX_RETRIES) {
-          message += ' Please enter your own API key ';
           message = (
             <>
               {message}
+              Please{' '}
               <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
-                here
+                enter your own API key
               </a>
               .
             </>
           );
         } else {
           const remaining = formatDistanceStrict(now, retries.nextRetry);
-          message += ` Please try again in ${remaining} or enter your own API key `;
           message = (
             <>
               {message}
+              Please try again in {remaining} or{' '}
               <a href="https://chef.convex.dev/settings" className="text-content-link hover:underline">
-                here
+                enter your own API key
               </a>
               .
             </>
           );
         }
         toast.error(message);
-        captureException('User tried to send message but chef is too busy');
+        captureMessage('User tried to send message but chef is too busy');
         return;
       }
 
@@ -378,6 +409,8 @@ export const Chat = memo(
       }
       try {
         setSendMessageInProgress(true);
+
+        enableAutoScroll();
 
         await initializeChat();
         runAnimation();
@@ -434,7 +467,7 @@ export const Chat = memo(
       }
     };
 
-    const [messageRef, scrollRef] = useSnapScroll();
+    const { messageRef, scrollRef, enableAutoScroll } = useSnapScroll();
 
     return (
       <BaseChat
@@ -454,15 +487,20 @@ export const Chat = memo(
         clearAlert={() => workbenchStore.clearAlert()}
         terminalInitializationOptions={terminalInitializationOptions}
         disableChatMessage={
-          disableChatMessage?.type === 'ExceededQuota'
-            ? noTokensText(selectedTeamSlugStore.get())
-            : disableChatMessage?.type === 'TeamDisabled'
-              ? disabledText(disableChatMessage.isPaidPlan)
-              : null
+          disableChatMessage?.type === 'ExceededQuota' ? (
+            <NoTokensText resetDisableChatMessage={() => setDisableChatMessage(null)} />
+          ) : disableChatMessage?.type === 'TeamDisabled' ? (
+            <DisabledText
+              isPaidPlan={disableChatMessage.isPaidPlan}
+              resetDisableChatMessage={() => setDisableChatMessage(null)}
+            />
+          ) : null
         }
         sendMessageInProgress={sendMessageInProgress}
         modelSelection={modelSelection}
         setModelSelection={setModelSelection}
+        onRewindToMessage={rewindToMessage}
+        earliestRewindableMessageRank={earliestRewindableMessageRank}
       />
     );
   },
@@ -533,32 +571,86 @@ function getConvexAuthToken(convex: ConvexReactClient): string | null {
   return token;
 }
 
-export function noTokensText(selectedTeamSlug: string | null) {
+export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMessage: () => void }) {
+  const selectedTeamSlug = useSelectedTeamSlug();
   return (
-    <span className="max-w-prose text-pretty">
-      You’ve used all the tokens included with your free plan! Please{' '}
-      <a
-        href={
-          selectedTeamSlug
-            ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
-            : 'https://dashboard.convex.dev/team/settings/billing'
-        }
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-content-link hover:underline"
-      >
-        upgrade to a paid plan
-      </a>{' '}
-      or{' '}
-      <a
-        href={`https://chef.convex.dev/settings`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-content-link hover:underline"
-      >
-        add your own API key
-      </a>{' '}
-      to continue.
-    </span>
+    <div className="flex w-full flex-col gap-4">
+      <h3>You&apos;ve used all the tokens included with your free plan.</h3>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          href={
+            selectedTeamSlug
+              ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
+              : 'https://dashboard.convex.dev/team/settings/billing'
+          }
+          className="w-fit"
+          rel="noopener noreferrer"
+          icon={<ExternalLinkIcon />}
+        >
+          Upgrade to a paid plan
+        </Button>{' '}
+        <span>
+          or{' '}
+          <a href="/settings" target="_blank" rel="noopener noreferrer" className="text-content-link hover:underline">
+            add your own API key
+          </a>{' '}
+          to continue.
+        </span>
+      </div>
+      <div className="ml-auto">
+        <TeamSelector
+          description="Your project will be created in this Convex team"
+          selectedTeamSlug={selectedTeamSlug}
+          setSelectedTeamSlug={(slug) => {
+            setSelectedTeamSlug(slug);
+            resetDisableChatMessage();
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export function DisabledText({
+  isPaidPlan,
+  resetDisableChatMessage,
+}: {
+  isPaidPlan: boolean;
+  resetDisableChatMessage: () => void;
+}) {
+  const selectedTeamSlug = useSelectedTeamSlug();
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <h3>
+        {isPaidPlan
+          ? "You've exceeded your spending limits, so your deployments have been disabled."
+          : "You've exceeded the free plan limits, so your deployments have been disabled."}
+      </h3>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          href={
+            selectedTeamSlug
+              ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
+              : 'https://dashboard.convex.dev/team/settings/billing'
+          }
+          className="w-fit"
+          icon={<ExternalLinkIcon />}
+          rel="noopener noreferrer"
+        >
+          {isPaidPlan ? 'Increase spending limit' : 'Upgrade to Pro'}
+        </Button>
+        {isPaidPlan && <span>or wait until limits reset</span>}
+      </div>
+      <div className="ml-auto">
+        <TeamSelector
+          description="Your project will be created in this Convex team"
+          selectedTeamSlug={selectedTeamSlug}
+          setSelectedTeamSlug={(slug) => {
+            setSelectedTeamSlug(slug);
+            resetDisableChatMessage();
+          }}
+        />
+      </div>
+    </div>
   );
 }

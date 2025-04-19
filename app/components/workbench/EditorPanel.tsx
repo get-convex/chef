@@ -4,7 +4,6 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   CodeMirrorEditor,
   type EditorDocument,
-  type EditorSettings,
   type OnChangeCallback as OnEditorChange,
   type OnSaveCallback as OnEditorSave,
   type OnScrollCallback as OnEditorScroll,
@@ -43,8 +42,6 @@ interface EditorPanelProps {
 }
 
 const DEFAULT_EDITOR_SIZE = 100 - DEFAULT_TERMINAL_SIZE;
-
-const editorSettings: EditorSettings = { tabSize: 2 };
 
 export const EditorPanel = memo(function EditorPanel({
   files,
@@ -123,7 +120,6 @@ export const EditorPanel = memo(function EditorPanel({
               <CodeMirrorEditor
                 theme={theme}
                 editable={!isStreaming && editorDocument !== undefined}
-                settings={editorSettings}
                 doc={editorDocument}
                 autoFocusOnDocumentChange={!isMobile()}
                 scrollToDocAppend={!!scrollToDocAppend}

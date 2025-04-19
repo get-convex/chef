@@ -154,24 +154,11 @@ function DeployTool({ artifact, invocation }: { artifact: ArtifactState; invocat
     throw new Error('Terminal can only be used for the deploy tool');
   }
 
-  if (invocation.state === 'call') {
-    return (
-      <div className="space-y-2">
-        <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
-          <Terminal artifact={artifact} invocation={invocation} />
-        </div>
-      </div>
-    );
+  if (invocation.state === 'call' || invocation.state === 'result') {
+    return <Terminal artifact={artifact} invocation={invocation} />;
   }
-  if (invocation.state === 'result') {
-    return (
-      <div className="space-y-2 ">
-        <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
-          <Terminal artifact={artifact} invocation={invocation} />
-        </div>
-      </div>
-    );
-  }
+
+  return null;
 }
 
 const Terminal = memo(
@@ -239,7 +226,11 @@ const Terminal = memo(
       };
     }, []);
 
-    return <div className="h-40" ref={terminalElementRef} />;
+    return (
+      <div className="overflow-hidden rounded-lg border bg-bolt-elements-terminals-background font-mono text-sm text-content-primary">
+        <div className="h-40" ref={terminalElementRef} />
+      </div>
+    );
   }),
 );
 
@@ -248,26 +239,11 @@ function NpmInstallTool({ artifact, invocation }: { artifact: ArtifactState; inv
     throw new Error('Terminal can only be used for the npmInstall tool');
   }
 
-  if (invocation.state === 'call') {
-    return (
-      <div className="space-y-2">
-        <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
-          <Terminal artifact={artifact} invocation={invocation} />
-        </div>
-      </div>
-    );
+  if (invocation.state === 'call' || (invocation.state === 'result' && invocation.result.startsWith('Error:'))) {
+    return <Terminal artifact={artifact} invocation={invocation} />;
   }
-  if (invocation.state === 'result') {
-    if (invocation.result.startsWith('Error:')) {
-      return (
-        <div className="space-y-2">
-          <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
-            <Terminal artifact={artifact} invocation={invocation} />
-          </div>
-        </div>
-      );
-    }
-  }
+
+  return null;
 }
 
 function parseToolInvocation(

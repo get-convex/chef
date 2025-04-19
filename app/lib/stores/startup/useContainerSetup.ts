@@ -6,7 +6,7 @@ import { sessionIdStore } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
 import type { ConvexReactClient } from 'convex/react';
 import { useConvex } from 'convex/react';
-import { decompressSnapshot } from '~/lib/snapshot.client';
+import { decompressWithLz4 } from '~/lib/compression';
 import { streamOutput } from '~/utils/process';
 import { cleanTerminalOutput } from '~/utils/shell';
 import { toast } from 'sonner';
@@ -17,6 +17,9 @@ import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { initializeConvexAuth } from '~/lib/convexAuth';
 import { appendEnvVarIfNotSet } from '~/utils/envFileUtils';
+import { getFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
+import { chatSyncState } from '~/lib/stores/startup/history';
+import { FILE_EVENTS_DEBOUNCE_MS } from '~/lib/stores/files';
 
 const TEMPLATE_URL = '/template-snapshot-80c98556.bin';
 
@@ -73,7 +76,7 @@ async function setupContainer(
     throw new Error(`Failed to download snapshot (${resp.statusText}): ${resp.statusText}`);
   }
   const compressed = await resp.arrayBuffer();
-  const decompressed = await decompressSnapshot(new Uint8Array(compressed));
+  const decompressed = decompressWithLz4(new Uint8Array(compressed));
 
   const container = await webcontainer;
   await container.mount(decompressed);
@@ -109,9 +112,24 @@ async function setupContainer(
   await initializeConvexAuth(convexProject);
 
   setContainerBootState(ContainerBootState.STARTING_BACKUP);
-  await workbenchStore.startBackup();
+  await initializeFileSystemBackup();
 
   setContainerBootState(ContainerBootState.READY);
+}
+
+async function initializeFileSystemBackup() {
+  // This is a bit racy, but we need to flush the current file events before
+  // deciding that we're synced up to the current update counter. Sleep for
+  // twice the batching interval.
+  await new Promise((resolve) => setTimeout(resolve, FILE_EVENTS_DEBOUNCE_MS * 2));
+  const currentChatSyncState = chatSyncState.get();
+  if (currentChatSyncState.savedFileUpdateCounter === null) {
+    const fileUpdateCounter = getFileUpdateCounter();
+    chatSyncState.set({
+      ...currentChatSyncState,
+      savedFileUpdateCounter: fileUpdateCounter,
+    });
+  }
 }
 
 async function setupConvexEnvVars(webcontainer: WebContainer, convexProject: ConvexProject) {

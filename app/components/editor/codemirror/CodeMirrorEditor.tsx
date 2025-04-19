@@ -71,15 +71,12 @@ interface Props {
   doc?: EditorDocument;
   scrollToDocAppend: boolean;
   editable?: boolean;
-  debounceChange?: number;
-  debounceScroll?: number;
   autoFocusOnDocumentChange?: boolean;
   onChange?: OnChangeCallback;
   onScroll?: OnScrollCallback;
   onWheel?: OnWheelCallback;
   onSave?: OnSaveCallback;
   className?: string;
-  settings?: EditorSettings;
 }
 
 type EditorStates = Map<string, EditorState>;
@@ -123,12 +120,13 @@ const editableStateField = StateField.define<boolean>({
   },
 });
 
+const DEBOUNCE_CHANGE = 150;
+const DEBOUNCE_SCROLL = 100;
+
 export const CodeMirrorEditor = memo(
   ({
     id,
     doc,
-    debounceScroll = 100,
-    debounceChange = 150,
     autoFocusOnDocumentChange = false,
     editable = true,
     onScroll,
@@ -137,12 +135,11 @@ export const CodeMirrorEditor = memo(
     onSave,
     scrollToDocAppend,
     theme,
-    settings,
     className = '',
   }: Props) => {
     renderLogger.trace('CodeMirrorEditor');
 
-    const [languageCompartment] = useState(new Compartment());
+    const [languageCompartment] = useState(() => new Compartment());
 
     const containerRef = useRef<HTMLDivElement | null>(null);
     const viewRef = useRef<EditorView>();
@@ -170,7 +167,7 @@ export const CodeMirrorEditor = memo(
     useEffect(() => {
       const onUpdate = debounce((update: EditorUpdate) => {
         onChangeRef.current?.(update);
-      }, debounceChange);
+      }, DEBOUNCE_CHANGE);
 
       const view = new EditorView({
         parent: containerRef.current!,
@@ -224,8 +221,10 @@ export const CodeMirrorEditor = memo(
       const view = viewRef.current!;
       const theme = themeRef.current!;
 
+      const settings: EditorSettings = { tabSize: 2 };
+
       if (!doc) {
-        const state = newEditorState('', theme, settings, onScrollRef, onWheelRef, debounceScroll, onSaveRef, [
+        const state = newEditorState('', theme, settings, onScrollRef, onWheelRef, onSaveRef, [
           languageCompartment.of([]),
         ]);
 
@@ -247,7 +246,7 @@ export const CodeMirrorEditor = memo(
       let state = editorStates.get(doc.filePath);
 
       if (!state) {
-        state = newEditorState(doc.value, theme, settings, onScrollRef, onWheelRef, debounceScroll, onSaveRef, [
+        state = newEditorState(doc.value, theme, settings, onScrollRef, onWheelRef, onSaveRef, [
           languageCompartment.of([]),
         ]);
 
@@ -269,11 +268,23 @@ export const CodeMirrorEditor = memo(
         editable,
         languageCompartment,
         autoFocusOnDocumentChange,
-        doc as TextEditorDocument,
+        doc,
         isFileChange,
         scrollToDocAppend && simpleAppend,
       );
-    }, [doc?.value, editable, doc?.filePath, autoFocusOnDocumentChange, scrollToDocAppend]);
+      // We don’t want this to run when `doc` changes without a change in isBinary/filePath/value
+      // (i.e. a change when only `scroll` changes). While `setEditorDocument` uses the scroll
+      // position, it only needs it when `isFileChange` is set to true.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+      doc?.isBinary,
+      doc?.value,
+      doc?.filePath,
+      editable,
+      autoFocusOnDocumentChange,
+      scrollToDocAppend,
+      languageCompartment,
+    ]);
 
     return (
       <div className={classNames('relative h-full', className)}>
@@ -292,7 +303,6 @@ function newEditorState(
   settings: EditorSettings | undefined,
   onScrollRef: MutableRefObject<OnScrollCallback | undefined>,
   onWheelRef: MutableRefObject<OnWheelCallback | undefined>,
-  debounceScroll: number,
   onFileSaveRef: MutableRefObject<OnSaveCallback | undefined>,
   extensions: Extension[],
 ) {
@@ -306,7 +316,7 @@ function newEditorState(
           }
 
           onScrollRef.current?.({ left: view.scrollDOM.scrollLeft, top: view.scrollDOM.scrollTop });
-        }, debounceScroll),
+        }, DEBOUNCE_SCROLL),
         wheel: () => {
           // Wheel is not debounced! So don't do anything intensive.
           // 'wheel' events are probably being captured somewhere, they don't bubble up to scrollDOM.

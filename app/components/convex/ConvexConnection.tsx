@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Dialog, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { useChatId } from '~/lib/stores/chatId';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { ConvexConnectButton } from '~/components/convex/ConvexConnectButton';
-import { ExternalLinkIcon } from '@radix-ui/react-icons';
+import { ExternalLinkIcon, LinkBreak1Icon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
+import { Modal } from '@ui/Modal';
+import { Callout } from '@ui/Callout';
 
 export function ConvexConnection() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,34 +32,28 @@ export function ConvexConnection() {
         <ConnectionStatus projectInfo={projectInfo} />
       </Button>
 
-      <DialogRoot open={isOpen} onOpenChange={setIsOpen}>
-        {isOpen && (
-          <Dialog className="max-w-[520px] p-6" showCloseButton>
-            <div className="space-y-4">
-              <DialogTitle>
-                <div className="px-3">
-                  {projectInfo?.kind === 'connected'
-                    ? 'Connected Convex Project'
-                    : projectInfo?.kind === 'connecting'
-                      ? 'Connecting to Convex...'
-                      : projectInfo?.kind === 'failed'
-                        ? 'Failed to connect to Convex'
-                        : 'Connect a Convex Project'}
-                </div>
-              </DialogTitle>
-              <div className="mx-3 flex items-center justify-between rounded-lg">
-                {projectInfo?.kind === 'connected' ? (
-                  <ConnectedDialogContent projectInfo={projectInfo} />
-                ) : projectInfo?.kind === 'failed' ? (
-                  <ErrorDialogContent errorMessage={projectInfo.errorMessage} />
-                ) : (
-                  <div className="flex justify-end gap-2">{sessionId && chatId ? <ConvexConnectButton /> : null}</div>
-                )}
-              </div>
-            </div>
-          </Dialog>
-        )}
-      </DialogRoot>
+      {isOpen && (
+        <Modal
+          title={
+            projectInfo?.kind === 'connected'
+              ? 'Connected Convex Project'
+              : projectInfo?.kind === 'connecting'
+                ? 'Connecting to Convex…'
+                : projectInfo?.kind === 'failed'
+                  ? 'Failed to connect to Convex'
+                  : 'Connect a Convex Project'
+          }
+          onClose={() => setIsOpen(false)}
+        >
+          {projectInfo?.kind === 'connected' ? (
+            <ConnectedDialogContent projectInfo={projectInfo} />
+          ) : projectInfo?.kind === 'failed' ? (
+            <ErrorDialogContent errorMessage={projectInfo.errorMessage} />
+          ) : (
+            sessionId && chatId && <ConvexConnectButton />
+          )}
+        </Modal>
+      )}
     </div>
   );
 }
@@ -93,10 +88,14 @@ function ConnectedDialogContent({
   };
 
   return (
-    <div className="mx-3 flex items-center justify-between rounded-lg">
+    <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-content-primary">Project: {projectInfo.projectSlug}</p>
-        <p className="text-sm font-medium text-content-primary">Team: {projectInfo.teamSlug}</p>
+        <p className="text-sm text-content-tertiary">
+          Project: <strong className="font-semibold text-content-primary">{projectInfo.projectSlug}</strong>
+        </p>
+        <p className="text-sm text-content-tertiary">
+          Team: <strong className="font-semibold text-content-primary">{projectInfo.teamSlug}</strong>
+        </p>
         <a
           className="flex items-center gap-1 text-sm text-content-secondary hover:underline"
           href={`https://dashboard.convex.dev/d/${projectInfo.deploymentName}`}
@@ -108,12 +107,10 @@ function ConnectedDialogContent({
         </a>
         {projectInfo.warningMessage && <p className="text-sm text-content-secondary">{projectInfo.warningMessage}</p>}
       </div>
-      <button
-        onClick={handleDisconnect}
-        className="rounded-md bg-transparent px-4 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
-      >
+
+      <Button onClick={handleDisconnect} variant="danger" icon={<LinkBreak1Icon />}>
         Disconnect from Convex
-      </button>
+      </Button>
     </div>
   );
 }
@@ -121,11 +118,11 @@ function ConnectedDialogContent({
 function ErrorDialogContent({ errorMessage }: { errorMessage: string }) {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   return (
-    <div className="mx-3 flex items-center justify-between rounded-lg">
-      <div className="flex flex-col gap-4">
-        <p className="text-sm font-medium text-content-primary">Error: {errorMessage}</p>
-        <div className="flex justify-end gap-2">{sessionId ? <ConvexConnectButton /> : null}</div>
-      </div>
+    <div className="flex w-full flex-col gap-4">
+      <Callout variant="error">
+        <p>Error: {errorMessage}</p>
+      </Callout>
+      {sessionId && <ConvexConnectButton />}
     </div>
   );
 }
@@ -142,7 +139,7 @@ function ConnectionStatus({ projectInfo }: { projectInfo: ProjectInfo | undefine
     case 'connected':
       return <span className="max-w-32 truncate">{`${projectInfo.projectSlug}`}</span>;
     case 'connecting':
-      return <span>Connecting...</span>;
+      return <span>Connecting…</span>;
     default: {
       const _exhaustiveCheck: never = projectInfo;
       return <span>Connect to Convex</span>;

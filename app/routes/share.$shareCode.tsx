@@ -1,5 +1,4 @@
-import { useStore } from '@nanostores/react';
-import { getConvexAuthToken, sessionIdStore, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
 import { useMutation, useConvex, useQuery } from 'convex/react';
@@ -16,6 +15,7 @@ import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Loading } from '~/components/Loading';
 import type { MetaFunction } from '@vercel/remix';
 import { Button } from '@ui/Button';
+import { ConvexError } from 'convex/values';
 
 export const meta: MetaFunction = () => {
   return [
@@ -62,7 +62,6 @@ function ShareProjectContent() {
   useTeamsInitializer();
   const chefAuthState = useChefAuth();
 
-  const sessionId = useStore(sessionIdStore);
   const cloneChat = useMutation(api.share.clone);
   const convex = useConvex();
   const getShareDescription = useQuery(api.share.getShareDescription, { code: shareCode });
@@ -80,9 +79,17 @@ function ShareProjectContent() {
       teamSlug,
       auth0AccessToken,
     };
-    const { id: chatId } = await cloneChat({ shareCode, sessionId, projectInitParams });
-    window.location.href = `/chat/${chatId}`;
-  }, [sessionId, convex]);
+    try {
+      const { id: chatId } = await cloneChat({ shareCode, sessionId, projectInitParams });
+      window.location.href = `/chat/${chatId}`;
+    } catch (e) {
+      if (e instanceof ConvexError) {
+        toast.error(`Error cloning chat: ${e.data.message}`);
+      } else {
+        toast.error('Unexpected error cloning chat');
+      }
+    }
+  }, [convex, cloneChat, shareCode]);
   const signIn = useCallback(() => {
     openSignInWindow();
   }, []);

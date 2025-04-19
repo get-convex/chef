@@ -6,14 +6,7 @@ import { webcontainer } from '~/lib/webcontainer';
 import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
 import { unreachable } from '~/utils/unreachable';
 import { EditorStore } from './editor';
-import {
-  FILE_EVENTS_DEBOUNCE_MS,
-  FilesStore,
-  getAbsolutePath,
-  getRelativePath,
-  type AbsolutePath,
-  type FileMap,
-} from './files';
+import { FilesStore, getAbsolutePath, getRelativePath, type AbsolutePath, type FileMap } from './files';
 import { PreviewsStore } from './previews';
 import { TerminalStore } from './terminal';
 import JSZip from 'jszip';
@@ -23,21 +16,13 @@ import { description } from './description';
 import { createSampler } from '~/utils/sampler';
 import type { ActionAlert } from '~/types/actions';
 import type { WebContainer } from '@webcontainer/api';
-import type { Id } from '@convex/_generated/dataModel';
-import { buildUncompressedSnapshot, compressSnapshot } from '~/lib/snapshot.client';
-import { waitForConvexSessionId } from './sessionId';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './artifacts';
-import { backoffTime, WORK_DIR } from '~/utils/constants';
-import { chatIdStore } from '~/lib/stores/chatId';
-import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from './fileUpdateCounter';
+import { WORK_DIR } from '~/utils/constants';
 import { generateReadmeContent } from '~/lib/download/readmeContent';
-import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { setupMjsContent } from '~/lib/download/setupMjsContent';
 import type { ConvexProject } from './convexProject';
 import { cursorRulesContent } from '~/lib/download/cursorRulesContent';
-
-const BACKUP_DEBOUNCE_MS = 1000;
 
 const { saveAs } = fileSaver;
 
@@ -52,13 +37,6 @@ export interface ArtifactState {
 type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard';
-
-export type BackupState = {
-  started: boolean;
-  numFailures: number;
-  savedUpdateCounter: number | null;
-  lastSync: number;
-};
 
 export class WorkbenchStore {
   #previewsStore = new PreviewsStore(webcontainer);
@@ -78,14 +56,6 @@ export class WorkbenchStore {
   unsavedFiles: WritableAtom<Set<AbsolutePath>> = import.meta.hot?.data.unsavedFiles ?? atom(new Set<AbsolutePath>());
   actionAlert: WritableAtom<ActionAlert | undefined> =
     import.meta.hot?.data.unsavedFiles ?? atom<ActionAlert | undefined>(undefined);
-  backupState: WritableAtom<BackupState> =
-    import.meta.hot?.data.backupState ??
-    atom<BackupState>({
-      started: false,
-      numFailures: 0,
-      savedUpdateCounter: null,
-      lastSync: 0,
-    });
   modifiedFiles = new Set<string>();
   partIdList: PartId[] = [];
   #globalExecutionQueue = Promise.resolve();
@@ -97,7 +67,6 @@ export class WorkbenchStore {
       import.meta.hot.data.showWorkbench = this.showWorkbench;
       import.meta.hot.data.currentView = this.currentView;
       import.meta.hot.data.actionAlert = this.actionAlert;
-      import.meta.hot.data.backupState = this.backupState;
       import.meta.hot.data.reloadedParts = this.#reloadedParts;
     }
   }
@@ -122,40 +91,6 @@ export class WorkbenchStore {
   }
   setLastChangedFile(): void {
     this._lastChangedFile = Date.now();
-  }
-
-  // Start the backup worker, assuming that the current filesystem state is
-  // fully saved. Therefore, this method must be called early in initialization
-  // after the snapshot has been loaded but before any subsequent changes are
-  // made.
-  async startBackup() {
-    // This is a bit racy, but we need to flush the current file events before
-    // deciding that we're synced up to the current update counter. Sleep for
-    // twice the batching interval.
-    await new Promise((resolve) => setTimeout(resolve, 2 * FILE_EVENTS_DEBOUNCE_MS));
-
-    this.backupState.set({
-      started: true,
-      numFailures: 0,
-      savedUpdateCounter: getFileUpdateCounter(),
-      lastSync: 0,
-    });
-
-    void backupWorker(this.backupState);
-
-    // Add beforeunload event listener to prevent navigation while uploading
-    const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
-      const currentState = this.backupState.get();
-      const currentUpdateCounter = getFileUpdateCounter();
-      if (currentState.started && currentState.savedUpdateCounter !== currentUpdateCounter) {
-        // Some browsers require both preventDefault and setting returnValue
-        e.preventDefault();
-        e.returnValue = '';
-        return '';
-      }
-      return undefined;
-    };
-    window.addEventListener('beforeunload', beforeUnloadHandler);
   }
 
   addToExecutionQueue(callback: () => Promise<void>) {
@@ -610,56 +545,3 @@ export class WorkbenchStore {
 }
 
 export const workbenchStore = new WorkbenchStore();
-
-async function backupWorker(backupState: WritableAtom<BackupState>) {
-  const sessionId = await waitForConvexSessionId('backupWorker');
-  while (true) {
-    const currentState = backupState.get();
-    if (currentState.savedUpdateCounter !== null) {
-      await waitForFileUpdateCounterChanged(currentState.savedUpdateCounter);
-    }
-    const nextSync = currentState.lastSync + BACKUP_DEBOUNCE_MS;
-    const now = Date.now();
-    if (now < nextSync) {
-      await new Promise((resolve) => setTimeout(resolve, nextSync - now));
-    }
-    const nextUpdateCounter = getFileUpdateCounter();
-    try {
-      await performBackup(sessionId);
-    } catch (error) {
-      console.error('Failed to upload snapshot:', error);
-      backupState.set({
-        ...currentState,
-        numFailures: currentState.numFailures + 1,
-      });
-      const sleepTime = backoffTime(currentState.numFailures);
-      console.error(
-        `Failed to upload snapshot (num failures: ${currentState.numFailures}), sleeping for ${sleepTime.toFixed(2)}ms`,
-        error,
-      );
-      await new Promise((resolve) => setTimeout(resolve, sleepTime));
-      continue;
-    }
-    backupState.set({
-      ...currentState,
-      savedUpdateCounter: nextUpdateCounter,
-      lastSync: now,
-      numFailures: 0,
-    });
-  }
-}
-
-async function performBackup(sessionId: Id<'sessions'>) {
-  const convexSiteUrl = getConvexSiteUrl();
-  const chatId = chatIdStore.get();
-  const binarySnapshot = await buildUncompressedSnapshot();
-  const compressed = await compressSnapshot(binarySnapshot);
-
-  const uploadUrl = `${convexSiteUrl}/upload_snapshot?sessionId=${sessionId}&chatId=${chatId}`;
-  const result = await fetch(uploadUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/octet-stream' },
-    body: compressed,
-  });
-  console.log('Uploaded snapshot', result);
-}

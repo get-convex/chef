@@ -32,7 +32,7 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
 
   return (
     <div id="suggestions">
-      <div className="flex flex-wrap justify-center gap-x-6 gap-y-4">
+      <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-4">
         {suggestions.map((suggestion) => (
           <Button
             key={suggestion.title}

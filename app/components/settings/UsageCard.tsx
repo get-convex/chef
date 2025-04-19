@@ -3,22 +3,26 @@ import { useConvex } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
-import { noTokensText, VITE_PROVISION_HOST } from '~/components/chat/Chat';
+import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { Callout } from '@ui/Callout';
+import { ExternalLinkIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
 
 export function UsageCard() {
   const convex = useConvex();
 
   const teams = useStore(convexTeamsStore);
+  const [selectedTeamSlug, setSelectedTeamSlug] = useState(useSelectedTeamSlug() ?? teams?.[0]?.slug ?? null);
   useEffect(() => {
     if (teams && !selectedTeamSlug) {
       setSelectedTeamSlug(teams[0]?.slug);
     }
+    // No need to run if only `selectedTeamSlug` changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teams]);
-  const [selectedTeamSlug, setSelectedTeamSlug] = useState(useSelectedTeamSlug() ?? teams?.[0]?.slug ?? null);
 
   const [isLoadingUsage, setIsLoadingUsage] = useState(true);
   const [tokenUsage, setTokenUsage] = useState<{
@@ -105,7 +109,18 @@ export function UsageCard() {
           </p>
           {tokenUsage && !tokenUsage.isPaidPlan && tokenUsage.centitokensUsed > tokenUsage.centitokensQuota && (
             <Callout variant="upsell" className="min-w-full rounded-md">
-              {noTokensText(selectedTeamSlug)}
+              <div className="flex w-full flex-col gap-4">
+                <h3>You&apos;ve used all the tokens included with your free plan.</h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    href={`https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`}
+                    icon={<ExternalLinkIcon />}
+                  >
+                    Upgrade to a paid plan
+                  </Button>
+                  <span>or add your own API key below to send more messages.</span>
+                </div>
+              </div>
             </Callout>
           )}
         </div>
