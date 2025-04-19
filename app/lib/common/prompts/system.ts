@@ -29,7 +29,6 @@ export function generalSystemPrompt(options: SystemPromptOptions) {
   const result = stripIndents`${GENERAL_SYSTEM_PROMPT_PRELUDE}
   ${openAi(options)}
   ${google(options)}
-  ${systemConstraints(options)}
   ${solutionConstraints(options)}
   ${formattingInstructions(options)}
   ${exampleDataInstructions(options)}
