@@ -72,7 +72,7 @@ export default [
         'error',
         {
           message: '.bottom-4 is blocked on convex.dev by easylist_cookie; use .bottom-four instead',
-          selector: 'Literal[value=/bottom-4(?:\D|$)/i]',
+          selector: 'Literal[value=/bottom-4(?:\\D|$)/i]',
         },
       ],
     },
