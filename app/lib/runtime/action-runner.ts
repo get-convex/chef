@@ -434,7 +434,7 @@ export class ActionRunner {
 
           const runCodegenAndTypecheck = async (onOutput?: (output: string) => void) => {
             // Convex codegen does a convex directory typecheck, then tsc does a full-project typecheck.
-            let output = await run(['convex', 'codegen'], outputLabels.frontendTypecheck, onOutput);
+            let output = await run(['convex', 'codegen'], outputLabels.convexTypecheck, onOutput);
             output += await run(
               ['tsc', '--noEmit', '-p', 'tsconfig.app.json'],
               outputLabels.frontendTypecheck,
@@ -447,7 +447,6 @@ export class ActionRunner {
           const [eslintResult, codegenResult] = await Promise.all([
             runEslint(),
             runCodegenAndTypecheck((output) => {
-              console.log('runing terminaloutput.set() with', output.length, 'characters');
               this.terminalOutput.set(output);
             }),
           ]);
