@@ -3,7 +3,6 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
-import convexPlugin from "@convex-dev/eslint-plugin";
 
 export default tseslint.config(
   {
@@ -16,8 +15,6 @@ export default tseslint.config(
       "vite.config.ts",
     ],
   },
-  // limited, commonsense Convex function rules
-  ...convexPlugin.configs.recommended,
   {
     extends: [
       js.configs.recommended,
