@@ -6,7 +6,7 @@ export default [
   {
     ignores: ['**/dist', '**/node_modules', 'convex/_generated/**'],
   },
-  ...convexPlugin.configs.recommmended,
+  ...convexPlugin.configs.recommended,
   {
     files: ['**/*.ts'],
     plugins: {
