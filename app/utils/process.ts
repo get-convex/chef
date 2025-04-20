@@ -19,8 +19,6 @@ export async function streamOutput(process: WebContainerProcess, options?: Strea
           options?.onOutput?.(output);
           lastSaved = now;
         }
-        // Maybe this is to short-circuit something?
-        // To fail faster?
         if (data.startsWith('Error: ')) {
           resolve(-1);
           return;
