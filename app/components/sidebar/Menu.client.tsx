@@ -1,7 +1,6 @@
 import { motion, type Variants } from 'framer-motion';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { useStore } from '@nanostores/react';
 import { ConfirmationDialog } from '@ui/ConfirmationDialog';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
@@ -15,14 +14,10 @@ import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { getConvexAuthToken, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { getKnownInitialId } from '~/lib/stores/chatId';
-import { profileStore } from '~/lib/stores/profile';
-import { useAuth0 } from '@auth0/auth0-react';
-import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
-import { PersonIcon, GearIcon, ExitIcon, PlusIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { TextInput } from '@ui/TextInput';
-import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { Checkbox } from '@ui/Checkbox';
+import { PlusIcon } from '@radix-ui/react-icons';
 
 const menuVariants = {
   closed: {
@@ -54,8 +49,6 @@ export const Menu = memo(() => {
   const list = useQuery(api.messages.getAll, sessionId ? { sessionId } : 'skip') ?? [];
   const [open, setOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState<ModalContent>(null);
-  const profile = useStore(profileStore);
-  const { logout } = useAuth0();
   const [shouldDeleteConvexProject, setShouldDeleteConvexProject] = useState(false);
   const convexProjectInfo = useQuery(
     api.convexProjects.loadConnectedConvexProjectCredentials,
@@ -140,19 +133,6 @@ export const Menu = memo(() => {
   const handleDeleteClick = useCallback((item: ChatHistoryItem) => {
     setDialogContent({ type: 'delete', item });
   }, []);
-
-  const handleLogout = () => {
-    window.localStorage.removeItem(SESSION_ID_KEY);
-    logout({
-      logoutParams: {
-        returnTo: window.location.origin,
-      },
-    });
-  };
-
-  const handleSettingsClick = () => {
-    window.location.pathname = '/settings';
-  };
 
   // Don't show the menu at all when logged out
   if (sessionId === null) {
@@ -259,37 +239,6 @@ export const Menu = memo(() => {
           </div>
           <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-gray-800">
             <ThemeSwitch />
-            {profile && open && (
-              <MenuComponent
-                placement="top-start"
-                buttonProps={{
-                  variant: 'neutral',
-                  title: 'User menu',
-                  inline: true,
-                  className: 'rounded-full',
-                  icon: profile.avatar ? (
-                    <img
-                      src={profile.avatar}
-                      alt={profile.username || 'User'}
-                      className="size-8 rounded-full object-cover"
-                      loading="eager"
-                      decoding="sync"
-                    />
-                  ) : (
-                    <PersonIcon className="size-8 rounded-full" />
-                  ),
-                }}
-              >
-                <MenuItemComponent action={handleSettingsClick}>
-                  <GearIcon />
-                  Settings
-                </MenuItemComponent>
-                <MenuItemComponent action={handleLogout}>
-                  <ExitIcon />
-                  Log out
-                </MenuItemComponent>
-              </MenuComponent>
-            )}
           </div>
         </div>
       </motion.div>
