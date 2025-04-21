@@ -112,7 +112,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                   <hr />
                   <MenuItemComponent action={handleSettingsClick}>
                     <GearIcon />
-                    Settings
+                    Settings & Usage
                   </MenuItemComponent>
                   <MenuItemComponent action={handleLogout}>
                     <ExitIcon />
