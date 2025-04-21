@@ -138,13 +138,10 @@ export function DeployButton() {
           switch (status.type) {
             case 'idle':
               return 'Click to deploy your application';
-            case 'building':
-            case 'zipping':
-            case 'deploying':
-            case 'error':
-              return undefined;
             case 'success':
               return 'Click to deploy again';
+            default:
+              return undefined;
           }
         })()}
       >
