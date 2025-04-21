@@ -4,7 +4,6 @@ import { Button } from '@ui/Button';
 import useViewport from '~/lib/hooks/useViewport';
 import { chatStore } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench.client';
-import { classNames } from '~/utils/classNames';
 
 interface HeaderActionButtonsProps {}
 
@@ -26,10 +25,9 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
             }
           }}
           variant="neutral"
-          className="border-r-0 rounded-r-none"
-          icon={<ChatBubbleIcon className="my-px"/>}
-        >
-        </Button>
+          className="rounded-r-none border-r-0"
+          icon={<ChatBubbleIcon className="my-px" />}
+        />
         <Button
           onClick={() => {
             if (showWorkbench && !showChat) {
@@ -40,10 +38,9 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
           }}
           variant="neutral"
           className="rounded-l-none"
-          icon={<CodeIcon className="my-px"/>}
+          icon={<CodeIcon className="my-px" />}
           tip={showWorkbench ? 'Hide workbench' : 'Show workbench'}
-        >
-        </Button>
+        />
       </div>
     </div>
   );
