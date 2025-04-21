@@ -430,7 +430,8 @@ export const earliestRewindableMessageRank = query({
     }
     const latestState = await getLatestChatMessageStorageState(ctx, chat);
     if (!latestState) {
-      throw new ConvexError({ code: 'NotFound', message: 'Chat messages storage state not found' });
+      // This is possible for older chats that were created before we started storing storage states
+      return null;
     }
     const docs = await ctx.db
       .query('chatMessagesStorageState')
