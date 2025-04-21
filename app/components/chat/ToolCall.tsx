@@ -32,6 +32,8 @@ import { deployToolParameters } from '~/lib/runtime/deployTool';
 import type { ZodError } from 'zod';
 import { Spinner } from '@ui/Spinner';
 import { FolderIcon } from '@heroicons/react/24/outline';
+import { getRelativePath } from '~/lib/stores/files';
+import { outputLabels } from '~/lib/runtime/deployToolOutputLabels';
 
 export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId: PartId; toolCallId: string }) {
   const userToggledAction = useRef(false);
@@ -370,7 +372,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         extra = ` (lines ${start} - ${endName})`;
       }
       if (args.success) {
-        renderedPath = args.data.path || '/home/project';
+        renderedPath = getRelativePath(args.data.path) || '/home/project';
       }
       return (
         <div className="flex items-center gap-2">
@@ -405,10 +407,8 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         );
       } else if (invocation.result?.startsWith('Error:')) {
         if (
-          // This is a hack, but `npx convex dev` prints this out when the typecheck fails
-          invocation.result.includes('To ignore failing typecheck') ||
-          // this is a bigger hack! TypeScript fails with error codes like TS
-          invocation.result.includes('Error TS')
+          invocation.result.includes(`[${outputLabels.convexTypecheck}]`) ||
+          invocation.result.includes(`[${outputLabels.frontendTypecheck}]`)
         ) {
           return (
             <div className="flex items-center gap-2">

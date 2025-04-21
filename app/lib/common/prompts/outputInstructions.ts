@@ -24,7 +24,20 @@ export function outputInstructions(options: SystemPromptOptions) {
 
         Let's start now.
 
-        [Rest of response...]"
+        [Write files to the filesystem using artifacts]
+        [Deploy the app and get type errors]
+        [Fix the type errors]
+        [Deploy the app again and get more type errors]
+        [Fix the type errors]
+        [Deploy the app again and get more type errors]
+        [Fix the type errors]
+        [Deploy the app again and get more type errors]
+        [Fix the type errors]
+        [Deploy the app again and get more type errors]
+        [Fix the type errors]
+        [Deploy the app successfully]
+
+        Now you can use the collaborative to-do list app by adding and completing tasks.
 
       ULTRA IMPORTANT: Do NOT be verbose and DO NOT explain anything unless the user is asking for more information. That is VERY important.
     </communication>

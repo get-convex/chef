@@ -14,17 +14,19 @@ export const deleteFromTable = internalMutation({
   },
 });
 
-export const clearAll = internalAction(async (ctx) => {
-  // Get all table names from the schema
-  const tableNames = Object.keys(schema.tables);
+export const clearAll = internalAction({
+  handler: async (ctx) => {
+    // Get all table names from the schema
+    const tableNames = Object.keys(schema.tables);
 
-  for (const tableName of tableNames) {
-    let isCleared = false;
+    for (const tableName of tableNames) {
+      let isCleared = false;
 
-    while (!isCleared) {
-      isCleared = await ctx.runMutation(internal.dev.deleteFromTable, { tableName });
+      while (!isCleared) {
+        isCleared = await ctx.runMutation(internal.dev.deleteFromTable, { tableName });
+      }
     }
-  }
+  },
 });
 
 export const findSessionForUser = internalQuery({

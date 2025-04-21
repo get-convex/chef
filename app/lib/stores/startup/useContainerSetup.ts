@@ -85,6 +85,8 @@ async function setupContainer(
   // we won't receive file events for snapshot files.
   await workbenchStore.prewarmWorkdir(container);
 
+  (window as any).chefWebContainer = container;
+
   setContainerBootState(ContainerBootState.DOWNLOADING_DEPENDENCIES);
   const npm = await container.spawn('npm', ['install', '--no-fund', '--no-deprecated']);
   const { output, exitCode } = await streamOutput(npm);

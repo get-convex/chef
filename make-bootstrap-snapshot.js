@@ -32,6 +32,7 @@ async function main() {
   console.log(`Writing snapshot (${compressed.length} bytes) to ${filename}...`);
   await fs.writeFile(`public/${filename}`, compressed);
   console.log("Done!");
+  console.log("Next update TEMPLATE_URL in app/lib/stores/startup/useContainerSetup.ts to see your change.");
 }
 
 async function getSnapshotFiles(dir) {

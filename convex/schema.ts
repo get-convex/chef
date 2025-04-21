@@ -8,6 +8,7 @@ export const apiKeyValidator = v.object({
   value: v.optional(v.string()),
   openai: v.optional(v.string()),
   xai: v.optional(v.string()),
+  google: v.optional(v.string()),
 });
 
 export default defineSchema({

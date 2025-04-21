@@ -50,3 +50,5 @@ template/pnpm-lock.yaml
 
 .vercel
 .env*.local
+
+temp_envars
