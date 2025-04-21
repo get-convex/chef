@@ -24,7 +24,8 @@
     "start": "remix-serve build/server/index.js",
     "typecheck": "tsc",
     "preview": "pnpm run build && pnpm run start",
-    "prepare": "husky",
+    "commentForPrepareScript": "This is just until everyone's got husky uninstalled",
+    "prepare": "git config --unset core.hooksPath || true",
     "clean": "node scripts/clean.js",
     "knip": "knip"
   },
@@ -161,7 +162,6 @@
     "events": "^3.3.0",
     "fast-glob": "^3.3.2",
     "http-proxy": "^1.18.1",
-    "husky": "9.1.7",
     "jsdom": "^26.0.0",
     "knip": "^5.46.5",
     "postcss": "^8.5.3",
