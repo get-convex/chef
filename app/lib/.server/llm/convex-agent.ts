@@ -267,21 +267,6 @@ export async function convexAgent(
 
   const dataStream = createDataStream({
     execute(dataStream) {
-      // Log the messages to the console
-      const reqMessages = [
-        {
-          role: 'system',
-          content: ROLE_SYSTEM_PROMPT,
-        },
-        {
-          role: 'system',
-          content: generalSystemPrompt(opts),
-        },
-        ...cleanupAssistantMessages(messages),
-      ];
-      console.log('--------------------------------');
-      console.log('Request messages:', reqMessages);
-      console.log('--------------------------------');
       const result = streamText({
         model: provider.model,
         maxTokens: provider.maxTokens,
