@@ -159,7 +159,7 @@ export async function recordUsage(
     //chefTokens += totalUsage.xaiCachedPromptTokens * 3;
   } else if (finalGeneration.providerMetadata?.google) {
     chefTokens += totalUsage.completionTokens * 140;
-    chefTokens += totalUsage.openaiCachedPromptTokens * 18;
+    chefTokens += totalUsage.promptTokens * 18;
     // TODO: Implement Google billing for the prompt tokens that are cached. Google doesn't offer caching yet.
   } else {
     console.error(
