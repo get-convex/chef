@@ -98,7 +98,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const resendMessage = useCallback(async () => {
       if (lastUserMessage) {
         await onSend?.(lastUserMessage.content);
-        messageInputStore.set('');
       }
     }, [lastUserMessage, onSend]);
     const baseChat = (
