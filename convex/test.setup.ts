@@ -1,31 +1,31 @@
-import { convexTest, type TestConvexForDataModel } from 'convex-test';
-import schema from './schema';
-import { api } from './_generated/api';
-import type { SerializedMessage } from './messages';
-import type { Id } from './_generated/dataModel';
-import type { GenericMutationCtx } from 'convex/server';
-import { expect } from 'vitest';
+import { convexTest, type TestConvexForDataModel } from "convex-test";
+import schema from "./schema";
+import { api } from "./_generated/api";
+import type { SerializedMessage } from "./messages";
+import type { Id } from "./_generated/dataModel";
+import type { GenericMutationCtx } from "convex/server";
+import { expect } from "vitest";
 
 // TODO -- for some reason, parameterizing on the generated `DataModel` does not work
 export type TestConvex = TestConvexForDataModel<any>;
 
 // Polyfill for Web Crypto API used in storage calls
-if (typeof globalThis.crypto === 'undefined') {
-  const { webcrypto } = await import('node:crypto');
+if (typeof globalThis.crypto === "undefined") {
+  const { webcrypto } = await import("node:crypto");
   globalThis.crypto = webcrypto as unknown as Crypto;
 }
 
-export const modules = import.meta.glob('../convex/**/*.*s');
+export const modules = import.meta.glob("../convex/**/*.*s");
 
 export function setupTest() {
   const test = convexTest(schema, modules);
-  const t = test.withIdentity({ name: 'Emma' });
+  const t = test.withIdentity({ name: "Emma" });
   return t;
 }
 
 export async function createChat(t: TestConvex) {
   const sessionId = await t.mutation(api.sessions.startSession);
-  const chatId = 'test';
+  const chatId = "test";
   await t.mutation(api.messages.initializeChat, {
     id: chatId,
     sessionId,
@@ -35,8 +35,8 @@ export async function createChat(t: TestConvex) {
 }
 
 export const testProjectInitParams = {
-  teamSlug: 'test',
-  auth0AccessToken: 'test',
+  teamSlug: "test",
+  auth0AccessToken: "test",
 };
 
 export async function storeChat(
@@ -52,32 +52,32 @@ export async function storeChat(
   const formData = new FormData();
   if (args.messages && !args.doNotUpdateMessages) {
     // NB: normally, we'd lz4 compress the string, but for testing, we'll skip that
-    formData.append('messages', new Blob([JSON.stringify(args.messages)]));
+    formData.append("messages", new Blob([JSON.stringify(args.messages)]));
   }
   if (args.snapshot) {
-    formData.append('snapshot', args.snapshot);
+    formData.append("snapshot", args.snapshot);
   }
 
-  const url = new URL('/store_chat', 'http://localhost:3000');
-  url.searchParams.set('sessionId', sessionId);
-  url.searchParams.set('chatId', chatId);
+  const url = new URL("/store_chat", "http://localhost:3000");
+  url.searchParams.set("sessionId", sessionId);
+  url.searchParams.set("chatId", chatId);
   if (args.messages) {
-    url.searchParams.set('lastMessageRank', (args.messages.length - 1).toString());
-    url.searchParams.set('partIndex', ((args.messages.at(-1)?.parts?.length ?? 0) - 1).toString());
+    url.searchParams.set("lastMessageRank", (args.messages.length - 1).toString());
+    url.searchParams.set("partIndex", ((args.messages.at(-1)?.parts?.length ?? 0) - 1).toString());
   }
 
   await t.fetch(url.pathname + url.search, {
-    method: 'POST',
+    method: "POST",
     body: formData,
   });
 }
 
-export async function verifyStoredContent(t: TestConvex, storageId: Id<'_storage'>, expectedContent: string) {
+export async function verifyStoredContent(t: TestConvex, storageId: Id<"_storage">, expectedContent: string) {
   await t.run(
-    async (ctx: GenericMutationCtx<any> & { storage: { get: (id: Id<'_storage'>) => Promise<Blob | null> } }) => {
+    async (ctx: GenericMutationCtx<any> & { storage: { get: (id: Id<"_storage">) => Promise<Blob | null> } }) => {
       const blob = await ctx.storage.get(storageId);
       if (!blob) {
-        throw new Error('Failed to retrieve snapshot');
+        throw new Error("Failed to retrieve snapshot");
       }
       const content = await blob.text();
       expect(content).toBe(expectedContent);
@@ -87,14 +87,14 @@ export async function verifyStoredContent(t: TestConvex, storageId: Id<'_storage
 
 export async function verifyStoredMessages(
   t: TestConvex,
-  storageId: Id<'_storage'>,
+  storageId: Id<"_storage">,
   expectedMessages: SerializedMessage[],
 ) {
   await t.run(
-    async (ctx: GenericMutationCtx<any> & { storage: { get: (id: Id<'_storage'>) => Promise<Blob | null> } }) => {
+    async (ctx: GenericMutationCtx<any> & { storage: { get: (id: Id<"_storage">) => Promise<Blob | null> } }) => {
       const blob = await ctx.storage.get(storageId);
       if (!blob) {
-        throw new Error('Failed to retrieve snapshot');
+        throw new Error("Failed to retrieve snapshot");
       }
       const content = await blob.text();
       const messages = JSON.parse(content) as SerializedMessage[];

@@ -1,6 +1,6 @@
-import { ConvexError, v } from 'convex/values';
-import { mutation, query } from './_generated/server';
-import { apiKeyValidator } from './schema';
+import { ConvexError, v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { apiKeyValidator } from "./schema";
 
 export const apiKeyForCurrentMember = query({
   args: {},
@@ -11,8 +11,8 @@ export const apiKeyForCurrentMember = query({
       return null;
     }
     const existingMember = await ctx.db
-      .query('convexMembers')
-      .withIndex('byTokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .query("convexMembers")
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     return existingMember?.apiKey;
@@ -27,16 +27,16 @@ export const setApiKeyForCurrentMember = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
     const existingMember = await ctx.db
-      .query('convexMembers')
-      .withIndex('byTokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .query("convexMembers")
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
     await ctx.db.patch(existingMember._id, { apiKey: args.apiKey });
@@ -49,16 +49,16 @@ export const deleteApiKeyForCurrentMember = mutation({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
     const existingMember = await ctx.db
-      .query('convexMembers')
-      .withIndex('byTokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .query("convexMembers")
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
     await ctx.db.patch(existingMember._id, { apiKey: undefined });
@@ -71,16 +71,16 @@ export const deleteAnthropicApiKeyForCurrentMember = mutation({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
     const existingMember = await ctx.db
-      .query('convexMembers')
-      .withIndex('byTokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .query("convexMembers")
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
     if (!existingMember.apiKey) {
       return;
@@ -100,16 +100,16 @@ export const deleteOpenaiApiKeyForCurrentMember = mutation({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
     const existingMember = await ctx.db
-      .query('convexMembers')
-      .withIndex('byTokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .query("convexMembers")
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
     if (!existingMember.apiKey) {
       return;
@@ -129,16 +129,16 @@ export const deleteXaiApiKeyForCurrentMember = mutation({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
     const existingMember = await ctx.db
-      .query('convexMembers')
-      .withIndex('byTokenIdentifier', (q) => q.eq('tokenIdentifier', identity.tokenIdentifier))
+      .query("convexMembers")
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Unauthorized' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
     if (!existingMember.apiKey) {
       return;
@@ -147,6 +147,35 @@ export const deleteXaiApiKeyForCurrentMember = mutation({
       apiKey: {
         ...existingMember.apiKey,
         xai: undefined,
+      },
+    });
+  },
+});
+
+export const deleteGoogleApiKeyForCurrentMember = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
+    }
+
+    const existingMember = await ctx.db
+      .query("convexMembers")
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .unique();
+
+    if (!existingMember) {
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
+    }
+    if (!existingMember.apiKey) {
+      return;
+    }
+    await ctx.db.patch(existingMember._id, {
+      apiKey: {
+        ...existingMember.apiKey,
+        google: undefined,
       },
     });
   },

@@ -1,12 +1,12 @@
-import { httpRouter } from 'convex/server';
-import { httpAction, type ActionCtx } from './_generated/server';
-import { internal } from './_generated/api';
-import type { Id } from './_generated/dataModel';
-import { ConvexError } from 'convex/values';
-import { openaiProxy } from './openaiProxy';
-import { corsRouter } from 'convex-helpers/server/cors';
-import { compressMessages } from './compressMessages';
-import { resendProxy } from './resendProxy';
+import { httpRouter } from "convex/server";
+import { httpAction, type ActionCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { ConvexError } from "convex/values";
+import { openaiProxy } from "./openaiProxy";
+import { corsRouter } from "convex-helpers/server/cors";
+import { compressMessages } from "./compressMessages";
+import { resendProxy } from "./resendProxy";
 
 const http = httpRouter();
 const httpWithCors = corsRouter(http, {});
@@ -20,11 +20,11 @@ function httpActionWithErrorHandling(handler: (ctx: ActionCtx, request: Request)
     } catch (e) {
       console.error(e);
       return new Response(
-        JSON.stringify({ error: e instanceof ConvexError ? e.message : 'An unknown error occurred' }),
+        JSON.stringify({ error: e instanceof ConvexError ? e.message : "An unknown error occurred" }),
         {
           status: 500,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         },
       );
@@ -32,61 +32,61 @@ function httpActionWithErrorHandling(handler: (ctx: ActionCtx, request: Request)
   });
 }
 httpWithCors.route({
-  path: '/upload_snapshot',
-  method: 'POST',
+  path: "/upload_snapshot",
+  method: "POST",
   handler: httpActionWithErrorHandling(async (ctx, request) => {
     const url = new URL(request.url);
-    const sessionId = url.searchParams.get('sessionId');
+    const sessionId = url.searchParams.get("sessionId");
     if (!sessionId) {
-      throw new ConvexError('sessionId is required');
+      throw new ConvexError("sessionId is required");
     }
-    const chatId = url.searchParams.get('chatId');
+    const chatId = url.searchParams.get("chatId");
     if (!chatId) {
-      throw new ConvexError('chatId is required');
+      throw new ConvexError("chatId is required");
     }
 
     const blob = await request.blob();
     const storageId = await ctx.storage.store(blob);
 
     await ctx.runMutation(internal.snapshot.saveSnapshot, {
-      sessionId: sessionId as Id<'sessions'>,
-      chatId: chatId as Id<'chats'>,
+      sessionId: sessionId as Id<"sessions">,
+      chatId: chatId as Id<"chats">,
       storageId,
     });
 
     return new Response(JSON.stringify({ snapshotId: storageId }), {
       status: 200,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
   }),
 });
 
 http.route({
-  pathPrefix: '/openai-proxy/',
-  method: 'POST',
+  pathPrefix: "/openai-proxy/",
+  method: "POST",
   handler: openaiProxy,
 });
 
 http.route({
-  pathPrefix: '/resend-proxy/',
-  method: 'POST',
+  pathPrefix: "/resend-proxy/",
+  method: "POST",
   handler: resendProxy,
 });
 
 httpWithCors.route({
-  path: '/initial_messages',
-  method: 'POST',
+  path: "/initial_messages",
+  method: "POST",
   handler: httpActionWithErrorHandling(async (ctx, request) => {
     const body = await request.json();
     const sessionId = body.sessionId;
     const chatId = body.chatId;
     if (!sessionId) {
-      throw new ConvexError('sessionId is required');
+      throw new ConvexError("sessionId is required");
     }
     if (!chatId) {
-      throw new ConvexError('chatId is required');
+      throw new ConvexError("chatId is required");
     }
     const storageInfo = await ctx.runQuery(internal.messages.getInitialMessagesStorageInfo, {
       sessionId,
@@ -132,20 +132,20 @@ httpWithCors.route({
 });
 
 httpWithCors.route({
-  path: '/store_messages',
-  method: 'POST',
+  path: "/store_messages",
+  method: "POST",
   handler: httpActionWithErrorHandling(async (ctx, request) => {
     const url = new URL(request.url);
-    const sessionId = url.searchParams.get('sessionId');
-    const chatId = url.searchParams.get('chatId');
-    const lastMessageRank = url.searchParams.get('lastMessageRank');
-    const partIndex = url.searchParams.get('partIndex');
+    const sessionId = url.searchParams.get("sessionId");
+    const chatId = url.searchParams.get("chatId");
+    const lastMessageRank = url.searchParams.get("lastMessageRank");
+    const partIndex = url.searchParams.get("partIndex");
     // Older pathway that sends just messages as a single blob
     const messageBlob = await request.blob();
     const storageId = await ctx.storage.store(messageBlob);
     await ctx.runMutation(internal.messages.updateStorageState, {
-      sessionId: sessionId as Id<'sessions'>,
-      chatId: chatId as Id<'chats'>,
+      sessionId: sessionId as Id<"sessions">,
+      chatId: chatId as Id<"chats">,
       lastMessageRank: parseInt(lastMessageRank!),
       partIndex: parseInt(partIndex!),
       storageId,
@@ -157,28 +157,28 @@ httpWithCors.route({
 });
 
 httpWithCors.route({
-  path: '/store_chat',
-  method: 'POST',
+  path: "/store_chat",
+  method: "POST",
   handler: httpActionWithErrorHandling(async (ctx, request) => {
     const url = new URL(request.url);
-    const sessionId = url.searchParams.get('sessionId');
-    const chatId = url.searchParams.get('chatId');
-    const lastMessageRank = url.searchParams.get('lastMessageRank');
-    const partIndex = url.searchParams.get('partIndex');
+    const sessionId = url.searchParams.get("sessionId");
+    const chatId = url.searchParams.get("chatId");
+    const lastMessageRank = url.searchParams.get("lastMessageRank");
+    const partIndex = url.searchParams.get("partIndex");
     const formData = await request.formData();
-    let messageStorageId: Id<'_storage'> | null = null;
-    let snapshotStorageId: Id<'_storage'> | null = null;
-    if (formData.has('messages')) {
-      const messageBlob = formData.get('messages') as Blob;
+    let messageStorageId: Id<"_storage"> | null = null;
+    let snapshotStorageId: Id<"_storage"> | null = null;
+    if (formData.has("messages")) {
+      const messageBlob = formData.get("messages") as Blob;
       messageStorageId = await ctx.storage.store(messageBlob);
     }
-    if (formData.has('snapshot')) {
-      const snapshotBlob = formData.get('snapshot') as Blob;
+    if (formData.has("snapshot")) {
+      const snapshotBlob = formData.get("snapshot") as Blob;
       snapshotStorageId = await ctx.storage.store(snapshotBlob);
     }
     await ctx.runMutation(internal.messages.updateStorageState, {
-      sessionId: sessionId as Id<'sessions'>,
-      chatId: chatId as Id<'chats'>,
+      sessionId: sessionId as Id<"sessions">,
+      chatId: chatId as Id<"chats">,
       lastMessageRank: parseInt(lastMessageRank!),
       partIndex: parseInt(partIndex!),
       storageId: messageStorageId,

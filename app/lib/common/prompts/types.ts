@@ -4,5 +4,6 @@ export interface SystemPromptOptions {
   includeTemplate: boolean;
   openaiProxyEnabled: boolean;
   usingOpenAi: boolean;
+  usingGoogle: boolean;
   resendProxyEnabled: boolean;
 }

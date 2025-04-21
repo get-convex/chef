@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { api, internal } from './_generated/api';
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { api, internal } from "./_generated/api";
 import {
   createChat,
   setupTest,
@@ -7,26 +7,26 @@ import {
   type TestConvex,
   storeChat,
   verifyStoredContent,
-} from './test.setup';
-import type { SerializedMessage } from './messages';
-import { describe } from 'node:test';
+} from "./test.setup";
+import type { SerializedMessage } from "./messages";
+import { describe } from "node:test";
 
 async function initializeChat(t: TestConvex, initialMessage?: SerializedMessage) {
   const { sessionId, chatId } = await createChat(t);
   const firstMessage: SerializedMessage = {
-    id: '1',
-    role: 'user',
-    parts: [{ text: 'Hello, world!', type: 'text' }],
+    id: "1",
+    role: "user",
+    parts: [{ text: "Hello, world!", type: "text" }],
     createdAt: Date.now(),
   };
   await storeChat(t, chatId, sessionId, {
     messages: [initialMessage ?? firstMessage],
-    snapshot: new Blob(['Hello, world!']),
+    snapshot: new Blob(["Hello, world!"]),
   });
   return { sessionId, chatId };
 }
 
-describe('share', () => {
+describe("share", () => {
   let t: TestConvex;
   beforeEach(() => {
     vi.useFakeTimers();
@@ -38,37 +38,37 @@ describe('share', () => {
     vi.useRealTimers();
   });
 
-  test('sharing a chat fails if there is no snapshot', async () => {
+  test("sharing a chat fails if there is no snapshot", async () => {
     const t = setupTest();
     const { sessionId } = await createChat(t);
-    await expect(t.mutation(api.share.create, { sessionId, id: 'test' })).rejects.toThrow('Chat history not found');
+    await expect(t.mutation(api.share.create, { sessionId, id: "test" })).rejects.toThrow("Chat history not found");
   });
 
-  test('sharing a chat works if there is a snapshot + message', async () => {
+  test("sharing a chat works if there is a snapshot + message", async () => {
     const { sessionId, chatId } = await initializeChat(t);
     const code = await t.mutation(api.share.create, { sessionId, id: chatId });
     expect(code).toBeDefined();
   });
 
-  test('getShareDescription works', async () => {
+  test("getShareDescription works", async () => {
     const { sessionId, chatId } = await initializeChat(t);
     await t.mutation(api.messages.setUrlId, {
       sessionId,
       chatId,
-      urlHint: 'test',
-      description: 'This is a test chat',
+      urlHint: "test",
+      description: "This is a test chat",
     });
-    const { code } = await t.mutation(api.share.create, { sessionId, id: 'test' });
+    const { code } = await t.mutation(api.share.create, { sessionId, id: "test" });
     expect(code).toBeDefined();
     const { description } = await t.query(api.share.getShareDescription, { code });
-    expect(description).toBe('This is a test chat');
+    expect(description).toBe("This is a test chat");
   });
 
-  test('cloning a chat forks history', async () => {
+  test("cloning a chat forks history", async () => {
     const firstMessage: SerializedMessage = {
-      id: '1',
-      role: 'user',
-      parts: [{ text: 'Hello, world!', type: 'text' }],
+      id: "1",
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
       createdAt: Date.now(),
     };
     const { sessionId, chatId } = await initializeChat(t, firstMessage);
@@ -80,17 +80,17 @@ describe('share', () => {
       projectInitParams: testProjectInitParams,
     });
     expect(clonedChatId).toBeDefined();
-    const response = await t.fetch('/initial_messages', {
-      method: 'POST',
+    const response = await t.fetch("/initial_messages", {
+      method: "POST",
       body: JSON.stringify({
         chatId: clonedChatId,
         sessionId,
       }),
     });
     const secondMessage: SerializedMessage = {
-      id: '2',
-      role: 'assistant',
-      parts: [{ text: 'Hi!', type: 'text' }],
+      id: "2",
+      role: "assistant",
+      parts: [{ text: "Hi!", type: "text" }],
       createdAt: Date.now(),
     };
     await storeChat(t, clonedChatId, sessionId, {
@@ -105,11 +105,11 @@ describe('share', () => {
 
   // TODO: Test that cloning messages does not leak a more recent snapshot or later messages
 
-  test('sharing a chat uses the snapshot in the chatMessagesStorageState table', async () => {
+  test("sharing a chat uses the snapshot in the chatMessagesStorageState table", async () => {
     const { sessionId, chatId } = await createChat(t);
 
     // First, create an old snapshot and store it in the chats table
-    const oldSnapshotContent = 'old snapshot content';
+    const oldSnapshotContent = "old snapshot content";
     const oldSnapshotId = await t.run(async (ctx) => {
       return ctx.storage.store(new Blob([oldSnapshotContent]));
     });
@@ -122,12 +122,12 @@ describe('share', () => {
 
     // Store a message with a new snapshot using storeChat
     const message: SerializedMessage = {
-      id: '1',
-      role: 'user',
-      parts: [{ text: 'Hello, world!', type: 'text' }],
+      id: "1",
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
       createdAt: Date.now(),
     };
-    const newSnapshotContent = 'new snapshot content';
+    const newSnapshotContent = "new snapshot content";
     await storeChat(t, chatId, sessionId, {
       messages: [message],
       snapshot: new Blob([newSnapshotContent]),
@@ -149,16 +149,16 @@ describe('share', () => {
     // Get the share and verify it has the new snapshot ID
     const share = await t.run(async (ctx) => {
       return ctx.db
-        .query('shares')
-        .withIndex('byCode', (q) => q.eq('code', code))
+        .query("shares")
+        .withIndex("byCode", (q) => q.eq("code", code))
         .first();
     });
     expect(share).not.toBeNull();
     if (!share) {
-      throw new Error('Share not found');
+      throw new Error("Share not found");
     }
     if (!storageInfo?.snapshotId) {
-      throw new Error('No snapshot ID');
+      throw new Error("No snapshot ID");
     }
 
     // Verify the share uses the new snapshot from chatMessagesStorageState
@@ -166,16 +166,16 @@ describe('share', () => {
     expect(share.snapshotId).not.toBe(oldSnapshotId);
 
     if (!share.snapshotId) {
-      throw new Error('No snapshot ID');
+      throw new Error("No snapshot ID");
     }
     await verifyStoredContent(t, share.snapshotId, newSnapshotContent);
   });
 
-  test('sharing falls back to chat.snapshotId when storageState has no snapshot', async () => {
+  test("sharing falls back to chat.snapshotId when storageState has no snapshot", async () => {
     const { sessionId, chatId } = await createChat(t);
 
     // Create a snapshot and store it in the chats table
-    const snapshotContent = 'snapshot from chats table';
+    const snapshotContent = "snapshot from chats table";
     const snapshotId = await t.run(async (ctx) => {
       return ctx.storage.store(new Blob([snapshotContent]));
     });
@@ -187,9 +187,9 @@ describe('share', () => {
 
     // Store a message without a snapshot to create storageState
     const message: SerializedMessage = {
-      id: '1',
-      role: 'user',
-      parts: [{ text: 'Hello, world!', type: 'text' }],
+      id: "1",
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
       createdAt: Date.now(),
     };
     await storeChat(t, chatId, sessionId, {
@@ -212,16 +212,16 @@ describe('share', () => {
     // Get the share and verify it has the snapshot ID from chats table
     const share = await t.run(async (ctx) => {
       return ctx.db
-        .query('shares')
-        .withIndex('byCode', (q) => q.eq('code', code))
+        .query("shares")
+        .withIndex("byCode", (q) => q.eq("code", code))
         .first();
     });
     expect(share).not.toBeNull();
     if (!share) {
-      throw new Error('Share not found');
+      throw new Error("Share not found");
     }
     if (!share.snapshotId) {
-      throw new Error('No snapshot ID in share');
+      throw new Error("No snapshot ID in share");
     }
 
     // Verify the share uses the snapshot from chats table

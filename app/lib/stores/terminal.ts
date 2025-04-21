@@ -59,7 +59,7 @@ export class TerminalStore {
       activeTerminalTabStore.set(CONVEX_DEPLOY_TAB_INDEX);
 
       await this.#deployTerminal.executeCommand('clear');
-      const result = await this.#deployTerminal.executeCommand('npx convex dev --once');
+      const result = await this.#deployTerminal.executeCommand('convex dev --once');
 
       if (result.exitCode !== 0) {
         toast.error('Failed to deploy Convex functions. Check the terminal for more details.');
@@ -73,7 +73,7 @@ export class TerminalStore {
     }
 
     if (!workbenchStore.isDefaultPreviewRunning()) {
-      await this.#boltTerminal.executeCommand('npx vite --open');
+      await this.#boltTerminal.executeCommand('vite --open');
     }
   }
 

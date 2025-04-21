@@ -8,19 +8,12 @@ interface Profile {
 }
 
 // Initialize with stored profile or defaults
-const storedProfile = typeof window !== 'undefined' ? localStorage.getItem('bolt_profile') : null;
-const initialProfile: Profile = storedProfile
-  ? JSON.parse(storedProfile)
-  : {
-      username: '',
-      avatar: '',
-      email: '',
-      id: '',
-    };
+const storedProfile = typeof window !== 'undefined' ? localStorage.getItem('chef_profile') : null;
+const initialProfile: Profile | null = storedProfile ? JSON.parse(storedProfile) : null;
 
-export const profileStore = atom<Profile>(initialProfile);
+export const profileStore = atom<Profile | null>(initialProfile);
 
-export const setProfile = (profile: Profile) => {
+export const setProfile = (profile: Profile | null) => {
   profileStore.set(profile);
-  localStorage.setItem('bolt_profile', JSON.stringify(profile));
+  localStorage.setItem('chef_profile', JSON.stringify(profile));
 };
