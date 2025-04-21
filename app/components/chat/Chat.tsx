@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import type { PartId } from '~/lib/stores/artifacts';
 import { captureMessage } from '@sentry/remix';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
-import { chatIdStore } from '~/lib/stores/chatId';
+import { chatIdStore, initialIdStore } from '~/lib/stores/chatId';
 import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
@@ -226,7 +226,7 @@ export const Chat = memo(
       api: '/api/chat',
       sendExtraMessageFields: true,
       experimental_prepareRequestBody: ({ messages }) => {
-        const chatId = chatIdStore.get();
+        const chatInitialId = initialIdStore.get();
         const deploymentName = convexProjectStore.get()?.deploymentName;
         const teamSlug = selectedTeamSlugStore.get();
         const token = getConvexAuthToken(convex);
@@ -252,7 +252,7 @@ export const Chat = memo(
         return {
           messages: chatContextManager.current.prepareContext(messages),
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
-          chatId,
+          chatInitialId,
           token,
           teamSlug,
           deploymentName,

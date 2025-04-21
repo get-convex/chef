@@ -53,7 +53,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   const body = (await request.json()) as {
     messages: Messages;
     firstUserMessage: boolean;
-    chatId: string;
+    chatInitialId: string;
     token: string;
     teamSlug: string;
     deploymentName: string | undefined;
@@ -62,7 +62,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
       | undefined;
   };
-  const { messages, firstUserMessage, chatId, deploymentName, token, teamSlug } = body;
+  const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug } = body;
 
   let useUserApiKey = false;
 
@@ -133,7 +133,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
     const dataStream = await convexAgent(
-      chatId,
+      chatInitialId,
       env,
       firstUserMessage,
       messages,

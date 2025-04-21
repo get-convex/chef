@@ -49,7 +49,7 @@ export type ModelProvider = 'Anthropic' | 'Bedrock' | 'OpenAI' | 'XAI' | 'Google
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
 
 export async function convexAgent(
-  chatId: string,
+  chatInitialId: string,
   env: Record<string, string | undefined>,
   firstUserMessage: boolean,
   messages: Messages,
@@ -284,7 +284,7 @@ export async function convexAgent(
         ],
         tools,
         onFinish: (result) => {
-          onFinishHandler(dataStream, messages, result, tracer, chatId, recordUsageCb);
+          onFinishHandler(dataStream, messages, result, tracer, chatInitialId, recordUsageCb);
         },
         onError({ error }) {
           console.error(error);
@@ -294,7 +294,7 @@ export async function convexAgent(
           isEnabled: true,
           metadata: {
             firstUserMessage,
-            chatId,
+            chatInitialId,
             provider: modelProvider,
           },
         },
@@ -384,7 +384,7 @@ async function onFinishHandler(
   messages: Messages,
   result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
   tracer: Tracer | null,
-  chatId: string,
+  chatInitialId: string,
   recordUsageCb: (
     lastMessage: Message | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
@@ -403,7 +403,7 @@ async function onFinishHandler(
   });
   if (tracer) {
     const span = tracer.startSpan('on-finish-handler');
-    span.setAttribute('chatId', chatId);
+    span.setAttribute('chatInitialId', chatInitialId);
     span.setAttribute('finishReason', result.finishReason);
     span.setAttribute('usage.completionTokens', usage.completionTokens);
     span.setAttribute('usage.promptTokens', usage.promptTokens);
