@@ -123,8 +123,12 @@ export function UsageCard() {
               </div>
             </Callout>
           ) : (
-            <Button icon={<ExternalLinkIcon />} href={`https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/api-keys`}>
-              Add your own API key
+            <Button
+              icon={<ExternalLinkIcon />}
+              inline
+              href={`https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`}
+            >
+              Manage Subscription
             </Button>
           )}
         </div>
