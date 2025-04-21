@@ -244,8 +244,7 @@ async function _deleteMessagesForChat(ctx: MutationCtx, args: { chatId: Id<'chat
   } else {
     const storageState = await ctx.db
       .query('chatMessagesStorageState')
-      .withIndex('byChatId')
-      .filter((q) => q.eq(q.field('chatId'), chatId))
+      .withIndex('byChatId', (q) => q.eq('chatId', chatId))
       .unique();
     if (storageState === null) {
       console.log('Chat messages storage state not found -- should not delete messages from DB if they are not stored');
@@ -254,8 +253,7 @@ async function _deleteMessagesForChat(ctx: MutationCtx, args: { chatId: Id<'chat
   }
   const messages = await ctx.db
     .query('chatMessages')
-    .withIndex('byChatId')
-    .filter((q) => q.eq(q.field('chatId'), chatId))
+    .withIndex('byChatId', (q) => q.eq('chatId', chatId))
     .collect();
   for (const message of messages) {
     if (message.deletedAt === undefined) {
