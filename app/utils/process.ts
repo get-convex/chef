@@ -28,5 +28,6 @@ export async function streamOutput(process: WebContainerProcess, options?: Strea
   );
   options?.onOutput?.(output);
   const exitCode = await Promise.race([promise, process.exit]);
+  options?.onOutput?.(output);
   return { output, exitCode };
 }
