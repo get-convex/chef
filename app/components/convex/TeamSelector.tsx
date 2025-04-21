@@ -2,8 +2,9 @@ import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { useStore } from '@nanostores/react';
 import { Spinner } from '@ui/Spinner';
 import { Combobox } from '@ui/Combobox';
+import { memo } from 'react';
 
-export function TeamSelector({
+export const TeamSelector = memo(function TeamSelector({
   selectedTeamSlug,
   setSelectedTeamSlug,
   description,
@@ -54,4 +55,4 @@ export function TeamSelector({
       )}
     />
   );
-}
+});
