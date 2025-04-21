@@ -173,11 +173,7 @@ export const MessageInput = memo(function MessageInput({
         <div className="flex items-center justify-end gap-4 px-4 pb-3 text-sm">
           <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
           <div className="grow" />
-          {input.length > 3 ? (
-            <div className="text-xs text-content-tertiary">
-              <KeyboardShortcut value={['Shift', 'Return']} className="mr-0.5 font-semibold" /> for new line
-            </div>
-          ) : null}
+          {input.length > 3 && <NewLineShortcut />}
           {chatStarted && <ConvexConnection />}
           {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
           {!chatStarted && sessionId && (
@@ -193,7 +189,15 @@ export const MessageInput = memo(function MessageInput({
   );
 });
 
-function SignInButton() {
+const NewLineShortcut = memo(function NewLineShortcut() {
+  return (
+    <div className="text-xs text-content-tertiary">
+      <KeyboardShortcut value={['Shift', 'Return']} className="mr-0.5 font-semibold" /> for new line
+    </div>
+  );
+});
+
+const SignInButton = memo(function SignInButton() {
   const [started, setStarted] = useState(false);
   const signIn = useCallback(() => {
     setStarted(true);
@@ -215,7 +219,7 @@ function SignInButton() {
       )}
     </Button>
   );
-}
+});
 
 /**
  * Debounced function to cache the prompt in cookies.
