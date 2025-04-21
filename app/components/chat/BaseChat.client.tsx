@@ -100,19 +100,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         await sendMessage?.(lastUserMessage.content);
         messageInputStore.set('');
       }
-    }, [lastUserMessage, handleSendMessage]);
-
-    const handleClickSendButton = useCallback(() => {
-      if (isStreaming) {
-        handleStop?.();
-        return;
-      }
-
-      if (input.length > 0) {
-        handleSendMessage?.();
-      }
-    }, [isStreaming, handleStop, handleSendMessage, input.length]);
-
+    }, [lastUserMessage, sendMessage]);
     const baseChat = (
       <div
         ref={ref}
