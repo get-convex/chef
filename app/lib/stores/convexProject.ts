@@ -1,12 +1,5 @@
 import { atom } from 'nanostores';
-
-export type ConvexProject = {
-  token: string;
-  deploymentName: string;
-  deploymentUrl: string;
-  projectSlug: string;
-  teamSlug: string;
-};
+import type { ConvexProject } from 'chef-agent/types';
 
 export const convexProjectStore = atom<ConvexProject | null>(null);
 

@@ -1,8 +1,6 @@
-export const WORK_DIR_NAME = 'project';
-export const WORK_DIR = `/home/${WORK_DIR_NAME}`;
-export const PROMPT_COOKIE_KEY = 'cachedPrompt';
+import { WORK_DIR } from 'chef-agent/constants.js';
 
-export const PREWARM_PATHS = [`${WORK_DIR}/package.json`, `${WORK_DIR}/convex/schema.ts`, `${WORK_DIR}/src/App.tsx`];
+export const PROMPT_COOKIE_KEY = 'cachedPrompt';
 
 export const IGNORED_PATHS = [`${WORK_DIR}/dist/`, `${WORK_DIR}/node_modules/`, `${WORK_DIR}/.env.local`];
 export const IGNORED_RELATIVE_PATHS = ['dist', 'node_modules', '.env.local'];

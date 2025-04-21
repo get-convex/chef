@@ -1,9 +1,8 @@
-import type { ActionType, BoltAction, BoltActionData, FileAction } from '~/types/actions';
-import type { BoltArtifactData } from '~/types/artifact';
-import { createScopedLogger } from '~/utils/logger';
-import { unreachable } from '~/utils/unreachable';
-import type { PartId } from '~/lib/stores/artifacts';
-import { getRelativePath } from '~/lib/stores/files';
+import type { PartId } from './partId.js';
+import type { BoltAction, BoltArtifactData, BoltActionData, ActionType, FileAction } from './types.js';
+import { createScopedLogger } from './utils/logger.js';
+import { getRelativePath } from './utils/workDir.js';
+import { unreachable } from './utils/unreachable.js';
 
 const ARTIFACT_TAG_OPEN = '<boltArtifact';
 const ARTIFACT_TAG_CLOSE = '</boltArtifact>';
@@ -55,20 +54,6 @@ interface MessageState {
   hasCreatedArtifact: boolean;
 }
 
-function cleanoutMarkdownSyntax(content: string) {
-  const codeBlockRegex = /^\s*```\w*\n([\s\S]*?)\n\s*```\s*$/;
-  const match = content.match(codeBlockRegex);
-
-  if (match) {
-    return match[1]; // Remove common leading 4-space indent
-  } else {
-    return content;
-  }
-}
-
-function cleanEscapedTags(content: string) {
-  return content.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-}
 export class StreamingMessageParser {
   #messages = new Map<string, MessageState>();
 
@@ -355,4 +340,19 @@ const createArtifactElement: ElementFactory = (props) => {
 
 function camelToDashCase(input: string) {
   return input.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+function cleanoutMarkdownSyntax(content: string) {
+  const codeBlockRegex = /^\s*```\w*\n([\s\S]*?)\n\s*```\s*$/;
+  const match = content.match(codeBlockRegex);
+
+  if (match) {
+    return match[1]; // Remove common leading 4-space indent
+  } else {
+    return content;
+  }
+}
+
+function cleanEscapedTags(content: string) {
+  return content.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 }

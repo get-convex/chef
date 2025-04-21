@@ -11,7 +11,7 @@ interface Logger {
   error: LoggerFunction;
 }
 
-let currentLevel: DebugLevel = import.meta.env.VITE_LOG_LEVEL ?? 'warn';
+let currentLevel: DebugLevel = 'warn';
 
 export const logger: Logger = {
   trace: (...messages: any[]) => log('trace', undefined, messages),
@@ -31,7 +31,7 @@ export function createScopedLogger(scope: string): Logger {
   };
 }
 
-function chefSetLogLevel(level: DebugLevel) {
+export function chefSetLogLevel(level: DebugLevel) {
   if (!levelOrder.includes(level)) {
     throw new Error('bad log level');
   }

@@ -1,5 +1,6 @@
 import { createTwoFilesPatch } from 'diff';
-import type { AbsolutePath, FileMap } from '~/lib/stores/files';
+import type { AbsolutePath } from 'chef-agent/utils/workDir';
+import type { FileMap } from 'chef-agent/types';
 
 interface ModifiedFile {
   type: 'diff' | 'file';

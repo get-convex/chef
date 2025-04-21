@@ -1,25 +1,4 @@
 import type { Change } from 'diff';
-import type { RelativePath } from '~/lib/stores/files';
-export type ActionType = 'file' | 'toolUse';
-
-interface BaseAction {
-  content: string;
-}
-
-export interface FileAction extends BaseAction {
-  type: 'file';
-  filePath: RelativePath;
-  isEdit?: boolean;
-}
-
-interface ToolUseAction extends BaseAction {
-  type: 'toolUse';
-  toolName: string;
-}
-
-export type BoltAction = FileAction | ToolUseAction;
-
-export type BoltActionData = BoltAction | BaseAction;
 
 export interface ActionAlert {
   type: string;

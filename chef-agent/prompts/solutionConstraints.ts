@@ -1,6 +1,6 @@
-import { stripIndents } from '~/utils/stripIndent';
-import { convexGuidelines } from './convexGuidelines';
-import type { SystemPromptOptions } from './types';
+import { stripIndents } from '../utils/stripIndent.js';
+import { convexGuidelines } from './convexGuidelines.js';
+import type { SystemPromptOptions } from '../types.js';
 
 export function solutionConstraints(options: SystemPromptOptions) {
   return stripIndents`
@@ -110,7 +110,7 @@ export function solutionConstraints(options: SystemPromptOptions) {
         If you want to use a UI element, you MUST create it. DO NOT use external libraries like Shadcn/UI.
 
         When writing a UI component and you want to use a Convex function, you MUST import the \`api\` object. For example:
-        
+
         \`\`\`tsx
         import { api } from "../convex/_generated/api";
         \`\`\`

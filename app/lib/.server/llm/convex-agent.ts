@@ -1,5 +1,4 @@
 import {
-  convertToCoreMessages,
   createDataStream,
   streamText,
   type DataStreamWriter,
@@ -13,22 +12,23 @@ import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createXai } from '@ai-sdk/xai';
-import { ROLE_SYSTEM_PROMPT, GENERAL_SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from '~/lib/common/prompts/system';
-import { deployTool } from '~/lib/runtime/deployTool';
-import { viewTool } from '~/lib/runtime/viewTool';
+import { ROLE_SYSTEM_PROMPT, GENERAL_SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from 'chef-agent/prompts/system';
+import { deployTool } from 'chef-agent/tools/deploy';
+import { viewTool } from 'chef-agent/tools/view';
 import type { ConvexToolSet } from '~/lib/common/types';
-import { npmInstallTool } from '~/lib/runtime/npmInstallTool';
+import { npmInstallTool } from 'chef-agent/tools/npmInstall';
 import { createOpenAI } from '@ai-sdk/openai';
 import type { Tracer } from '~/lib/.server/chat';
-import { editTool } from '~/lib/runtime/editTool';
+import { editTool } from 'chef-agent/tools/edit';
 import { captureException } from '@sentry/remix';
-import type { SystemPromptOptions } from '~/lib/common/prompts/types';
+import type { SystemPromptOptions } from 'chef-agent/types';
 import { awsCredentialsProvider } from '@vercel/functions/oidc';
+import { cleanupAssistantMessages } from 'chef-agent/cleanupAssistantMessages';
 
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch as undiciFetch } from 'undici';
-import { logger } from '~/utils/logger';
+import { logger } from 'chef-agent/utils/logger';
 import { encodeUsageAnnotation } from '~/lib/.server/usage';
 type Fetch = typeof fetch;
 
@@ -353,29 +353,6 @@ function anthropicInjectCacheControl(options?: RequestInit) {
   const newBody = JSON.stringify(body);
   console.log(`Injected system messages in ${Date.now() - start}ms`);
   return { ...options, body: newBody };
-}
-
-function cleanupAssistantMessages(messages: Messages) {
-  let processedMessages = messages.map((message) => {
-    if (message.role == 'assistant') {
-      let content = message.content;
-      content = content.replace(/<div class=\\"__boltThought__\\">.*?<\/div>/s, '');
-      content = content.replace(/<think>.*?<\/think>/s, '');
-      // We prevent the LLM from modifying `convex/auth.ts`
-      content = content.replace(
-        /<boltAction type="file" filePath="convex\/auth\.ts"[^>]*>[\s\S]*?<\/boltAction>/g,
-        'You tried to modify `convex/auth.ts` but this is not allowed. Please modify a different file.',
-      );
-      return { ...message, content };
-    } else {
-      return message;
-    }
-  });
-  // Filter out empty messages and messages with empty parts
-  processedMessages = processedMessages.filter(
-    (message) => message.content.trim() !== '' || (message.parts && message.parts.length > 0),
-  );
-  return convertToCoreMessages(processedMessages);
 }
 
 async function onFinishHandler(

@@ -5,7 +5,7 @@ import { ConfirmationDialog } from '@ui/ConfirmationDialog';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { type ChatHistoryItem } from '~/types/ChatHistoryItem';
 import { cubicEasingFn } from '~/utils/easings';
-import { logger } from '~/utils/logger';
+import { logger } from 'chef-agent/utils/logger';
 import { HistoryItem } from './HistoryItem';
 import { binDates } from './date-binning';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
