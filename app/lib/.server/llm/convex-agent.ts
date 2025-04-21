@@ -375,7 +375,6 @@ function cleanupAssistantMessages(messages: Messages) {
   processedMessages = processedMessages.filter(
     (message) => message.content.trim() !== '' || (message.parts && message.parts.length > 0),
   );
-  console.log('Processed messages', processedMessages);
   return convertToCoreMessages(processedMessages);
 }
 

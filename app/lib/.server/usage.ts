@@ -157,6 +157,11 @@ export async function recordUsage(
     chefTokens += totalUsage.promptTokens * 40;
     // TODO - never seen xai set this field to anything but 0, so holding off until we understand.
     //chefTokens += totalUsage.xaiCachedPromptTokens * 3;
+  } else if (finalGeneration.providerMetadata?.google) {
+    // TODO: Implement Google billing. These are placeholder values that are the same as openai.
+    chefTokens += totalUsage.completionTokens * 100;
+    chefTokens += totalUsage.openaiCachedPromptTokens * 5;
+    // TODO: Implement Google billing for the prompt tokens that are cached. I didn't see any fields in the output.
   } else {
     console.error(
       'WARNING: Unknown provider. Not recording usage. Giving away for free.',
