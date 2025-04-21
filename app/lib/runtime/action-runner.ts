@@ -412,16 +412,25 @@ export class ActionRunner {
           };
 
           //         START         deploy tool call
-          //          /
-          //         /
-          //  codegen              `convex typecheck` includes typecheck of convex/ dir
-          // + typecheck
-          //       |
-          //       |
-          // app typecheck         `tsc --noEmit --project tsconfig.app.json
-          //         \
-          //          \
+          //          / \
+          //         /   \
+          //  codegen     \        `convex typecheck` includes typecheck of convex/ dir
+          // + typecheck   \
+          //       |       ESLint  `eslint` must not include rules that check imports
+          //       |        /
+          // app typecheck /       `tsc --noEmit --project tsconfig.app.json
+          //         \    /
+          //          \  /
           //         deploy        `deploy` can fail
+
+          // ESLint doesn't need to wait for codegen since we don't use rules like plugin-import to validate imports.
+          const runEslint = async () => {
+            if (await hasMatchingEslintConfig(container)) {
+              // ESLint results don't stream to the terminal
+              return await run(['eslint', 'convex'], outputLabels.convexLint);
+            }
+            return '';
+          };
 
           const runCodegenAndTypecheck = async (onOutput?: (output: string) => void) => {
             // Convex codegen does a convex directory typecheck, then tsc does a full-project typecheck.
@@ -435,9 +444,14 @@ export class ActionRunner {
           };
 
           const t0 = performance.now();
-          result += await runCodegenAndTypecheck((output) => {
-            this.terminalOutput.set(output);
-          });
+          const [eslintResult, codegenResult] = await Promise.all([
+            runEslint(),
+            runCodegenAndTypecheck((output) => {
+              this.terminalOutput.set(output);
+            }),
+          ]);
+          result += codegenResult;
+          result += eslintResult;
           result += await run(['convex', 'dev', '--once', '--typecheck=disable'], outputLabels.convexDeploy);
           const time = performance.now() - t0;
           logger.info('deploy action finished in', time);
@@ -512,4 +526,17 @@ function cleanConvexOutput(output: string) {
     console.log(`Sanitized output: ${output.length} -> ${result.length}`);
   }
   return result;
+}
+
+async function hasMatchingEslintConfig(container: WebContainer): Promise<boolean> {
+  // Only run eslint if the file we expect is present and contains '@convex-dev/eslint-plugin'.
+  let contents = '';
+  try {
+    contents = await container.fs.readFile('eslint.config.js', 'utf-8');
+  } catch (e: any) {
+    if (!e.message.includes('ENOENT: no such file or directory')) {
+      throw e;
+    }
+  }
+  return contents.includes('@convex-dev/eslint-plugin');
 }

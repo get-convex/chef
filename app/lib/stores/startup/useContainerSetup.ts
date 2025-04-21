@@ -21,7 +21,7 @@ import { getFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
 import { chatSyncState } from '~/lib/stores/startup/history';
 import { FILE_EVENTS_DEBOUNCE_MS } from '~/lib/stores/files';
 
-const TEMPLATE_URL = '/template-snapshot-80c98556.bin';
+const TEMPLATE_URL = 'template-snapshot-d5712743.bin';
 
 export function useNewChatContainerSetup() {
   const convex = useConvex();

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.80",
+    "@convex-dev/eslint-plugin": "0.0.1-alpha.4",
     "clsx": "^2.1.1",
     "convex": "1.21.1-alpha.1",
     "react": "^19.0.0",
