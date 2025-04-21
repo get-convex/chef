@@ -390,10 +390,6 @@ export const Chat = memo(
         return;
       }
 
-      if (!messageInput.trim()) {
-        return;
-      }
-
       if (status === 'streaming' || status === 'submitted') {
         console.log('Aborting current message.');
         abort();

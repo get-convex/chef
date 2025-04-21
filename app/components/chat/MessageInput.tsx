@@ -87,11 +87,12 @@ export const MessageInput = memo(function MessageInput({
 
   // Send messages
   const handleSend = useCallback(async () => {
-    if (input.length === 0) {
+    const trimmedInput = input.trim();
+    if (trimmedInput.length === 0) {
       return;
     }
 
-    await onSend(input);
+    await onSend(trimmedInput);
 
     Cookies.remove(PROMPT_COOKIE_KEY);
     messageInputStore.set('');
