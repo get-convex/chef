@@ -120,7 +120,7 @@ export async function convexAgent(
     case 'Google': {
       model = getEnv(env, 'GOOGLE_MODEL') || 'gemini-2.5-pro-preview-03-25';
       const google = createGoogleGenerativeAI({
-        apiKey: getEnv(env, 'GOOGLE_API_KEY'),
+        apiKey: userApiKey || getEnv(env, 'GOOGLE_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
       });
       provider = {
