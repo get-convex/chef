@@ -6,8 +6,7 @@ import { Combobox } from '@ui/Combobox';
 export function TeamSelector({
   selectedTeamSlug,
   setSelectedTeamSlug,
-  // TODO: Use the description
-  // description,
+  description,
 }: {
   selectedTeamSlug: string | null;
   setSelectedTeamSlug: (teamSlug: string) => void;
@@ -40,7 +39,7 @@ export function TeamSelector({
       optionsHeader={
         <div className="flex flex-col gap-0.5 px-2">
           <h5>Select Team</h5>
-          <p className="text-xs text-content-secondary">Your Convex project will be created in the selected team.</p>
+          {description && <p className="text-xs text-content-secondary">{description}</p>}
         </div>
       }
       disableSearch
