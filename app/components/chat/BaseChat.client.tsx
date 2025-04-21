@@ -28,8 +28,8 @@ interface BaseChatProps {
   description: string | undefined;
 
   // Chat user interactions
-  handleStop: () => void;
-  sendMessage: (messageInput: string) => Promise<void>;
+  onStop: () => void;
+  onSend: (messageInput: string) => Promise<void>;
   sendMessageInProgress: boolean;
 
   // Current chat history props
@@ -73,9 +73,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       chatStarted = false,
       streamStatus = 'ready',
       currentError,
-      sendMessage,
+      onSend,
+      onStop,
       sendMessageInProgress,
-      handleStop,
       messages,
       actionAlert,
       clearAlert,
@@ -97,10 +97,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const lastUserMessage = messages.findLast((message) => message.role === 'user');
     const resendMessage = useCallback(async () => {
       if (lastUserMessage) {
-        await sendMessage?.(lastUserMessage.content);
+        await onSend?.(lastUserMessage.content);
         messageInputStore.set('');
       }
-    }, [lastUserMessage, sendMessage]);
+    }, [lastUserMessage, onSend]);
     const baseChat = (
       <div
         ref={ref}
@@ -149,7 +149,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         alert={actionAlert}
                         clearAlert={() => clearAlert?.()}
                         postMessage={(message) => {
-                          sendMessage?.(message);
+                          onSend?.(message);
                           clearAlert?.();
                         }}
                       />
@@ -179,8 +179,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     disabled={disableChatMessage !== null || maintenanceMode}
                     modelSelection={modelSelection}
                     setModelSelection={setModelSelection}
-                    onStop={handleStop}
-                    onSend={sendMessage}
+                    onStop={onStop}
+                    onSend={onSend}
                   />
                 </div>
               </div>
