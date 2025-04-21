@@ -39,7 +39,7 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
             workbenchStore.showWorkbench.set(!showWorkbench);
           }}
           variant="neutral"
-          className="border-l-0 rounded-l-none"
+          className="rounded-l-none"
           icon={<CodeIcon className="my-px"/>}
           tip={showWorkbench ? 'Hide workbench' : 'Show workbench'}
         >
