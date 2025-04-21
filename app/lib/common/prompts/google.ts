@@ -20,6 +20,8 @@ export function google(options: SystemPromptOptions) {
     - You MUST write the whole frontend and backend.
     - You MUST end every turn with a tool call to deploy your changes.
     - You can use the deploy tool as many times as you need to.
+    - Do NOT write your code directly in the output. Stuff like \`\`\`tsx\`\`\` is not allowed.
+    - Use \`<boltAction>...\<\/boltAction\>\`  and \`<boltArtifact>...\<\/boltArtifact\>\` tags to write your code.
   </reminders>
   `;
 }
