@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import { Markdown } from './Markdown';
 import type { Message } from 'ai';
 import { ToolCall } from './ToolCall';
-import { makePartId } from '~/lib/stores/artifacts';
+import { makePartId } from 'chef-agent/partId.js';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { failedDueToRepeatedErrors } from '~/lib/common/errors';
 interface AssistantMessageProps {
