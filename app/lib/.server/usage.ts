@@ -30,6 +30,10 @@ export const annotationValidator = z.discriminatedUnion('type', [
       payload: z.string(),
     }),
   }),
+  z.object({
+    type: z.literal('failure'),
+    reason: z.string(),
+  }),
 ]);
 
 export const usageValidator = z.object({

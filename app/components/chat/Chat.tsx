@@ -271,7 +271,7 @@ export const Chat = memo(
         if (shouldDisableTools) {
           shouldDisableToolsStore.set(true);
         }
-        return { result };
+        return result;
       },
       onError: async (e: Error) => {
         // Clean up the last message if it's an assistant message

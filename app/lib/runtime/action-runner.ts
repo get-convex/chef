@@ -89,27 +89,19 @@ export class ActionRunner {
   onAlert?: (alert: ActionAlert) => void;
   buildOutput?: { path: string; exitCode: number; output: string };
   terminalOutput: WritableAtom<string> = atom('');
-  partId: PartId;
-  onToolCallComplete: (args: { kind: 'success' | 'error'; result: string; partId: PartId; toolCallId: string }) => void;
+  onToolCallComplete: (args: { kind: 'success' | 'error'; result: string; toolCallId: string }) => void;
   constructor(
     webcontainerPromise: Promise<WebContainer>,
     shellTerminal: BoltShell,
-    partId: PartId,
     callbacks: {
       onAlert?: (alert: ActionAlert) => void;
-      onToolCallComplete: (args: {
-        kind: 'success' | 'error';
-        result: string;
-        partId: PartId;
-        toolCallId: string;
-      }) => void;
+      onToolCallComplete: (args: { kind: 'success' | 'error'; result: string; toolCallId: string }) => void;
     },
   ) {
     this.#webcontainer = webcontainerPromise;
     this.#shellTerminal = shellTerminal;
     this.onAlert = callbacks.onAlert;
     this.onToolCallComplete = callbacks.onToolCallComplete;
-    this.partId = partId;
   }
 
   addAction(data: ActionCallbackData) {
@@ -471,7 +463,6 @@ export class ActionRunner {
       this.onToolCallComplete({
         kind: 'success',
         result,
-        partId: this.partId,
         toolCallId: action.parsedContent.toolCallId,
       });
     } catch (e: any) {
@@ -483,7 +474,6 @@ export class ActionRunner {
       this.onToolCallComplete({
         kind: 'error',
         result: message,
-        partId: this.partId,
         toolCallId: action.parsedContent.toolCallId,
       });
       throw e;

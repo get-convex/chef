@@ -1,9 +1,10 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Markdown } from './Markdown';
 import type { Message } from 'ai';
 import { ToolCall } from './ToolCall';
 import { makePartId } from '~/lib/stores/artifacts';
-
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { failedDueToRepeatedErrors } from '~/lib/common/errors';
 interface AssistantMessageProps {
   message: Message;
 }
@@ -30,9 +31,24 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
       );
     }
   }
+  const stoppedDueToFailedToolCalls = useMemo(
+    () => failedDueToRepeatedErrors(message.annotations),
+    [message.annotations?.length],
+  );
   return (
     <div className="w-full overflow-hidden text-sm">
-      <div className="flex flex-col gap-2">{children}</div>
+      <div className="flex flex-col gap-2">
+        {children}
+        {stoppedDueToFailedToolCalls && (
+          <div className="flex items-center gap-2 text-content-primary">
+            <ExclamationTriangleIcon className="size-6" />
+            <div className="inline">
+              <span className="font-bold">Note:</span> The chat stopped because of repeated errors. You can send a
+              message to try again, give more information, or fix the problem yourself.
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 });

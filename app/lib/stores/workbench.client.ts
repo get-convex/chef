@@ -41,6 +41,7 @@ export interface ArtifactState {
 type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard';
+const MAX_CONSECUTIVE_TOOL_ERRORS = 5;
 
 export class WorkbenchStore {
   #previewsStore = new PreviewsStore(webcontainer);
@@ -344,6 +345,10 @@ export class WorkbenchStore {
   }
 
   addArtifact({ partId, title, id, type }: ArtifactCallbackData) {
+    const messageId = parsePartId(partId).messageId;
+    if (!this._toolCallResults.has(messageId)) {
+      this._toolCallResults.set(messageId, []);
+    }
     const artifact = this.#getArtifact(partId);
 
     if (artifact) {
@@ -359,7 +364,7 @@ export class WorkbenchStore {
       title,
       closed: false,
       type,
-      runner: new ActionRunner(webcontainer, this.boltTerminal, partId, {
+      runner: new ActionRunner(webcontainer, this.boltTerminal, {
         onAlert: (alert) => {
           if (this.#reloadedParts.has(partId)) {
             return;
@@ -367,17 +372,18 @@ export class WorkbenchStore {
 
           this.actionAlert.set(alert);
         },
-        onToolCallComplete: ({ kind, result, partId, toolCallId }) => {
+        onToolCallComplete: ({ kind, result, toolCallId }) => {
           const toolCallPromise = this.#toolCalls.get(toolCallId);
           if (!toolCallPromise) {
             console.error('Tool call promise not found');
             return;
           }
           const messageId = parsePartId(partId).messageId;
-          let toolCallResults = this._toolCallResults.get(messageId);
+          const toolCallResults = this._toolCallResults.get(messageId);
           if (!toolCallResults) {
-            toolCallResults = [];
-            this._toolCallResults.set(messageId, toolCallResults);
+            console.error('Tool call results not found');
+            toolCallPromise.resolve({ result, shouldDisableTools: false });
+            return;
           }
           toolCallResults.push({ partId, kind });
 
@@ -394,7 +400,10 @@ export class WorkbenchStore {
                 break;
               }
             }
-            toolCallPromise.resolve({ result, shouldDisableTools: numConsecutiveErrors >= 3 });
+            toolCallPromise.resolve({
+              result,
+              shouldDisableTools: numConsecutiveErrors >= MAX_CONSECUTIVE_TOOL_ERRORS,
+            });
           }
         },
       }),
@@ -469,7 +478,7 @@ export class WorkbenchStore {
       const doc = this.#editorStore.documents.get()[fullPath];
 
       if (!doc) {
-        await artifact.runner.runAction(data, isStreaming);
+        await artifact.runner.runAction(data, { isStreaming: !!isStreaming });
       }
 
       // Where does this initial newline come from? The tool parsing incorrectly?
@@ -478,7 +487,7 @@ export class WorkbenchStore {
       this.#editorStore.updateFile(fullPath, newContent);
 
       if (!isStreaming) {
-        await artifact.runner.runAction(data, { isStreaming });
+        await artifact.runner.runAction(data, { isStreaming: !!isStreaming });
         this.resetAllFileModifications();
       }
     } else {
@@ -490,7 +499,7 @@ export class WorkbenchStore {
           this.#toolCalls.set(action.parsedContent.toolCallId, toolCallPromise);
         }
       }
-      await artifact.runner.runAction(data, { isStreaming });
+      await artifact.runner.runAction(data, { isStreaming: !!isStreaming });
     }
   }
 

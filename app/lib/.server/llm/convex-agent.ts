@@ -30,6 +30,7 @@ import { cleanupAssistantMessages } from 'chef-agent/cleanupAssistantMessages';
 import { fetch as undiciFetch } from 'undici';
 import { logger } from 'chef-agent/utils/logger';
 import { encodeUsageAnnotation } from '~/lib/.server/usage';
+import { REPEATED_ERROR_REASON } from '~/lib/common/errors';
 type Fetch = typeof fetch;
 
 type Messages = Message[];
@@ -267,6 +268,7 @@ export async function convexAgent(args: {
     usingOpenAi: modelProvider == 'OpenAI',
     usingGoogle: modelProvider == 'Google',
     resendProxyEnabled: getEnv(env, 'RESEND_PROXY_ENABLED') == '1',
+    toolsDisabledFromRepeatedErrors: shouldDisableTools,
   };
   const tools: ConvexToolSet = {
     deploy: deployTool,
@@ -297,7 +299,15 @@ export async function convexAgent(args: {
         tools,
         toolChoice: shouldDisableTools ? 'none' : 'auto',
         onFinish: (result) => {
-          onFinishHandler(dataStream, messages, result, tracer, chatInitialId, recordUsageCb);
+          onFinishHandler({
+            dataStream,
+            messages,
+            result,
+            tracer,
+            chatInitialId,
+            recordUsageCb,
+            toolsDisabledFromRepeatedErrors: shouldDisableTools,
+          });
         },
         onError({ error }) {
           console.error(error);
@@ -368,17 +378,26 @@ function anthropicInjectCacheControl(options?: RequestInit) {
   return { ...options, body: newBody };
 }
 
-async function onFinishHandler(
-  dataStream: DataStreamWriter,
-  messages: Messages,
-  result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
-  tracer: Tracer | null,
-  chatInitialId: string,
+async function onFinishHandler({
+  dataStream,
+  messages,
+  result,
+  tracer,
+  chatInitialId,
+  recordUsageCb,
+  toolsDisabledFromRepeatedErrors,
+}: {
+  dataStream: DataStreamWriter;
+  messages: Messages;
+  result: Omit<StepResult<any>, 'stepType' | 'isContinued'>;
+  tracer: Tracer | null;
+  chatInitialId: string;
   recordUsageCb: (
     lastMessage: Message | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
-  ) => Promise<void>,
-) {
+  ) => Promise<void>;
+  toolsDisabledFromRepeatedErrors: boolean;
+}) {
   const { providerMetadata } = result;
   const usage = {
     completionTokens: normalizeUsage(result.usage.completionTokens),
@@ -407,6 +426,10 @@ async function onFinishHandler(
     span.end();
   }
 
+  if (toolsDisabledFromRepeatedErrors) {
+    dataStream.writeMessageAnnotation({ type: 'failure', reason: REPEATED_ERROR_REASON });
+  }
+
   // Stash this part's usage as an annotation if we're not done yet.
   if (result.finishReason !== 'stop') {
     let toolCallId: string | undefined;
@@ -426,6 +449,7 @@ async function onFinishHandler(
   else {
     await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata });
   }
+
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
