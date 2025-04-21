@@ -3,16 +3,15 @@ import { RemixBrowser, useLocation, useMatches } from '@remix-run/react';
 import { startTransition, useEffect } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 
-const enableSentry = // exposed via vite.config.ts
-  globalThis.process.env.VERCEL_ENV === 'production' || globalThis.process.env.VERCEL_GIT_COMMIT_REF === 'staging';
+const environment =
+  globalThis.process.env.VERCEL_ENV === "production"
+    ? "production"
+    : "development";
 
-if (typeof window !== 'undefined') {
-  (window as any).chefSentryEnabled = enableSentry;
-}
 
 Sentry.init({
   dsn: 'https://16615d9875b4630cfabeed5d376c4343@o1192621.ingest.us.sentry.io/4509097600811008',
-  enabled: enableSentry,
+  environment,
   tracesSampleRate: 1,
 
   integrations: [
