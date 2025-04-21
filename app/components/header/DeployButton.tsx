@@ -2,7 +2,6 @@ import { useState } from 'react';
 import JSZip from 'jszip';
 import { webcontainer } from '~/lib/webcontainer';
 import type { WebContainer } from '@webcontainer/api';
-import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { getFileUpdateCounter, useFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
@@ -14,18 +13,6 @@ import { Button } from '@ui/Button';
 
 interface ErrorResponse {
   error: string;
-}
-
-interface ButtonProps {
-  active?: boolean;
-  disabled?: boolean;
-  children?: any;
-  onClick?: VoidFunction;
-  className?: string;
-  title?: string;
-  href?: string;
-  target?: string;
-  rel?: string;
 }
 
 type DeployStatus =
@@ -140,8 +127,14 @@ export function DeployButton() {
 
   return (
     <div className="flex items-center gap-2">
-      <Button disabled={isDisabled} onClick={handleDeploy} title={status.type === 'error' ? status.message : undefined} variant="neutral" size="xs" icon={icon} tip={
-        (() => {
+      <Button
+        disabled={isDisabled}
+        onClick={handleDeploy}
+        title={status.type === 'error' ? status.message : undefined}
+        variant="neutral"
+        size="xs"
+        icon={icon}
+        tip={(() => {
           switch (status.type) {
             case 'idle':
               return 'Click to deploy your application';
@@ -153,8 +146,8 @@ export function DeployButton() {
             case 'success':
               return 'Click to deploy again';
           }
-        })()
-      }>
+        })()}
+      >
         {buttonText}
       </Button>
       {status.type === 'success' && convex && (

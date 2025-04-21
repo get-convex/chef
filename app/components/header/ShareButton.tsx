@@ -1,5 +1,4 @@
-import { useState, forwardRef, useEffect } from 'react';
-import { classNames } from '~/utils/classNames';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import * as Popover from '@radix-ui/react-popover';
 import { useMutation, useQuery } from 'convex/react';
@@ -9,7 +8,6 @@ import { useChatId } from '~/lib/stores/chatId';
 import { Share2Icon, ClipboardIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@ui/Spinner';
 import { Button } from '@ui/Button';
-
 
 type ShareStatus = 'idle' | 'loading' | 'success';
 
