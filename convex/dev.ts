@@ -1,7 +1,7 @@
-import { internalMutation, internalAction, internalQuery } from './_generated/server';
-import { v } from 'convex/values';
-import schema from './schema';
-import { internal } from './_generated/api';
+import { internalMutation, internalAction, internalQuery } from "./_generated/server";
+import { v } from "convex/values";
+import schema from "./schema";
+import { internal } from "./_generated/api";
 
 export const deleteFromTable = internalMutation({
   args: { tableName: v.string() },
@@ -33,28 +33,28 @@ export const findSessionForUser = internalQuery({
   args: { githubMemberId: v.string() },
   handler: async (ctx, { githubMemberId }) => {
     let normalizedGithubMemberId = githubMemberId;
-    if (!normalizedGithubMemberId.startsWith('github|')) {
+    if (!normalizedGithubMemberId.startsWith("github|")) {
       if (!isNaN(parseInt(normalizedGithubMemberId))) {
         normalizedGithubMemberId = `github|${normalizedGithubMemberId}`;
       } else {
-        throw new Error('Invalid github member id -- these should look like github|1234567890');
+        throw new Error("Invalid github member id -- these should look like github|1234567890");
       }
     }
     const convexMember = await ctx.db
-      .query('convexMembers')
-      .withIndex('byTokenIdentifier', (q) =>
-        q.eq('tokenIdentifier', `https://auth.convex.dev/${normalizedGithubMemberId}`),
+      .query("convexMembers")
+      .withIndex("byTokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", `https://auth.convex.dev/${normalizedGithubMemberId}`),
       )
       .first();
     if (!convexMember) {
-      throw new Error('Convex member not found');
+      throw new Error("Convex member not found");
     }
     const session = await ctx.db
-      .query('sessions')
-      .filter((q) => q.eq(q.field('memberId'), convexMember._id))
+      .query("sessions")
+      .filter((q) => q.eq(q.field("memberId"), convexMember._id))
       .first();
     if (!session) {
-      throw new Error('Session not found');
+      throw new Error("Session not found");
     }
     return session;
   },

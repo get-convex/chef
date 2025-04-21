@@ -37,7 +37,9 @@ function Content() {
       <div className="text-center">
         <h1 className="text-5xl font-bold accent-text mb-4">Cook with Chef</h1>
         <Authenticated>
-          <p className="text-xl text-slate-600">Welcome back, {loggedInUser?.email ?? "friend"}!</p>
+          <p className="text-xl text-slate-600">
+            Welcome back, {loggedInUser?.email ?? "friend"}!
+          </p>
         </Authenticated>
         <Unauthenticated>
           <p className="text-xl text-slate-600">Sign in to get started</p>

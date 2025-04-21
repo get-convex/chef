@@ -1,19 +1,19 @@
-import { ConvexError, v } from 'convex/values';
-import { internalAction, internalMutation, mutation, query, type DatabaseReader } from './_generated/server';
-import { getChatByIdOrUrlIdEnsuringAccess, getLatestChatMessageStorageState, type SerializedMessage } from './messages';
-import { startProvisionConvexProjectHelper } from './convexProjects';
-import { internal } from './_generated/api';
-import { compressMessages } from './compressMessages';
+import { ConvexError, v } from "convex/values";
+import { internalAction, internalMutation, mutation, query, type DatabaseReader } from "./_generated/server";
+import { getChatByIdOrUrlIdEnsuringAccess, getLatestChatMessageStorageState, type SerializedMessage } from "./messages";
+import { startProvisionConvexProjectHelper } from "./convexProjects";
+import { internal } from "./_generated/api";
+import { compressMessages } from "./compressMessages";
 
 export const create = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     id: v.string(),
   },
   handler: async (ctx, { sessionId, id }) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
     if (!chat) {
-      throw new ConvexError('Chat not found');
+      throw new ConvexError("Chat not found");
     }
 
     const code = await generateUniqueCode(ctx.db);
@@ -22,13 +22,13 @@ export const create = mutation({
 
     if (storageState) {
       if (storageState.storageId === null) {
-        throw new ConvexError('Chat history not found');
+        throw new ConvexError("Chat history not found");
       }
       const snapshotId = storageState.snapshotId ?? chat.snapshotId;
       if (!snapshotId) {
-        throw new ConvexError('Your project has never been saved.');
+        throw new ConvexError("Your project has never been saved.");
       }
-      await ctx.db.insert('shares', {
+      await ctx.db.insert("shares", {
         chatId: chat._id,
 
         // It is safe to use the snapshotId from the chat because the user’s
@@ -45,18 +45,18 @@ export const create = mutation({
       return { code };
     } else {
       if (!chat.snapshotId) {
-        throw new ConvexError('Your project has never been saved.');
+        throw new ConvexError("Your project has never been saved.");
       }
-      console.warn('No storage state found for chat, using last message rank');
+      console.warn("No storage state found for chat, using last message rank");
       const messages = await ctx.db
-        .query('chatMessages')
-        .withIndex('byChatId', (q) => q.eq('chatId', chat._id))
-        .order('desc')
+        .query("chatMessages")
+        .withIndex("byChatId", (q) => q.eq("chatId", chat._id))
+        .order("desc")
         .collect();
       const compressedMessages = await compressMessages(messages.map((m) => m.content));
       const lastMessage = messages[messages.length - 1];
       const partIndex = ((lastMessage?.content as SerializedMessage)?.parts?.length ?? 0) - 1;
-      const shareId = await ctx.db.insert('shares', {
+      const shareId = await ctx.db.insert("shares", {
         chatId: chat._id,
         code,
         chatHistoryId: null,
@@ -76,7 +76,7 @@ export const create = mutation({
 
 export const intializeShareWithStorage = internalAction({
   args: {
-    shareId: v.id('shares'),
+    shareId: v.id("shares"),
     compressedMessages: v.bytes(),
   },
   handler: async (ctx, { shareId, compressedMessages }) => {
@@ -91,8 +91,8 @@ export const intializeShareWithStorage = internalAction({
 
 export const updateShareWithStorage = internalMutation({
   args: {
-    shareId: v.id('shares'),
-    storageId: v.id('_storage'),
+    shareId: v.id("shares"),
+    storageId: v.id("_storage"),
   },
   handler: async (ctx, { shareId, storageId }) => {
     await ctx.db.patch(shareId, {
@@ -108,8 +108,8 @@ export const isShareReady = query({
   returns: v.boolean(),
   handler: async (ctx, { code }) => {
     const share = await ctx.db
-      .query('shares')
-      .withIndex('byCode', (q) => q.eq('code', code))
+      .query("shares")
+      .withIndex("byCode", (q) => q.eq("code", code))
       .unique();
     if (!share) {
       return false;
@@ -119,10 +119,10 @@ export const isShareReady = query({
 });
 
 async function generateUniqueCode(db: DatabaseReader) {
-  const code = crypto.randomUUID().replace(/-/g, '').substring(0, 6);
+  const code = crypto.randomUUID().replace(/-/g, "").substring(0, 6);
   const existing = await db
-    .query('shares')
-    .withIndex('byCode', (q) => q.eq('code', code))
+    .query("shares")
+    .withIndex("byCode", (q) => q.eq("code", code))
     .first();
   if (existing) {
     return generateUniqueCode(db);
@@ -139,11 +139,11 @@ export const getShareDescription = query({
   }),
   handler: async (ctx, { code }) => {
     const getShare = await ctx.db
-      .query('shares')
-      .withIndex('byCode', (q) => q.eq('code', code))
+      .query("shares")
+      .withIndex("byCode", (q) => q.eq("code", code))
       .first();
     if (!getShare) {
-      throw new ConvexError('Invalid share link');
+      throw new ConvexError("Invalid share link");
     }
     return {
       description: getShare.description,
@@ -154,7 +154,7 @@ export const getShareDescription = query({
 export const clone = mutation({
   args: {
     shareCode: v.string(),
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     projectInitParams: v.object({
       teamSlug: v.string(),
       auth0AccessToken: v.string(),
@@ -166,18 +166,18 @@ export const clone = mutation({
   }),
   handler: async (ctx, { shareCode, sessionId, projectInitParams }) => {
     const getShare = await ctx.db
-      .query('shares')
-      .withIndex('byCode', (q) => q.eq('code', shareCode))
+      .query("shares")
+      .withIndex("byCode", (q) => q.eq("code", shareCode))
       .first();
     if (!getShare) {
-      throw new ConvexError('Invalid share link');
+      throw new ConvexError("Invalid share link");
     }
 
     const parentChat = await ctx.db.get(getShare.chatId);
     if (!parentChat) {
       throw new ConvexError({
-        code: 'NotFound',
-        message: 'The original chat was not found. It may have been deleted.',
+        code: "NotFound",
+        message: "The original chat was not found. It may have been deleted.",
       });
     }
     const chatId = crypto.randomUUID();
@@ -188,10 +188,10 @@ export const clone = mutation({
       timestamp: new Date().toISOString(),
       snapshotId: getShare.snapshotId,
     };
-    const clonedChatId = await ctx.db.insert('chats', clonedChat);
+    const clonedChatId = await ctx.db.insert("chats", clonedChat);
 
     if (getShare.chatHistoryId) {
-      await ctx.db.insert('chatMessagesStorageState', {
+      await ctx.db.insert("chatMessagesStorageState", {
         chatId: clonedChatId,
         storageId: getShare.chatHistoryId,
         lastMessageRank: getShare.lastMessageRank,
@@ -199,11 +199,11 @@ export const clone = mutation({
       });
     } else {
       const messages = await ctx.db
-        .query('chatMessages')
-        .withIndex('byChatId', (q) => q.eq('chatId', parentChat._id).lte('rank', getShare.lastMessageRank))
+        .query("chatMessages")
+        .withIndex("byChatId", (q) => q.eq("chatId", parentChat._id).lte("rank", getShare.lastMessageRank))
         .collect();
       for (const message of messages) {
-        await ctx.db.insert('chatMessages', {
+        await ctx.db.insert("chatMessages", {
           chatId: clonedChatId,
           content: message.content,
           rank: message.rank,
