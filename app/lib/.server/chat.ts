@@ -58,7 +58,9 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     teamSlug: string;
     deploymentName: string | undefined;
     modelProvider: ModelProvider;
-    userApiKey: { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string } | undefined;
+    userApiKey:
+      | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
+      | undefined;
   };
   const { messages, firstUserMessage, chatId, deploymentName, token, teamSlug } = body;
 
@@ -100,14 +102,20 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     if (body.modelProvider === 'Anthropic' || body.modelProvider === 'Bedrock') {
       userApiKey = body.userApiKey?.value;
       body.modelProvider = 'Anthropic';
-    } else {
+    } else if (body.modelProvider === 'OpenAI') {
       userApiKey = body.userApiKey?.openai;
+    } else if (body.modelProvider === 'XAI') {
+      userApiKey = body.userApiKey?.xai;
+    } else if (body.modelProvider === 'Google') {
+      userApiKey = body.userApiKey?.google;
     }
     if (!userApiKey) {
-      const provider = body.modelProvider === 'OpenAI' ? 'OpenAI' : 'Anthropic';
-      return new Response(JSON.stringify({ error: `Tried to use missing ${provider} API key. Set one in Settings!` }), {
-        status: 402,
-      });
+      return new Response(
+        JSON.stringify({ error: `Tried to use missing ${body.modelProvider} API key. Set one in Settings!` }),
+        {
+          status: 402,
+        },
+      );
     }
   }
   logger.info(`Using model provider: ${body.modelProvider} (user API key: ${useUserApiKey})`);
