@@ -12,8 +12,6 @@ import { type ModelSelection } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger } from '~/utils/logger';
 import { BaseChat } from './BaseChat.client';
-import Cookies from 'js-cookie';
-import { debounce } from '~/utils/debounce';
 import { createSampler } from '~/utils/sampler';
 import { filesToArtifacts } from '~/utils/fileUtils';
 import { ChatContextManager } from '~/lib/ChatContextManager';
