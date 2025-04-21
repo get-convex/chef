@@ -111,11 +111,11 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                   <DiscordButton showInMenu={true} />
                   <hr />
                   <MenuItemComponent action={handleSettingsClick}>
-                    <GearIcon />
+                    <GearIcon className="text-content-secondary" />
                     Settings & Usage
                   </MenuItemComponent>
                   <MenuItemComponent action={handleLogout}>
-                    <ExitIcon />
+                    <ExitIcon className="text-content-secondary" />
                     Log out
                   </MenuItemComponent>
                 </MenuComponent>

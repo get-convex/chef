@@ -16,7 +16,7 @@ export function FeedbackButton({ showInMenu }: { showInMenu: boolean }) {
   if (showInMenu) {
     return (
       <MenuItem action={handleFeedback}>
-        <ChatBubbleIcon />
+        <ChatBubbleIcon className="text-content-secondary" />
         <span>Submit Feedback</span>
       </MenuItem>
     );
