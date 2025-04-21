@@ -106,7 +106,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       userApiKey = body.userApiKey?.openai;
     } else if (body.modelProvider === 'XAI') {
       userApiKey = body.userApiKey?.xai;
-    } else if (body.modelProvider === 'Google') {
+    } else {
       userApiKey = body.userApiKey?.google;
     }
     if (!userApiKey) {
