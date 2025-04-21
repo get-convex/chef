@@ -1,66 +1,65 @@
-import { existsSync, promises as fs } from "fs";
-import path from "path";
-import os from "os";
-import { exec as execCallback } from "child_process";
-import { snapshot } from "@webcontainer/snapshot";
-import { promisify } from "util";
-import * as lz4 from "lz4-wasm-nodejs";
-import { createHash } from "crypto";
+import { existsSync, promises as fs } from 'fs';
+import path from 'path';
+import os from 'os';
+import { exec as execCallback } from 'child_process';
+import { snapshot } from '@webcontainer/snapshot';
+import { promisify } from 'util';
+import * as lz4 from 'lz4-wasm-nodejs';
+import { createHash } from 'crypto';
 
 const exec = promisify(execCallback);
 
 async function main() {
-  const inputDir = "template";
+  const inputDir = 'template';
   const absoluteInputDir = path.resolve(inputDir);
-  const tempDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), "webcontainer-snapshot-")
-  );
-  console.log("Temp directory:", tempDir);
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'webcontainer-snapshot-'));
+  console.log('Temp directory:', tempDir);
 
-  console.log("Running npm install...");
-  await exec("npm install", { cwd: absoluteInputDir });
+  console.log('Running npm install...');
+  await exec('npm install', { cwd: absoluteInputDir });
 
-  console.log("Using git to list unignored files + package-lock.json...");
+  console.log('Using git to list unignored files + package-lock.json...');
   const files = await getSnapshotFiles(absoluteInputDir);
   console.log(`Copying ${files.length} files to temp directory...`);
   await copyFilesToTemp(files, absoluteInputDir, tempDir);
-  console.log("Creating snapshot...");
+  console.log('Creating snapshot...');
   const buffer = await snapshot(tempDir);
   const compressed = lz4.compress(buffer);
-  const sha256 = createHash("sha256").update(compressed).digest("hex").slice(0, 8);
+  const sha256 = createHash('sha256').update(compressed).digest('hex').slice(0, 8);
   const filename = `template-snapshot-${sha256}.bin`;
   console.log(`Writing snapshot (${compressed.length} bytes) to ${filename}...`);
   await fs.writeFile(`public/${filename}`, compressed);
-  console.log("Done!");
+  console.log('Done!');
+  console.log('Next update TEMPLATE_URL in app/lib/stores/startup/useContainerSetup.ts to see your change.');
 }
 
 async function getSnapshotFiles(dir) {
   try {
-    const { stdout } = await exec("git ls-files", {
+    const { stdout } = await exec('git ls-files', {
       cwd: dir,
-      encoding: "utf8",
+      encoding: 'utf8',
     });
     if (!stdout) {
-      throw new Error("No output from git ls-files");
+      throw new Error('No output from git ls-files');
     }
     const unignoredFiles = stdout
       .trim()
-      .split("\n")
+      .split('\n')
       .filter((file) => file.length > 0);
-    const packageLockFile = "package-lock.json";
+    const packageLockFile = 'package-lock.json';
     if (!existsSync(path.join(dir, packageLockFile))) {
-      throw new Error("package-lock.json not found");
+      throw new Error('package-lock.json not found');
     }
     return [...unignoredFiles, packageLockFile];
   } catch (error) {
-    console.error("Error using git to list files", error);
+    console.error('Error using git to list files', error);
     process.exit(1);
   }
 }
 
 async function copyFilesToTemp(files, sourceDir, targetDir) {
   for (const file of files) {
-    console.log("Copying", file);
+    console.log('Copying', file);
     const sourcePath = path.join(sourceDir, file);
     const targetPath = path.join(targetDir, file);
 

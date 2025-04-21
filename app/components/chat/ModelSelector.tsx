@@ -24,6 +24,11 @@ const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNo
     icon: svgIcon('/icons/claude.svg'),
     experimental: false,
   },
+  'gemini-2.5-pro': {
+    name: 'Gemini 2.5 Pro',
+    icon: svgIcon('/icons/gemini.svg'),
+    experimental: true,
+  },
   'gpt-4.1': {
     name: 'GPT-4.1',
     icon: svgIcon('/icons/openai.svg'),
@@ -31,7 +36,7 @@ const models: Partial<Record<ModelSelection, { name: string; icon: React.ReactNo
   },
   'grok-3-mini': {
     name: 'Grok 3 Mini',
-    icon: svgIcon('/icons/xai.svg'),
+    icon: svgIcon('/icons/grok.svg'),
     experimental: true,
   },
 } as const;

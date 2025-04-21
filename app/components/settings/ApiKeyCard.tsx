@@ -29,6 +29,7 @@ export function ApiKeyCard() {
   const [anthropicKey, setAnthropicKey] = useState('');
   const [openaiKey, setOpenaiKey] = useState('');
   const [xaiKey, setXaiKey] = useState('');
+  const [googleKey, setGoogleKey] = useState('');
 
   const handleSaveApiKey = async () => {
     setIsSaving(true);
@@ -36,9 +37,10 @@ export function ApiKeyCard() {
       await convex.mutation(api.apiKeys.setApiKeyForCurrentMember, {
         apiKey: {
           preference: alwaysUseKey ? 'always' : 'quotaExhausted',
-          value: anthropicKey,
-          openai: openaiKey,
-          xai: xaiKey,
+          value: cleanApiKey(anthropicKey),
+          openai: cleanApiKey(openaiKey),
+          xai: cleanApiKey(xaiKey),
+          google: cleanApiKey(googleKey),
         },
       });
       toast.success('API key saved successfully');
@@ -87,6 +89,18 @@ export function ApiKeyCard() {
     }
   };
 
+  const handleDeleteGoogleApiKey = async () => {
+    try {
+      await convex.mutation(api.apiKeys.deleteGoogleApiKeyForCurrentMember);
+      toast.success('Google API key removed successfully');
+      setGoogleKey('');
+      setIsDirty(false);
+    } catch (error) {
+      console.error('Failed to remove Google API key:', error);
+      toast.error('Failed to remove Google API key');
+    }
+  };
+
   return (
     <div className="rounded-lg border bg-bolt-elements-background-depth-1 shadow-sm">
       <div className="p-6">
@@ -121,7 +135,29 @@ export function ApiKeyCard() {
                 }}
                 handleDelete={handleDeleteAnthropicApiKey}
               />
-
+              <ApiKeyInput
+                isLoading={apiKey === undefined}
+                id="google-key"
+                label="Google API key"
+                description={
+                  <>
+                    <a
+                      href="https://ai.google.dev/gemini-api/docs/api-key"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-content-link hover:underline"
+                    >
+                      See instructions for generating a Google API key
+                    </a>
+                  </>
+                }
+                value={googleKey}
+                onChange={(value) => {
+                  setGoogleKey(value);
+                  setIsDirty(true);
+                }}
+                handleDelete={handleDeleteGoogleApiKey}
+              />
               <ApiKeyInput
                 isLoading={apiKey === undefined}
                 id="openai-key"
@@ -269,4 +305,8 @@ function AlwaysUseKeyCheckbox(props: {
       />
     </div>
   );
+}
+
+function cleanApiKey(key: string) {
+  return key.trim() === '' ? undefined : key;
 }

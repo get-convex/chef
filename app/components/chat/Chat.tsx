@@ -165,6 +165,7 @@ export const Chat = memo(
       const useAnthropic = modelSelection === 'claude-3.5-sonnet' || modelSelection === 'auto';
       const useOpenai = modelSelection === 'gpt-4.1';
       const useXai = modelSelection === 'grok-3-mini';
+      const useGoogle = modelSelection === 'gemini-2.5-pro';
       if (useAnthropic && apiKey && apiKey.value) {
         return true;
       }
@@ -172,6 +173,9 @@ export const Chat = memo(
         return true;
       }
       if (useXai && apiKey && apiKey.xai) {
+        return true;
+      }
+      if (useGoogle && apiKey && apiKey.google) {
         return true;
       }
       return false;
@@ -234,6 +238,8 @@ export const Chat = memo(
           modelProvider = providers[retries.numFailures % providers.length];
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
+        } else if (modelSelection === 'gemini-2.5-pro') {
+          modelProvider = 'Google';
         } else {
           modelProvider = 'OpenAI';
         }
@@ -315,8 +321,12 @@ export const Chat = memo(
       },
     });
 
+    (window as any).chefMessages = messages;
+
     // AKA "processed messages," since parsing has side effects
     const { parsedMessages, parseMessages } = useMessageParser(partCache);
+
+    (window as any).chefParsedMessages = parsedMessages;
 
     useEffect(() => {
       chatStore.setKey('started', initialMessages.length > 0);

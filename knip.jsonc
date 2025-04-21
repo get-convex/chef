@@ -12,13 +12,13 @@
     "convex/vitest.config.mts",
     // for occasional debugging
     "app/lib/hooks/useWhatChanged.ts",
-    "load-context.ts"
+    "load-context.ts",
   ],
   "project": ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}!"],
   "ignore": ["template/**"],
 
   "ignoreDependencies": [],
   "ignoreBinaries": [
-    "open" // yeah this only works on macs, sorry
-  ]
+    "open", // yeah this only works on macs, sorry
+  ],
 }

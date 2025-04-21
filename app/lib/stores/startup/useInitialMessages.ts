@@ -97,7 +97,7 @@ export function useInitialMessages(chatId: string):
         });
         description.set(chatInfo.description);
       } catch (error) {
-        toast.error('Failed to load chat messages from Convex. Reload the page?');
+        toast.error('Failed to load chat messages from Convex. Try reloading the page.');
         console.error('Error fetching initial messages:', error);
       }
     };

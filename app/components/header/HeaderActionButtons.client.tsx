@@ -1,9 +1,9 @@
 import { useStore } from '@nanostores/react';
 import { ChatBubbleIcon, CodeIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
 import useViewport from '~/lib/hooks/useViewport';
 import { chatStore } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench.client';
-import { classNames } from '~/utils/classNames';
 
 interface HeaderActionButtonsProps {}
 
@@ -15,21 +15,20 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
 
   return (
     <div className="flex">
-      <div className="flex overflow-hidden rounded-md border">
+      <div className="flex overflow-hidden">
         <Button
-          active={showChat}
           disabled={!canHideChat || isSmallViewport} // expand button is disabled on mobile as it's not needed
+          tip={!canHideChat ? 'Cannot hide chat while code is closed' : showChat ? 'Hide chat' : 'Show chat'}
           onClick={() => {
             if (canHideChat) {
               chatStore.setKey('showChat', !showChat);
             }
           }}
-        >
-          <ChatBubbleIcon />
-        </Button>
-        <div className="w-px" />
+          variant="neutral"
+          className="rounded-r-none border-r-0"
+          icon={<ChatBubbleIcon className="my-px" />}
+        />
         <Button
-          active={showWorkbench}
           onClick={() => {
             if (showWorkbench && !showChat) {
               chatStore.setKey('showChat', true);
@@ -37,38 +36,12 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
 
             workbenchStore.showWorkbench.set(!showWorkbench);
           }}
-        >
-          <CodeIcon />
-        </Button>
+          variant="neutral"
+          className="rounded-l-none"
+          icon={<CodeIcon className="my-px" />}
+          tip={showWorkbench ? 'Hide workbench' : 'Show workbench'}
+        />
       </div>
     </div>
-  );
-}
-
-interface ButtonProps {
-  active?: boolean;
-  disabled?: boolean;
-  children?: any;
-  onClick?: VoidFunction;
-  className?: string;
-}
-
-function Button({ active = false, disabled = false, children, onClick, className }: ButtonProps) {
-  return (
-    <button
-      className={classNames(
-        'flex items-center p-1.5',
-        {
-          'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-content-tertiary hover:text-content-primary':
-            !active,
-          'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent': active && !disabled,
-          'bg-bolt-elements-item-backgroundDefault text-gray-900/20 dark:text-white/20 cursor-not-allowed': disabled,
-        },
-        className,
-      )}
-      onClick={onClick}
-    >
-      {children}
-    </button>
   );
 }

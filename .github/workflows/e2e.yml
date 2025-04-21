@@ -1,0 +1,37 @@
+name: Manual E2E Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: 'Run E2E tests'
+        type: boolean
+        default: true
+        required: false
+
+jobs:
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    if: inputs.run_e2e
+    env:
+      CHEF_EVAL_USER_EMAIL: ${{ secrets.CHEF_EVAL_USER_EMAIL }}
+      CHEF_EVAL_USER_PASSWORD: ${{ secrets.CHEF_EVAL_USER_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup and Build
+        uses: ./.github/actions/setup-and-build
+
+      - name: Run chefshot E2E tests
+        run: node chefshot/chefshot.js "Let's build a chat app!" --output-dir generated-app --messages-file messages.json --prod
+
+      - name: Upload generated app and messages
+        uses: actions/upload-artifact@v4
+        with:
+          name: chefshot-output
+          path: |
+            generated-app
+            messages.json
+          retention-days: 7

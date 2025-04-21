@@ -90,6 +90,10 @@ export default defineConfig((config) => {
         ...(config.mode === 'test' ? { 'lz4-wasm': 'lz4-wasm/dist/index.js' } : {}),
       },
     },
+    server: {
+      // feel free to disable, just using this to foolproof dev
+      strictPort: true,
+    },
     plugins: [
       // This is complicated: we're polyfilling the browser (!) for some things
       // and were previously polyfilling Cloudflare worker functions for some things.

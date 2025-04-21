@@ -1,3 +1,5 @@
 pnpm-lock.yaml
 .astro
 proxy/proxy.bundled.cjs
+
+convex/_generated

@@ -42,3 +42,10 @@ html.dark {
     @apply ease-[cubic-bezier(0.4,0,0.2,1)];
   }
 }
+
+@layer utilities {
+  /* Alias for .bottom-4 to avoid false positives with easylist_cookie */
+  .bottom-four {
+    @apply bottom-4;
+  }
+}

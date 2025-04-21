@@ -1,7 +1,7 @@
 import blitzPlugin from '@blitz/eslint-plugin';
 import { jsFileExtensions } from '@blitz/eslint-plugin/dist/configs/javascript.js';
 import { getNamingConventionRule, tsFileExtensions } from '@blitz/eslint-plugin/dist/configs/typescript.js';
-import tailwindcss from "eslint-plugin-tailwindcss";
+import tailwindcss from 'eslint-plugin-tailwindcss';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
@@ -14,13 +14,13 @@ export default [
     files: [...tsFileExtensions, ...jsFileExtensions],
     plugins: {
       react: reactPlugin,
-      "react-hooks": reactHooksPlugin,
+      'react-hooks': reactHooksPlugin,
     },
     rules: {
       ...reactPlugin.configs.flat.recommended.rules,
       ...reactPlugin.configs.flat['jsx-runtime'].rules,
       ...reactHooksPlugin.configs.recommended.rules,
-      
+
       '@blitz/lines-around-comment': 'off',
       '@blitz/newline-before-return': 'off',
       '@blitz/catch-error-name': 'off',
@@ -61,13 +61,20 @@ export default [
           fixStyle: 'separate-type-imports', // This is also the default, enforces 'import type { Foo }'
         },
       ],
-      "prefer-arrow-callback": [
+      'prefer-arrow-callback': [
         'error',
         {
           allowNamedFunctions: true,
         },
       ],
       'tailwindcss/classnames-order': 'off',
+      'no-restricted-syntax': [
+        'error',
+        {
+          message: '.bottom-4 is blocked on convex.dev by easylist_cookie; use .bottom-four instead',
+          selector: 'Literal[value=/bottom-4(?:\\D|$)/i]',
+        },
+      ],
     },
     settings: {
       react: {
@@ -100,25 +107,30 @@ export default [
               message: "Relative imports are not allowed. Please use '~/' instead.",
             },
           ],
-          paths: [{
-            name: 'sonner',
-            importNames: ['Toaster'],
-            message: "Please import Toaster from '~/components/ui/Toaster' instead of 'sonner'."
-          }]
+          paths: [
+            {
+              name: 'sonner',
+              importNames: ['Toaster'],
+              message: "Please import Toaster from '~/components/ui/Toaster' instead of 'sonner'.",
+            },
+          ],
         },
       ],
     },
   },
-  ...tailwindcss.configs["flat/recommended"],
+  ...tailwindcss.configs['flat/recommended'],
   {
     files: ['**/*.tsx'],
     plugins: {
       tailwindcss,
     },
     rules: {
-      'tailwindcss/no-custom-classname': ['error', {
-        whitelist: ['sentry-mask']
-      }],
+      'tailwindcss/no-custom-classname': [
+        'error',
+        {
+          whitelist: ['sentry-mask'],
+        },
+      ],
     },
   },
 ];

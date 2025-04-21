@@ -2,7 +2,6 @@ import { useState } from 'react';
 import JSZip from 'jszip';
 import { webcontainer } from '~/lib/webcontainer';
 import type { WebContainer } from '@webcontainer/api';
-import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { getFileUpdateCounter, useFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
@@ -10,59 +9,10 @@ import { toast } from 'sonner';
 import { streamOutput } from '~/utils/process';
 import { Spinner } from '@ui/Spinner';
 import { CheckIcon, ExternalLinkIcon, RocketIcon, UpdateIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
 
 interface ErrorResponse {
   error: string;
-}
-
-interface ButtonProps {
-  active?: boolean;
-  disabled?: boolean;
-  children?: any;
-  onClick?: VoidFunction;
-  className?: string;
-  title?: string;
-  href?: string;
-  target?: string;
-  rel?: string;
-}
-
-function Button({
-  active = false,
-  disabled = false,
-  children,
-  onClick,
-  className,
-  title,
-  href,
-  target,
-  rel,
-}: ButtonProps) {
-  const sharedClassName = classNames(
-    'flex items-center gap-1 p-1 text-sm border rounded-md',
-    {
-      'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-content-primary hover:text-content-primary':
-        !active,
-      'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent': active && !disabled,
-      'bg-bolt-elements-item-backgroundDefault text-gray-900/20 dark:text-white/20 cursor-not-allowed hover:bg-bolt-elements-item-backgroundDefault hover:text-content-tertiary':
-        disabled,
-    },
-    className,
-  );
-
-  if (href) {
-    return (
-      <a href={href} target={target} rel={rel} className={sharedClassName}>
-        {children}
-      </a>
-    );
-  }
-
-  return (
-    <button className={sharedClassName} disabled={disabled} onClick={onClick} title={title}>
-      {children}
-    </button>
-  );
 }
 
 type DeployStatus =
@@ -101,7 +51,7 @@ export function DeployButton() {
       const container = await webcontainer;
 
       // Run the build command
-      const buildProcess = await container.spawn('npx', ['vite', 'build', '--mode', 'development']);
+      const buildProcess = await container.spawn('vite', ['build', '--mode', 'development']);
       const { output, exitCode } = await streamOutput(buildProcess);
       if (exitCode !== 0) {
         throw new Error(`Build failed: ${output}`);
@@ -177,18 +127,34 @@ export function DeployButton() {
 
   return (
     <div className="flex items-center gap-2">
-      <Button disabled={isDisabled} onClick={handleDeploy} title={status.type === 'error' ? status.message : undefined}>
-        {icon}
-        <span>{buttonText}</span>
+      <Button
+        disabled={isDisabled}
+        onClick={handleDeploy}
+        title={status.type === 'error' ? status.message : undefined}
+        variant="neutral"
+        size="xs"
+        icon={icon}
+        tip={(() => {
+          switch (status.type) {
+            case 'idle':
+              return 'Click to deploy your application';
+            case 'success':
+              return 'Click to deploy again';
+            default:
+              return undefined;
+          }
+        })()}
+      >
+        {buttonText}
       </Button>
       {status.type === 'success' && convex && (
         <Button
           href={`https://${convex.deploymentName}.convex.app`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1"
+          size="xs"
+          icon={<ExternalLinkIcon />}
         >
-          <ExternalLinkIcon />
           View site
         </Button>
       )}
