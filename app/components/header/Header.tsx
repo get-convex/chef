@@ -20,7 +20,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
   const chat = useStore(chatStore);
 
   const sessionId = useConvexSessionIdOrNullOrLoading();
-  const isLoggedIn = !!sessionId;
+  const isLoggedIn = sessionId !== null;
   const showSidebarIcon = !hideSidebarIcon && isLoggedIn;
 
   const profile = useStore(profileStore);
