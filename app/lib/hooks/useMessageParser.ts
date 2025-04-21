@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 import { StreamingMessageParser } from '~/lib/runtime/message-parser';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { makePartId, type PartId } from '~/lib/stores/artifacts';
+import type { BoltAction } from '~/types/actions';
 
 const messageParser = new StreamingMessageParser({
   callbacks: {
@@ -14,9 +15,8 @@ const messageParser = new StreamingMessageParser({
       workbenchStore.updateArtifact(data, { closed: true });
     },
     onActionOpen: (data) => {
-      // We only add shell actions when when the close tag got parsed because only then we have the content. We also
-      // want to prevent the LLM from modifying `convex/auth.ts`
-      if (data.action.type === 'file' && !data.action.filePath.includes('convex/auth.ts')) {
+      // We want to prevent the LLM from modifying `convex/auth.ts`
+      if (isValidAction(data.action)) {
         workbenchStore.addAction(data);
       }
     },
@@ -24,10 +24,14 @@ const messageParser = new StreamingMessageParser({
       if (data.action.type !== 'file') {
         workbenchStore.addAction(data);
       }
-      workbenchStore.runAction(data);
+      if (isValidAction(data.action)) {
+        workbenchStore.runAction(data);
+      }
     },
     onActionStream: (data) => {
-      workbenchStore.runAction(data, true);
+      if (isValidAction(data.action)) {
+        workbenchStore.runAction(data, true);
+      }
     },
   },
 });
@@ -154,4 +158,11 @@ export function useMessageParser(partCache: PartCache) {
   }, []);
 
   return { parsedMessages, parseMessages };
+}
+
+function isValidAction(action: BoltAction): boolean {
+  if (action.type === 'file') {
+    return !action.filePath.includes('convex/auth.ts');
+  }
+  return true;
 }
