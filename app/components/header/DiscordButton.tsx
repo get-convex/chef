@@ -17,7 +17,13 @@ export function DiscordButton({ showInMenu }: { showInMenu: boolean }) {
     );
   }
   return (
-    <Button variant="neutral" size="xs" className="hidden sm:flex" onClick={handleDiscordClick} icon={<DiscordLogoIcon />}>
+    <Button
+      variant="neutral"
+      size="xs"
+      className="hidden sm:flex"
+      onClick={handleDiscordClick}
+      icon={<DiscordLogoIcon />}
+    >
       Community Support
     </Button>
   );
