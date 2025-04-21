@@ -7,10 +7,10 @@ export function DiscordButton() {
   };
 
   return (
-    <MenuItem action={handleDiscordClick}>      
+    <MenuItem action={handleDiscordClick}>
       {/* Margin top is needed to visually align the icon with the text */}
       <DiscordLogoIcon style={{ marginTop: '3px' }} />
       <span>Community Support</span>
-      </MenuItem>
+    </MenuItem>
   );
 }

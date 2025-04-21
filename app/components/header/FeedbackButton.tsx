@@ -13,7 +13,7 @@ export function FeedbackButton() {
   };
 
   return (
-    <MenuItem action={handleFeedback} >
+    <MenuItem action={handleFeedback}>
       <ChatBubbleIcon />
       <span>Submit Feedback</span>
     </MenuItem>
