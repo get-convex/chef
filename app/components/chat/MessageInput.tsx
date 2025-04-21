@@ -31,7 +31,7 @@ export const MessageInput = memo(function MessageInput({
   chatStarted,
   isStreaming,
   sendMessageInProgress,
-  onAbort,
+  onStop,
   onSend,
   disabled,
 
@@ -41,7 +41,7 @@ export const MessageInput = memo(function MessageInput({
   chatStarted: boolean;
   isStreaming: boolean;
   sendMessageInProgress: boolean;
-  onAbort: () => void;
+  onStop: () => void;
   onSend: (message: string) => Promise<void>;
   disabled: boolean;
 
@@ -101,12 +101,12 @@ export const MessageInput = memo(function MessageInput({
 
   const handleClickButton = useCallback(() => {
     if (isStreaming) {
-      onAbort?.();
+      onStop?.();
       return;
     }
 
     handleSend();
-  }, [handleSend, isStreaming, onAbort]);
+  }, [handleSend, isStreaming, onStop]);
 
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useCallback(
     (event) => {
@@ -118,7 +118,7 @@ export const MessageInput = memo(function MessageInput({
         event.preventDefault();
 
         if (isStreaming) {
-          onAbort?.();
+          onStop?.();
           return;
         }
 
@@ -130,7 +130,7 @@ export const MessageInput = memo(function MessageInput({
         handleSend();
       }
     },
-    [selectedTeamSlug, handleSend, isStreaming, onAbort],
+    [selectedTeamSlug, handleSend, isStreaming, onStop],
   );
 
   const handleChange: ChangeEventHandler<HTMLTextAreaElement> = useCallback((event) => {

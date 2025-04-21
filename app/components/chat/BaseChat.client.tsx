@@ -179,7 +179,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     disabled={disableChatMessage !== null || maintenanceMode}
                     modelSelection={modelSelection}
                     setModelSelection={setModelSelection}
-                    onAbort={handleStop}
+                    onStop={handleStop}
                     onSend={sendMessage}
                   />
                 </div>
