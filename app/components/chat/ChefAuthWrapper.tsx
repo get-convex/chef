@@ -74,12 +74,12 @@ export const ChefAuthProvider = ({
 
     if (sessionId === undefined && isUnauthenticated) {
       setSessionId(null);
-      return;
+      return undefined;
     }
 
     if (sessionId !== null && isUnauthenticated) {
       setSessionId(null);
-      return;
+      return undefined;
     }
     let verifySessionTimeout: ReturnType<typeof setTimeout> | null = null;
 
