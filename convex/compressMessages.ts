@@ -1,5 +1,5 @@
-import { Lz4 } from './lz4';
-import type { SerializedMessage } from './messages';
+import { Lz4 } from "./lz4";
+import type { SerializedMessage } from "./messages";
 
 export async function compressMessages(messages: SerializedMessage[]) {
   const lz4 = await Lz4.initialize();

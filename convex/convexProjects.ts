@@ -6,16 +6,16 @@ import {
   query,
   type ActionCtx,
   type MutationCtx,
-} from './_generated/server';
-import { ConvexError, v } from 'convex/values';
-import { getChatByIdOrUrlIdEnsuringAccess } from './messages';
-import { internal } from './_generated/api';
-import { getInviteCode } from './sessions';
-import type { Id } from './_generated/dataModel';
+} from "./_generated/server";
+import { ConvexError, v } from "convex/values";
+import { getChatByIdOrUrlIdEnsuringAccess } from "./messages";
+import { internal } from "./_generated/api";
+import { getInviteCode } from "./sessions";
+import type { Id } from "./_generated/dataModel";
 
 export const hasConnectedConvexProject = query({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     chatId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -26,12 +26,12 @@ export const hasConnectedConvexProject = query({
 
 export const loadConnectedConvexProjectCredentials = query({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     chatId: v.string(),
   },
   returns: v.union(
     v.object({
-      kind: v.literal('connected'),
+      kind: v.literal("connected"),
       projectSlug: v.string(),
       teamSlug: v.string(),
       deploymentUrl: v.string(),
@@ -40,10 +40,10 @@ export const loadConnectedConvexProjectCredentials = query({
       warningMessage: v.optional(v.string()),
     }),
     v.object({
-      kind: v.literal('connecting'),
+      kind: v.literal("connecting"),
     }),
     v.object({
-      kind: v.literal('failed'),
+      kind: v.literal("failed"),
       errorMessage: v.string(),
     }),
     v.null(),
@@ -57,21 +57,21 @@ export const loadConnectedConvexProjectCredentials = query({
     if (project === undefined) {
       return null;
     }
-    if (project.kind === 'connecting') {
-      return { kind: 'connecting' } as const;
+    if (project.kind === "connecting") {
+      return { kind: "connecting" } as const;
     }
-    if (project.kind === 'failed') {
-      return { kind: 'failed', errorMessage: project.errorMessage } as const;
+    if (project.kind === "failed") {
+      return { kind: "failed", errorMessage: project.errorMessage } as const;
     }
     const credentials = await ctx.db
-      .query('convexProjectCredentials')
-      .withIndex('bySlugs', (q) => q.eq('teamSlug', project.teamSlug).eq('projectSlug', project.projectSlug))
+      .query("convexProjectCredentials")
+      .withIndex("bySlugs", (q) => q.eq("teamSlug", project.teamSlug).eq("projectSlug", project.projectSlug))
       .first();
     if (!credentials) {
       return null;
     }
     return {
-      kind: 'connected',
+      kind: "connected",
       projectSlug: project.projectSlug,
       teamSlug: project.teamSlug,
       deploymentUrl: project.deploymentUrl,
@@ -86,7 +86,7 @@ const CHECK_CONNECTION_DEADLINE_MS = 15000;
 
 export const startProvisionConvexProject = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     chatId: v.string(),
     projectInitParams: v.optional(
       v.object({
@@ -103,7 +103,7 @@ export const startProvisionConvexProject = mutation({
 export async function startProvisionConvexProjectHelper(
   ctx: MutationCtx,
   args: {
-    sessionId: Id<'sessions'>;
+    sessionId: Id<"sessions">;
     chatId: string;
     projectInitParams?: {
       teamSlug: string;
@@ -113,18 +113,18 @@ export async function startProvisionConvexProjectHelper(
 ): Promise<void> {
   const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
   if (!chat) {
-    throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
+    throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
   }
   const session = await ctx.db.get(args.sessionId);
   if (!session) {
     console.error(`Session not found: ${args.sessionId}`);
-    throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
+    throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
   }
   if (session.memberId !== undefined) {
     // OAuth flow
     if (args.projectInitParams === undefined) {
       console.error(`Must provide projectInitParams for oauth: ${args.sessionId}`);
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Invalid flow for connecting a project' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Invalid flow for connecting a project" });
     }
 
     await ctx.scheduler.runAfter(0, internal.convexProjects.connectConvexProjectForOauth, {
@@ -137,7 +137,7 @@ export async function startProvisionConvexProjectHelper(
       sessionId: args.sessionId,
       chatId: args.chatId,
     });
-    await ctx.db.patch(chat._id, { convexProject: { kind: 'connecting', checkConnectionJobId: jobId } });
+    await ctx.db.patch(chat._id, { convexProject: { kind: "connecting", checkConnectionJobId: jobId } });
     return;
   }
 
@@ -153,12 +153,12 @@ export async function startProvisionConvexProjectHelper(
     sessionId: args.sessionId,
     chatId: args.chatId,
   });
-  await ctx.db.patch(chat._id, { convexProject: { kind: 'connecting', checkConnectionJobId: jobId } });
+  await ctx.db.patch(chat._id, { convexProject: { kind: "connecting", checkConnectionJobId: jobId } });
 }
 
 export const recordProvisionedConvexProjectCredentials = internalMutation({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     chatId: v.string(),
     projectSlug: v.string(),
     teamSlug: v.optional(v.string()),
@@ -168,8 +168,8 @@ export const recordProvisionedConvexProjectCredentials = internalMutation({
     warningMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const teamSlug = args.teamSlug ?? 'demo-team';
-    await ctx.db.insert('convexProjectCredentials', {
+    const teamSlug = args.teamSlug ?? "demo-team";
+    await ctx.db.insert("convexProjectCredentials", {
       projectSlug: args.projectSlug,
       teamSlug,
       projectDeployKey: args.projectDeployKey,
@@ -179,7 +179,7 @@ export const recordProvisionedConvexProjectCredentials = internalMutation({
       console.error(`Chat not found: ${args.chatId}, sessionId: ${args.sessionId}`);
       return;
     }
-    if (chat.convexProject?.kind === 'connecting') {
+    if (chat.convexProject?.kind === "connecting") {
       const jobId = chat.convexProject.checkConnectionJobId;
       if (jobId) {
         await ctx.scheduler.cancel(jobId);
@@ -187,7 +187,7 @@ export const recordProvisionedConvexProjectCredentials = internalMutation({
     }
     await ctx.db.patch(chat._id, {
       convexProject: {
-        kind: 'connected',
+        kind: "connected",
         projectSlug: args.projectSlug,
         teamSlug,
         deploymentUrl: args.deploymentUrl,
@@ -203,7 +203,7 @@ const WAIT_TIME_MS = 500;
 
 export const connectConvexProjectForOauth = internalAction({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     chatId: v.string(),
     accessToken: v.string(),
     teamSlug: v.string(),
@@ -229,7 +229,7 @@ export const connectConvexProjectForOauth = internalAction({
       })
       .catch(async (error) => {
         console.error(`Error connecting convex project: ${error.message}`);
-        const errorMessage = error instanceof ConvexError ? error.data.message : 'Unexpected error';
+        const errorMessage = error instanceof ConvexError ? error.data.message : "Unexpected error";
         await ctx.runMutation(internal.convexProjects.recordFailedConvexProjectConnection, {
           sessionId: args.sessionId,
           chatId: args.chatId,
@@ -242,7 +242,7 @@ export const connectConvexProjectForOauth = internalAction({
 async function _connectConvexProjectForMember(
   ctx: ActionCtx,
   args: {
-    sessionId: Id<'sessions'>;
+    sessionId: Id<"sessions">;
     chatId: string;
     accessToken: string;
     teamSlug: string;
@@ -255,7 +255,7 @@ async function _connectConvexProjectForMember(
   projectDeployKey: string;
   warningMessage: string | undefined;
 }> {
-  const bigBrainHost = ensureEnvVar('BIG_BRAIN_HOST');
+  const bigBrainHost = ensureEnvVar("BIG_BRAIN_HOST");
   let projectName: string | null = null;
   let timeElapsed = 0;
   // Project names get set via the first message from the LLM, so best effort
@@ -271,23 +271,23 @@ async function _connectConvexProjectForMember(
     await new Promise((resolve) => setTimeout(resolve, WAIT_TIME_MS));
     timeElapsed += WAIT_TIME_MS;
   }
-  projectName = projectName ?? 'My Project (Chef)';
+  projectName = projectName ?? "My Project (Chef)";
   const response = await fetch(`${bigBrainHost}/api/create_project`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${args.accessToken}`,
     },
     body: JSON.stringify({
       team: args.teamSlug,
       projectName,
-      deploymentType: 'dev',
+      deploymentType: "dev",
     }),
   });
   if (!response.ok) {
     const text = await response.text();
     const defaultProvisioningError = new ConvexError({
-      code: 'ProvisioningError',
+      code: "ProvisioningError",
       message: `Failed to create project: ${response.status}`,
       details: text,
     });
@@ -302,9 +302,9 @@ async function _connectConvexProjectForMember(
     }
 
     // Special case this error since it's probably semi-common
-    if (data !== null && data.code === 'ProjectQuotaReached' && typeof data.message === 'string') {
+    if (data !== null && data.code === "ProjectQuotaReached" && typeof data.message === "string") {
       throw new ConvexError({
-        code: 'ProvisioningError',
+        code: "ProvisioningError",
         message: `Failed to create project: ProjectQuotaReached: ${data.message}`,
         details: text,
       });
@@ -323,21 +323,21 @@ async function _connectConvexProjectForMember(
   } = await response.json();
 
   const projectDeployKeyResponse = await fetch(`${bigBrainHost}/api/dashboard/authorize`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${args.accessToken}`,
     },
     body: JSON.stringify({
       authn_token: args.accessToken,
       projectId: data.projectId,
-      appName: ensureEnvVar('CHEF_OAUTH_APP_NAME'),
+      appName: ensureEnvVar("CHEF_OAUTH_APP_NAME"),
     }),
   });
   if (!projectDeployKeyResponse.ok) {
     const text = await projectDeployKeyResponse.text();
     throw new ConvexError({
-      code: 'ProvisioningError',
+      code: "ProvisioningError",
       message: `Failed to create project deploy key: ${projectDeployKeyResponse.status}`,
       details: text,
     });
@@ -359,7 +359,7 @@ async function _connectConvexProjectForMember(
 
 export const recordFailedConvexProjectConnection = internalMutation({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     chatId: v.string(),
     errorMessage: v.string(),
   },
@@ -369,21 +369,21 @@ export const recordFailedConvexProjectConnection = internalMutation({
       console.error(`Chat not found: ${args.chatId}, sessionId: ${args.sessionId}`);
       return;
     }
-    if (chat.convexProject?.kind === 'connecting') {
+    if (chat.convexProject?.kind === "connecting") {
       const jobId = chat.convexProject.checkConnectionJobId;
       if (jobId) {
         await ctx.scheduler.cancel(jobId);
       }
     }
     await ctx.db.patch(chat._id, {
-      convexProject: { kind: 'failed', errorMessage: args.errorMessage },
+      convexProject: { kind: "failed", errorMessage: args.errorMessage },
     });
   },
 });
 
 export const checkConnection = internalMutation({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     chatId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -392,23 +392,23 @@ export const checkConnection = internalMutation({
       console.error(`Chat not found: ${args.chatId}, sessionId: ${args.sessionId}`);
       return;
     }
-    if (chat.convexProject?.kind !== 'connecting') {
+    if (chat.convexProject?.kind !== "connecting") {
       return;
     }
-    await ctx.db.patch(chat._id, { convexProject: { kind: 'failed', errorMessage: 'Failed to connect to project' } });
+    await ctx.db.patch(chat._id, { convexProject: { kind: "failed", errorMessage: "Failed to connect to project" } });
   },
 });
 
 export const getProjectName = internalQuery({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     chatId: v.string(),
   },
   returns: v.union(v.string(), v.null()),
   handler: async (ctx, args) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
     if (!chat) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
     }
     return chat.urlId ?? null;
   },
@@ -416,25 +416,25 @@ export const getProjectName = internalQuery({
 
 export const connectConvexProjectForInviteCode = internalAction({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     projectName: v.string(),
     chatId: v.string(),
   },
   handler: async (ctx, args) => {
-    const bigBrainHost = ensureEnvVar('BIG_BRAIN_HOST');
-    const bigBrainApiKey = ensureEnvVar('BIG_BRAIN_API_KEY');
-    const teamSlug = ensureEnvVar('DEMO_TEAM_SLUG');
+    const bigBrainHost = ensureEnvVar("BIG_BRAIN_HOST");
+    const bigBrainApiKey = ensureEnvVar("BIG_BRAIN_API_KEY");
+    const teamSlug = ensureEnvVar("DEMO_TEAM_SLUG");
 
     const response = await fetch(`${bigBrainHost}/api/create_project`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${bigBrainApiKey}`,
       },
       body: JSON.stringify({
         team: teamSlug,
         projectName: args.projectName,
-        deploymentType: 'dev',
+        deploymentType: "dev",
       }),
     });
 
@@ -467,13 +467,13 @@ export const connectConvexProjectForInviteCode = internalAction({
 
 export const disconnectConvexProject = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     chatId: v.string(),
   },
   handler: async (ctx, args) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: args.chatId, sessionId: args.sessionId });
     if (!chat) {
-      throw new ConvexError({ code: 'NotAuthorized', message: 'Chat not found' });
+      throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
     }
     await ctx.db.patch(chat._id, { convexProject: undefined });
   },

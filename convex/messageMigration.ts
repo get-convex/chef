@@ -1,8 +1,8 @@
-import { v } from 'convex/values';
-import { internalMutation, type ActionCtx, type MutationCtx, internalAction } from './_generated/server';
-import { internal } from './_generated/api';
-import type { Id } from './_generated/dataModel';
-import { compressMessages } from './compressMessages';
+import { v } from "convex/values";
+import { internalMutation, type ActionCtx, type MutationCtx, internalAction } from "./_generated/server";
+import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { compressMessages } from "./compressMessages";
 
 /**
  * There are two (and a half) migrations:
@@ -40,24 +40,24 @@ export const migrateSharedChats = internalMutation({
   },
   handler: async (ctx, args) => {
     const sharesPage = await ctx.db
-      .query('shares')
-      .withIndex('by_creation_time')
-      .order('asc')
+      .query("shares")
+      .withIndex("by_creation_time")
+      .order("asc")
       .paginate({
         cursor: args.cursor ?? null,
         numItems: 1,
       });
     if (sharesPage.isDone) {
-      console.log('No more shares to migrate');
+      console.log("No more shares to migrate");
       return;
     }
     const share = sharesPage.page[0];
     const continueCursor = sharesPage.continueCursor;
     if (share === null) {
-      console.log('Empty page, but not done, so continuing');
+      console.log("Empty page, but not done, so continuing");
       if (!args.shouldScheduleNext) {
         console.log(
-          'Would have scheduled next migration of shared chats, but not scheduled, continue cursor is: ',
+          "Would have scheduled next migration of shared chats, but not scheduled, continue cursor is: ",
           continueCursor,
         );
         return;
@@ -73,7 +73,7 @@ export const migrateSharedChats = internalMutation({
       console.log(`Share ${share._id} has a chat history ID, so skipping`);
       if (!args.shouldScheduleNext) {
         console.log(
-          'Would have scheduled next migration of shared chats, but not scheduled, continue cursor is: ',
+          "Would have scheduled next migration of shared chats, but not scheduled, continue cursor is: ",
           continueCursor,
         );
         return;
@@ -87,8 +87,8 @@ export const migrateSharedChats = internalMutation({
     }
     console.log(`Migrating share ${share._id} to storage`);
     const messages = await ctx.db
-      .query('chatMessages')
-      .withIndex('byChatId', (q) => q.eq('chatId', share.chatId).lte('rank', share.lastMessageRank))
+      .query("chatMessages")
+      .withIndex("byChatId", (q) => q.eq("chatId", share.chatId).lte("rank", share.lastMessageRank))
       .collect();
     const compressed = await compressMessages(messages.map((m) => m.content));
     await ctx.scheduler.runAfter(0, internal.messageMigration.migrateSharedChatToStorage, {
@@ -103,7 +103,7 @@ export const migrateSharedChats = internalMutation({
 
 export const migrateSharedChatToStorage = internalAction({
   args: {
-    shareId: v.id('shares'),
+    shareId: v.id("shares"),
     compressedMessages: v.bytes(),
     forReal: v.optional(v.boolean()),
     cursor: v.optional(v.string()),
@@ -123,7 +123,7 @@ export const migrateSharedChatToStorage = internalAction({
     console.log(`Migrated shared chat ${args.shareId} to storage`);
     if (!args.shouldScheduleNext) {
       console.log(
-        'Would have scheduled next migration of shared chats, but not scheduled, continue cursor is: ',
+        "Would have scheduled next migration of shared chats, but not scheduled, continue cursor is: ",
         args.cursor,
       );
       return;
@@ -138,8 +138,8 @@ export const migrateSharedChatToStorage = internalAction({
 
 export const updateSharedChatWithStorageId = internalMutation({
   args: {
-    shareId: v.id('shares'),
-    storageId: v.id('_storage'),
+    shareId: v.id("shares"),
+    storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.shareId, {
@@ -155,25 +155,25 @@ export const migrateMessages = internalMutation({
     shouldScheduleNext: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    console.log('Starting message migration');
+    console.log("Starting message migration");
     const messagesPage = await ctx.db
-      .query('chatMessages')
-      .withIndex('byChatId')
+      .query("chatMessages")
+      .withIndex("byChatId")
       .paginate({
         cursor: args.cursor ?? null,
         numItems: 1,
       });
     if (messagesPage.isDone) {
-      console.log('No more messages to migrate');
+      console.log("No more messages to migrate");
       return;
     }
     const message = messagesPage.page[0];
     const continueCursor = messagesPage.continueCursor;
     if (message === null) {
-      console.log('Empty page, but not done, so continuing');
+      console.log("Empty page, but not done, so continuing");
       if (!args.shouldScheduleNext) {
         console.log(
-          'Would have scheduled next migration of messages, but not scheduled, continue cursor is: ',
+          "Would have scheduled next migration of messages, but not scheduled, continue cursor is: ",
           continueCursor,
         );
         return;
@@ -236,28 +236,28 @@ export const migrateMessages = internalMutation({
   },
 });
 
-async function _deleteMessagesForChat(ctx: MutationCtx, args: { chatId: Id<'chats'>; forReal: boolean }) {
+async function _deleteMessagesForChat(ctx: MutationCtx, args: { chatId: Id<"chats">; forReal: boolean }) {
   const { chatId, forReal } = args;
   const chat = await ctx.db.get(chatId);
   if (chat === null) {
     console.warn(`Chat ${chatId} not found, probably already deleted, so deleting messages from DB`);
   } else {
     const storageState = await ctx.db
-      .query('chatMessagesStorageState')
-      .withIndex('byChatId', (q) => q.eq('chatId', chatId))
+      .query("chatMessagesStorageState")
+      .withIndex("byChatId", (q) => q.eq("chatId", chatId))
       .unique();
     if (storageState === null) {
-      console.log('Chat messages storage state not found -- should not delete messages from DB if they are not stored');
+      console.log("Chat messages storage state not found -- should not delete messages from DB if they are not stored");
       return;
     }
   }
   const messages = await ctx.db
-    .query('chatMessages')
-    .withIndex('byChatId', (q) => q.eq('chatId', chatId))
+    .query("chatMessages")
+    .withIndex("byChatId", (q) => q.eq("chatId", chatId))
     .collect();
   for (const message of messages) {
     if (message.deletedAt === undefined) {
-      throw new Error('Message has not been deleted');
+      throw new Error("Message has not been deleted");
     }
     if (!forReal) {
       console.log(`DRY RUN: Would delete message: ${message._id}`);
@@ -269,7 +269,7 @@ async function _deleteMessagesForChat(ctx: MutationCtx, args: { chatId: Id<'chat
 
 export const deleteMessagesForChat = internalMutation({
   args: {
-    chatId: v.id('chats'),
+    chatId: v.id("chats"),
     forReal: v.optional(v.boolean()),
     cursor: v.optional(v.string()),
     shouldScheduleNext: v.optional(v.boolean()),
@@ -293,7 +293,7 @@ export const deleteMessagesForChat = internalMutation({
   },
 });
 
-async function _migrateMessagesForChat(ctx: ActionCtx, chatId: string, sessionId: Id<'sessions'>, forReal: boolean) {
+async function _migrateMessagesForChat(ctx: ActionCtx, chatId: string, sessionId: Id<"sessions">, forReal: boolean) {
   const messages = await ctx.runQuery(internal.messages.getInitialMessagesInternal, {
     sessionId,
     id: chatId,
@@ -325,9 +325,9 @@ async function _migrateMessagesForChat(ctx: ActionCtx, chatId: string, sessionId
 
 export const migrateMessagesForChat = internalAction({
   args: {
-    chatDocId: v.id('chats'),
+    chatDocId: v.id("chats"),
     chatId: v.string(),
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     forReal: v.optional(v.boolean()),
     cursor: v.optional(v.string()),
     shouldScheduleNext: v.optional(v.boolean()),

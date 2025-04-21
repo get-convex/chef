@@ -1,8 +1,19 @@
 {
   "printWidth": 120,
   "singleQuote": true,
-  "useTabs": false,
-  "tabWidth": 2,
-  "semi": true,
-  "bracketSpacing": true
+  "overrides": [
+    {
+      "files": "template/**/*",
+      "options": {
+        "printWidth": 80,
+        "singleQuote": false
+      }
+    },
+    {
+      "files": "convex/**/*",
+      "options": {
+        "singleQuote": false
+      }
+    }
+  ]
 }
