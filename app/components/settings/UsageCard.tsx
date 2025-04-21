@@ -107,7 +107,7 @@ export function UsageCard() {
               </span>
             )}
           </p>
-          {tokenUsage && !tokenUsage.isPaidPlan && tokenUsage.centitokensUsed > tokenUsage.centitokensQuota && (
+          {tokenUsage && !tokenUsage.isPaidPlan && tokenUsage.centitokensUsed > tokenUsage.centitokensQuota ? (
             <Callout variant="upsell" className="min-w-full rounded-md">
               <div className="flex w-full flex-col gap-4">
                 <h3>You&apos;ve used all the tokens included with your free plan.</h3>
@@ -122,6 +122,10 @@ export function UsageCard() {
                 </div>
               </div>
             </Callout>
+          ) : (
+            <Button icon={<ExternalLinkIcon />} href={`https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/api-keys`}>
+              Add your own API key
+            </Button>
           )}
         </div>
       </div>
