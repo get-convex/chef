@@ -7,6 +7,13 @@ on:
       - release
   pull_request:
   merge_group:
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: 'Run E2E tests'
+        type: boolean
+        default: true
+        required: false
 
 jobs:
   test:
@@ -27,3 +34,20 @@ jobs:
 
       - name: Run tests
         run: pnpm run test
+
+  e2e-test:
+    name: E2E Tests (Manual)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.run_e2e
+    env:
+      CHEF_EVAL_USER_EMAIL: ${{ secrets.CHEF_EVAL_USER_EMAIL }}
+      CHEF_EVAL_USER_PASSWORD: ${{ secrets.CHEF_EVAL_USER_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup and Build
+        uses: ./.github/actions/setup-and-build
+
+      - name: Run chefshot E2E tests
+        run: pnpm run chefshot
