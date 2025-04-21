@@ -5,6 +5,7 @@ import { workbenchStore } from '~/lib/stores/workbench.client';
 import { PortDropdown } from './PortDropdown';
 import { Spinner } from '@ui/Spinner';
 import { UpdateIcon, MobileIcon, ExternalLinkIcon, CrossCircledIcon } from '@radix-ui/react-icons';
+import * as Sentry from '@sentry/remix';
 
 type ResizeSide = 'left' | 'right' | null;
 
@@ -50,7 +51,9 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
     };
   }, [isActivePreviewSet, activePreview?.port]);
 
-  const [url, setUrl] = useState('');
+  // e.g. '/about' (URL visible to the user in the address bar)
+  const [url, setUrl] = useState<string | undefined>();
+  // e.g. 'https://k03e2io1v3fx9wvj0vr8qd5q58o56n-fkdo--50415--fb22cd3d.local-credentialless.webcontainer-api.io/about'
   const [iframeUrl, setIframeUrl] = useState<string | undefined>();
 
   // Toggle between responsive mode and device mode
@@ -71,32 +74,18 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
 
   useEffect(() => {
     if (!proxyBaseUrl) {
-      setUrl('');
+      setUrl(undefined);
       setIframeUrl(undefined);
 
       return;
     }
 
-    setUrl(proxyBaseUrl);
-    setIframeUrl(proxyBaseUrl);
+    setUrl('/');
+    if (proxyBaseUrl.endsWith('/')) {
+      Sentry.captureMessage('proxyBaseUrl unexpectedly has a trailing slash');
+    }
+    setIframeUrl(proxyBaseUrl + '/');
   }, [proxyBaseUrl]);
-
-  const validateUrl = useCallback(
-    (value: string) => {
-      if (!proxyBaseUrl) {
-        return false;
-      }
-
-      if (value === proxyBaseUrl) {
-        return true;
-      } else if (value.startsWith(proxyBaseUrl)) {
-        return ['/', '?', '#'].includes(value.charAt(proxyBaseUrl.length));
-      }
-
-      return false;
-    },
-    [proxyBaseUrl],
-  );
 
   const findMinPortIndex = useCallback(
     (minIndex: number, preview: { port: number }, index: number, array: { port: number }[]) => {
@@ -253,21 +242,41 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
           <input
             title="URL"
             ref={inputRef}
-            className="w-full bg-transparent outline-none"
+            className="w-full bg-transparent outline-none focus:outline-none"
             type="text"
             value={url}
             onChange={(event) => {
               setUrl(event.target.value);
             }}
             onKeyDown={(event) => {
-              if (event.key === 'Enter' && validateUrl(url)) {
-                setIframeUrl(url);
-
-                if (inputRef.current) {
-                  inputRef.current.blur();
-                }
+              if (proxyBaseUrl === null) {
+                Sentry.captureMessage('key down event received while proxyBaseUrl is null');
+                return;
               }
+
+              if (iframeUrl === undefined) {
+                Sentry.captureMessage('key down event received while iframeUrl is undefined');
+                return;
+              }
+
+              if (event.key !== 'Enter') {
+                return;
+              }
+
+              // Don’t allow the user to enter an absolute URL
+              if (url?.startsWith('http://') || url?.startsWith('https://')) {
+                setUrl(iframeUrl.slice(proxyBaseUrl.length));
+                inputRef.current?.blur();
+                return;
+              }
+
+              const urlWithLeadingSlash = url?.startsWith('/') ? url : `/${url ?? ''}`;
+              setUrl(urlWithLeadingSlash);
+              setIframeUrl(proxyBaseUrl + urlWithLeadingSlash);
+
+              inputRef.current?.blur();
             }}
+            disabled={proxyBaseUrl === null}
           />
         </div>
 
