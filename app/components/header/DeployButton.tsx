@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { streamOutput } from '~/utils/process';
 import { Spinner } from '@ui/Spinner';
 import { CheckIcon, ExternalLinkIcon, RocketIcon, UpdateIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
 
 interface ErrorResponse {
   error: string;
@@ -25,44 +26,6 @@ interface ButtonProps {
   href?: string;
   target?: string;
   rel?: string;
-}
-
-function Button({
-  active = false,
-  disabled = false,
-  children,
-  onClick,
-  className,
-  title,
-  href,
-  target,
-  rel,
-}: ButtonProps) {
-  const sharedClassName = classNames(
-    'flex items-center gap-1 p-1 text-sm border rounded-md',
-    {
-      'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-content-primary hover:text-content-primary':
-        !active,
-      'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent': active && !disabled,
-      'bg-bolt-elements-item-backgroundDefault text-gray-900/20 dark:text-white/20 cursor-not-allowed hover:bg-bolt-elements-item-backgroundDefault hover:text-content-tertiary':
-        disabled,
-    },
-    className,
-  );
-
-  if (href) {
-    return (
-      <a href={href} target={target} rel={rel} className={sharedClassName}>
-        {children}
-      </a>
-    );
-  }
-
-  return (
-    <button className={sharedClassName} disabled={disabled} onClick={onClick} title={title}>
-      {children}
-    </button>
-  );
 }
 
 type DeployStatus =
@@ -177,7 +140,7 @@ export function DeployButton() {
 
   return (
     <div className="flex items-center gap-2">
-      <Button disabled={isDisabled} onClick={handleDeploy} title={status.type === 'error' ? status.message : undefined}>
+      <Button disabled={isDisabled} onClick={handleDeploy} title={status.type === 'error' ? status.message : undefined} variant="neutral" size="xs">
         {icon}
         <span>{buttonText}</span>
       </Button>

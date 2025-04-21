@@ -8,40 +8,8 @@ import { useConvexSessionId } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
 import { Share2Icon, ClipboardIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@ui/Spinner';
+import { Button } from '@ui/Button';
 
-const Button = forwardRef<
-  HTMLButtonElement,
-  {
-    active?: boolean;
-    disabled?: boolean;
-    children?: any;
-    onClick?: VoidFunction;
-    className?: string;
-    title?: string;
-  }
->(function Button({ active = false, disabled = false, children, onClick, className, title }, ref) {
-  return (
-    <button
-      ref={ref}
-      className={classNames(
-        'flex items-center gap-1 p-1 text-sm border rounded-md',
-        {
-          'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-content-primary hover:text-content-primary':
-            !active,
-          'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent': active && !disabled,
-          'bg-bolt-elements-item-backgroundDefault text-gray-900/20 dark:text-white/20 cursor-not-allowed hover:bg-bolt-elements-item-backgroundDefault hover:text-content-tertiary':
-            disabled,
-        },
-        className,
-      )}
-      disabled={disabled}
-      onClick={onClick}
-      title={title}
-    >
-      {children}
-    </button>
-  );
-});
 
 type ShareStatus = 'idle' | 'loading' | 'success';
 
@@ -104,7 +72,7 @@ export function ShareButton() {
   return (
     <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>
       <Popover.Trigger asChild>
-        <Button active={isOpen}>
+        <Button focused={isOpen} variant="neutral" size="xs">
           <Share2Icon />
           <span>Share Chat</span>
         </Button>
