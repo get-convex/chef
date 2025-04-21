@@ -31,7 +31,7 @@ export function useNewChatContainerSetup() {
         await waitForBootStepCompleted(ContainerBootState.STARTING);
         await setupContainer(convex, { snapshotUrl: TEMPLATE_URL, allowNpmInstallFailure: false });
       } catch (error: any) {
-        toast.error('Failed to setup Chef environment. Try reloading the page?');
+        toast.error('Failed to setup Chef environment. Try reloading the page.');
         setContainerBootState(ContainerBootState.ERROR, error);
       }
     };
@@ -59,7 +59,7 @@ export function useExistingChatContainerSetup(loadedChatId: string | undefined) 
         }
         await setupContainer(convex, { snapshotUrl, allowNpmInstallFailure: true });
       } catch (error: any) {
-        toast.error('Failed to setup Chef environment. Try reloading the page?');
+        toast.error('Failed to setup Chef environment. Try reloading the page.');
         setContainerBootState(ContainerBootState.ERROR, error);
       }
     };

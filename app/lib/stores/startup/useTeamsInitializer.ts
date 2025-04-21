@@ -35,7 +35,7 @@ async function fetchTeams(convex: ConvexReactClient) {
     teams = await response.json();
   } catch (error) {
     console.error('Error fetching teams:', error);
-    toast.error('Failed to load user. Try logging in at dashboard.convex.dev?');
+    toast.error('Failed to load user. Try logging in at https://dashboard.convex.dev.');
     return;
   }
   convexTeamsStore.set(teams);
