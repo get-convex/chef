@@ -140,18 +140,31 @@ export function DeployButton() {
 
   return (
     <div className="flex items-center gap-2">
-      <Button disabled={isDisabled} onClick={handleDeploy} title={status.type === 'error' ? status.message : undefined} variant="neutral" size="xs">
-        {icon}
-        <span>{buttonText}</span>
+      <Button disabled={isDisabled} onClick={handleDeploy} title={status.type === 'error' ? status.message : undefined} variant="neutral" size="xs" icon={icon} tip={
+        (() => {
+          switch (status.type) {
+            case 'idle':
+              return 'Click to deploy your application';
+            case 'building':
+            case 'zipping':
+            case 'deploying':
+            case 'error':
+              return undefined;
+            case 'success':
+              return 'Click to deploy again';
+          }
+        })()
+      }>
+        {buttonText}
       </Button>
       {status.type === 'success' && convex && (
         <Button
           href={`https://${convex.deploymentName}.convex.app`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1"
+          size="xs"
+          icon={<ExternalLinkIcon />}
         >
-          <ExternalLinkIcon />
           View site
         </Button>
       )}
