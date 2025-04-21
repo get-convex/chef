@@ -10,7 +10,7 @@ import { HamburgerMenuIcon, PersonIcon, GearIcon, ExitIcon } from '@radix-ui/rea
 import { DownloadButton } from './DownloadButton';
 import { LoggedOutHeaderButtons } from './LoggedOutHeaderButtons';
 import { useAuth0 } from '@auth0/auth0-react';
-import { profileStore } from '~/lib/stores/profile';
+import { profileStore, setProfile } from '~/lib/stores/profile';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
 import { FeedbackButton } from './FeedbackButton';
@@ -27,7 +27,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
   const { logout } = useAuth0();
 
   const handleLogout = () => {
-    window.localStorage.removeItem('bolt_profile');
+    setProfile(null);
     window.localStorage.removeItem(SESSION_ID_KEY);
     logout({
       logoutParams: {
