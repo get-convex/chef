@@ -48,19 +48,31 @@ export type ModelProvider = 'Anthropic' | 'Bedrock' | 'OpenAI' | 'XAI' | 'Google
 
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
 
-export async function convexAgent(
-  chatInitialId: string,
-  env: Record<string, string | undefined>,
-  firstUserMessage: boolean,
-  messages: Messages,
-  tracer: Tracer | null,
-  modelProvider: ModelProvider,
-  userApiKey: string | undefined,
+export async function convexAgent(args: {
+  chatInitialId: string;
+  env: Record<string, string | undefined>;
+  firstUserMessage: boolean;
+  messages: Messages;
+  tracer: Tracer | null;
+  modelProvider: ModelProvider;
+  userApiKey: string | undefined;
+  shouldDisableTools: boolean;
   recordUsageCb: (
     lastMessage: Message | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
-  ) => Promise<void>,
-) {
+  ) => Promise<void>;
+}) {
+  const {
+    chatInitialId,
+    env,
+    firstUserMessage,
+    messages,
+    tracer,
+    modelProvider,
+    userApiKey,
+    shouldDisableTools,
+    recordUsageCb,
+  } = args;
   console.debug('Starting agent with model provider', modelProvider);
   if (userApiKey) {
     console.debug('Using user provided API key');
@@ -283,6 +295,7 @@ export async function convexAgent(
           ...cleanupAssistantMessages(messages),
         ],
         tools,
+        toolChoice: shouldDisableTools ? 'none' : 'auto',
         onFinish: (result) => {
           onFinishHandler(dataStream, messages, result, tracer, chatInitialId, recordUsageCb);
         },

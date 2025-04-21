@@ -82,6 +82,7 @@ const retryState = atom({
   numFailures: 0,
   nextRetry: Date.now(),
 });
+const shouldDisableToolsStore = atom(false);
 
 export const Chat = memo(
   ({
@@ -259,14 +260,18 @@ export const Chat = memo(
           modelProvider,
           // Fall back to the user's API key if the request has failed too many times
           userApiKey: retries.numFailures < MAX_RETRIES ? apiKey : { ...apiKey, preference: 'always' },
+          shouldDisableTools: shouldDisableToolsStore.get(),
         };
       },
       maxSteps: 64,
       async onToolCall({ toolCall }) {
         console.log('Starting tool call', toolCall);
-        const result = await workbenchStore.waitOnToolCall(toolCall.toolCallId);
+        const { result, shouldDisableTools } = await workbenchStore.waitOnToolCall(toolCall.toolCallId);
         console.log('Tool call finished', result);
-        return result;
+        if (shouldDisableTools) {
+          shouldDisableToolsStore.set(true);
+        }
+        return { result };
       },
       onError: async (e: Error) => {
         // Clean up the last message if it's an assistant message
@@ -445,6 +450,7 @@ export const Chat = memo(
         const modifiedFiles = workbenchStore.getModifiedFiles();
         chatStore.setKey('aborted', false);
 
+        shouldDisableToolsStore.set(false);
         if (modifiedFiles !== undefined) {
           const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
           append({

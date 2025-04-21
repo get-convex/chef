@@ -1,3 +1,4 @@
+import { ToolInvocation } from 'ai';
 import type { AbsolutePath, RelativePath } from './utils/workDir.js';
 
 export type ConvexProject = {
@@ -26,24 +27,24 @@ export interface BoltArtifactData {
 
 export type ActionType = 'file' | 'toolUse';
 
-interface BaseAction {
-  content: string;
-}
-
-export interface FileAction extends BaseAction {
+export interface FileAction {
   type: 'file';
   filePath: RelativePath;
   isEdit?: boolean;
+  content: string;
 }
 
-interface ToolUseAction extends BaseAction {
+export interface ToolUseAction {
   type: 'toolUse';
   toolName: string;
+  parsedContent: ToolInvocation;
+  // Serialized content to use for de-duping
+  content: string;
 }
 
 export type BoltAction = FileAction | ToolUseAction;
 
-export type BoltActionData = BoltAction | BaseAction;
+export type BoltActionData = BoltAction;
 
 export interface EditorDocument {
   value: string;

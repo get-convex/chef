@@ -99,6 +99,7 @@ export function processMessage(
           action: {
             type: 'toolUse' as const,
             toolName: toolInvocation.toolName,
+            parsedContent: toolInvocation,
             content: JSON.stringify(toolInvocation),
           },
         };
