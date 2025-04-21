@@ -117,3 +117,15 @@ You will need a lot of terminals
 There are a few steps to iterating on the template.
 
 Run `npm run rebuild-template` for directions.
+
+# Debugging
+
+We include source maps in production so you should be able to poke around in production.
+
+There are a few global variables available for debugging too:
+
+- `chefWebContainer` is the unix-ish container in which tooling and code runs
+- `chefMessages` is the raw messages
+- `chefParsedMessages` is similar
+- `chefSentryEnabled` is whether Sentry is currently enabled
+- `chefSetLogLevel()` can be called with log levels like `"debug"` or `"info"` to get more console logging. `"tracing"` is usually too much.

@@ -14,6 +14,9 @@ import {
   prepareMessageHistory,
   waitForNewMessages,
 } from './messages';
+import { createScopedLogger } from '~/utils/logger';
+
+const logger = createScopedLogger('history');
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
@@ -121,7 +124,7 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
     const currentState = await waitForInitialized();
     const completeMessageInfo = lastCompleteMessageInfoStore.get();
     if (completeMessageInfo === null) {
-      console.error('Complete message info not initialized');
+      logger.error('Complete message info not initialized');
       continue;
     }
     const areMessagesUpToDate =
@@ -187,7 +190,7 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
       );
     }
     if (messageBlob === undefined && snapshotBlob === undefined) {
-      console.info('No updates to chat, skipping sync');
+      logger.info('Complete message info not initialized');
       continue;
     }
     let response;
@@ -209,13 +212,13 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
     }
     if (error !== null || (response !== undefined && !response.ok)) {
       const errorText = response !== undefined ? await response.text() : (error?.message ?? 'Unknown error');
-      console.error('Failed to save chat:', errorText);
+      logger.error('Complete message info not initialized');
       chatSyncState.set({
         ...currentState,
         numFailures: currentState.numFailures + 1,
       });
       const sleepTime = backoffTime(currentState.numFailures);
-      console.error(
+      logger.error(
         `Failed to save chat (num failures: ${currentState.numFailures}), sleeping for ${sleepTime.toFixed(2)}ms`,
         errorText,
       );

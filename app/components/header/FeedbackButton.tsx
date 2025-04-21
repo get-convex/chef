@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/remix';
 import { ChatBubbleIcon } from '@radix-ui/react-icons';
-import { OverflowMenuButton } from './OverflowMenuButton';
+import { MenuItem } from '@ui/Menu';
 
 export function FeedbackButton() {
   const handleFeedback = async () => {
@@ -13,9 +13,9 @@ export function FeedbackButton() {
   };
 
   return (
-    <OverflowMenuButton onClick={handleFeedback}>
+    <MenuItem action={handleFeedback}>
       <ChatBubbleIcon />
       <span>Submit Feedback</span>
-    </OverflowMenuButton>
+    </MenuItem>
   );
 }

@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { editToolParameters } from './editTool';
 import { getAbsolutePath } from '~/lib/stores/files';
 import { streamOutput } from '~/utils/process';
+import { outputLabels, type OutputLabels } from './deployToolOutputLabels';
 
 const logger = createScopedLogger('ActionRunner');
 
@@ -372,30 +373,79 @@ export class ActionRunner {
         case 'deploy': {
           const container = await this.#webcontainer;
           await waitForContainerBootState(ContainerBootState.READY);
-          const convexProc = await container.spawn('sh', [
-            '-c',
-            'convex dev --once && tsc --noEmit -p tsconfig.app.json',
-          ]);
-          action.abortSignal.addEventListener('abort', () => {
-            convexProc.kill();
-          });
 
-          const { output, exitCode } = await streamOutput(convexProc, {
-            onOutput: (output) => {
-              this.terminalOutput.set(output);
-            },
-            debounceMs: 50,
+          result = '';
+
+          const commandErroredController = new AbortController();
+          const abortSignal = AbortSignal.any([action.abortSignal, commandErroredController.signal]);
+
+          /** Return a promise of output on success, throws an error containing output on failure. */
+          const run = async (
+            commandAndArgs: string[],
+            errorPrefix: OutputLabels,
+            onOutput?: (s: string) => void,
+          ): Promise<string> => {
+            logger.info('starting to run', errorPrefix);
+            const t0 = performance.now();
+            const proc = await container.spawn(commandAndArgs[0], commandAndArgs.slice(1));
+            const abortListener: () => void = () => proc.kill();
+            abortSignal.addEventListener('abort', () => {
+              logger.info('aborting', commandAndArgs);
+              proc.kill();
+            });
+            const { output, exitCode } = await streamOutput(proc, { onOutput, debounceMs: 50 });
+
+            const cleanedOutput = cleanConvexOutput(output);
+            const time = performance.now() - t0;
+            logger.debug('finished', errorPrefix, 'in', Math.round(time));
+            if (exitCode !== 0) {
+              // Kill all other commands
+              commandErroredController.abort(`${errorPrefix}`);
+              // This command's output will be reported exclusively
+              throw new Error(`[${errorPrefix}] Failed with exit code ${exitCode}: ${cleanedOutput}`);
+            }
+            abortSignal.removeEventListener('abort', abortListener);
+            if (cleanedOutput.trim().length === 0) {
+              return '';
+            }
+            return cleanedOutput + '\n\n';
+          };
+
+          //         START         deploy tool call
+          //          /
+          //         /
+          //  codegen              `convex typecheck` includes typecheck of convex/ dir
+          // + typecheck
+          //       |
+          //       |
+          // app typecheck         `tsc --noEmit --project tsconfig.app.json
+          //         \
+          //          \
+          //         deploy        `deploy` can fail
+
+          const runCodegenAndTypecheck = async (onOutput?: (output: string) => void) => {
+            // Convex codegen does a convex directory typecheck, then tsc does a full-project typecheck.
+            let output = await run(['convex', 'codegen'], outputLabels.convexTypecheck, onOutput);
+            output += await run(
+              ['tsc', '--noEmit', '-p', 'tsconfig.app.json'],
+              outputLabels.frontendTypecheck,
+              onOutput,
+            );
+            return output;
+          };
+
+          const t0 = performance.now();
+          result += await runCodegenAndTypecheck((output) => {
+            this.terminalOutput.set(output);
           });
-          const cleanedOutput = cleanConvexOutput(output);
-          if (exitCode !== 0) {
-            throw new Error(`Convex failed with exit code ${exitCode}: ${cleanedOutput}`);
-          }
-          result = cleanedOutput;
+          result += await run(['convex', 'dev', '--once', '--typecheck=disable'], outputLabels.convexDeploy);
+          const time = performance.now() - t0;
+          logger.info('deploy action finished in', time);
 
           // Start the default preview if it’s not already running
           if (!workbenchStore.isDefaultPreviewRunning()) {
             const shell = this.#shellTerminal();
-            await shell.startCommand('npx vite --open');
+            await shell.startCommand('vite --open');
             result += '\n\nDev server started successfully!';
           }
 

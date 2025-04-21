@@ -10,8 +10,9 @@
     "deploy": "npm run build",
     "build": "remix vite:build",
     "build:proxy": "node proxy/build.cjs",
-    "dev": "remix vite:dev",
-    "rebuild-template": "node make-bootstrap-snapshot.js && open http://localhost:5173/admin/build-snapshot",
+    "dev": "node depscheck.mjs && remix vite:dev",
+    "update-env": "grep -E 'VITE_CONVEX_URL|CONVEX_DEPLOYMENT' .env.local > temp_envars; vercel env pull; cat temp_envars >> .env.local; if [ -s temp_envars ]; then echo '\nAdditionally, preserved existing envars:'; cat temp_envars; fi; rm temp_envars",
+    "rebuild-template": "node make-bootstrap-snapshot.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint:app": "eslint --cache --cache-location ./node_modules/.cache/eslint app",
@@ -33,6 +34,7 @@
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^2.2.5",
     "@ai-sdk/anthropic": "^1.2.4",
+    "@ai-sdk/google": "^1.2.11",
     "@ai-sdk/openai": "^1.3.6",
     "@ai-sdk/react": "^1.2.5",
     "@ai-sdk/xai": "^1.2.13",
@@ -56,6 +58,7 @@
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.35.0",
     "@convex-dev/design-system": "0.1.5",
+    "@convex-dev/eslint-plugin": "0.0.1-alpha.4",
     "@convex-dev/rate-limiter": "^0.2.6",
     "@fast-check/vitest": "^0.2.1",
     "@heroicons/react": "^2.2.0",
@@ -168,7 +171,7 @@
     "stream-browserify": "^3.0.0",
     "tailwind-scrollbar": "3.0.3",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.3",
+    "typescript": "~5.7.3",
     "unified": "^11.0.5",
     "unocss": "^0.61.9",
     "util": "^0.12.5",
@@ -182,6 +185,11 @@
   },
   "resolutions": {
     "@typescript-eslint/utils": "^8.0.0-alpha.30"
+  },
+  "pnpm": {
+    "overrides": {
+      "@remix-run/cloudflare": "npm:@remix-run/node@2.15.3"
+    }
   },
   "packageManager": "pnpm@9.5.0"
 }
