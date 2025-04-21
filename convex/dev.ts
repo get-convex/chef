@@ -41,7 +41,7 @@ export const findSessionForUser = internalQuery({
     const convexMember = await ctx.db
       .query('convexMembers')
       .withIndex('byTokenIdentifier', (q) =>
-        q.eq('tokenIdentifier', `https://auth.convex.dev/${normalizedGithubMemberId}`),
+        q.eq('tokenIdentifier', `https://auth.convex.dev/|${normalizedGithubMemberId}`),
       )
       .first();
     if (!convexMember) {
