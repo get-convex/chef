@@ -9,9 +9,9 @@ interface Profile {
 
 // Initialize with stored profile or defaults
 const storedProfile = typeof window !== 'undefined' ? localStorage.getItem('bolt_profile') : null;
-const initialProfile: Profile = storedProfile ? JSON.parse(storedProfile) : null;
+const initialProfile: Profile | null = storedProfile ? JSON.parse(storedProfile) : null;
 
-export const profileStore = atom<Profile>(initialProfile);
+export const profileStore = atom<Profile | null>(initialProfile);
 
 export const setProfile = (profile: Profile) => {
   profileStore.set(profile);
