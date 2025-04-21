@@ -107,12 +107,13 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                     ),
                   }}
                 >
+                  <FeedbackButton showInMenu={true} />
+                  <DiscordButton showInMenu={true} />
+                  <hr />
                   <MenuItemComponent action={handleSettingsClick}>
                     <GearIcon />
                     Settings
                   </MenuItemComponent>
-                  <FeedbackButton showInMenu={true} />
-                  <DiscordButton showInMenu={true} />
                   <MenuItemComponent action={handleLogout}>
                     <ExitIcon />
                     Log out
