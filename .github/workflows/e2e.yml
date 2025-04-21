@@ -24,14 +24,8 @@ jobs:
       - name: Setup and Build
         uses: ./.github/actions/setup-and-build
 
-      - name: Install Playwright Chrome dependencies
-        run: npx playwright install-deps chromium
-
-      - name: Install Playwright Chrome
-        run: npx playwright install chromium
-
       - name: Run chefshot E2E tests
-        run: pnpm run chefshot "Let's build a chat app!" --output-dir generated-app --messages-file messages.json --prod
+        run: node chefshot/chefshot.js "Let's build a chat app!" --output-dir generated-app --messages-file messages.json --prod
 
       - name: Upload generated app and messages
         uses: actions/upload-artifact@v4
