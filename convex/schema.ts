@@ -1,9 +1,9 @@
-import { defineSchema, defineTable } from 'convex/server';
-import { v, type VAny } from 'convex/values';
-import type { SerializedMessage } from './messages';
+import { defineSchema, defineTable } from "convex/server";
+import { v, type VAny } from "convex/values";
+import type { SerializedMessage } from "./messages";
 
 export const apiKeyValidator = v.object({
-  preference: v.union(v.literal('always'), v.literal('quotaExhausted')),
+  preference: v.union(v.literal("always"), v.literal("quotaExhausted")),
   // NB: This is the *Anthropic* API key.
   value: v.optional(v.string()),
   openai: v.optional(v.string()),
@@ -21,13 +21,13 @@ export default defineSchema({
   sessions: defineTable({
     // When auth-ing with convex.dev, we'll save a `convexMembers` document and
     // reference it here.
-    memberId: v.optional(v.id('convexMembers')),
-  }).index('byMemberId', ['memberId']),
+    memberId: v.optional(v.id("convexMembers")),
+  }).index("byMemberId", ["memberId"]),
 
   convexMembers: defineTable({
     tokenIdentifier: v.string(),
     apiKey: v.optional(apiKeyValidator),
-  }).index('byTokenIdentifier', ['tokenIdentifier']),
+  }).index("byTokenIdentifier", ["tokenIdentifier"]),
 
   /*
    * All chats have two IDs -- an `initialId` that is always set (UUID) and a `urlId`
@@ -38,18 +38,18 @@ export default defineSchema({
    * we should prefer `urlId` if it is set.
    */
   chats: defineTable({
-    creatorId: v.id('sessions'),
+    creatorId: v.id("sessions"),
     initialId: v.string(),
     urlId: v.optional(v.string()),
     description: v.optional(v.string()),
     timestamp: v.string(),
     metadata: v.optional(v.any()), // TODO migration to remove this column
-    snapshotId: v.optional(v.id('_storage')),
+    snapshotId: v.optional(v.id("_storage")),
     lastMessageRank: v.optional(v.number()),
     convexProject: v.optional(
       v.union(
         v.object({
-          kind: v.literal('connected'),
+          kind: v.literal("connected"),
           projectSlug: v.string(),
           teamSlug: v.string(),
           // for this member's dev deployment
@@ -58,59 +58,59 @@ export default defineSchema({
           warningMessage: v.optional(v.string()),
         }),
         v.object({
-          kind: v.literal('connecting'),
-          checkConnectionJobId: v.optional(v.id('_scheduled_functions')),
+          kind: v.literal("connecting"),
+          checkConnectionJobId: v.optional(v.id("_scheduled_functions")),
         }),
         v.object({
-          kind: v.literal('failed'),
+          kind: v.literal("failed"),
           errorMessage: v.string(),
         }),
       ),
     ),
   })
-    .index('byCreatorAndId', ['creatorId', 'initialId'])
-    .index('byCreatorAndUrlId', ['creatorId', 'urlId'])
-    .index('bySnapshotId', ['snapshotId']),
+    .index("byCreatorAndId", ["creatorId", "initialId"])
+    .index("byCreatorAndUrlId", ["creatorId", "urlId"])
+    .index("bySnapshotId", ["snapshotId"]),
 
   convexProjectCredentials: defineTable({
     projectSlug: v.string(),
     teamSlug: v.string(),
-    memberId: v.optional(v.id('convexMembers')),
+    memberId: v.optional(v.id("convexMembers")),
     projectDeployKey: v.string(),
-  }).index('bySlugs', ['teamSlug', 'projectSlug']),
+  }).index("bySlugs", ["teamSlug", "projectSlug"]),
 
   chatMessages: defineTable({
     content: v.any() as VAny<SerializedMessage>,
     rank: v.number(),
-    chatId: v.id('chats'),
+    chatId: v.id("chats"),
     deletedAt: v.optional(v.number()),
-  }).index('byChatId', ['chatId', 'rank']),
+  }).index("byChatId", ["chatId", "rank"]),
   chatMessagesStorageState: defineTable({
-    chatId: v.id('chats'),
-    storageId: v.union(v.id('_storage'), v.null()),
+    chatId: v.id("chats"),
+    storageId: v.union(v.id("_storage"), v.null()),
     lastMessageRank: v.number(),
     partIndex: v.number(),
-    snapshotId: v.optional(v.id('_storage')),
+    snapshotId: v.optional(v.id("_storage")),
   })
-    .index('byChatId', ['chatId', 'lastMessageRank', 'partIndex'])
-    .index('byStorageId', ['storageId'])
-    .index('bySnapshotId', ['snapshotId']),
+    .index("byChatId", ["chatId", "lastMessageRank", "partIndex"])
+    .index("byStorageId", ["storageId"])
+    .index("bySnapshotId", ["snapshotId"]),
   inviteCodes: defineTable({
     code: v.string(),
-    sessionId: v.id('sessions'),
+    sessionId: v.id("sessions"),
     lastUsedTime: v.union(v.number(), v.null()),
     issuedReason: v.string(),
     isActive: v.boolean(),
   })
-    .index('byCode', ['code'])
-    .index('bySessionId', ['sessionId']),
+    .index("byCode", ["code"])
+    .index("bySessionId", ["sessionId"]),
 
   shares: defineTable({
-    chatId: v.id('chats'),
-    snapshotId: v.optional(v.id('_storage')),
+    chatId: v.id("chats"),
+    snapshotId: v.optional(v.id("_storage")),
     code: v.string(),
 
-    chatHistoryId: v.optional(v.union(v.id('_storage'), v.null())),
+    chatHistoryId: v.optional(v.union(v.id("_storage"), v.null())),
 
     // Shares are created at one point in time, so this makes sure
     // people using the link don’t see newer messages.
@@ -119,27 +119,27 @@ export default defineSchema({
     // The description of the chat at the time the share was created.
     description: v.optional(v.string()),
   })
-    .index('byCode', ['code'])
-    .index('bySnapshotId', ['snapshotId'])
-    .index('byChatHistoryId', ['chatHistoryId'])
-    .index('byChatId', ['chatId']),
+    .index("byCode", ["code"])
+    .index("bySnapshotId", ["snapshotId"])
+    .index("byChatHistoryId", ["chatHistoryId"])
+    .index("byChatId", ["chatId"]),
 
   memberOpenAITokens: defineTable({
-    memberId: v.id('convexMembers'),
+    memberId: v.id("convexMembers"),
     token: v.string(),
     requestsRemaining: v.number(),
     lastUsedTime: v.union(v.number(), v.null()),
   })
-    .index('byMemberId', ['memberId'])
-    .index('byToken', ['token']),
+    .index("byMemberId", ["memberId"])
+    .index("byToken", ["token"]),
 
   resendTokens: defineTable({
-    memberId: v.id('convexMembers'),
+    memberId: v.id("convexMembers"),
     token: v.string(),
     verifiedEmail: v.string(),
     requestsRemaining: v.number(),
     lastUsedTime: v.union(v.number(), v.null()),
   })
-    .index('byMemberId', ['memberId'])
-    .index('byToken', ['token']),
+    .index("byMemberId", ["memberId"])
+    .index("byToken", ["token"]),
 });

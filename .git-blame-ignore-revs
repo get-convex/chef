@@ -12,3 +12,6 @@ e0fe050d578fe7177d7b3a3047941492df6e3990
 
 # fixing lint
 66eaf4e2a1183311584816f012f1cf4d686e1235
+
+# reformat, after this we're enforcing formatting in CI
+4a47229e6f7036a7d1c90425e64124a30716d340
