@@ -85,7 +85,6 @@ const retryState = atom({
 
 export const Chat = memo(
   ({
-    // TODO Remove this comment
     initialMessages,
     partCache,
     storeMessageHistory,
