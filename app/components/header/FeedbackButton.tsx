@@ -3,7 +3,7 @@ import { ChatBubbleIcon } from '@radix-ui/react-icons';
 import { MenuItem } from '@ui/Menu';
 import { Button } from '@ui/Button';
 
-export function FeedbackButton({ chatStarted }: { chatStarted: boolean }) {
+export function FeedbackButton({ showInMenu }: { showInMenu: boolean }) {
   const handleFeedback = async () => {
     const feedback = Sentry.getFeedback();
     const form = await feedback?.createForm();
@@ -13,7 +13,7 @@ export function FeedbackButton({ chatStarted }: { chatStarted: boolean }) {
     }
   };
 
-  if (chatStarted) {
+  if (showInMenu) {
     return (
       <MenuItem action={handleFeedback}>
         <ChatBubbleIcon />

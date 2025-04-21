@@ -8,11 +8,13 @@ import { ShareButton } from './ShareButton';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { HamburgerMenuIcon, PersonIcon, GearIcon, ExitIcon } from '@radix-ui/react-icons';
 import { DownloadButton } from './DownloadButton';
-import { OverflowMenu } from './OverflowMenu';
+import { LoggedOutHeaderButtons } from './LoggedOutHeaderButtons';
 import { useAuth0 } from '@auth0/auth0-react';
 import { profileStore } from '~/lib/stores/profile';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
+import { FeedbackButton } from './FeedbackButton';
+import { DiscordButton } from './DiscordButton';
 
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
@@ -73,7 +75,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
         <ClientOnly>
           {() => (
             <div className="ml-auto flex flex-wrap items-center gap-2">
-              <OverflowMenu chatStarted={chat.started} />
+              {!isLoggedIn && <LoggedOutHeaderButtons />}
               {chat.started && (
                 <>
                   <DownloadButton />
@@ -109,6 +111,8 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                     <GearIcon />
                     Settings
                   </MenuItemComponent>
+                  <FeedbackButton showInMenu={true} />
+                  <DiscordButton showInMenu={true} />
                   <MenuItemComponent action={handleLogout}>
                     <ExitIcon />
                     Log out
