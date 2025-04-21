@@ -23,7 +23,7 @@ export function FeedbackButton({ showInMenu }: { showInMenu: boolean }) {
   }
 
   return (
-    <Button variant="neutral" size="xs" onClick={handleFeedback} icon={<ChatBubbleIcon />}>
+    <Button variant="neutral" size="xs" className="hidden sm:flex" onClick={handleFeedback} icon={<ChatBubbleIcon />}>
       Submit Feedback
     </Button>
   );
