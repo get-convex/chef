@@ -21,7 +21,7 @@ import type { ActionAlert } from '~/types/actions';
 import type { WebContainer } from '@webcontainer/api';
 import { withResolvers } from '~/utils/promises';
 import type { Artifacts, PartId } from './artifacts';
-import { WORK_DIR } from 'chef-agent/constants.js';
+import { WORK_DIR } from 'chef-agent/constants';
 import { generateReadmeContent } from '~/lib/download/readmeContent';
 import { setupMjsContent } from '~/lib/download/setupMjsContent';
 import type { ConvexProject } from 'chef-agent/types';

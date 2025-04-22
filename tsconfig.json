@@ -20,7 +20,9 @@
       "@convex/*": ["./convex/*"],
       "@ui/*": ["./node_modules/@convex-dev/design-system/dist/*"]
     },
-    "outDir": "./dist"
+
+    // vite takes care of building everything, not tsc
+    "noEmit": true
   },
   "include": [
     "**/*.ts",

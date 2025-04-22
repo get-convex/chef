@@ -1,5 +1,5 @@
 import type { DirEnt } from '@webcontainer/api';
-import { WORK_DIR } from 'chef-agent/constants.js';
+import { WORK_DIR } from 'chef-agent/constants';
 import type { WebContainer } from '@webcontainer/api';
 
 export const filesToArtifacts = (files: { [path: string]: { content: string } }, id: string): string => {

@@ -14,7 +14,7 @@ import { PanelHeaderButton } from '~/components/ui/PanelHeaderButton';
 import type { FileMap } from 'chef-agent/types';
 import type { FileHistory } from '~/types/actions';
 import { themeStore } from '~/lib/stores/theme';
-import { WORK_DIR } from 'chef-agent/constants.js';
+import { WORK_DIR } from 'chef-agent/constants';
 import { renderLogger } from 'chef-agent/utils/logger';
 import { isMobile } from '~/utils/mobile';
 import { FileBreadcrumb } from './FileBreadcrumb';

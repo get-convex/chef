@@ -1,5 +1,5 @@
 import { WebContainer } from '@webcontainer/api';
-import { WORK_DIR_NAME } from 'chef-agent/constants.js';
+import { WORK_DIR_NAME } from 'chef-agent/constants';
 import { cleanStackTrace } from '~/utils/stacktrace';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { setContainerBootState, ContainerBootState } from '~/lib/stores/containerBootState';

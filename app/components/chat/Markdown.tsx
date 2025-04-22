@@ -3,7 +3,7 @@ import ReactMarkdown, { type Components } from 'react-markdown';
 import type { BundledLanguage } from 'shiki';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { rehypePlugins, remarkPlugins } from '~/utils/markdown';
-import { allowedHTMLElements } from 'chef-agent/prompts/formattingInstructions.js';
+import { allowedHTMLElements } from 'chef-agent/prompts/formattingInstructions';
 import { Artifact } from './Artifact';
 import { CodeBlock } from './CodeBlock';
 

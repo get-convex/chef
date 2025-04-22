@@ -3,7 +3,7 @@ import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { memo, useEffect, useRef, useState } from 'react';
 import type { FileMap } from 'chef-agent/types';
 import { classNames } from '~/utils/classNames';
-import { WORK_DIR } from 'chef-agent/constants.js';
+import { WORK_DIR } from 'chef-agent/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { renderLogger } from 'chef-agent/utils/logger';
 import { FileTree } from './FileTree';
