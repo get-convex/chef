@@ -206,7 +206,7 @@ export const Chat = memo(
           console.log(`Convex tokens used/quota: ${centitokensUsed} / ${centitokensQuota}`);
           if (isTeamDisabled) {
             setDisableChatMessage({ type: 'TeamDisabled', isPaidPlan });
-          } else if (!isPaidPlan && centitokensUsed > centitokensQuota && hasAnyApiKeySet(apiKey)) {
+          } else if (!isPaidPlan && centitokensUsed > centitokensQuota && !hasAnyApiKeySet(apiKey)) {
             setDisableChatMessage({ type: 'ExceededQuota' });
           } else {
             setDisableChatMessage(null);
