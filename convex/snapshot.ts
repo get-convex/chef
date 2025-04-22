@@ -33,10 +33,7 @@ export const getSnapshotUrl = query({
     }
     const latestChatStorageState = await getLatestChatMessageStorageState(ctx, chat);
     if (latestChatStorageState?.snapshotId) {
-      const storage = await ctx.db.system.get(latestChatStorageState.snapshotId);
-      console.log("storage", storage);
       const url = await ctx.storage.getUrl(latestChatStorageState.snapshotId);
-      console.log("url", url);
       return url;
     }
 
