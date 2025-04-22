@@ -1,5 +1,5 @@
 import { httpRouter } from "convex/server";
 
-const router = httpRouter();
+const http = httpRouter();
 
-export default router;
+export default http;
