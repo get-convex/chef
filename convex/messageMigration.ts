@@ -256,8 +256,8 @@ async function _deleteMessagesForChat(ctx: MutationCtx, args: { chatId: Id<"chat
     .withIndex("byChatId", (q) => q.eq("chatId", chatId))
     .collect();
   for (const message of messages) {
-    if (message.deletedAt === undefined) {
-      throw new Error("Message has not been deleted");
+    if (chat !== null && message.deletedAt === undefined) {
+      throw new Error("Message has not been soft deleted");
     }
     if (!forReal) {
       console.log(`DRY RUN: Would delete message: ${message._id}`);
