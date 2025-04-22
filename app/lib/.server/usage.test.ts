@@ -16,6 +16,10 @@ test('encodeUsageAnnotationAnthropic', async () => {
   const annotation = encodeUsageAnnotation(undefined, usage, providerMetadata);
   const parsed = annotationValidator.safeParse({ type: 'usage', usage: annotation });
   expect(parsed.success).toBe(true);
+  if (parsed.data?.type !== 'usage') {
+    // Note -- this mostly functions as a typeguard for the following line
+    throw new Error('Expected usage annotation');
+  }
   const payload = usageValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
   expect(payload).toEqual({
     completionTokens: 100,
@@ -44,6 +48,9 @@ test('encodeUsageAnnotationOpenAI', async () => {
   const annotation = encodeUsageAnnotation(undefined, usage, providerMetadata);
   const parsed = annotationValidator.safeParse({ type: 'usage', usage: annotation });
   expect(parsed.success).toBe(true);
+  if (parsed.data?.type !== 'usage') {
+    throw new Error('Expected usage annotation');
+  }
   const payload = usageValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
   expect(payload).toEqual({
     completionTokens: 100,
@@ -71,6 +78,9 @@ test('encodeUsageAnnotationXAI', async () => {
   const annotation = encodeUsageAnnotation(undefined, usage, providerMetadata);
   const parsed = annotationValidator.safeParse({ type: 'usage', usage: annotation });
   expect(parsed.success).toBe(true);
+  if (parsed.data?.type !== 'usage') {
+    throw new Error('Expected usage annotation');
+  }
   const payload = usageValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
   expect(payload).toEqual({
     completionTokens: 100,

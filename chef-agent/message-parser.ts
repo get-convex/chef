@@ -1,5 +1,5 @@
 import type { PartId } from './partId.js';
-import type { BoltAction, BoltArtifactData, BoltActionData, ActionType, FileAction } from './types.js';
+import type { BoltAction, BoltArtifactData, ActionType, FileAction } from './types.js';
 import { createScopedLogger } from './utils/logger.js';
 import { getRelativePath } from './utils/workDir.js';
 import { unreachable } from './utils/unreachable.js';
