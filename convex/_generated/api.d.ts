@@ -8,9 +8,11 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
 import type * as apiKeys from "../apiKeys.js";
 import type * as compressMessages from "../compressMessages.js";
 import type * as convexProjects from "../convexProjects.js";
+import type * as debugPrompt from "../debugPrompt.js";
 import type * as dev from "../dev.js";
 import type * as http from "../http.js";
 import type * as lz4 from "../lz4.js";
@@ -39,9 +41,11 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
   apiKeys: typeof apiKeys;
   compressMessages: typeof compressMessages;
   convexProjects: typeof convexProjects;
+  debugPrompt: typeof debugPrompt;
   dev: typeof dev;
   http: typeof http;
   lz4: typeof lz4;

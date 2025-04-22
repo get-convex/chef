@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
-import { annotationValidator, encodeUsageAnnotation, usageValidator } from './usage';
+import { encodeUsageAnnotation } from './usage';
+import { annotationValidator, usageAnnotationValidator } from './validators';
 
 test('encodeUsageAnnotationAnthropic', async () => {
   const usage = {
@@ -20,7 +21,7 @@ test('encodeUsageAnnotationAnthropic', async () => {
     // Note -- this mostly functions as a typeguard for the following line
     throw new Error('Expected usage annotation');
   }
-  const payload = usageValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
+  const payload = usageAnnotationValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
   expect(payload).toEqual({
     completionTokens: 100,
     promptTokens: 200,
@@ -51,7 +52,7 @@ test('encodeUsageAnnotationOpenAI', async () => {
   if (parsed.data?.type !== 'usage') {
     throw new Error('Expected usage annotation');
   }
-  const payload = usageValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
+  const payload = usageAnnotationValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
   expect(payload).toEqual({
     completionTokens: 100,
     promptTokens: 200,
@@ -81,7 +82,7 @@ test('encodeUsageAnnotationXAI', async () => {
   if (parsed.data?.type !== 'usage') {
     throw new Error('Expected usage annotation');
   }
-  const payload = usageValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
+  const payload = usageAnnotationValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
   expect(payload).toEqual({
     completionTokens: 100,
     promptTokens: 200,

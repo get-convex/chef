@@ -61,11 +61,12 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     userApiKey:
       | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
       | undefined;
-
     shouldDisableTools: boolean;
     skipSystemPrompt: boolean;
+    recordRawPromptsForDebugging?: boolean;
   };
-  const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug } = body;
+  const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug, recordRawPromptsForDebugging } =
+    body;
 
   let useUserApiKey = false;
 
@@ -149,6 +150,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       shouldDisableTools: body.shouldDisableTools,
       skipSystemPrompt: body.skipSystemPrompt,
       recordUsageCb,
+      recordRawPromptsForDebugging: !!recordRawPromptsForDebugging,
     });
 
     return new Response(dataStream, {

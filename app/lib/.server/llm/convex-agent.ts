@@ -1,6 +1,9 @@
 import {
   createDataStream,
   streamText,
+  type CoreAssistantMessage,
+  type CoreMessage,
+  type CoreToolMessage,
   type DataStreamWriter,
   type LanguageModelUsage,
   type LanguageModelV1,
@@ -20,17 +23,21 @@ import { npmInstallTool } from 'chef-agent/tools/npmInstall';
 import { createOpenAI } from '@ai-sdk/openai';
 import type { Tracer } from '~/lib/.server/chat';
 import { editTool } from 'chef-agent/tools/edit';
-import { captureException } from '@sentry/remix';
+import { captureException, captureMessage } from '@sentry/remix';
 import type { SystemPromptOptions } from 'chef-agent/types';
 import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { cleanupAssistantMessages } from 'chef-agent/cleanupAssistantMessages';
+import { logger } from 'chef-agent/utils/logger';
+import { calculateUsage, encodeUsageAnnotation } from '~/lib/.server/usage';
+import { compressWithLz4Server } from '~/lib/compression.server';
+import { REPEATED_ERROR_REASON } from '~/lib/common/errors';
+import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch as undiciFetch } from 'undici';
-import { logger } from 'chef-agent/utils/logger';
-import { encodeUsageAnnotation } from '~/lib/.server/usage';
-import { REPEATED_ERROR_REASON } from '~/lib/common/errors';
+import { waitUntil } from '@vercel/functions';
+import type { internal } from '@convex/_generated/api';
 type Fetch = typeof fetch;
 
 type Messages = Message[];
@@ -63,6 +70,7 @@ export async function convexAgent(args: {
     lastMessage: Message | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => Promise<void>;
+  recordRawPromptsForDebugging: boolean;
 }) {
   const {
     chatInitialId,
@@ -75,6 +83,7 @@ export async function convexAgent(args: {
     shouldDisableTools,
     skipSystemPrompt,
     recordUsageCb,
+    recordRawPromptsForDebugging,
   } = args;
   console.debug('Starting agent with model provider', modelProvider);
   if (userApiKey) {
@@ -281,27 +290,29 @@ export async function convexAgent(args: {
     tools.edit = editTool;
   }
 
+  const messagesForDataStream: CoreMessage[] = [
+    {
+      role: 'system' as const,
+      content: ROLE_SYSTEM_PROMPT,
+    },
+    ...(skipSystemPrompt
+      ? []
+      : [
+          {
+            role: 'system' as const,
+            content: generalSystemPrompt(opts),
+          },
+        ]),
+    ...cleanupAssistantMessages(messages),
+  ];
+
   const dataStream = createDataStream({
     execute(dataStream) {
       const result = streamText({
         model: provider.model,
         maxTokens: provider.maxTokens,
         providerOptions: provider.options,
-        messages: [
-          {
-            role: 'system' as const,
-            content: ROLE_SYSTEM_PROMPT,
-          },
-          ...(skipSystemPrompt
-            ? []
-            : [
-                {
-                  role: 'system' as const,
-                  content: generalSystemPrompt(opts),
-                },
-              ]),
-          ...cleanupAssistantMessages(messages),
-        ],
+        messages: messagesForDataStream,
         tools,
         toolChoice: shouldDisableTools ? 'none' : 'auto',
         onFinish: (result) => {
@@ -313,6 +324,8 @@ export async function convexAgent(args: {
             chatInitialId,
             recordUsageCb,
             toolsDisabledFromRepeatedErrors: shouldDisableTools,
+            recordRawPromptsForDebugging,
+            coreMessages: messagesForDataStream,
           });
         },
         onError({ error }) {
@@ -389,6 +402,8 @@ async function onFinishHandler({
   chatInitialId,
   recordUsageCb,
   toolsDisabledFromRepeatedErrors,
+  recordRawPromptsForDebugging,
+  coreMessages,
 }: {
   dataStream: DataStreamWriter;
   messages: Messages;
@@ -399,7 +414,9 @@ async function onFinishHandler({
     lastMessage: Message | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => Promise<void>;
+  recordRawPromptsForDebugging: boolean;
   toolsDisabledFromRepeatedErrors: boolean;
+  coreMessages: CoreMessage[];
 }) {
   const { providerMetadata } = result;
   const usage = {
@@ -410,17 +427,18 @@ async function onFinishHandler({
   console.log('Finished streaming', {
     finishReason: result.finishReason,
     usage,
-    providerMetadata: result.providerMetadata,
+    providerMetadata,
   });
   if (tracer) {
+    // TODO we're not tracing other providers!
     const span = tracer.startSpan('on-finish-handler');
     span.setAttribute('chatInitialId', chatInitialId);
     span.setAttribute('finishReason', result.finishReason);
     span.setAttribute('usage.completionTokens', usage.completionTokens);
     span.setAttribute('usage.promptTokens', usage.promptTokens);
     span.setAttribute('usage.totalTokens', usage.totalTokens);
-    if (result.providerMetadata) {
-      const anthropic: any = result.providerMetadata.anthropic;
+    if (providerMetadata) {
+      const anthropic: any = providerMetadata.anthropic;
       if (anthropic) {
         span.setAttribute('providerMetadata.anthropic.cacheCreationInputTokens', anthropic.cacheCreationInputTokens);
         span.setAttribute('providerMetadata.anthropic.cacheReadInputTokens', anthropic.cacheReadInputTokens);
@@ -452,8 +470,71 @@ async function onFinishHandler({
   else {
     await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata });
   }
-
+  if (recordRawPromptsForDebugging) {
+    const responseCoreMessages = result.response.messages as (CoreAssistantMessage | CoreToolMessage)[];
+    // don't block the request but keep the request alive in Vercel Lambdas
+    waitUntil(
+      storeDebugPrompt(coreMessages, chatInitialId, responseCoreMessages, result, messages[messages.length - 1], {
+        usage,
+        providerMetadata,
+      }),
+    );
+  }
   await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+async function storeDebugPrompt(
+  promptCoreMessages: CoreMessage[],
+  chatInitialId: string,
+  responseCoreMessages: CoreMessage[],
+  result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
+  lastMessage: Message,
+  generation: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
+) {
+  try {
+    const finishReason = result.finishReason;
+    const modelId = result.response.modelId || '';
+    const {
+      totalBilledUsage: billableUsage,
+      totalUnbilledUsage: unbillableUsage,
+      totalBilledChefTokens: billableChefTokens,
+      totalUnbilledChefTokens: unbillableChefTokens,
+    } = calculateUsage({ ...generation, lastMessage });
+
+    const promptMessageData = new TextEncoder().encode(JSON.stringify(promptCoreMessages));
+    const compressedData = compressWithLz4Server(promptMessageData);
+
+    type Metadata = Omit<(typeof internal.debugPrompt.storeDebugPrompt)['_args'], 'promptCoreMessagesStorageId'>;
+
+    const metadata = {
+      chatInitialId,
+      responseCoreMessages,
+      finishReason,
+      modelId,
+      billableUsage,
+      unbillableUsage,
+      billableChefTokens,
+      unbillableChefTokens,
+    } satisfies Metadata;
+
+    const formData = new FormData();
+    formData.append('metadata', JSON.stringify(metadata));
+    formData.append('promptCoreMessages', new Blob([compressedData]));
+
+    const response = await fetch(`${getConvexSiteUrl()}/upload_debug_prompt`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      const message = `Failed to store debug prompt: ${response.status} ${text}`;
+      console.error(message);
+      captureMessage(message);
+    }
+  } catch (error) {
+    captureException(error);
+  }
 }
 
 // TODO this was cool, do something to type our environment variables

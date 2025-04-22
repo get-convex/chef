@@ -242,4 +242,40 @@ http.route({
   }),
 });
 
+httpWithCors.route({
+  path: "/upload_debug_prompt",
+  method: "POST",
+  handler: httpActionWithErrorHandling(async (ctx, request) => {
+    const formData = await request.formData();
+    const metadataStr = formData.get("metadata");
+    const messagesBlob = formData.get("promptCoreMessages") as Blob;
+
+    if (!metadataStr || !messagesBlob) {
+      throw new ConvexError("metadata and messages are required in form data");
+    }
+
+    let metadata;
+    try {
+      metadata = JSON.parse(metadataStr as string);
+    } catch (_e) {
+      throw new ConvexError("Invalid metadata: must be valid JSON");
+    }
+
+    const promptCoreMessagesStorageId = await ctx.storage.store(messagesBlob);
+    try {
+      await ctx.runMutation(internal.debugPrompt.storeDebugPrompt, { ...metadata, promptCoreMessagesStorageId });
+    } catch (e) {
+      await ctx.storage.delete(promptCoreMessagesStorageId);
+      throw e;
+    }
+
+    return new Response(JSON.stringify({ promptCoreMessagesStorageId }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }),
+});
+
 export default httpWithCors.http;
