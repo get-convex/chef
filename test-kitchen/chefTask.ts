@@ -90,7 +90,8 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       enableBulkEdits: true,
       enablePreciseEdits: false,
       includeTemplate: true,
-      usingOpenAi: false,
+      usingOpenAi: model.name.startsWith('gpt-'),
+      usingGoogle: model.name.startsWith('gemini-'),
 
       // TODO: We need to set up a Convex deployment running the `chef`
       // app to setup the OpenAI and Resend proxies + manage their tokens.
@@ -155,12 +156,12 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       try {
         switch (toolCall.toolName) {
           case 'deploy': {
+            numDeploys++;
             toolCallResult = await deploy(repoDir, backend);
             toolCallResult += await runTypecheck(repoDir);
-            if (numDeploys == 0) {
+            if (numDeploys == 1) {
               toolCallResult += '\n\nDev server started successfully!';
             }
-            numDeploys++;
             logger.info('Successfully deployed');
             break;
           }
@@ -300,7 +301,7 @@ async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, c
             parameters: npmInstallToolParameters,
           },
         },
-        maxSteps: 1,
+        maxSteps: 64,
       });
       span.log({
         input: messages,
