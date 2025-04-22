@@ -206,7 +206,7 @@ export const Chat = memo(
           console.log(`Convex tokens used/quota: ${centitokensUsed} / ${centitokensQuota}`);
           if (isTeamDisabled) {
             setDisableChatMessage({ type: 'TeamDisabled', isPaidPlan });
-          } else if (!isPaidPlan && centitokensUsed > centitokensQuota && !hasAnyApiKeySet(apiKey) ) {
+          } else if (!isPaidPlan && centitokensUsed > centitokensQuota && hasAnyApiKeySet(apiKey)) {
             setDisableChatMessage({ type: 'ExceededQuota' });
           } else {
             setDisableChatMessage(null);
@@ -658,10 +658,9 @@ export function DisabledText({
   );
 }
 
-
-function hasAnyApiKeySet(apiKey?: Doc<"convexMembers">["apiKey"] | null) {
+function hasAnyApiKeySet(apiKey?: Doc<'convexMembers'>['apiKey'] | null) {
   if (!apiKey) {
-    return false
+    return false;
   }
   Object.entries(apiKey).some(([key, value]) => {
     if (key === 'preference') {

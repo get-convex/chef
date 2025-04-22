@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react';
 import { useConvex } from 'convex/react';
 import { useEffect, useState } from 'react';
-import { getStoredTeamSlug, } from '~/lib/stores/convexTeams';
+import { getStoredTeamSlug } from '~/lib/stores/convexTeams';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';

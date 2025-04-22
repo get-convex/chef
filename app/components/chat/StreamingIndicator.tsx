@@ -105,9 +105,24 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
           try {
             const { code, error, details } = JSON.parse(props.currentError?.message);
             if (code === 'missing-api-key') {
-              message = <div>{error} <a href="/settings" className="text-content-link hover:underline">Set an API key</a> or switch to a different model provider.</div>;
+              message = (
+                <div>
+                  {error}{' '}
+                  <a href="/settings" className="text-content-link hover:underline">
+                    Set an API key
+                  </a>{' '}
+                  or switch to a different model provider.
+                </div>
+              );
             } else if (code === 'no-tokens') {
-              message = <div>You've used all the tokens included with your free plan. <a href="/settings" className="text-content-link hover:underline">Upgrade to a paid plan or add your own API key.</a></div>;
+              message = (
+                <div>
+                  You've used all the tokens included with your free plan.{' '}
+                  <a href="/settings" className="text-content-link hover:underline">
+                    Upgrade to a paid plan or add your own API key.
+                  </a>
+                </div>
+              );
             } else {
               message = error;
             }
