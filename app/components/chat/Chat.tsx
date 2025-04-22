@@ -662,7 +662,7 @@ function hasAnyApiKeySet(apiKey?: Doc<'convexMembers'>['apiKey'] | null) {
   if (!apiKey) {
     return false;
   }
-  Object.entries(apiKey).some(([key, value]) => {
+  return Object.entries(apiKey).some(([key, value]) => {
     if (key === 'preference') {
       return false;
     }
