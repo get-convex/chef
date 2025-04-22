@@ -41,7 +41,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
   };
 
   return (
-    <header className={'flex h-[var(--header-height)] items-center border-b p-5'}>
+    <header className={'flex h-[var(--header-height)] items-center overflow-auto border-b p-5'}>
       <div className="z-logo flex cursor-pointer items-center gap-4 text-content-primary">
         {showSidebarIcon && <HamburgerMenuIcon />}
         <a href="/" className="flex flex-col text-2xl font-semibold leading-tight">
@@ -74,7 +74,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
         )}
         <ClientOnly>
           {() => (
-            <div className="ml-auto flex flex-wrap items-center gap-2">
+            <div className="ml-auto flex items-center gap-2">
               {!isLoggedIn && <LoggedOutHeaderButtons />}
               {chat.started && (
                 <>
@@ -98,12 +98,12 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                       <img
                         src={profile.avatar}
                         alt={profile.username || 'User'}
-                        className="size-8 rounded-full object-cover"
+                        className="size-8 min-w-8 rounded-full object-cover"
                         loading="eager"
                         decoding="sync"
                       />
                     ) : (
-                      <PersonIcon className="size-8" />
+                      <PersonIcon className="size-8 min-w-8" />
                     ),
                   }}
                 >
