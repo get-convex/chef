@@ -1,5 +1,5 @@
-import { stripIndents } from '~/utils/stripIndent';
-import type { SystemPromptOptions } from './types';
+import { stripIndents } from '../utils/stripIndent.js';
+import type { SystemPromptOptions } from '../types.js';
 
 export function exampleDataInstructions(_options: SystemPromptOptions) {
   return stripIndents`

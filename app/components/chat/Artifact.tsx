@@ -10,8 +10,8 @@ import { type PartId } from '~/lib/stores/artifacts';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
 import { captureException } from '@sentry/remix';
-import type { RelativePath } from '~/lib/stores/files';
-import { getAbsolutePath } from '~/lib/stores/files';
+import type { RelativePath } from 'chef-agent/utils/workDir';
+import { getAbsolutePath } from 'chef-agent/utils/workDir';
 import { Spinner } from '@ui/Spinner';
 const highlighterOptions = {
   langs: ['shell'],

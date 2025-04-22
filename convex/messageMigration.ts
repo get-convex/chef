@@ -245,7 +245,7 @@ async function _deleteMessagesForChat(ctx: MutationCtx, args: { chatId: Id<"chat
     const storageState = await ctx.db
       .query("chatMessagesStorageState")
       .withIndex("byChatId", (q) => q.eq("chatId", chatId))
-      .unique();
+      .first();
     if (storageState === null) {
       console.log("Chat messages storage state not found -- should not delete messages from DB if they are not stored");
       return;
@@ -256,8 +256,8 @@ async function _deleteMessagesForChat(ctx: MutationCtx, args: { chatId: Id<"chat
     .withIndex("byChatId", (q) => q.eq("chatId", chatId))
     .collect();
   for (const message of messages) {
-    if (message.deletedAt === undefined) {
-      throw new Error("Message has not been deleted");
+    if (chat !== null && message.deletedAt === undefined) {
+      throw new Error("Message has not been soft deleted");
     }
     if (!forReal) {
       console.log(`DRY RUN: Would delete message: ${message._id}`);

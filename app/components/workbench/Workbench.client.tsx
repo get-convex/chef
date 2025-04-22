@@ -14,7 +14,7 @@ import { Slider, type SliderOptions } from '~/components/ui/Slider';
 import { workbenchStore, type WorkbenchViewType } from '~/lib/stores/workbench.client';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
-import { renderLogger } from '~/utils/logger';
+import { renderLogger } from 'chef-agent/utils/logger';
 import { EditorPanel } from './EditorPanel';
 import { Preview } from './Preview';
 import useViewport from '~/lib/hooks/useViewport';
@@ -23,7 +23,7 @@ import { Allotment } from 'allotment';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { BackupStatusIndicator } from '~/components/BackupStatusIndicator';
 import type { TerminalInitializationOptions } from '~/types/terminal';
-import { getAbsolutePath } from '~/lib/stores/files';
+import { getAbsolutePath } from 'chef-agent/utils/workDir';
 import { PlusIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { CommandLineIcon } from '@heroicons/react/24/outline';
 

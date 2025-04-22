@@ -14,7 +14,7 @@ import {
   prepareMessageHistory,
   waitForNewMessages,
 } from './messages';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from 'chef-agent/utils/logger';
 
 const logger = createScopedLogger('history');
 

@@ -21,20 +21,14 @@ import { memo, useEffect, useRef, useState, type MutableRefObject } from 'react'
 import type { Theme } from '~/types/theme';
 import { classNames } from '~/utils/classNames';
 import { debounce } from '~/utils/debounce';
-import { createScopedLogger, renderLogger } from '~/utils/logger';
+import { createScopedLogger, renderLogger } from 'chef-agent/utils/logger';
 import { BinaryContent } from './BinaryContent';
 import { getTheme, reconfigureTheme } from './cm-theme';
 import { indentKeyBinding } from './indent';
 import { getLanguage } from './languages';
-import type { AbsolutePath } from '~/lib/stores/files';
+import type { EditorDocument } from 'chef-agent/types';
+import type { ScrollPosition } from 'chef-agent/types';
 const logger = createScopedLogger('CodeMirrorEditor');
-
-export interface EditorDocument {
-  value: string;
-  isBinary: boolean;
-  filePath: AbsolutePath;
-  scroll?: ScrollPosition;
-}
 
 export interface EditorSettings {
   fontSize?: string;
@@ -45,11 +39,6 @@ export interface EditorSettings {
 type TextEditorDocument = EditorDocument & {
   value: string;
 };
-
-export interface ScrollPosition {
-  top: number;
-  left: number;
-}
 
 interface EditorUpdate {
   selection: EditorSelection;

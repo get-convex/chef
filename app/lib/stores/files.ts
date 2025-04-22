@@ -2,49 +2,19 @@ import type { WebContainer, PathWatcherEvent } from '@webcontainer/api';
 import { getEncoding } from 'istextorbinary';
 import { map, type MapStore } from 'nanostores';
 import { Buffer } from 'node:buffer';
-import { path } from '~/utils/path';
+import { path } from 'chef-agent/utils/path';
 import { bufferWatchEvents } from '~/utils/buffer';
-import { WORK_DIR } from '~/utils/constants';
+import { WORK_DIR } from 'chef-agent/constants.js';
 import { computeFileModifications } from '~/utils/diff';
-import { createScopedLogger } from '~/utils/logger';
-import { unreachable } from '~/utils/unreachable';
+import { createScopedLogger } from 'chef-agent/utils/logger';
+import { unreachable } from 'chef-agent/utils/unreachable';
 import { incrementFileUpdateCounter } from './fileUpdateCounter';
+import { getAbsolutePath, type AbsolutePath } from 'chef-agent/utils/workDir';
+import type { File, FileMap } from 'chef-agent/types';
 
 const logger = createScopedLogger('FilesStore');
 
 const utf8TextDecoder = new TextDecoder('utf8', { fatal: true });
-
-interface File {
-  type: 'file';
-  content: string;
-  isBinary: boolean;
-}
-
-interface Folder {
-  type: 'folder';
-}
-
-export type Dirent = File | Folder;
-
-// Relative to `WORK_DIR`
-export type RelativePath = string & { __brand: 'RelativePath' };
-export type AbsolutePath = string & { __brand: 'AbsolutePath' };
-
-export const getAbsolutePath = (pathString: string): AbsolutePath => {
-  if (pathString.startsWith(WORK_DIR)) {
-    return pathString as AbsolutePath;
-  }
-  return path.join(WORK_DIR, pathString) as AbsolutePath;
-};
-
-export const getRelativePath = (pathString: string): RelativePath => {
-  if (pathString.startsWith(WORK_DIR)) {
-    return path.relative(WORK_DIR, pathString) as RelativePath;
-  }
-  return pathString as RelativePath;
-};
-
-export type FileMap = Record<AbsolutePath, Dirent | undefined>;
 
 export class FilesStore {
   #webcontainer: Promise<WebContainer>;

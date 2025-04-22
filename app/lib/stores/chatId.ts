@@ -39,6 +39,18 @@ export function setKnownInitialId(initialId: string) {
   knownInitialId.set(initialId);
 }
 
+// This is useful in places where we want a unique ID (e.g. logs) instead of the
+// more human-friendly `urlId`, which is only unique within the current session.
+export const initialIdStore = computed([pageLoadChatId, knownInitialId], (pageLoadChatId, knownInitialId) => {
+  if (knownInitialId !== undefined) {
+    return knownInitialId;
+  }
+  if (pageLoadChatId === undefined) {
+    throw new Error('initialIdStore used before pageLoadChatId was set');
+  }
+  return pageLoadChatId;
+});
+
 /*
  * We may not know a chat's `urlId` until its first message.
  */

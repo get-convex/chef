@@ -1,6 +1,7 @@
 import { generateKeyPair, exportPKCS8, exportJWK } from 'jose';
-import type { ConvexProject } from './stores/convexProject';
-import { queryEnvVariable, setEnvVariables } from '~/lib/convexEnvVariables';
+import type { ConvexProject } from './types.js';
+import { queryEnvVariable, setEnvVariables } from './convexEnvVariables.js';
+import { logger } from './utils/logger.js';
 
 export async function initializeConvexAuth(project: ConvexProject) {
   const SITE_URL = await queryEnvVariable(project, 'SITE_URL');
@@ -27,7 +28,7 @@ export async function initializeConvexAuth(project: ConvexProject) {
   if (Object.entries(newEnv).length > 0) {
     await setEnvVariables(project, newEnv);
   }
-  console.log('✅ Convex Auth setup!');
+  logger.info('✅ Convex Auth setup!');
 }
 
 async function generateKeys() {

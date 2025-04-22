@@ -1,15 +1,15 @@
 import { generateId, type ToolInvocation, type UIMessage } from 'ai';
-import { renderFile } from '~/utils/fileUtils';
-import { getAbsolutePath, type AbsolutePath, type Dirent } from './stores/files';
-import { PREWARM_PATHS, WORK_DIR } from '~/utils/constants';
-import { workbenchStore } from './stores/workbench.client';
-import { makePartId, type PartId } from './stores/artifacts';
-import { StreamingMessageParser } from './runtime/message-parser';
-import { path } from '~/utils/path';
-import { loggingSafeParse } from '~/lib/zodUtil';
-import { npmInstallToolParameters } from './runtime/npmInstallTool';
-import { editToolParameters } from './runtime/editTool';
-import { viewParameters } from './runtime/viewTool';
+import { type AbsolutePath, getAbsolutePath } from './utils/workDir.js';
+import { type Dirent, type EditorDocument, type FileMap } from './types.js';
+import { PREWARM_PATHS, WORK_DIR } from './constants.js';
+import { renderFile } from './utils/renderFile.js';
+import { StreamingMessageParser } from './message-parser.js';
+import { makePartId, type PartId } from './partId.js';
+import { viewParameters } from './tools/view.js';
+import { editToolParameters } from './tools/edit.js';
+import { loggingSafeParse } from './utils/zodUtil.js';
+import { npmInstallToolParameters } from './tools/npmInstall.js';
+import { path } from './utils/path.js';
 
 // It's wasteful to actually tokenize the content, so we'll just use character
 // counts as a heuristic.
@@ -29,6 +29,12 @@ export class ChatContextManager {
   messageSizeCache: WeakMap<UIMessage, number> = new WeakMap();
   partSizeCache: WeakMap<UIMessagePart, number> = new WeakMap();
 
+  constructor(
+    private getCurrentDocument: () => EditorDocument | undefined,
+    private getFiles: () => FileMap,
+    private getUserWrites: () => Map<AbsolutePath, number>,
+  ) {}
+
   /**
    * Our request context has a few sections:
    *
@@ -46,10 +52,10 @@ export class ChatContextManager {
   }
 
   private relevantFiles(messages: UIMessage[]): UIMessage[] {
-    const currentDocument = workbenchStore.currentDocument.get();
+    const currentDocument = this.getCurrentDocument();
 
     // Seed the set with the PREWARM_PATHS.
-    const cache = workbenchStore.files.get();
+    const cache = this.getFiles();
     const allPaths = Object.keys(cache).sort();
 
     const lastUsed: Map<AbsolutePath, number> = new Map();
@@ -82,7 +88,7 @@ export class ChatContextManager {
       partCounter += message.parts.length;
     }
 
-    for (const [path, lastUsedTime] of workbenchStore.userWrites.entries()) {
+    for (const [path, lastUsedTime] of this.getUserWrites().entries()) {
       const existing = lastUsed.get(path) ?? 0;
       lastUsed.set(path, Math.max(existing, lastUsedTime));
     }

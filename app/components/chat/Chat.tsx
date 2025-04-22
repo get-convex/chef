@@ -10,18 +10,18 @@ import { chatStore } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { type ModelSelection } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from 'chef-agent/utils/logger';
 import { BaseChat } from './BaseChat.client';
 import { createSampler } from '~/utils/sampler';
 import { filesToArtifacts } from '~/utils/fileUtils';
-import { ChatContextManager } from '~/lib/ChatContextManager';
+import { ChatContextManager } from 'chef-agent/ChatContextManager';
 import { selectedTeamSlugStore, setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
 import type { PartId } from '~/lib/stores/artifacts';
 import { captureMessage } from '@sentry/remix';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
-import { chatIdStore } from '~/lib/stores/chatId';
+import { chatIdStore, initialIdStore } from '~/lib/stores/chatId';
 import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
@@ -34,7 +34,7 @@ import { Button } from '@ui/Button';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
-import type { Id } from 'convex/_generated/dataModel';
+import type { Doc, Id } from 'convex/_generated/dataModel';
 
 const logger = createScopedLogger('Chat');
 
@@ -155,7 +155,13 @@ export const Chat = memo(
       return () => clearInterval(resetInterval);
     }, []);
 
-    const chatContextManager = useRef(new ChatContextManager());
+    const chatContextManager = useRef(
+      new ChatContextManager(
+        () => workbenchStore.currentDocument.get(),
+        () => workbenchStore.files.get(),
+        () => workbenchStore.userWrites,
+      ),
+    );
     const [disableChatMessage, setDisableChatMessage] = useState<
       { type: 'ExceededQuota' } | { type: 'TeamDisabled'; isPaidPlan: boolean } | null
     >(null);
@@ -206,7 +212,7 @@ export const Chat = memo(
           console.log(`Convex tokens used/quota: ${centitokensUsed} / ${centitokensQuota}`);
           if (isTeamDisabled) {
             setDisableChatMessage({ type: 'TeamDisabled', isPaidPlan });
-          } else if (!isPaidPlan && centitokensUsed > centitokensQuota) {
+          } else if (!isPaidPlan && centitokensUsed > centitokensQuota && !hasAnyApiKeySet(apiKey)) {
             setDisableChatMessage({ type: 'ExceededQuota' });
           } else {
             setDisableChatMessage(null);
@@ -220,7 +226,7 @@ export const Chat = memo(
       api: '/api/chat',
       sendExtraMessageFields: true,
       experimental_prepareRequestBody: ({ messages }) => {
-        const chatId = chatIdStore.get();
+        const chatInitialId = initialIdStore.get();
         const deploymentName = convexProjectStore.get()?.deploymentName;
         const teamSlug = selectedTeamSlugStore.get();
         const token = getConvexAuthToken(convex);
@@ -246,7 +252,7 @@ export const Chat = memo(
         return {
           messages: chatContextManager.current.prepareContext(messages),
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
-          chatId,
+          chatInitialId,
           token,
           teamSlug,
           deploymentName,
@@ -656,4 +662,19 @@ export function DisabledText({
       </div>
     </div>
   );
+}
+
+function hasAnyApiKeySet(apiKey?: Doc<'convexMembers'>['apiKey'] | null) {
+  if (!apiKey) {
+    return false;
+  }
+  return Object.entries(apiKey).some(([key, value]) => {
+    if (key === 'preference') {
+      return false;
+    }
+    if (typeof value === 'string') {
+      return value.trim() !== '';
+    }
+    return false;
+  });
 }

@@ -1,5 +1,5 @@
-import { stripIndents } from '~/utils/stripIndent';
-import type { SystemPromptOptions } from './types';
+import { stripIndents } from '../utils/stripIndent.js';
+import type { SystemPromptOptions } from '../types.js';
 
 export function openAi(options: SystemPromptOptions) {
   if (!options.usingOpenAi) {
@@ -14,8 +14,8 @@ export function openAi(options: SystemPromptOptions) {
     keep going until the user’s query is completely resolved, before ending your turn and yielding back to the user.
     Only terminate your turn when you are sure that the problem is solved.
     <problem_solving>
-      You MUST iterate and keep going until you have created a fully-functional application with a working frontend and backend that has been deployed. Only terminate your turn when you are sure 
-      that the problem is solved and you have deployed your changes. NEVER end your turn without deploying your changes, and when you say you are going 
+      You MUST iterate and keep going until you have created a fully-functional application with a working frontend and backend that has been deployed. Only terminate your turn when you are sure
+      that the problem is solved and you have deployed your changes. NEVER end your turn without deploying your changes, and when you say you are going
       to make a tool call, make sure you ACTUALLY make the tool call, instead of ending your turn. NEVER prematurely end your turn without deploying your changes.
     </problem_solving>
     <deployment>

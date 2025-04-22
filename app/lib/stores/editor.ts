@@ -1,6 +1,8 @@
 import { atom, computed, map, type MapStore, type WritableAtom } from 'nanostores';
-import type { EditorDocument, ScrollPosition } from '~/components/editor/codemirror/CodeMirrorEditor';
-import type { AbsolutePath, FileMap, FilesStore } from './files';
+import type { EditorDocument, ScrollPosition } from 'chef-agent/types';
+import type { AbsolutePath } from 'chef-agent/utils/workDir';
+import type { FileMap } from 'chef-agent/types';
+import type { FilesStore } from '~/lib/stores/files';
 
 type EditorDocuments = Record<string, EditorDocument>;
 

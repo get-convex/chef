@@ -1,4 +1,4 @@
-import type { ConvexProject } from './stores/convexProject';
+import type { ConvexProject } from './types.js';
 
 export async function queryEnvVariable(project: ConvexProject, name: string): Promise<string | null> {
   const response = await fetch(`${project.deploymentUrl}/api/query`, {
@@ -23,6 +23,7 @@ export async function queryEnvVariable(project: ConvexProject, name: string): Pr
   const udfResult = respJSON.value;
   return udfResult && udfResult.value;
 }
+
 export async function setEnvVariables(project: ConvexProject, values: Record<string, string>) {
   const response = await fetch(`${project.deploymentUrl}/api/update_environment_variables`, {
     method: 'POST',

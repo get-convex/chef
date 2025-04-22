@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs } from '@vercel/remix';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from 'chef-agent/utils/logger';
 import { convexAgent, getEnv, type ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
@@ -53,7 +53,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   const body = (await request.json()) as {
     messages: Messages;
     firstUserMessage: boolean;
-    chatId: string;
+    chatInitialId: string;
     token: string;
     teamSlug: string;
     deploymentName: string | undefined;
@@ -62,7 +62,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
       | undefined;
   };
-  const { messages, firstUserMessage, chatId, deploymentName, token, teamSlug } = body;
+  const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug } = body;
 
   let useUserApiKey = false;
 
@@ -88,9 +88,12 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     if (!isPaidPlan && centitokensUsed >= centitokensQuota) {
       if (body.userApiKey?.preference !== 'quotaExhausted') {
         logger.error(`No tokens available for ${deploymentName}: ${centitokensUsed} of ${centitokensQuota}`);
-        return new Response(JSON.stringify({ error: noTokensText(centitokensUsed, centitokensQuota) }), {
-          status: 402,
-        });
+        return new Response(
+          JSON.stringify({ code: 'no-tokens', error: noTokensText(centitokensUsed, centitokensQuota) }),
+          {
+            status: 402,
+          },
+        );
       }
       // If they're set to quotaExhausted mode, try to use the user's API key.
       useUserApiKey = true;
@@ -111,7 +114,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     }
     if (!userApiKey) {
       return new Response(
-        JSON.stringify({ error: `Tried to use missing ${body.modelProvider} API key. Set one in Settings!` }),
+        JSON.stringify({ code: 'missing-api-key', error: `Tried to use missing ${body.modelProvider} API key.` }),
         {
           status: 402,
         },
@@ -133,7 +136,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
     const dataStream = await convexAgent(
-      chatId,
+      chatInitialId,
       env,
       firstUserMessage,
       messages,

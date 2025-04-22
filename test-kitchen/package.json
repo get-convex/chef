@@ -1,0 +1,17 @@
+{
+  "name": "test-kitchen",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "async-mutex": "^0.5.0",
+    "braintrust": "^0.0.199",
+    "portfinder": "^1.0.36",
+    "chef-agent": "workspace:*",
+    "typescript": "^5.4.2",
+    "walkdir": "^0.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.30"
+  },
+  "packageManager": "pnpm@9.5.0"
+}

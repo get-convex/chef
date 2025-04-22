@@ -61,6 +61,7 @@ export const ChefAuthProvider = ({
     null,
   );
   const hasAlertedAboutOptIns = useRef(false);
+  const authRetries = useRef(0);
   const { getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
@@ -73,13 +74,14 @@ export const ChefAuthProvider = ({
 
     if (sessionId === undefined && isUnauthenticated) {
       setSessionId(null);
-      return;
+      return undefined;
     }
 
     if (sessionId !== null && isUnauthenticated) {
       setSessionId(null);
-      return;
+      return undefined;
     }
+    let verifySessionTimeout: ReturnType<typeof setTimeout> | null = null;
 
     async function verifySession() {
       if (sessionIdFromLocalStorage) {
@@ -89,8 +91,15 @@ export const ChefAuthProvider = ({
           await getAccessTokenSilently({
             detailedResponse: true,
           });
+          authRetries.current = 0;
         } catch (_e) {
           console.error('Unable to fetch access token from Auth0');
+          if (authRetries.current < 3 && verifySessionTimeout === null) {
+            authRetries.current++;
+            verifySessionTimeout = setTimeout(() => {
+              void verifySession();
+            }, 1000);
+          }
           return;
         }
         if (!isAuthenticated) {
@@ -136,8 +145,15 @@ export const ChefAuthProvider = ({
           setSessionId(null);
         }
       }
+      return;
     }
+
     void verifySession();
+    return () => {
+      if (verifySessionTimeout) {
+        clearTimeout(verifySessionTimeout);
+      }
+    };
   }, [
     convex,
     sessionId,

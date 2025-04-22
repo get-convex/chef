@@ -1,15 +1,15 @@
-import { stripIndents } from '~/utils/stripIndent';
-import { systemConstraints } from './systemConstraints';
-import type { SystemPromptOptions } from './types';
-import { solutionConstraints } from './solutionConstraints';
-import { formattingInstructions } from './formattingInstructions';
-import { exampleDataInstructions } from './exampleDataInstructions';
-import { secretsInstructions } from './secretsInstructions';
-import { outputInstructions } from './outputInstructions';
-import { openaiProxyGuidelines } from './openaiProxyGuidelines';
-import { openAi } from './openAi';
-import { google } from './google';
-import { resendProxyGuidelines } from './resendProxyGuidelines';
+import { stripIndents } from '../utils/stripIndent.js';
+import { systemConstraints } from './systemConstraints.js';
+import type { SystemPromptOptions } from '../types.js';
+import { solutionConstraints } from './solutionConstraints.js';
+import { formattingInstructions } from './formattingInstructions.js';
+import { exampleDataInstructions } from './exampleDataInstructions.js';
+import { secretsInstructions } from './secretsInstructions.js';
+import { outputInstructions } from './outputInstructions.js';
+import { openaiProxyGuidelines } from './openaiProxyGuidelines.js';
+import { openAi } from './openAi.js';
+import { google } from './google.js';
+import { resendProxyGuidelines } from './resendProxyGuidelines.js';
 
 // This is the very first part of the system prompt that tells the model what
 // role to play.
