@@ -34,7 +34,7 @@ import { Button } from '@ui/Button';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
-import type { Id } from 'convex/_generated/dataModel';
+import type { Doc, Id } from 'convex/_generated/dataModel';
 
 const logger = createScopedLogger('Chat');
 
@@ -206,7 +206,7 @@ export const Chat = memo(
           console.log(`Convex tokens used/quota: ${centitokensUsed} / ${centitokensQuota}`);
           if (isTeamDisabled) {
             setDisableChatMessage({ type: 'TeamDisabled', isPaidPlan });
-          } else if (!isPaidPlan && centitokensUsed > centitokensQuota) {
+          } else if (!isPaidPlan && centitokensUsed > centitokensQuota && !hasAnyApiKeySet(apiKey) ) {
             setDisableChatMessage({ type: 'ExceededQuota' });
           } else {
             setDisableChatMessage(null);
@@ -656,4 +656,20 @@ export function DisabledText({
       </div>
     </div>
   );
+}
+
+
+function hasAnyApiKeySet(apiKey?: Doc<"convexMembers">["apiKey"] | null) {
+  if (!apiKey) {
+    return false
+  }
+  Object.entries(apiKey).some(([key, value]) => {
+    if (key === 'preference') {
+      return false;
+    }
+    if (typeof value === 'string') {
+      return value.trim() !== '';
+    }
+    return false;
+  });
 }

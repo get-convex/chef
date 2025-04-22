@@ -88,7 +88,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     if (!isPaidPlan && centitokensUsed >= centitokensQuota) {
       if (body.userApiKey?.preference !== 'quotaExhausted') {
         logger.error(`No tokens available for ${deploymentName}: ${centitokensUsed} of ${centitokensQuota}`);
-        return new Response(JSON.stringify({ error: noTokensText(centitokensUsed, centitokensQuota) }), {
+        return new Response(JSON.stringify({ code: 'no-tokens', error: noTokensText(centitokensUsed, centitokensQuota) }), {
           status: 402,
         });
       }
@@ -111,7 +111,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     }
     if (!userApiKey) {
       return new Response(
-        JSON.stringify({ error: `Tried to use missing ${body.modelProvider} API key. Set one in Settings!` }),
+        JSON.stringify({ code: "missing-api-key", error: `Tried to use missing ${body.modelProvider} API key.` }),
         {
           status: 402,
         },

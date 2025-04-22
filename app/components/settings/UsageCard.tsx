@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react';
 import { useConvex } from 'convex/react';
 import { useEffect, useState } from 'react';
-import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { getStoredTeamSlug, } from '~/lib/stores/convexTeams';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
@@ -15,7 +15,7 @@ export function UsageCard() {
   const convex = useConvex();
 
   const teams = useStore(convexTeamsStore);
-  const [selectedTeamSlug, setSelectedTeamSlug] = useState(useSelectedTeamSlug() ?? teams?.[0]?.slug ?? null);
+  const [selectedTeamSlug, setSelectedTeamSlug] = useState(getStoredTeamSlug() ?? teams?.[0]?.slug ?? null);
   useEffect(() => {
     if (teams && !selectedTeamSlug) {
       setSelectedTeamSlug(teams[0]?.slug);
