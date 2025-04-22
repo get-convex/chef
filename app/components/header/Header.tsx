@@ -41,10 +41,10 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
   };
 
   return (
-    <header className={'flex h-[var(--header-height)] items-center overflow-auto border-b p-5'}>
+    <header className={'flex h-[var(--header-height)] items-center overflow-x-auto overflow-y-hidden border-b p-5'}>
       <div className="z-logo flex cursor-pointer items-center gap-4 text-content-primary">
-        {showSidebarIcon && <HamburgerMenuIcon />}
-        <a href="/" className="flex flex-col text-2xl font-semibold leading-tight">
+        {showSidebarIcon && <HamburgerMenuIcon className="shrink-0" />}
+        <a href="/" className="flex shrink-0 flex-col text-2xl font-semibold leading-tight">
           <div className="flex items-center gap-2 font-display font-bold">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
