@@ -21,6 +21,7 @@ export function ApiKeyCard() {
       setAnthropicKey(apiKey.value || '');
       setOpenaiKey(apiKey.openai || '');
       setXaiKey(apiKey.xai || '');
+      setGoogleKey(apiKey.google || '');
       setAlwaysUseKey(apiKey.preference === 'always');
       setIsDirty(false);
     }
@@ -207,7 +208,7 @@ export function ApiKeyCard() {
             </div>
             <AlwaysUseKeyCheckbox
               isLoading={apiKey === undefined}
-              disabled={anthropicKey === '' && openaiKey === '' && xaiKey === ''}
+              disabled={anthropicKey === '' && openaiKey === '' && xaiKey === '' && googleKey === ''}
               value={alwaysUseKey}
               onChange={(value) => {
                 setAlwaysUseKey(value);
