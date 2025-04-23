@@ -2,7 +2,7 @@ import type { Message, UIMessage } from 'ai';
 import { useCallback, useRef, useState } from 'react';
 import { StreamingMessageParser } from 'chef-agent/message-parser';
 import { workbenchStore } from '~/lib/stores/workbench.client';
-import { makePartId, type PartId } from '~/lib/stores/artifacts';
+import { makePartId, type PartId } from 'chef-agent/partId';
 import type { BoltAction } from 'chef-agent/types';
 
 const messageParser = new StreamingMessageParser({

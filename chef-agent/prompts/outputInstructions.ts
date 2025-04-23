@@ -2,18 +2,6 @@ import type { SystemPromptOptions } from '../types.js';
 import { stripIndents } from '../utils/stripIndent.js';
 
 export function outputInstructions(options: SystemPromptOptions) {
-  if (options.toolsDisabledFromRepeatedErrors) {
-    return stripIndents`
-    <output_instructions>
-      <communication>
-        Previous attempts to help the user build their app have failed. Summarize the errors from 
-        the previous failed tool calls and ask the user how they would like to proceed.
-
-        ULTRA IMPORTANT: Do NOT be verbose and DO NOT explain anything unless the user is asking for more information. That is VERY important.
-      </communication>
-    </output_instructions>
-    `;
-  }
   return stripIndents`
   <output_instructions>
     <communication>

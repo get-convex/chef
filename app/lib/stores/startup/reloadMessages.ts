@@ -1,6 +1,6 @@
 import type { Message } from 'ai';
 import { useEffect, useState } from 'react';
-import { makePartId } from '~/lib/stores/artifacts';
+import { makePartId } from 'chef-agent/partId';
 import { toast } from 'sonner';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { processMessage, type PartCache } from '~/lib/hooks/useMessageParser';

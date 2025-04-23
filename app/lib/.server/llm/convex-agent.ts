@@ -268,7 +268,6 @@ export async function convexAgent(args: {
     usingOpenAi: modelProvider == 'OpenAI',
     usingGoogle: modelProvider == 'Google',
     resendProxyEnabled: getEnv(env, 'RESEND_PROXY_ENABLED') == '1',
-    toolsDisabledFromRepeatedErrors: shouldDisableTools,
   };
   const tools: ConvexToolSet = {
     deploy: deployTool,

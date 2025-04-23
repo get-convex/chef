@@ -1,4 +1,4 @@
-import { ToolInvocation } from 'ai';
+import type { ToolInvocation } from 'ai';
 import type { AbsolutePath, RelativePath } from './utils/workDir.js';
 
 export type ConvexProject = {
