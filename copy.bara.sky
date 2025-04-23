@@ -1,13 +1,13 @@
 CHEF_URL = "https://github.com/get-convex/chef"
 PARTNER_URL = "https://github.com/get-convex/chef-%s"
 
-# To add a partner first, create a new repo on github called chef-${PARTNER}
-# Then, run the following commands:
-#
-# Add the partner to the PARTNERS variable below
-# Manually run the following command once. It may take a while.
-
-# copybara copy.bara.sky push_${PARTNER} main
+# To add a partner
+# 
+# 1) create a new repo on github called chef-${PARTNER}
+# 2) Add the partner to the PARTNERS variable below
+# 3) Install copybara if you haven't https://github.com/get-convex/convex/blob/main/ops/release.md#install-copybara
+# 4) Manually run once `copybara copy.bara.sky push_${PARTNER} main`. May take a while.
+# 5) Submit/land your PR that updates the PARTNERS variable - to auto-keep things up to date.
 PARTNERS = ["testcustomer"]
 
 def push_to_partner(partner):
