@@ -398,6 +398,7 @@ export class WorkbenchStore {
             toolCallPromise.resolve({
               result,
               shouldDisableTools: false,
+              // Skip sending the system prompt if the last tool call was a successful deploy. The model should not need any Convex information at that point.
               skipSystemPrompt: toolName === 'deploy',
             });
             return;
