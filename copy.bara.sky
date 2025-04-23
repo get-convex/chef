@@ -15,8 +15,6 @@ PARTNER_URL = "https://github.com/get-convex/chef-%s"
 #
 # Now switch back to the (noncloned) regular chef repo and add to the PARTNERS variable below and run:
 # copybara copy.bara.sky push_${PARTNER} main --last-rev ${REV}
-#
-# Finally, add to the PARTNERS variable in the .github/workflows/copybara.yml
 PARTNERS = ["testcustomer"]
 
 def push_to_partner(partner):

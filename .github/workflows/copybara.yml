@@ -18,8 +18,6 @@ jobs:
   copybara_partners:
     name: Copybara Partners
     runs-on: ubuntu-latest
-    env:
-      PARTNERS: testcustomer
 
     steps:
       - uses: bazelbuild/setup-bazelisk@v3
@@ -73,7 +71,7 @@ jobs:
       - name: Checkout copy.bara.sky from Convex repo
         uses: actions/checkout@v4
         with:
-          path: convex
+          path: chef
           sparse-checkout: copy.bara.sky
 
       # Sync the code. If this starts failing, you must sync by hand / debug further
@@ -91,7 +89,10 @@ jobs:
       # https://github.com/google/copybara/blob/9d41eddf6a5e30b9661a47bc3eb6e769d38ee03d/java/com/google/copybara/Main.java#L265
       - name: Sync partners
         run: |
-          for partner in ${{ env.PARTNERS }}; do
+          set -ex
+          PARTNERS=$(java -jar copybara/bazel-bin/java/com/google/copybara/copybara_deploy.jar \
+            info --info-list-only chef/copy.bara.sky 2>&1 | grep MIGRATIONS | cut -d' ' -f5 | tr ',' ' ')
+          for partner in $PARTNERS; do
             java -jar copybara/bazel-bin/java/com/google/copybara/copybara_deploy.jar \
-            convex/copy.bara.sky push_${partner} main --ignore-noop $DRY_RUN_FLAG || [ $? -eq 4 ]
+            chef/copy.bara.sky push_${partner} main --ignore-noop $DRY_RUN_FLAG || [ $? -eq 4 ]
           done
