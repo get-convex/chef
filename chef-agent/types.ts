@@ -17,6 +17,7 @@ export interface SystemPromptOptions {
   usingOpenAi: boolean;
   usingGoogle: boolean;
   resendProxyEnabled: boolean;
+  skipSystemPrompt: boolean;
 }
 
 export interface BoltArtifactData {

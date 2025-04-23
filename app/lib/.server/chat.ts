@@ -63,6 +63,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       | undefined;
 
     shouldDisableTools: boolean;
+    skipSystemPrompt: boolean;
   };
   const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug } = body;
 
@@ -146,6 +147,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       modelProvider: body.modelProvider,
       userApiKey,
       shouldDisableTools: body.shouldDisableTools,
+      skipSystemPrompt: body.skipSystemPrompt,
       recordUsageCb,
     });
 

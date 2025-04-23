@@ -88,13 +88,23 @@ export class ActionRunner {
   onAlert?: (alert: ActionAlert) => void;
   buildOutput?: { path: string; exitCode: number; output: string };
   terminalOutput: WritableAtom<string> = atom('');
-  onToolCallComplete: (args: { kind: 'success' | 'error'; result: string; toolCallId: string }) => void;
+  onToolCallComplete: (args: {
+    kind: 'success' | 'error';
+    result: string;
+    toolCallId: string;
+    toolName: string;
+  }) => void;
   constructor(
     webcontainerPromise: Promise<WebContainer>,
     shellTerminal: BoltShell,
     callbacks: {
       onAlert?: (alert: ActionAlert) => void;
-      onToolCallComplete: (args: { kind: 'success' | 'error'; result: string; toolCallId: string }) => void;
+      onToolCallComplete: (args: {
+        kind: 'success' | 'error';
+        result: string;
+        toolCallId: string;
+        toolName: string;
+      }) => void;
     },
   ) {
     this.#webcontainer = webcontainerPromise;
@@ -463,6 +473,7 @@ export class ActionRunner {
         kind: 'success',
         result,
         toolCallId: action.parsedContent.toolCallId,
+        toolName: parsed.toolName,
       });
     } catch (e: any) {
       console.error('Error on tool call', e);
@@ -474,6 +485,7 @@ export class ActionRunner {
         kind: 'error',
         result: message,
         toolCallId: action.parsedContent.toolCallId,
+        toolName: parsed.toolName,
       });
       throw e;
     }

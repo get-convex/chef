@@ -7,4 +7,5 @@ export interface SystemPromptOptions {
   usingGoogle: boolean;
   resendProxyEnabled: boolean;
   toolsDisabledFromRepeatedErrors: boolean;
+  skipSystemPrompt: boolean;
 }
