@@ -457,6 +457,7 @@ export const Chat = memo(
         chatStore.setKey('aborted', false);
 
         shouldDisableToolsStore.set(false);
+        skipSystemPromptStore.set(false);
         if (modifiedFiles !== undefined) {
           const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
           append({
