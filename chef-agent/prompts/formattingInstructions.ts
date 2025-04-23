@@ -58,6 +58,7 @@ export function formattingInstructions(_options: SystemPromptOptions) {
   <formatting_instructions>
     <code_formatting_instructions>
       Use 2 spaces for code indentation.
+      Put React components in their own files.
     </code_formatting_instructions>
     <message_formatting_instructions>
       You can make text output pretty by using Markdown or the following available HTML elements:
