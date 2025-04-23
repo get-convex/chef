@@ -74,4 +74,3 @@ if (process.env.XAI_API_KEY) {
     maxTokens: 8192,
   });
 }
-
