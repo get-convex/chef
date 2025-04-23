@@ -16,6 +16,9 @@ import type { ModelSelection } from '~/utils/constants';
 import { Callout } from '@ui/Callout';
 import { MessageInput } from './MessageInput';
 import { messageInputStore } from '~/lib/stores/messageInput';
+import { useChatId } from '~/lib/stores/chatId';
+import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 
 interface BaseChatProps {
   // Refs
@@ -53,17 +56,6 @@ interface BaseChatProps {
   earliestRewindableMessageRank?: number;
 }
 
-function useSerializedMessages(messages: Message[]) {
-  return useMemo(() => {
-    try {
-      return JSON.stringify(messages);
-    } catch {
-      console.log('error stringifying messages');
-      return undefined;
-    }
-  }, [messages]);
-}
-
 export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   (
     {
@@ -92,7 +84,16 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const { maintenanceMode } = useFlags();
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
-    const messagesString = useSerializedMessages(messages);
+
+    const chatId = useChatId();
+    const sessionId = useConvexSessionIdOrNullOrLoading();
+    const dataForEvals = useMemo(() => {
+      return JSON.stringify({
+        chatId,
+        sessionId,
+        convexSiteUrl: getConvexSiteUrl(),
+      });
+    }, [chatId, sessionId]);
 
     const lastUserMessage = messages.findLast((message) => message.role === 'user');
     const resendMessage = useCallback(async () => {
@@ -105,7 +106,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         ref={ref}
         className={classNames(styles.BaseChat, 'relative flex h-full w-full overflow-hidden')}
         data-chat-visible={showChat}
-        data-messages-for-evals={messagesString}
+        data-messages-for-evals={dataForEvals}
       >
         <Menu />
         <div ref={scrollRef} className="flex size-full flex-col overflow-y-auto">

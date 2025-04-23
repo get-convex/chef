@@ -4,7 +4,7 @@ import type { LinksFunction, LoaderFunctionArgs } from '@vercel/remix';
 import { json } from '@vercel/remix';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, useRouteError } from '@remix-run/react';
 import { themeStore } from './lib/stores/theme';
-import { stripIndents } from './utils/stripIndent';
+import { stripIndents } from 'chef-agent/utils/stripIndent';
 import { createHead } from 'remix-island';
 import { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';

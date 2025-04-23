@@ -1,5 +1,5 @@
 import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from 'chef-agent/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
 import { z } from 'zod';
 

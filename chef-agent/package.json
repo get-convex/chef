@@ -1,0 +1,23 @@
+{
+  "name": "chef-agent",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "ai": "^4.3.2",
+    "jose": "^5.9.6",
+    "path-browserify": "^1.0.1",
+    "typescript": "^5.4.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.30",
+    "@types/path-browserify": "^1.0.3",
+    "vitest": "^2.1.9"
+  },
+  "packageManager": "pnpm@9.5.0"
+}

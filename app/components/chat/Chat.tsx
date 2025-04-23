@@ -10,11 +10,11 @@ import { chatStore } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { type ModelSelection } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from 'chef-agent/utils/logger';
 import { BaseChat } from './BaseChat.client';
 import { createSampler } from '~/utils/sampler';
 import { filesToArtifacts } from '~/utils/fileUtils';
-import { ChatContextManager } from '~/lib/ChatContextManager';
+import { ChatContextManager } from 'chef-agent/ChatContextManager';
 import { selectedTeamSlugStore, setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
@@ -155,7 +155,13 @@ export const Chat = memo(
       return () => clearInterval(resetInterval);
     }, []);
 
-    const chatContextManager = useRef(new ChatContextManager());
+    const chatContextManager = useRef(
+      new ChatContextManager(
+        () => workbenchStore.currentDocument.get(),
+        () => workbenchStore.files.get(),
+        () => workbenchStore.userWrites,
+      ),
+    );
     const [disableChatMessage, setDisableChatMessage] = useState<
       { type: 'ExceededQuota' } | { type: 'TeamDisabled'; isPaidPlan: boolean } | null
     >(null);

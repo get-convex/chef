@@ -20,20 +20,20 @@ import { classNames } from '~/utils/classNames';
 import type { ConvexToolInvocation } from '~/lib/common/types';
 import { getTerminalTheme } from '~/components/workbench/terminal/theme';
 import { FitAddon } from '@xterm/addon-fit';
-import { viewParameters } from '~/lib/runtime/viewTool';
+import { viewParameters } from 'chef-agent/tools/view';
 import { getHighlighter } from 'shiki';
 import { themeStore } from '~/lib/stores/theme';
 import { getLanguageFromExtension } from '~/utils/getLanguageFromExtension';
-import { path } from '~/utils/path';
-import { editToolParameters } from '~/lib/runtime/editTool';
-import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
-import { loggingSafeParse } from '~/lib/zodUtil';
-import { deployToolParameters } from '~/lib/runtime/deployTool';
+import { path } from 'chef-agent/utils/path';
+import { editToolParameters } from 'chef-agent/tools/edit';
+import { npmInstallToolParameters } from 'chef-agent/tools/npmInstall';
+import { loggingSafeParse } from 'chef-agent/utils/zodUtil';
+import { deployToolParameters } from 'chef-agent/tools/deploy';
 import type { ZodError } from 'zod';
 import { Spinner } from '@ui/Spinner';
 import { FolderIcon } from '@heroicons/react/24/outline';
-import { getRelativePath } from '~/lib/stores/files';
 import { outputLabels } from '~/lib/runtime/deployToolOutputLabels';
+import { getRelativePath } from 'chef-agent/utils/workDir';
 
 export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId: PartId; toolCallId: string }) {
   const userToggledAction = useRef(false);

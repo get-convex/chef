@@ -1,21 +1,26 @@
 import type { WebContainer } from '@webcontainer/api';
-import { path as nodePath } from '~/utils/path';
+import { path as nodePath } from 'chef-agent/utils/path';
 import { atom, map, type MapStore, type WritableAtom } from 'nanostores';
-import type { ActionAlert, BoltAction, FileHistory } from '~/types/actions';
-import { createScopedLogger } from '~/utils/logger';
-import { unreachable } from '~/utils/unreachable';
-import type { ActionCallbackData } from './message-parser';
-import { cleanTerminalOutput, type BoltShell } from '~/utils/shell';
+import type { ActionAlert, FileHistory } from '~/types/actions';
+import { createScopedLogger } from 'chef-agent/utils/logger';
+import { unreachable } from 'chef-agent/utils/unreachable';
+import type { ActionCallbackData } from 'chef-agent/message-parser';
 import type { ToolInvocation } from 'ai';
 import { withResolvers } from '~/utils/promises';
-import { viewParameters } from './viewTool';
-import { readPath, renderDirectory, renderFile, workDirRelative } from '~/utils/fileUtils';
+import { viewParameters } from 'chef-agent/tools/view';
+import { renderDirectory } from 'chef-agent/utils/renderDirectory';
+import { renderFile } from 'chef-agent/utils/renderFile';
 import { ContainerBootState, waitForContainerBootState } from '~/lib/stores/containerBootState';
-import { npmInstallToolParameters } from '~/lib/runtime/npmInstallTool';
+import { npmInstallToolParameters } from 'chef-agent/tools/npmInstall';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { z } from 'zod';
-import { editToolParameters } from './editTool';
-import { getAbsolutePath } from '~/lib/stores/files';
+import { editToolParameters } from 'chef-agent/tools/edit';
+import { getAbsolutePath } from 'chef-agent/utils/workDir';
+import { cleanConvexOutput } from 'chef-agent/utils/shell';
+import type { BoltAction } from 'chef-agent/types';
+import type { BoltShell } from '~/utils/shell';
+import { workDirRelative } from '~/utils/fileUtils';
+import { readPath } from '~/utils/fileUtils';
 import { streamOutput } from '~/utils/process';
 import { outputLabels, type OutputLabels } from './deployToolOutputLabels';
 
@@ -442,7 +447,7 @@ export class ActionRunner {
           const time = performance.now() - t0;
           logger.info('deploy action finished in', time);
 
-          // Start the default preview if it’s not already running
+          // Start the default preview if it's not already running
           if (!workbenchStore.isDefaultPreviewRunning()) {
             const shell = this.#shellTerminal();
             await shell.startCommand('vite --open');
@@ -466,50 +471,4 @@ export class ActionRunner {
       throw e;
     }
   }
-}
-
-const BANNED_LINES = ['transforming (', 'computing gzip size', 'idealTree buildDeps', 'timing reify:unpack'];
-
-// Taken from https://github.com/sindresorhus/cli-spinners
-const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-
-// Cleaning terminal output helps the agent focus on the important parts and
-// not waste input tokens.
-function cleanConvexOutput(output: string) {
-  output = cleanTerminalOutput(output);
-  const normalizedNewlines = output.replace('\r\n', '\n').replace('\r', '\n');
-  const rawLines = normalizedNewlines.split('\n');
-  let lastSpinnerLine: string | null = null;
-  let lines = [];
-  for (const line of rawLines) {
-    if (BANNED_LINES.some((bannedLine) => line.includes(bannedLine))) {
-      continue;
-    }
-    if (SPINNER_FRAMES.some((spinnerFrame) => line.startsWith(spinnerFrame))) {
-      const lineWithoutSpinner = line.slice(1).trim();
-      if (lineWithoutSpinner === lastSpinnerLine) {
-        continue;
-      }
-      lastSpinnerLine = lineWithoutSpinner;
-      lines.push(lineWithoutSpinner);
-      continue;
-    }
-    lines.push(line);
-  }
-
-  // Remove all esbuild "could not resolve" errors except the last one
-  const firstEsbuildNodeErrror = lines.findIndex((line) => line.includes('[ERROR] Could not resolve'));
-  if (firstEsbuildNodeErrror !== -1) {
-    const lastEsbuildNodeError = lines.findLastIndex((line) => line.includes('[ERROR] Could not resolve'));
-    if (lastEsbuildNodeError !== -1) {
-      // just keep the last one
-      lines = [...lines.slice(0, firstEsbuildNodeErrror), ...lines.slice(lastEsbuildNodeError)];
-    }
-  }
-
-  const result = lines.join('\n');
-  if (output !== result) {
-    console.log(`Sanitized output: ${output.length} -> ${result.length}`);
-  }
-  return result;
 }

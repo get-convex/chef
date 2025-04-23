@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { join } from 'node:path';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import JSZip from 'jszip';
+import * as lz4 from 'lz4-wasm-nodejs';
 
 interface GenerateAppOptions {
   prompt: string;
@@ -77,12 +78,11 @@ export async function generateApp({ prompt, chefUrl, outputDir, headless = true,
     if (!messagesData) {
       throw new Error('No messages data found after completion');
     }
-    const messages = JSON.parse(messagesData);
-
-    const codeButton = await page.waitForSelector('button:has-text("Code")', { timeout: 10000 });
-    await codeButton.click();
+    const { sessionId, chatId, convexSiteUrl } = JSON.parse(messagesData);
 
     if (outputDir) {
+      const codeButton = await page.waitForSelector('button:has-text("Code")', { timeout: 10000 });
+      await codeButton.click();
       const downloadButton = await page.waitForSelector('button:has-text("Download Code")', { timeout: 10000 });
 
       // If outputDir exists, it was already checked by the CLI
@@ -115,6 +115,25 @@ export async function generateApp({ prompt, chefUrl, outputDir, headless = true,
         }
       }
     }
+
+    // Wait a while to make sure the messages have been saved. For some reason,
+    // relying on the beforeunload handler doesn't work from playwright.
+    await page.waitForTimeout(10_000);
+
+    const messagesResponse = await fetch(new URL('/initial_messages', convexSiteUrl), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sessionId, chatId }),
+    });
+    console.log('messagesResponse', messagesResponse.status);
+    if (!messagesResponse.ok) {
+      throw new Error('Failed to fetch initial messages');
+    }
+    const messagesBlob = await messagesResponse.arrayBuffer();
+    const decompressed = await lz4.decompress(new Uint8Array(messagesBlob));
+    const messages = JSON.parse(new TextDecoder().decode(decompressed));
 
     return { messages, outputDir };
   } finally {
