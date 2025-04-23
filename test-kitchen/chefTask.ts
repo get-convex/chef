@@ -255,16 +255,10 @@ const copyFiles = wrapTraced(async function copyFiles(repoDir: string) {
   if (!stdout) {
     throw new Error('No output from git ls-files');
   }
-  const unignoredFiles = stdout
+  const templateFiles = stdout
     .trim()
     .split('\n')
     .filter((file) => file.length > 0);
-  const packageLockFile = 'package-lock.json';
-  if (!existsSync(path.join(TEMPLATE_DIR, packageLockFile))) {
-    throw new Error('package-lock.json not found');
-  }
-  const templateFiles = [...unignoredFiles, packageLockFile];
-
   for (const file of templateFiles) {
     const sourcePath = path.join(TEMPLATE_DIR, file);
     const targetPath = path.join(repoDir, file);
