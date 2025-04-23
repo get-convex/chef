@@ -12,7 +12,7 @@ import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createXai } from '@ai-sdk/xai';
-import { ROLE_SYSTEM_PROMPT, GENERAL_SYSTEM_PROMPT_PRELUDE, generalSystemPrompt } from 'chef-agent/prompts/system';
+import { ROLE_SYSTEM_PROMPT, generalSystemPrompt } from 'chef-agent/prompts/system';
 import { deployTool } from 'chef-agent/tools/deploy';
 import { viewTool } from 'chef-agent/tools/view';
 import type { ConvexToolSet } from '~/lib/common/types';

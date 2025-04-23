@@ -1,6 +1,6 @@
 import { atom, map, type ReadableAtom, type WritableAtom } from 'nanostores';
 import type { EditorDocument, ScrollPosition } from 'chef-agent/types';
-import { ActionRunner, type ActionState } from '~/lib/runtime/action-runner';
+import { ActionRunner } from '~/lib/runtime/action-runner';
 import type { ActionCallbackData, ArtifactCallbackData } from 'chef-agent/message-parser';
 import { webcontainer } from '~/lib/webcontainer';
 import type { ITerminal, TerminalInitializationOptions } from '~/types/terminal';
