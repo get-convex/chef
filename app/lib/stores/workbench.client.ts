@@ -395,11 +395,10 @@ export class WorkbenchStore {
           toolCallResults.push({ partId, kind });
 
           if (kind === 'success') {
-            const isSuccessfulDeploy = toolName === 'deploy' && !result.startsWith('Error:');
             toolCallPromise.resolve({
               result,
               shouldDisableTools: false,
-              skipSystemPrompt: isSuccessfulDeploy,
+              skipSystemPrompt: toolName === 'deploy',
             });
             return;
           }

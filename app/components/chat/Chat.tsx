@@ -275,7 +275,6 @@ export const Chat = memo(
           shouldDisableToolsStore.set(true);
         }
         if (skipSystemPrompt) {
-          console.log('Setting skipSystemPrompt to true');
           skipSystemPromptStore.set(true);
         }
         return result;
