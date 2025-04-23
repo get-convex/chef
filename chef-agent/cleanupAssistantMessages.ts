@@ -16,7 +16,6 @@ export function cleanupAssistantMessages(messages: Message[]) {
           `You tried to modify \`${excludedPath}\` but this is not allowed. Please modify a different file.`,
         );
       }
-      console.log('content', content);
       return { ...message, content };
     } else {
       return message;
