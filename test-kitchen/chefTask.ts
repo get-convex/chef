@@ -51,7 +51,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
 
   const backendDir = path.join(taskDir, 'backend');
   mkdirSync(backendDir, { recursive: true });
-  const { numDeploys, usage } = await withConvexBackend(backendDir, async (backend) => {
+  const { numDeploys, usage, success } = await withConvexBackend(backendDir, async (backend) => {
     const contextManager = new ChatContextManager(
       () => undefined,
       () => ({}),
@@ -64,6 +64,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
           if (data.action.type === 'file') {
             const filePath = path.join(repoDir, data.action.filePath);
             logger.info(`Writing to ${filePath}`);
+            mkdirSync(path.dirname(filePath), { recursive: true });
             writeFileSync(filePath, data.action.content);
           }
         },
@@ -105,6 +106,8 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       parts: [],
     };
     let numDeploys = 0;
+    let success: boolean;
+    let hadSuccessfulDeploy = false;
     const totalUsage: LanguageModelUsage = {
       promptTokens: 0,
       completionTokens: 0,
@@ -112,9 +115,10 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
     };
     while (true) {
       if (assistantMessage.parts.length >= MAX_STEPS) {
-        throw new Error('Reached max steps');
+        logger.error('Reached max steps, ending test.');
+        success = false;
+        break;
       }
-
       const messages = [initialUserMessage];
       if (assistantMessage.parts.length > 0) {
         messages.push(assistantMessage);
@@ -140,6 +144,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       totalUsage.totalTokens += response.usage.totalTokens;
 
       if (response.finishReason == 'stop') {
+        success = hadSuccessfulDeploy;
         break;
       }
       if (response.finishReason === 'length') {
@@ -163,6 +168,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
               toolCallResult += '\n\nDev server started successfully!';
             }
             logger.info('Successfully deployed');
+            hadSuccessfulDeploy = true;
             break;
           }
           case 'npmInstall': {
@@ -194,6 +200,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       });
     }
     return {
+      success,
       numDeploys,
       usage: totalUsage,
     };
@@ -222,6 +229,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
     files[relativePath] = readFileSync(repoPath, 'utf8');
   }
   return {
+    success,
     numDeploys,
     usage,
     files,
@@ -287,38 +295,45 @@ async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, c
         },
         ...cleanupAssistantMessages(context),
       ];
-      const result = await generateText({
-        model: model.ai,
-        maxTokens: 8192,
-        messages,
-        tools: {
-          deploy: {
-            description: deployToolDescription,
-            parameters: deployToolParameters,
+      try {
+        const result = await generateText({
+          model: model.ai,
+          maxTokens: model.maxTokens,
+          messages,
+          tools: {
+            deploy: {
+              description: deployToolDescription,
+              parameters: deployToolParameters,
+            },
+            npmInstall: {
+              description: npmInstallToolDescription,
+              parameters: npmInstallToolParameters,
+            },
           },
-          npmInstall: {
-            description: npmInstallToolDescription,
-            parameters: npmInstallToolParameters,
+          maxSteps: 64,
+        });
+        span.log({
+          input: messages,
+          output: {
+            text: result.text,
+            toolCalls: result.toolCalls,
           },
-        },
-        maxSteps: 64,
-      });
-      span.log({
-        input: messages,
-        output: {
-          text: result.text,
-          toolCalls: result.toolCalls,
-        },
-        metrics: {
-          promptTokens: result.usage.promptTokens,
-          completionTokens: result.usage.completionTokens,
-          totalTokens: result.usage.totalTokens,
-        },
-        metadata: {
-          model: model.model_slug,
-        },
-      });
-      return result;
+          metrics: {
+            promptTokens: result.usage.promptTokens,
+            completionTokens: result.usage.completionTokens,
+            totalTokens: result.usage.totalTokens,
+          },
+          metadata: {
+            model: model.model_slug,
+          },
+        });
+        return result;
+      } catch (e: any) {
+        span.log({
+          input: messages,
+        });
+        throw e;
+      }
     },
     {
       type: 'llm',

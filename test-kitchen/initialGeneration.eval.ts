@@ -44,6 +44,7 @@ if (process.env.ANTHROPIC_API_KEY) {
     name: 'claude-3.5-sonnet',
     model_slug: 'claude-3-5-sonnet-20240620',
     ai: anthropic('claude-3-5-sonnet-20241022'),
+    maxTokens: 8192,
   });
 }
 
@@ -52,6 +53,7 @@ if (process.env.OPENAI_API_KEY) {
     name: 'gpt-4.1',
     model_slug: 'gpt-4.1',
     ai: openai('gpt-4.1'),
+    maxTokens: 8192,
   });
 }
 
@@ -60,6 +62,7 @@ if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     name: 'gemini-2.5-pro-preview-03-25',
     model_slug: 'gemini-2.5-pro-preview-03-25',
     ai: google('gemini-2.5-pro-preview-03-25'),
+    maxTokens: 20000,
   });
 }
 
@@ -68,6 +71,7 @@ if (process.env.XAI_API_KEY) {
     name: 'grok-3-mini',
     model_slug: 'grok-3-mini',
     ai: xai('grok-3-mini'),
+    maxTokens: 8192,
   });
 }
 

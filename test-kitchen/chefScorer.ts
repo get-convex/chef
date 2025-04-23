@@ -5,7 +5,7 @@ export async function chefScorer(props: braintrust.EvalScorerArgs<string, ChefRe
   return [
     {
       name: '1/Deploys',
-      score: 1 / Math.max(1, props.output.numDeploys),
+      score: props.output.success ? 1 / Math.max(1, props.output.numDeploys) : 0,
     },
   ];
 }
