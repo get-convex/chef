@@ -1,0 +1,41 @@
+CHEF_URL = "https://github.com/get-convex/chef"
+PARTNER_URL = "https://github.com/get-convex/chef-%s"
+
+# To add a partner first, create a new repo on github called chef-${PARTNER}
+# Then, run the following commands:
+#
+# PARTNER=name-of-partner
+# git clone https://github.com/get-convex/chef-${PARTNER}
+# git remote add upstream https://github.com/get-convex/chef
+# git fetch upstream main
+# git checkout main
+# git reset --hard upstream/main
+# git push origin main
+# REV=$(git rev-parse HEAD)
+#
+# Now switch back to the (noncloned) regular chef repo and add to the PARTNERS variable below and run:
+# copybara copy.bara.sky push_${PARTNER} main --last-rev ${REV}
+#
+# Finally, add to the PARTNERS variable in the .github/workflows/copybara.yml
+PARTNERS = ["testcustomer"]
+
+def push_to_partner(partner):
+    return core.workflow(
+        name = "push_%s" % partner,
+        description = "push code from chef -> chef-%s" % partner,
+        mode = "ITERATIVE",
+        origin = git.origin(
+            url = CHEF_URL,
+            # ref from the command line
+            ref = "${COPYBARA_CONTEXT_REFERENCE}",
+        ),
+        destination = git.destination(
+            url = PARTNER_URL % partner,
+            fetch = "main",
+            push = "main",
+        ),
+        authoring = authoring.pass_thru("Convex, Inc. <no-reply@convex.dev>"),
+        check_last_rev_state = True,
+    )
+
+[push_to_partner(partner) for partner in PARTNERS]
