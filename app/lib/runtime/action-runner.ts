@@ -21,7 +21,6 @@ import type { BoltAction } from 'chef-agent/types';
 import type { BoltShell } from '~/utils/shell';
 import { streamOutput } from '~/utils/process';
 import { outputLabels, type OutputLabels } from '~/lib/runtime/deployToolOutputLabels';
-import type { PartId } from '~/lib/stores/artifacts';
 
 const logger = createScopedLogger('ActionRunner');
 

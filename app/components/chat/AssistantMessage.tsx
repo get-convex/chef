@@ -10,6 +10,10 @@ interface AssistantMessageProps {
 }
 
 export const AssistantMessage = memo(function AssistantMessage({ message }: AssistantMessageProps) {
+  const stoppedDueToFailedToolCalls = useMemo(
+    () => failedDueToRepeatedErrors(message.annotations),
+    [message.annotations],
+  );
   if (!message.parts) {
     return (
       <div className="w-full overflow-hidden">
@@ -31,10 +35,7 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
       );
     }
   }
-  const stoppedDueToFailedToolCalls = useMemo(
-    () => failedDueToRepeatedErrors(message.annotations),
-    [message.annotations?.length],
-  );
+
   return (
     <div className="w-full overflow-hidden text-sm">
       <div className="flex flex-col gap-2">
