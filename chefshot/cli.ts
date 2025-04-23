@@ -5,7 +5,7 @@ import { writeFile, access } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
 import { generateApp } from './interact.js';
 import { config } from 'dotenv';
-
+import * as lz4 from 'lz4-wasm-nodejs';
 // Helper for consistent logging to stderr
 const log = (...args: any[]) => console.error(...args);
 
@@ -41,10 +41,7 @@ interface GenerateOptions {
   headless: boolean;
 }
 
-const program = new Command();
-
-program
-  .name('chefshot')
+const generateCommand = new Command('generate')
   .description('Generate an app using Chef AI')
   .argument('<prompt>', 'The prompt to send to Chef')
   // URL group - mutually exclusive options
@@ -154,5 +151,88 @@ program
       log('Tip: Use --output-dir to save the generated code');
     }
   });
+
+interface DownloadOptions {
+  chefSiteUrl: string;
+  dev?: boolean;
+  prod?: boolean;
+  messagesFile?: string;
+  messages?: boolean;
+}
+
+const downloadCommand = new Command('download')
+  .description('Download an app using Chef AI')
+  .argument('chatUuid', 'The UUID of the chat to download')
+  // URL group - mutually exclusive options
+  .addOption(
+    new Option('--chef-site-url <url>', 'Chef site URL').conflicts(['prod', 'dev']).argParser((value: string) => {
+      try {
+        new URL(value);
+        return value;
+      } catch {
+        throw new InvalidArgumentError('Not a valid URL');
+      }
+    }),
+  )
+  .addOption(new Option('--prod', 'Use production Chef database').conflicts(['chef-backend-url', 'dev']))
+  .addOption(new Option('--dev', 'Use dev Chef database configured in .env.local').conflicts(['chef-site-url', 'prod']))
+  .addOption(new Option('--messages-file <file>', 'File to write conversation messages to'))
+  .action(async (chatUuid: string, options: DownloadOptions) => {
+    let chefSiteUrl: string | undefined;
+    if (options.dev) {
+      if (process.env.VITE_CONVEX_SITE_URL) {
+        chefSiteUrl = process.env.VITE_CONVEX_SITE_URL;
+      } else if (process.env.CONVEX_URL) {
+        const convexUrl = process.env.CONVEX_URL;
+        if (convexUrl.endsWith('.convex.cloud')) {
+          chefSiteUrl = convexUrl.replace('.convex.cloud', '.convex.site');
+        }
+      }
+    } else if (options.prod) {
+      chefSiteUrl = 'https://academic-mammoth-217.convex.site';
+    } else if (options.chefSiteUrl) {
+      chefSiteUrl = options.chefSiteUrl;
+    }
+    if (!chefSiteUrl) {
+      log('Error: Missing required environment variables');
+      log('Please set CONVEX_URL in your .env.local file or run with --chef-site-url or --prod');
+      process.exit(1);
+    }
+    log(`Looking for Chef at ${chefSiteUrl}`);
+    const chefAdminToken = process.env.CHEF_ADMIN_TOKEN;
+    if (!chefAdminToken) {
+      log('Error: Missing required environment variables');
+      log('Please set CHEF_ADMIN_TOKEN in your .env.local file');
+      process.exit(1);
+    }
+
+    const response = await fetch(`${chefSiteUrl}/__debug/download_messages`, {
+      method: 'POST',
+      body: JSON.stringify({ chatUuid }),
+      headers: {
+        'X-Chef-Admin-Token': chefAdminToken,
+      },
+    });
+    if (!response.ok) {
+      log(`Error: ${response.statusText}`);
+      process.exit(1);
+    }
+
+    const messagesBlob = await response.arrayBuffer();
+    const decompressed = await lz4.decompress(new Uint8Array(messagesBlob));
+    const messages = JSON.parse(new TextDecoder().decode(decompressed));
+    if (options.messagesFile) {
+      const messagesPath = resolve(options.messagesFile);
+      await writeFile(messagesPath, JSON.stringify(messages, null, 2));
+      log(`Wrote messages to ${messagesPath}`);
+    } else {
+      // Write to stdout for piping
+      console.log(JSON.stringify(messages, null, 2));
+    }
+  });
+
+const program = new Command();
+
+program.name('chefshot').description('Chef AI CLI').addCommand(generateCommand).addCommand(downloadCommand);
 
 program.parse();

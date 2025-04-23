@@ -9,7 +9,9 @@ import { compressMessages } from "./compressMessages";
 import { resendProxy } from "./resendProxy";
 
 const http = httpRouter();
-const httpWithCors = corsRouter(http, {});
+const httpWithCors = corsRouter(http, {
+  allowedHeaders: ["Content-Type", "X-Chef-Admin-Token"],
+});
 
 // This is particularly useful with CORS, where an unhandled error won't have CORS
 // headers applied to it.
@@ -186,6 +188,56 @@ httpWithCors.route({
     });
     return new Response(null, {
       status: 200,
+    });
+  }),
+});
+
+http.route({
+  path: "/__debug/download_messages",
+  method: "OPTIONS",
+  handler: httpActionWithErrorHandling(async (ctx, request) => {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": request.headers.get("Origin") ?? "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true",
+      },
+    });
+  }),
+});
+
+http.route({
+  path: "/__debug/download_messages",
+  method: "POST",
+  handler: httpActionWithErrorHandling(async (ctx, request) => {
+    const body = await request.json();
+    const header = request.headers.get("X-Chef-Admin-Token");
+    if (header !== process.env.CHEF_ADMIN_TOKEN) {
+      return new Response(JSON.stringify({ code: "Unauthorized", message: "Invalid admin token" }), {
+        status: 401,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+    const chatUuid = body.chatUuid;
+    const storageId = await ctx.runQuery(internal.messages.getMessagesByChatInitialIdBypassingAccessControl, {
+      id: chatUuid,
+    });
+    if (!storageId) {
+      return new Response(null, {
+        status: 204,
+      });
+    }
+    const blob = await ctx.storage.get(storageId);
+    return new Response(blob, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": request.headers.get("Origin") ?? "*",
+        Vary: "Origin",
+      },
     });
   }),
 });
