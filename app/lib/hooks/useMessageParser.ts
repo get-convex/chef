@@ -4,6 +4,7 @@ import { StreamingMessageParser } from 'chef-agent/message-parser';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { makePartId, type PartId } from '~/lib/stores/artifacts';
 import type { BoltAction } from 'chef-agent/types';
+import { EXCLUDED_FILE_PATHS } from 'chef-agent/constants';
 
 const messageParser = new StreamingMessageParser({
   callbacks: {
@@ -162,7 +163,7 @@ export function useMessageParser(partCache: PartCache) {
 
 function isValidAction(action: BoltAction): boolean {
   if (action.type === 'file') {
-    return !action.filePath.includes('convex/auth.ts');
+    return !EXCLUDED_FILE_PATHS.some((excludedPath) => action.filePath.includes(excludedPath));
   }
   return true;
 }
