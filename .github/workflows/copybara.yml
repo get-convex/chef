@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  copybara_open_source:
-    name: Copybara Open Source
+  copybara_partners:
+    name: Copybara Partners
     runs-on: ubuntu-latest
     env:
       PARTNERS: testcustomer
