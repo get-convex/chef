@@ -15,6 +15,11 @@ export function solutionConstraints(options: SystemPromptOptions) {
 
       ${convexGuidelines}
 
+      <http_guidelines>
+        - All user-defined HTTP endpoints are defined in \`convex/router.ts\` and require an \`httpAction\` decorator.
+        - The \`convex/http.ts\` file contains the authentication handler for Convex Auth. Do NOT modify this file because it is locked. Instead define all new http actions in \`convex/router.ts\`.
+      </http_guidelines>
+
       <auth_server_guidelines>
         Here are some guidelines for using the template's auth within the app:
 
