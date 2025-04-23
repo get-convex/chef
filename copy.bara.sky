@@ -32,6 +32,7 @@ def push_to_partner(partner):
             fetch = "main",
             push = "main",
         ),
+        origin_files = glob(["**"], exclude=["copy.bara.sky", ".github/workflows/copybara.yml"]),
         authoring = authoring.pass_thru("Convex, Inc. <no-reply@convex.dev>"),
         check_last_rev_state = True,
     )
