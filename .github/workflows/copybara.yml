@@ -80,10 +80,10 @@ jobs:
       # Migration of last-rev '168f9e54d7f66e942959d51c0d17749820b03596' didn't result in an empty change.
       #
       # It's likely because someone changed the copy.bara.sky. Make sure that's the case, and after
-      # confirming, sync manually with this command (replacing `push_backend` with the appropriate one).
+      # confirming, sync manually with this command.
       # Once you're sure it works, run without `--dry-run`.
       #
-      # copybara copy.bara.sky push_${PARTNER} main --ignore-noop --git-committer-email "team@convex.dev" --git-committer-name "Convex, Inc." --force --dry-run
+      # copybara copy.bara.sky ${PARTNER} main --ignore-noop --git-committer-email "team@convex.dev" --git-committer-name "Convex, Inc." --force --dry-run
       #
       # Exit code 4 occurs as a "NOOP" and can be treated as a success
       # https://github.com/google/copybara/blob/9d41eddf6a5e30b9661a47bc3eb6e769d38ee03d/java/com/google/copybara/Main.java#L265
@@ -92,7 +92,7 @@ jobs:
           set -ex
           PARTNERS=$(java -jar copybara/bazel-bin/java/com/google/copybara/copybara_deploy.jar \
             info --info-list-only chef/copy.bara.sky 2>&1 | grep MIGRATIONS | cut -d' ' -f5 | tr ',' ' ')
-          for partner in $PARTNERS; do
+          for PARTNER in $PARTNERS; do
             java -jar copybara/bazel-bin/java/com/google/copybara/copybara_deploy.jar \
-            chef/copy.bara.sky push_${partner} main --ignore-noop $DRY_RUN_FLAG || [ $? -eq 4 ]
+            chef/copy.bara.sky ${PARTNER} main --ignore-noop $DRY_RUN_FLAG || [ $? -eq 4 ]
           done
