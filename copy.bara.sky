@@ -4,17 +4,10 @@ PARTNER_URL = "https://github.com/get-convex/chef-%s"
 # To add a partner first, create a new repo on github called chef-${PARTNER}
 # Then, run the following commands:
 #
-# PARTNER=name-of-partner
-# git clone https://github.com/get-convex/chef-${PARTNER}
-# git remote add upstream https://github.com/get-convex/chef
-# git fetch upstream main
-# git checkout main
-# git reset --hard upstream/main
-# git push origin main
-# REV=$(git rev-parse HEAD)
-#
-# Now switch back to the (noncloned) regular chef repo and add to the PARTNERS variable below and run:
-# copybara copy.bara.sky push_${PARTNER} main --last-rev ${REV}
+# Add the partner to the PARTNERS variable below
+# Manually run the following command once. It may take a while.
+
+# copybara copy.bara.sky push_${PARTNER} main
 PARTNERS = ["testcustomer"]
 
 def push_to_partner(partner):
