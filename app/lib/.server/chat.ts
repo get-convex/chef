@@ -1,12 +1,13 @@
 import { type ActionFunctionArgs } from '@vercel/remix';
 import { createScopedLogger } from 'chef-agent/utils/logger';
-import { convexAgent, getEnv } from '~/lib/.server/llm/convex-agent';
+import { convexAgent } from '~/lib/.server/llm/convex-agent';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { checkTokenUsage, recordUsage } from '~/lib/.server/usage';
 import { disabledText, noTokensText } from '~/lib/convexUsage';
-import type { ModelProvider } from './llm/provider';
+import type { ModelProvider } from '~/lib/.server/llm/provider';
+import { getEnv } from '~/lib/.server/env';
 
 type Messages = Message[];
 

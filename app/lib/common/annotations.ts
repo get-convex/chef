@@ -43,8 +43,8 @@ export type Usage = UsageAnnotation & {
   xaiCachedPromptTokens: number;
 };
 
-const modelValidator = z.enum(['anthropic', 'openai', 'xai', 'google', 'unknown']);
-export type ModelType = z.infer<typeof modelValidator>;
+const providerValidator = z.enum(['Anthropic', 'Bedrock', 'OpenAI', 'XAI', 'Google', 'Unknown']);
+export type ProviderType = z.infer<typeof providerValidator>;
 
 export const annotationValidator = z.discriminatedUnion('type', [
   z.object({
@@ -60,7 +60,8 @@ export const annotationValidator = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('model'),
     toolCallId: z.string(),
-    provider: modelValidator,
+    provider: providerValidator,
+    model: z.optional(z.string()),
   }),
 ]);
 
@@ -79,7 +80,7 @@ export const parseAnnotations = (
 ): {
   failedDueToRepeatedErrors: boolean;
   usageForToolCall: Record<string, Usage | null>;
-  modelForToolCall: Record<string, ModelType>;
+  modelForToolCall: Record<string, { provider: ProviderType; model: string | undefined }>;
 } => {
   if (!annotations) {
     return {
@@ -90,7 +91,7 @@ export const parseAnnotations = (
   }
   let failedDueToRepeatedErrors = false;
   const usageForToolCall: Record<string, Usage | null> = {};
-  const modelForToolCall: Record<string, ModelType> = {};
+  const modelForToolCall: Record<string, { provider: ProviderType; model: string | undefined }> = {};
   for (const annotation of annotations) {
     const parsed = annotationValidator.safeParse(annotation);
     if (!parsed.success) {
@@ -108,7 +109,7 @@ export const parseAnnotations = (
       }
     }
     if (parsed.data.type === 'model') {
-      modelForToolCall[parsed.data.toolCallId] = parsed.data.provider;
+      modelForToolCall[parsed.data.toolCallId] = { provider: parsed.data.provider, model: parsed.data.model };
     }
   }
   return {

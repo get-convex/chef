@@ -4,7 +4,7 @@ import type { Message } from 'ai';
 import { ToolCall } from './ToolCall';
 import { makePartId } from 'chef-agent/partId.js';
 import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
-import { parseAnnotations, type ModelType, type Usage } from '~/lib/common/annotations';
+import { parseAnnotations, type ProviderType, type Usage } from '~/lib/common/annotations';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 interface AssistantMessageProps {
   message: Message;
@@ -76,11 +76,11 @@ function displayModelAndUsage({
   usage,
   success,
 }: {
-  model: ModelType | undefined;
+  model: { provider: ProviderType; model: string | undefined } | undefined;
   usage: Usage | undefined;
   success: boolean;
 }) {
-  const modelDisplay = displayModel(model);
+  const modelDisplay = displayModel(model ?? { provider: 'Unknown', model: undefined });
   // Note: These numbers are the LLM-reported tokens, not Chef tokens (i.e. not
   // what we use to bill users). This attempts to take into account the logic where
   // we don't charge for tokens produced from failed tool calls. This should
@@ -103,23 +103,24 @@ function displayModelAndUsage({
   return modelDisplay ?? usageDisplay;
 }
 
-function displayModel(model: ModelType | undefined) {
-  if (!model) {
+function displayModel(modelInfo: { provider: ProviderType; model: string | undefined }) {
+  if (!modelInfo) {
     return null;
   }
-  switch (model) {
-    case 'unknown':
+  switch (modelInfo.provider) {
+    case 'Unknown':
       return null;
-    case 'anthropic':
+    case 'Anthropic':
+    case 'Bedrock':
       return <div className="text-xs text-content-secondary">Generated with Anthropic</div>;
-    case 'openai':
+    case 'OpenAI':
       return <div className="text-xs text-content-secondary">Generated with OpenAI</div>;
-    case 'xai':
-      return <div className="text-xs text-content-secondary">Generated with XAI</div>;
-    case 'google':
+    case 'XAI':
+      return <div className="text-xs text-content-secondary">Generated with xAI</div>;
+    case 'Google':
       return <div className="text-xs text-content-secondary">Generated with Google</div>;
     default: {
-      const _exhaustiveCheck: never = model;
+      const _exhaustiveCheck: never = modelInfo.provider;
       return null;
     }
   }

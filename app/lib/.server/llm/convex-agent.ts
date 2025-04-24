@@ -21,18 +21,22 @@ import { captureException, captureMessage } from '@sentry/remix';
 import type { SystemPromptOptions } from 'chef-agent/types';
 import { cleanupAssistantMessages } from 'chef-agent/cleanupAssistantMessages';
 import { logger } from 'chef-agent/utils/logger';
-import { calculateChefTokens, encodeUsageAnnotation, usageFromGeneration } from '~/lib/.server/usage';
+import {
+  calculateChefTokens,
+  encodeUsageAnnotation,
+  usageFromGeneration,
+  encodeModelAnnotation,
+} from '~/lib/.server/usage';
 import { compressWithLz4Server } from '~/lib/compression.server';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
+import { REPEATED_ERROR_REASON } from '~/lib/common/annotations';
 
 import { waitUntil } from '@vercel/functions';
 import type { internal } from '@convex/_generated/api';
 import type { Usage } from '~/lib/.server/validators';
 import type { UsageRecord } from '@convex/schema';
-import type { ModelProvider } from '~/lib/.server/llm/provider';
-
-type Fetch = typeof fetch;
-
+import { getProvider, type ModelProvider } from '~/lib/.server/llm/provider';
+import { getEnv } from '~/lib/.server/env';
 type Messages = Message[];
 
 export async function convexAgent(args: {
@@ -68,7 +72,6 @@ export async function convexAgent(args: {
   }
 
   const provider = getProvider(userApiKey, modelProvider);
-
   const opts: SystemPromptOptions = {
     enableBulkEdits: true,
     enablePreciseEdits: false,
@@ -342,11 +345,6 @@ async function storeDebugPrompt(
     console.error(error);
     captureException(error);
   }
-}
-
-// TODO this was cool, do something to type our environment variables
-export function getEnv(name: string): string | undefined {
-  return globalThis.process.env[name];
 }
 
 function normalizeUsage(usage: number) {

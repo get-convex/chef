@@ -1,5 +1,4 @@
 import type { LanguageModelV1 } from 'ai';
-import { getEnv } from './convex-agent';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
@@ -9,14 +8,16 @@ import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { captureException } from '@sentry/remix';
 import { logger } from 'chef-agent/utils/logger';
 import { ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
+import type { ProviderType } from '~/lib/common/annotations';
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch as undiciFetch } from 'undici';
+import { getEnv } from '~/lib/.server/env';
 
 type Fetch = typeof fetch;
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
 
-export type ModelProvider = 'Anthropic' | 'Bedrock' | 'OpenAI' | 'XAI' | 'Google';
+export type ModelProvider = Exclude<ProviderType, 'Unknown'>;
 type Provider = {
   maxTokens: number;
   model: LanguageModelV1;
@@ -27,6 +28,25 @@ type Provider = {
   };
 };
 
+export function modelForProvider(provider: ModelProvider) {
+  switch (provider) {
+    case 'Anthropic':
+      return getEnv('ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
+    case 'Bedrock':
+      return getEnv('AMAZON_BEDROCK_MODEL') || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
+    case 'OpenAI':
+      return getEnv('OPENAI_MODEL') || 'gpt-4.1';
+    case 'XAI':
+      return getEnv('XAI_MODEL') || 'grok-3-mini';
+    case 'Google':
+      return getEnv('GOOGLE_MODEL') || 'gemini-2.5-pro-preview-03-25';
+    default: {
+      const _exhaustiveCheck: never = provider;
+      throw new Error(`Unknown provider: ${_exhaustiveCheck}`);
+    }
+  }
+}
+
 export function getProvider(userApiKey: string | undefined, modelProvider: ModelProvider): Provider {
   let model: string;
   let provider: Provider;
@@ -36,7 +56,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
 
   switch (modelProvider) {
     case 'Google': {
-      model = getEnv('GOOGLE_MODEL') || 'gemini-2.5-pro-preview-03-25';
+      model = modelForProvider(modelProvider);
       const google = createGoogleGenerativeAI({
         apiKey: userApiKey || getEnv('GOOGLE_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
@@ -65,7 +85,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'OpenAI': {
-      model = getEnv('OPENAI_MODEL') || 'gpt-4.1';
+      model = modelForProvider(modelProvider);
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv('OPENAI_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
@@ -79,7 +99,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'Bedrock': {
-      model = getEnv('AMAZON_BEDROCK_MODEL') || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
+      model = modelForProvider(modelProvider);
       let region = getEnv('AWS_REGION');
       if (!region || !ALLOWED_AWS_REGIONS.includes(region)) {
         region = 'us-west-2';
@@ -99,7 +119,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'Anthropic': {
-      model = getEnv('ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
+      model = modelForProvider(modelProvider);
       // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
       const rateLimitAwareFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {
