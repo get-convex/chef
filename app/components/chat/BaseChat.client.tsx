@@ -119,7 +119,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               {!chatStarted && (
                 <div
                   id="intro"
-                  className="mx-auto max-w-chat px-4 text-center lg:px-0 mt-12 mb-8 md:mt-16 lg:mt-24 lg:mb-12"
+                  className="mx-auto mb-8 mt-12 max-w-chat px-4 text-center md:mt-16 lg:mb-12 lg:mt-24 lg:px-0"
                 >
                   <h1 className="mb-4 animate-fadeInFromLoading font-display text-4xl font-black tracking-tight text-content-primary sm:text-5xl md:text-6xl">
                     Now you&rsquo;re cooking
@@ -209,7 +209,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 }}
               />
               {!chatStarted && (
-                <div className="my-16 lg:my-24 border-2 border-blue-500 h-[1200px] w-full max-w-7xl">
+                <div className="my-16 h-[1200px] w-full max-w-7xl border-2 border-blue-500 lg:my-24">
                   TODO: Page content.
                 </div>
               )}
