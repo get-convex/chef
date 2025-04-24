@@ -23,14 +23,15 @@ import { cleanupAssistantMessages } from 'chef-agent/cleanupAssistantMessages';
 import { logger } from 'chef-agent/utils/logger';
 import { calculateChefTokens, encodeUsageAnnotation, usageFromGeneration } from '~/lib/.server/usage';
 import { compressWithLz4Server } from '~/lib/compression.server';
-import { REPEATED_ERROR_REASON } from '~/lib/common/errors';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 
 import { waitUntil } from '@vercel/functions';
 import type { internal } from '@convex/_generated/api';
 import type { Usage } from '~/lib/.server/validators';
 import type { UsageRecord } from '@convex/schema';
-import { getProvider, type ModelProvider } from './provider';
+import type { ModelProvider } from '~/lib/.server/llm/provider';
+
+type Fetch = typeof fetch;
 
 type Messages = Message[];
 
@@ -219,9 +220,16 @@ async function onFinishHandler({
     }
     const annotation = encodeUsageAnnotation(toolCallId, usage, providerMetadata);
     dataStream.writeMessageAnnotation({ type: 'usage', usage: annotation });
+    const modelAnnotation = encodeModelAnnotation(
+      { kind: 'tool-call', toolCallId: toolCallId ?? null },
+      providerMetadata,
+    );
+    dataStream.writeMessageAnnotation({ type: 'model', ...modelAnnotation });
   }
   // Otherwise, record usage once we've generated the final part.
   else {
+    const modelAnnotation = encodeModelAnnotation({ kind: 'final' }, providerMetadata);
+    dataStream.writeMessageAnnotation({ type: 'model', ...modelAnnotation });
     await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata });
   }
   if (recordRawPromptsForDebugging) {
