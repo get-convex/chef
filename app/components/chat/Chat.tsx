@@ -36,7 +36,7 @@ import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import type { Doc, Id } from 'convex/_generated/dataModel';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
-import type { ModelProvider } from '~/lib/.server/llm/provider';
+import type { ProviderType } from '~/lib/common/annotations';
 
 const logger = createScopedLogger('Chat');
 
@@ -239,11 +239,11 @@ export const Chat = memo(
         if (!teamSlug) {
           throw new Error('No team slug');
         }
-        let modelProvider: ModelProvider;
+        let modelProvider: ProviderType;
         const retries = retryState.get();
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
           // Send all traffic to Anthropic first before failing over to Bedrock.
-          const providers: ModelProvider[] = ['Anthropic', 'Bedrock'];
+          const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
           modelProvider = providers[retries.numFailures % providers.length];
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
