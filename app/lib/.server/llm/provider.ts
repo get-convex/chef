@@ -27,11 +27,7 @@ type Provider = {
   };
 };
 
-export function getProvider(
-  env: Record<string, string | undefined>,
-  userApiKey: string | undefined,
-  modelProvider: ModelProvider,
-): Provider {
+export function getProvider(userApiKey: string | undefined, modelProvider: ModelProvider): Provider {
   let model: string;
   let provider: Provider;
 
@@ -40,9 +36,9 @@ export function getProvider(
 
   switch (modelProvider) {
     case 'Google': {
-      model = getEnv(env, 'GOOGLE_MODEL') || 'gemini-2.5-pro-preview-03-25';
+      model = getEnv('GOOGLE_MODEL') || 'gemini-2.5-pro-preview-03-25';
       const google = createGoogleGenerativeAI({
-        apiKey: userApiKey || getEnv(env, 'GOOGLE_API_KEY'),
+        apiKey: userApiKey || getEnv('GOOGLE_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
       });
       provider = {
@@ -52,9 +48,9 @@ export function getProvider(
       break;
     }
     case 'XAI': {
-      model = getEnv(env, 'XAI_MODEL') || 'grok-3-mini';
+      model = getEnv('XAI_MODEL') || 'grok-3-mini';
       const xai = createXai({
-        apiKey: userApiKey || getEnv(env, 'XAI_API_KEY'),
+        apiKey: userApiKey || getEnv('XAI_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('XAI') : fetch,
       });
       provider = {
@@ -69,9 +65,9 @@ export function getProvider(
       break;
     }
     case 'OpenAI': {
-      model = getEnv(env, 'OPENAI_MODEL') || 'gpt-4.1';
+      model = getEnv('OPENAI_MODEL') || 'gpt-4.1';
       const openai = createOpenAI({
-        apiKey: userApiKey || getEnv(env, 'OPENAI_API_KEY'),
+        apiKey: userApiKey || getEnv('OPENAI_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
         compatibility: 'strict',
       });
@@ -83,15 +79,15 @@ export function getProvider(
       break;
     }
     case 'Bedrock': {
-      model = getEnv(env, 'AMAZON_BEDROCK_MODEL') || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
-      let region = getEnv(env, 'AWS_REGION');
+      model = getEnv('AMAZON_BEDROCK_MODEL') || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
+      let region = getEnv('AWS_REGION');
       if (!region || !ALLOWED_AWS_REGIONS.includes(region)) {
         region = 'us-west-2';
       }
       const bedrock = createAmazonBedrock({
         region,
         credentialProvider: awsCredentialsProvider({
-          roleArn: getEnv(env, 'AWS_ROLE_ARN')!,
+          roleArn: getEnv('AWS_ROLE_ARN')!,
         }),
         fetch,
       });
@@ -103,7 +99,7 @@ export function getProvider(
       break;
     }
     case 'Anthropic': {
-      model = getEnv(env, 'ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
+      model = getEnv('ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
       // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
       const rateLimitAwareFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -133,7 +129,7 @@ export function getProvider(
             return throwIfBad(response, false);
           }
 
-          const lowQosKey = getEnv(env, 'ANTHROPIC_LOW_QOS_API_KEY');
+          const lowQosKey = getEnv('ANTHROPIC_LOW_QOS_API_KEY');
           if (!lowQosKey) {
             captureException('Anthropic low qos api key not set', { level: 'error' });
             console.error('Anthropic low qos api key not set');
@@ -157,7 +153,7 @@ export function getProvider(
         };
       };
       const anthropic = createAnthropic({
-        apiKey: userApiKey || getEnv(env, 'ANTHROPIC_API_KEY'),
+        apiKey: userApiKey || getEnv('ANTHROPIC_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('Anthropic') : rateLimitAwareFetch(),
       });
 

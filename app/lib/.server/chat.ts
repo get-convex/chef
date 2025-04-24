@@ -15,11 +15,10 @@ const logger = createScopedLogger('api.chat');
 export type Tracer = ReturnType<typeof WebTracerProvider.prototype.getTracer>;
 
 export async function chatAction({ request }: ActionFunctionArgs) {
-  const env = globalThis.process.env;
-  const AXIOM_API_TOKEN = getEnv(env, 'AXIOM_API_TOKEN');
-  const AXIOM_API_URL = getEnv(env, 'AXIOM_API_URL');
-  const AXIOM_DATASET_NAME = getEnv(env, 'AXIOM_DATASET_NAME');
-  const PROVISION_HOST = getEnv(env, 'PROVISION_HOST') || 'https://api.convex.dev';
+  const AXIOM_API_TOKEN = getEnv('AXIOM_API_TOKEN');
+  const AXIOM_API_URL = getEnv('AXIOM_API_URL');
+  const AXIOM_DATASET_NAME = getEnv('AXIOM_DATASET_NAME');
+  const PROVISION_HOST = getEnv('PROVISION_HOST') || 'https://api.convex.dev';
 
   let tracer: Tracer | null = null;
   if (AXIOM_API_TOKEN && AXIOM_API_URL && AXIOM_DATASET_NAME) {
@@ -142,7 +141,6 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
     const dataStream = await convexAgent({
       chatInitialId,
-      env,
       firstUserMessage,
       messages,
       tracer,

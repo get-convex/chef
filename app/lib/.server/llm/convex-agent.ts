@@ -36,7 +36,6 @@ type Messages = Message[];
 
 export async function convexAgent(args: {
   chatInitialId: string;
-  env: Record<string, string | undefined>;
   firstUserMessage: boolean;
   messages: Messages;
   tracer: Tracer | null;
@@ -52,7 +51,6 @@ export async function convexAgent(args: {
 }) {
   const {
     chatInitialId,
-    env,
     firstUserMessage,
     messages,
     tracer,
@@ -68,16 +66,16 @@ export async function convexAgent(args: {
     console.debug('Using user provided API key');
   }
 
-  const provider = getProvider(env, userApiKey, modelProvider);
+  const provider = getProvider(userApiKey, modelProvider);
 
   const opts: SystemPromptOptions = {
     enableBulkEdits: true,
     enablePreciseEdits: false,
     includeTemplate: true,
-    openaiProxyEnabled: getEnv(env, 'OPENAI_PROXY_ENABLED') == '1',
+    openaiProxyEnabled: getEnv('OPENAI_PROXY_ENABLED') == '1',
     usingOpenAi: modelProvider == 'OpenAI',
     usingGoogle: modelProvider == 'Google',
-    resendProxyEnabled: getEnv(env, 'RESEND_PROXY_ENABLED') == '1',
+    resendProxyEnabled: getEnv('RESEND_PROXY_ENABLED') == '1',
     skipSystemPrompt,
   };
   const tools: ConvexToolSet = {
@@ -345,8 +343,8 @@ async function storeDebugPrompt(
 }
 
 // TODO this was cool, do something to type our environment variables
-export function getEnv(env: Record<string, string | undefined>, name: string): string | undefined {
-  return env[name] || globalThis.process.env[name];
+export function getEnv(name: string): string | undefined {
+  return globalThis.process.env[name];
 }
 
 function normalizeUsage(usage: number) {
