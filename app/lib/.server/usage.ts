@@ -1,7 +1,7 @@
 import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
-import type { Usage, UsageAnnotation } from '~/lib/common/annotations';
+import type { ProviderType, Usage, UsageAnnotation } from '~/lib/common/annotations';
 import { annotationValidator, usageAnnotationValidator } from '~/lib/common/annotations';
 import { modelForProvider } from './llm/provider';
 
@@ -45,21 +45,21 @@ export function encodeModelAnnotation(
   call: { kind: 'tool-call'; toolCallId: string | null } | { kind: 'final' },
   providerMetadata: ProviderMetadata | undefined,
 ) {
-  let provider: 'anthropic' | 'openai' | 'xai' | 'google' | 'unknown' = 'unknown';
+  let provider: ProviderType | null = null;
   let model: string | null = null;
   if (providerMetadata?.anthropic) {
-    provider = 'anthropic';
+    provider = 'Anthropic';
     // This covers both claude on Bedrock vs. Anthropic, unclear if we want to
     // try and differentiate between the two.
     model = modelForProvider('Anthropic');
   } else if (providerMetadata?.openai) {
-    provider = 'openai';
+    provider = 'OpenAI';
     model = modelForProvider('OpenAI');
   } else if (providerMetadata?.xai) {
-    provider = 'xai';
+    provider = 'XAI';
     model = modelForProvider('XAI');
   } else if (providerMetadata?.google) {
-    provider = 'google';
+    provider = 'Google';
     model = modelForProvider('Google');
   }
   return { toolCallId: call.kind === 'tool-call' ? call.toolCallId : 'final', provider, model };
