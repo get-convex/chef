@@ -79,7 +79,7 @@ export const parseAnnotations = (
   annotations: Message['annotations'],
 ): {
   failedDueToRepeatedErrors: boolean;
-  usageForToolCall: Record<string, Usage | null>;
+  usageForToolCall: Record<string, UsageAnnotation | null>;
   modelForToolCall: Record<string, { provider: ProviderType; model: string | undefined }>;
 } => {
   if (!annotations) {
@@ -90,7 +90,7 @@ export const parseAnnotations = (
     };
   }
   let failedDueToRepeatedErrors = false;
-  const usageForToolCall: Record<string, Usage | null> = {};
+  const usageForToolCall: Record<string, UsageAnnotation | null> = {};
   const modelForToolCall: Record<string, { provider: ProviderType; model: string | undefined }> = {};
   for (const annotation of annotations) {
     const parsed = annotationValidator.safeParse(annotation);

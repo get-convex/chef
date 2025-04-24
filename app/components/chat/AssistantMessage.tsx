@@ -4,7 +4,7 @@ import type { Message } from 'ai';
 import { ToolCall } from './ToolCall';
 import { makePartId } from 'chef-agent/partId.js';
 import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
-import { parseAnnotations, type ProviderType, type Usage } from '~/lib/common/annotations';
+import { parseAnnotations, type ProviderType, type UsageAnnotation } from '~/lib/common/annotations';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 interface AssistantMessageProps {
   message: Message;
@@ -77,7 +77,7 @@ function displayModelAndUsage({
   success,
 }: {
   model: { provider: ProviderType; model: string | undefined } | undefined;
-  usage: Usage | undefined;
+  usage: UsageAnnotation | undefined;
   success: boolean;
 }) {
   const modelDisplay = displayModel(model ?? { provider: 'Unknown', model: undefined });
