@@ -37,6 +37,7 @@ import type { Doc, Id } from 'convex/_generated/dataModel';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import type { ProviderType } from '~/lib/common/annotations';
+import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 
 const logger = createScopedLogger('Chat');
 
@@ -341,12 +342,12 @@ export const Chat = memo(
       },
     });
 
-    (window as any).chefMessages = messages;
+    setChefDebugProperty('messages', messages);
 
     // AKA "processed messages," since parsing has side effects
     const { parsedMessages, parseMessages } = useMessageParser(partCache);
 
-    (window as any).chefParsedMessages = parsedMessages;
+    setChefDebugProperty('parsedMessages', parsedMessages);
 
     useEffect(() => {
       chatStore.setKey('started', initialMessages.length > 0);
