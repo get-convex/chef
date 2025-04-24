@@ -3,7 +3,7 @@ import { useConvex } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { getStoredTeamSlug } from '~/lib/stores/convexTeams';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
-import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
+import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
 import { TeamSelector } from '~/components/convex/TeamSelector';

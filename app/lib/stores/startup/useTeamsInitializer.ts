@@ -5,8 +5,7 @@ import { getStoredTeamSlug, setSelectedTeamSlug } from '~/lib/stores/convexTeams
 import { toast } from 'sonner';
 import type { ConvexReactClient } from 'convex/react';
 import { useConvex } from 'convex/react';
-
-const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
+import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 
 export function useTeamsInitializer() {
   const convex = useConvex();
