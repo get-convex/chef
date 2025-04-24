@@ -111,19 +111,26 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         <Menu />
         <div ref={scrollRef} className="flex size-full flex-col overflow-y-auto">
           <div className="flex w-full grow flex-col lg:flex-row">
-            <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
+            <div
+              className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full', {
+                'items-center px-4 sm:px-8 lg:px-12': !chatStarted,
+              })}
+            >
               {!chatStarted && (
-                <div id="intro" className="mx-auto mt-[16vh] max-w-chat px-4 text-center lg:px-0">
+                <div
+                  id="intro"
+                  className="mx-auto max-w-chat px-4 text-center lg:px-0 mt-12 mb-8 md:mt-16 lg:mt-24 lg:mb-12"
+                >
                   <h1 className="mb-4 animate-fadeInFromLoading font-display text-4xl font-black tracking-tight text-content-primary sm:text-5xl md:text-6xl">
                     Now you&rsquo;re cooking
                   </h1>
-                  <p className="mb-8 animate-fadeInFromLoading text-balance font-display text-xl font-medium text-content-secondary [animation-delay:200ms] [animation-fill-mode:backwards] md:text-2xl">
+                  <p className="animate-fadeInFromLoading text-balance font-display text-xl font-medium text-content-secondary [animation-delay:200ms] [animation-fill-mode:backwards] md:text-2xl">
                     Generate and launch realtime full‑stack apps you never thought possible
                   </p>
                 </div>
               )}
               <div
-                className={classNames('pt-6 px-2 sm:px-6', {
+                className={classNames('w-full', {
                   'h-full flex flex-col': chatStarted,
                 })}
                 ref={scrollRef}
@@ -143,8 +150,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     'sticky bottom-four': chatStarted,
                   })}
                 >
-                  <div className="bg-bolt-elements-background-depth-2">
-                    {actionAlert && (
+                  {actionAlert && (
+                    <div className="bg-bolt-elements-background-depth-2">
                       <ChatAlert
                         alert={actionAlert}
                         clearAlert={() => clearAlert?.()}
@@ -153,8 +160,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           clearAlert?.();
                         }}
                       />
-                    )}
-                  </div>
+                    </div>
+                  )}
                   {!disableChatMessage && (
                     <StreamingIndicator
                       streamStatus={streamStatus}
@@ -201,6 +208,11 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   messageInputStore.set(suggestion);
                 }}
               />
+              {!chatStarted && (
+                <div className="my-16 lg:my-24 border-2 border-blue-500 h-[1200px] w-full max-w-7xl">
+                  TODO: Page content.
+                </div>
+              )}
             </div>
             <Workbench
               chatStarted={chatStarted}
@@ -211,7 +223,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           {!chatStarted && (
             <footer
               id="footer"
-              className="flex w-full flex-col justify-between gap-2 px-6 py-4 transition-opacity sm:flex-row"
+              className="flex w-full flex-col justify-between gap-2 p-4 transition-opacity sm:flex-row"
             >
               <div className="flex items-end">
                 <p>
