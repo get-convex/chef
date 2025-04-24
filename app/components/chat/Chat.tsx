@@ -22,7 +22,6 @@ import type { PartId } from '~/lib/stores/artifacts';
 import { captureMessage } from '@sentry/remix';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import { chatIdStore, initialIdStore } from '~/lib/stores/chatId';
-import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
@@ -37,6 +36,7 @@ import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import type { Doc, Id } from 'convex/_generated/dataModel';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
+import type { ModelProvider } from '~/lib/.server/llm/provider';
 
 const logger = createScopedLogger('Chat');
 
