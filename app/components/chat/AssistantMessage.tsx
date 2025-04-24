@@ -5,11 +5,13 @@ import { ToolCall } from './ToolCall';
 import { makePartId } from 'chef-agent/partId.js';
 import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
 import { parseAnnotations, type ModelType, type Usage } from '~/lib/common/annotations';
+import { useFlags } from 'launchdarkly-react-client-sdk';
 interface AssistantMessageProps {
   message: Message;
 }
 
 export const AssistantMessage = memo(function AssistantMessage({ message }: AssistantMessageProps) {
+  const { showUsageAnnotations } = useFlags();
   const parsedAnnotations = useMemo(() => parseAnnotations(message.annotations), [message.annotations]);
   if (!message.parts) {
     return (
@@ -22,32 +24,35 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
   for (const [index, part] of message.parts.entries()) {
     const partId = makePartId(message.id, index);
     if (part.type === 'tool-invocation') {
-      const model = parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId];
-      const usage = parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId];
-      const success = part.toolInvocation.state === 'result' && part.toolInvocation.result.status === 'success';
-      children.push(
-        displayModelAndUsage({
-          model,
-          usage: usage ?? undefined,
-          success,
-        }),
-      );
+      if (showUsageAnnotations) {
+        const model = parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId];
+        const usage = parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId];
+        const success = part.toolInvocation.state === 'result' && part.toolInvocation.result.status === 'success';
+        children.push(
+          displayModelAndUsage({
+            model,
+            usage: usage ?? undefined,
+            success,
+          }),
+        );
+      }
       children.push(<ToolCall key={children.length} partId={partId} toolCallId={part.toolInvocation.toolCallId} />);
     }
     if (part.type === 'text') {
-      console.log('part.text', part);
       children.push(<Markdown html>{part.text}</Markdown>);
     }
   }
-  const finalModel = parsedAnnotations.modelForToolCall.final;
-  const finalUsage = parsedAnnotations.usageForToolCall.final;
-  children.push(
-    displayModelAndUsage({
-      model: finalModel,
-      usage: finalUsage ?? undefined,
-      success: true,
-    }),
-  );
+  if (showUsageAnnotations) {
+    const finalModel = parsedAnnotations.modelForToolCall.final;
+    const finalUsage = parsedAnnotations.usageForToolCall.final;
+    children.push(
+      displayModelAndUsage({
+        model: finalModel,
+        usage: finalUsage ?? undefined,
+        success: true,
+      }),
+    );
+  }
   return (
     <div className="w-full overflow-hidden text-sm">
       <div className="flex flex-col gap-2">
@@ -76,6 +81,10 @@ function displayModelAndUsage({
   success: boolean;
 }) {
   const modelDisplay = displayModel(model);
+  // Note: These numbers are the LLM-reported tokens, not Chef tokens (i.e. not
+  // what we use to bill users). This attempts to take into account the logic where
+  // we don't charge for tokens produced from failed tool calls. This should
+  // probably be re-worked to use Chef tokens.
   const usageDisplay =
     usage && success ? (
       <div className="text-xs text-content-secondary">
