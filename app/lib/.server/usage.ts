@@ -46,7 +46,7 @@ export function encodeModelAnnotation(
   providerMetadata: ProviderMetadata | undefined,
 ) {
   let provider: 'anthropic' | 'openai' | 'xai' | 'google' | 'unknown' = 'unknown';
-  let model: string | undefined;
+  let model: string | null = null;
   if (providerMetadata?.anthropic) {
     provider = 'anthropic';
     // This covers both claude on Bedrock vs. Anthropic, unclear if we want to
@@ -62,7 +62,7 @@ export function encodeModelAnnotation(
     provider = 'google';
     model = modelForProvider('Google');
   }
-  return { toolCallId: call.kind === 'tool-call' ? call.toolCallId : 'final', provider };
+  return { toolCallId: call.kind === 'tool-call' ? call.toolCallId : 'final', provider, model };
 }
 
 export function usageFromGeneration(generation: {
