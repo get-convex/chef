@@ -1,10 +1,8 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import type { Validator, VAny } from "convex/values";
+import type { Infer, Validator, VAny } from "convex/values";
 import type { SerializedMessage } from "./messages";
 import type { CoreMessage } from "ai";
-import { zodToConvex } from "convex-helpers/server/zod";
-import { usageValidator as zodUsageValdator } from "~/lib/.server/validators";
 
 export const apiKeyValidator = v.object({
   preference: v.union(v.literal("always"), v.literal("quotaExhausted")),
@@ -15,7 +13,15 @@ export const apiKeyValidator = v.object({
   google: v.optional(v.string()),
 });
 
-export const convexUsageValidator = zodToConvex(zodUsageValdator);
+// A stable-enough way to store token usage.
+export const usageRecordValidator = v.object({
+  completionTokens: v.number(),
+  promptTokens: v.number(),
+  /** Included in promptTokens total! */
+  cachedPromptTokens: v.number(),
+});
+
+export type UsageRecord = Infer<typeof usageRecordValidator>;
 
 export default defineSchema({
   /*
@@ -181,8 +187,8 @@ export default defineSchema({
     finishReason: v.string(),
     modelId: v.string(),
     // Not necessarily billed because personal API key use shows up here too
-    billableUsage: convexUsageValidator,
-    unbillableUsage: convexUsageValidator,
+    billableUsage: usageRecordValidator,
+    unbillableUsage: usageRecordValidator,
     billableChefTokens: v.number(),
     unbillableChefTokens: v.number(),
   }).index("byChatId", ["chatId"]),

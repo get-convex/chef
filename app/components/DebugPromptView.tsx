@@ -6,8 +6,8 @@ import type { CoreMessage, FilePart, ToolCallPart, TextPart } from 'ai';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 import { ClipboardIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { useDebugPrompt } from '~/hooks/useDebugPrompt';
-import type { Usage } from '~/lib/.server/validators';
 import { IconButton } from '~/components/ui/IconButton';
+import type { UsageRecord } from '@convex/schema';
 
 /*
  * The heirarchy here is:
@@ -163,32 +163,16 @@ function findLastAssistantMessage(prompt: CoreMessage[]): string {
 }
 
 function summarizeUsage(data: {
-  billableUsage: Usage;
-  unbillableUsage: Usage;
+  billableUsage: UsageRecord;
+  unbillableUsage: UsageRecord;
   billableChefTokens: number;
   unbillableChefTokens: number;
 }) {
-  const billableCachedInputTokens =
-    data.billableUsage.anthropicCacheReadInputTokens +
-    data.billableUsage.xaiCachedPromptTokens +
-    data.billableUsage.openaiCachedPromptTokens;
-  const billableInputTokens =
-    data.billableUsage.promptTokens + billableCachedInputTokens + data.billableUsage.anthropicCacheCreationInputTokens;
+  const inputTokensTotal = data.billableUsage.promptTokens + data.unbillableUsage.promptTokens;
+  const outputTokens = data.billableUsage.completionTokens + data.unbillableUsage.completionTokens;
+  const cachedInputTokens = data.billableUsage.cachedPromptTokens + data.unbillableUsage.completionTokens;
 
-  const unbillableCachedInputTokens =
-    data.billableUsage.anthropicCacheReadInputTokens +
-    data.billableUsage.xaiCachedPromptTokens +
-    data.billableUsage.openaiCachedPromptTokens;
-  const unbillableInputTokens =
-    data.unbillableUsage.promptTokens +
-    unbillableCachedInputTokens +
-    data.unbillableUsage.anthropicCacheCreationInputTokens;
-
-  const totalInputTokens = billableInputTokens + unbillableInputTokens;
-  const totalOutputTokens = data.billableUsage.completionTokens + data.unbillableUsage.completionTokens;
-  const totalCachedInputTokens = billableCachedInputTokens + unbillableCachedInputTokens;
-
-  return { totalInputTokens, totalOutputTokens, totalCachedInputTokens };
+  return { inputTokensTotal, outputTokens, cachedInputTokens };
 }
 
 // Everything we sent to an LLM, plus the response we recieved (an Assistant message);
@@ -196,7 +180,7 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
   const { prompt, finishReason, modelId } = promptAndResponse;
 
   const [isExpanded, setIsExpanded] = useState(true);
-  const { totalInputTokens, totalOutputTokens, totalCachedInputTokens } = summarizeUsage(promptAndResponse);
+  const { inputTokensTotal, outputTokens, cachedInputTokens } = summarizeUsage(promptAndResponse);
 
   // Calculate character counts and token estimates
   const inputMessages = prompt?.filter((m) => m.role === 'system' || m.role === 'user' || m.role === 'tool') ?? [];
@@ -208,9 +192,9 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
   const getTokenEstimate = (message: CoreMessage) => {
     const charCount = getMessageCharCount(message);
     if (message.role === 'assistant') {
-      return estimateTokenCount(charCount, totalOutputChars, totalOutputTokens);
+      return estimateTokenCount(charCount, totalOutputChars, outputTokens);
     } else {
-      return estimateTokenCount(charCount, totalInputChars, totalInputTokens);
+      return estimateTokenCount(charCount, totalInputChars, inputTokensTotal);
     }
   };
 
@@ -226,10 +210,10 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
           <div className="font-medium text-gray-900 dark:text-gray-100">{lastAssistantMessage}</div>
           <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
             <div>
-              {totalInputTokens}
-              {totalCachedInputTokens ? ` (${totalInputTokens - totalCachedInputTokens} uncached)` : ''} input
+              {inputTokensTotal}
+              {cachedInputTokens ? ` (${inputTokensTotal - cachedInputTokens} uncached)` : ''} input
             </div>
-            <div>{totalOutputTokens} output</div>
+            <div>{outputTokens} output</div>
             <div>finish: {finishReason}</div>
             <div>model: {modelId}</div>
           </div>
@@ -243,8 +227,8 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
                 key={idx}
                 message={message}
                 getTokenEstimate={getTokenEstimate}
-                totalInputTokens={totalInputTokens}
-                totalOutputTokens={totalOutputTokens}
+                totalInputTokens={inputTokensTotal}
+                totalOutputTokens={outputTokens}
               />
             ))}
           </div>
@@ -443,11 +427,11 @@ function groupIntoUserPrompts(data: LlmPromptAndResponse[]): AllPromptsForUserIn
       if (currentGroup.length > 0) {
         const totalInputTokens = currentGroup.reduce((sum, item) => {
           const usage = summarizeUsage(item);
-          return sum + usage.totalInputTokens;
+          return sum + usage.inputTokensTotal;
         }, 0);
         const totalOutputTokens = currentGroup.reduce((sum, item) => {
           const usage = summarizeUsage(item);
-          return sum + usage.totalOutputTokens;
+          return sum + usage.outputTokens;
         }, 0);
 
         groups.push({

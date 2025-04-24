@@ -38,6 +38,8 @@ import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { fetch as undiciFetch } from 'undici';
 import { waitUntil } from '@vercel/functions';
 import type { internal } from '@convex/_generated/api';
+import type { Usage } from '~/lib/.server/validators';
+import type { UsageRecord } from '@convex/schema';
 type Fetch = typeof fetch;
 
 type Messages = Message[];
@@ -483,6 +485,58 @@ async function onFinishHandler({
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+/* Convert Usage into something stable to store in Convex debug logs */
+function buildUsageRecord(usage: Usage): UsageRecord {
+  const usageRecord = {
+    completionTokens: 0,
+    promptTokens: 0,
+    cachedPromptTokens: 0,
+  };
+
+  for (const k of Object.keys(usage) as Array<keyof Usage>) {
+    switch (k) {
+      case 'completionTokens': {
+        usageRecord.completionTokens += usage.completionTokens;
+        break;
+      }
+      case 'promptTokens': {
+        usageRecord.promptTokens += usage.promptTokens;
+        break;
+      }
+      case 'xaiCachedPromptTokens': {
+        usageRecord.cachedPromptTokens += usage.xaiCachedPromptTokens;
+        usageRecord.promptTokens += usage.xaiCachedPromptTokens;
+        break;
+      }
+      case 'openaiCachedPromptTokens': {
+        usageRecord.cachedPromptTokens += usage.openaiCachedPromptTokens;
+        usageRecord.promptTokens += usage.openaiCachedPromptTokens;
+        break;
+      }
+      case 'anthropicCacheReadInputTokens': {
+        usageRecord.cachedPromptTokens += usage.anthropicCacheReadInputTokens;
+        usageRecord.promptTokens += usage.anthropicCacheReadInputTokens;
+        break;
+      }
+      case 'anthropicCacheCreationInputTokens': {
+        usageRecord.promptTokens += usage.anthropicCacheCreationInputTokens;
+        break;
+      }
+      case 'toolCallId':
+      case 'providerMetadata':
+      case 'totalTokens': {
+        break;
+      }
+      default: {
+        const exhaustiveCheck: never = k;
+        throw new Error(`Unhandled property: ${String(exhaustiveCheck)}`);
+      }
+    }
+  }
+
+  return usageRecord;
+}
+
 async function storeDebugPrompt(
   promptCoreMessages: CoreMessage[],
   chatInitialId: string,
@@ -495,10 +549,10 @@ async function storeDebugPrompt(
     const finishReason = result.finishReason;
     const modelId = result.response.modelId || '';
     const {
-      totalBilledUsage: billableUsage,
-      totalUnbilledUsage: unbillableUsage,
-      totalBilledChefTokens: billableChefTokens,
-      totalUnbilledChefTokens: unbillableChefTokens,
+      totalBillableUsage: billableUsage,
+      totalUnbillableUsage: unbillableUsage,
+      totalBillableChefTokens: billableChefTokens,
+      totalUnbillableChefTokens: unbillableChefTokens,
     } = calculateUsage({ ...generation, lastMessage });
 
     const promptMessageData = new TextEncoder().encode(JSON.stringify(promptCoreMessages));
@@ -511,8 +565,8 @@ async function storeDebugPrompt(
       responseCoreMessages,
       finishReason,
       modelId,
-      billableUsage,
-      unbillableUsage,
+      billableUsage: buildUsageRecord(billableUsage),
+      unbillableUsage: buildUsageRecord(unbillableUsage),
       billableChefTokens,
       unbillableChefTokens,
     } satisfies Metadata;

@@ -2,7 +2,7 @@ import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
 import type { Usage, UsageAnnotation } from './validators';
-import { annotationValidator, usageValidator } from './validators';
+import { annotationValidator, usageAnnotationValidator } from './validators';
 
 const logger = createScopedLogger('usage');
 
@@ -49,12 +49,12 @@ export function calculateUsage({
   providerMetadata?: ProviderMetadata;
   lastMessage?: Message;
 }): {
-  totalBilledUsage: Usage;
-  totalUnbilledUsage: Usage;
-  totalBilledChefTokens: number;
-  totalUnbilledChefTokens: number;
+  totalBillableUsage: Usage;
+  totalUnbillableUsage: Usage;
+  totalBillableChefTokens: number;
+  totalUnbillableChefTokens: number;
 } {
-  const totalBilledUsage = {
+  const totalBillableUsage = {
     completionTokens: usage.completionTokens,
     promptTokens: usage.promptTokens,
     totalTokens: usage.totalTokens,
@@ -64,7 +64,7 @@ export function calculateUsage({
     openaiCachedPromptTokens: Number(providerMetadata?.openai?.cachedPromptTokens ?? 0),
     xaiCachedPromptTokens: Number(providerMetadata?.xai?.cachedPromptTokens ?? 0),
   } satisfies Usage;
-  const totalUnbilledUsage = {
+  const totalUnbillableUsage = {
     completionTokens: 0,
     promptTokens: 0,
     totalTokens: 0,
@@ -73,7 +73,7 @@ export function calculateUsage({
     anthropicCacheReadInputTokens: 0,
     openaiCachedPromptTokens: 0,
     xaiCachedPromptTokens: 0,
-  } satisfies typeof totalBilledUsage;
+  } satisfies typeof totalBillableUsage;
 
   const failedToolCalls: Set<string> = new Set();
   for (const part of lastMessage?.parts ?? []) {
@@ -87,7 +87,7 @@ export function calculateUsage({
 
   if (lastMessage && lastMessage.role === 'assistant') {
     for (const annotation of lastMessage.annotations ?? []) {
-      let totalUsage = totalBilledUsage;
+      let totalUsage = totalBillableUsage;
       const parsed = annotationValidator.safeParse(annotation);
       if (!parsed.success) {
         console.error('Invalid annotation', parsed.error);
@@ -98,14 +98,14 @@ export function calculateUsage({
       }
       let payload: UsageAnnotation;
       try {
-        payload = usageValidator.parse(JSON.parse(parsed.data.usage.payload));
+        payload = usageAnnotationValidator.parse(JSON.parse(parsed.data.usage.payload));
       } catch (e) {
         console.error('Invalid payload', parsed.data.usage.payload, e);
         continue;
       }
       if (payload.toolCallId && failedToolCalls.has(payload.toolCallId)) {
         console.warn('Skipping usage for failed tool call', payload.toolCallId);
-        totalUsage = totalUnbilledUsage;
+        totalUsage = totalUnbillableUsage;
       }
       totalUsage.completionTokens += payload.completionTokens;
       totalUsage.promptTokens += payload.promptTokens;
@@ -118,10 +118,10 @@ export function calculateUsage({
     }
   }
 
-  let totalBilledChefTokens = 0;
-  let totalUnbilledChefTokens = 0;
+  let totalBillableChefTokens = 0;
+  let totalUnbillableChefTokens = 0;
 
-  for (const totalUsage of [totalBilledUsage, totalUnbilledUsage]) {
+  for (const totalUsage of [totalBillableUsage, totalUnbillableUsage]) {
     // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
     let chefTokens = 0;
     if (providerMetadata?.anthropic) {
@@ -145,16 +145,16 @@ export function calculateUsage({
     } else {
       console.error('WARNING: Unknown provider. Not recording usage. Giving away for free.', providerMetadata);
     }
-    if (totalUsage === totalBilledUsage) {
-      totalBilledChefTokens = chefTokens;
-    } else if (totalUsage === totalUnbilledUsage) {
-      totalUnbilledChefTokens = chefTokens;
+    if (totalUsage === totalBillableUsage) {
+      totalBillableChefTokens = chefTokens;
+    } else if (totalUsage === totalUnbillableUsage) {
+      totalUnbillableChefTokens = chefTokens;
     } else {
       throw new Error('impossible');
     }
   }
 
-  return { totalBilledUsage, totalUnbilledUsage, totalBilledChefTokens, totalUnbilledChefTokens };
+  return { totalBillableUsage, totalUnbillableUsage, totalBillableChefTokens, totalUnbillableChefTokens };
 }
 
 export async function recordUsage(
@@ -165,7 +165,7 @@ export async function recordUsage(
   lastMessage: Message | undefined,
   finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
 ) {
-  const { totalBilledUsage: totalUsage, totalBilledChefTokens: chefTokens } = calculateUsage({
+  const { totalBillableUsage: totalUsage, totalBillableChefTokens: chefTokens } = calculateUsage({
     ...finalGeneration,
     lastMessage,
   });

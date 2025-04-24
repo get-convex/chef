@@ -42,12 +42,10 @@ export const usageAnnotationValidator = z.object({
 
 export type UsageAnnotation = z.infer<typeof usageAnnotationValidator>;
 
-/* similar, but flattened for some reason */
-export const usageValidator = usageAnnotationValidator.extend({
-  anthropicCacheReadInputTokens: z.number(),
-  anthropicCacheCreationInputTokens: z.number(),
-  openaiCachedPromptTokens: z.number(),
-  xaiCachedPromptTokens: z.number(),
-});
-
-export type Usage = z.infer<typeof usageValidator>;
+/* similar, but flattened and non-optional */
+export type Usage = UsageAnnotation & {
+  anthropicCacheReadInputTokens: number;
+  anthropicCacheCreationInputTokens: number;
+  openaiCachedPromptTokens: number;
+  xaiCachedPromptTokens: number;
+};

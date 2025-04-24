@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { assertIsConvexAdmin } from "./admin";
 import type { Id } from "./_generated/dataModel";
-import { convexUsageValidator } from "./schema";
+import { usageRecordValidator } from "./schema";
 
 async function getChatByInitialId(ctx: QueryCtx, initialId: string) {
   const chatByInitialId = await ctx.db
@@ -23,8 +23,8 @@ export const storeDebugPrompt = internalMutation({
     promptCoreMessagesStorageId: v.id("_storage"),
     finishReason: v.string(),
     modelId: v.optional(v.string()),
-    billableUsage: convexUsageValidator,
-    unbillableUsage: convexUsageValidator,
+    billableUsage: usageRecordValidator,
+    unbillableUsage: usageRecordValidator,
     billableChefTokens: v.number(),
     unbillableChefTokens: v.number(),
   },
