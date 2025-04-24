@@ -35,6 +35,7 @@ import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import type { Doc, Id } from 'convex/_generated/dataModel';
+import { useFlags } from 'launchdarkly-react-client-sdk';
 
 const logger = createScopedLogger('Chat');
 
@@ -222,6 +223,7 @@ export const Chat = memo(
       }
     }
 
+    const { enableSkipSystemPrompt } = useFlags();
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
       api: '/api/chat',
@@ -274,7 +276,7 @@ export const Chat = memo(
         if (shouldDisableTools) {
           shouldDisableToolsStore.set(true);
         }
-        if (skipSystemPrompt) {
+        if (skipSystemPrompt && enableSkipSystemPrompt) {
           skipSystemPromptStore.set(true);
         }
         return result;
