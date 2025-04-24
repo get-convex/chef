@@ -3,7 +3,7 @@ import { Markdown } from './Markdown';
 import type { Message } from 'ai';
 import { ToolCall } from './ToolCall';
 import { makePartId } from 'chef-agent/partId.js';
-import { ExclamationTriangleIcon, DotIcon, DotFilledIcon } from '@radix-ui/react-icons';
+import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
 import { parseAnnotations, type ModelType, type Usage } from '~/lib/common/annotations';
 interface AssistantMessageProps {
   message: Message;
@@ -39,8 +39,8 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
       children.push(<Markdown html>{part.text}</Markdown>);
     }
   }
-  const finalModel = parsedAnnotations.modelForToolCall['final'];
-  const finalUsage = parsedAnnotations.usageForToolCall['final'];
+  const finalModel = parsedAnnotations.modelForToolCall.final;
+  const finalUsage = parsedAnnotations.usageForToolCall.final;
   children.push(
     displayModelAndUsage({
       model: finalModel,
