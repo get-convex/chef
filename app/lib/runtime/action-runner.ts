@@ -21,6 +21,7 @@ import type { BoltAction } from 'chef-agent/types';
 import type { BoltShell } from '~/utils/shell';
 import { streamOutput } from '~/utils/process';
 import { outputLabels, type OutputLabels } from '~/lib/runtime/deployToolOutputLabels';
+import type { ConvexToolName } from '../common/types';
 
 const logger = createScopedLogger('ActionRunner');
 
@@ -92,7 +93,7 @@ export class ActionRunner {
     kind: 'success' | 'error';
     result: string;
     toolCallId: string;
-    toolName: string;
+    toolName: ConvexToolName;
   }) => void;
   constructor(
     webcontainerPromise: Promise<WebContainer>,
@@ -103,7 +104,7 @@ export class ActionRunner {
         kind: 'success' | 'error';
         result: string;
         toolCallId: string;
-        toolName: string;
+        toolName: ConvexToolName;
       }) => void;
     },
   ) {

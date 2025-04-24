@@ -27,6 +27,7 @@ import { generateReadmeContent } from '~/lib/download/readmeContent';
 import { setupMjsContent } from '~/lib/download/setupMjsContent';
 import type { ConvexProject } from 'chef-agent/types';
 import { cursorRulesContent } from '~/lib/download/cursorRulesContent';
+import type { ConvexToolName } from '../common/types';
 
 const { saveAs } = fileSaver;
 
@@ -41,7 +42,7 @@ export interface ArtifactState {
 type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard';
-const MAX_CONSECUTIVE_TOOL_ERRORS = 5;
+const MAX_CONSECUTIVE_DEPLOY_ERRORS = 5;
 
 export class WorkbenchStore {
   #previewsStore = new PreviewsStore(webcontainer);
@@ -67,7 +68,8 @@ export class WorkbenchStore {
   modifiedFiles = new Set<string>();
   partIdList: PartId[] = [];
   #globalExecutionQueue = Promise.resolve();
-  _toolCallResults: Map<MessageId, Array<{ partId: PartId; kind: 'success' | 'error' }>> = new Map();
+  _toolCallResults: Map<MessageId, Array<{ partId: PartId; kind: 'success' | 'error'; toolName: ConvexToolName }>> =
+    new Map();
 
   constructor() {
     if (import.meta.hot) {
@@ -392,7 +394,7 @@ export class WorkbenchStore {
             toolCallPromise.resolve({ result, shouldDisableTools: false, skipSystemPrompt: false });
             return;
           }
-          toolCallResults.push({ partId, kind });
+          toolCallResults.push({ partId, kind, toolName });
 
           if (kind === 'success') {
             toolCallPromise.resolve({
@@ -404,17 +406,20 @@ export class WorkbenchStore {
             return;
           }
           if (kind === 'error') {
-            let numConsecutiveErrors = 0;
+            let numConsecutiveDeployErrors = 0;
             for (let i = toolCallResults.length - 1; i >= 0; i--) {
-              if (toolCallResults[i].kind === 'error') {
-                numConsecutiveErrors++;
-              } else {
-                break;
+              const toolCallResult = toolCallResults[i];
+              if (toolCallResult.toolName === 'deploy') {
+                if (toolCallResult.kind === 'error') {
+                  numConsecutiveDeployErrors++;
+                } else {
+                  break;
+                }
               }
             }
             toolCallPromise.resolve({
               result,
-              shouldDisableTools: numConsecutiveErrors >= MAX_CONSECUTIVE_TOOL_ERRORS,
+              shouldDisableTools: numConsecutiveDeployErrors >= MAX_CONSECUTIVE_DEPLOY_ERRORS,
               skipSystemPrompt: false,
             });
           }
