@@ -35,15 +35,7 @@ import { FolderIcon } from '@heroicons/react/24/outline';
 import { outputLabels } from '~/lib/runtime/deployToolOutputLabels';
 import { getRelativePath } from 'chef-agent/utils/workDir';
 
-export const ToolCall = memo(function ToolCall({
-  partId,
-  toolCallId,
-  model,
-  usage,
-}: {
-  partId: PartId;
-  toolCallId: string;
-}) {
+export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId: PartId; toolCallId: string }) {
   const userToggledAction = useRef(false);
   const [showAction, setShowAction] = useState(false);
 

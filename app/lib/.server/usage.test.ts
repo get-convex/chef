@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { encodeUsageAnnotation } from './usage';
-import { annotationValidator, usageAnnotationValidator } from './validators';
+import { annotationValidator, usageAnnotationValidator } from '~/lib/common/annotations';
 
 test('encodeUsageAnnotationAnthropic', async () => {
   const usage = {
@@ -14,7 +14,7 @@ test('encodeUsageAnnotationAnthropic', async () => {
       cacheReadInputTokens: 20,
     },
   };
-  const annotation = encodeUsageAnnotation(undefined, usage, providerMetadata);
+  const annotation = encodeUsageAnnotation({ kind: 'tool-call', toolCallId: undefined }, usage, providerMetadata);
   const parsed = annotationValidator.safeParse({ type: 'usage', usage: annotation });
   expect(parsed.success).toBe(true);
   if (parsed.data?.type !== 'usage') {
@@ -46,7 +46,7 @@ test('encodeUsageAnnotationOpenAI', async () => {
       cachedPromptTokens: 10,
     },
   };
-  const annotation = encodeUsageAnnotation(undefined, usage, providerMetadata);
+  const annotation = encodeUsageAnnotation({ kind: 'tool-call', toolCallId: undefined }, usage, providerMetadata);
   const parsed = annotationValidator.safeParse({ type: 'usage', usage: annotation });
   expect(parsed.success).toBe(true);
   if (parsed.data?.type !== 'usage') {
@@ -76,7 +76,7 @@ test('encodeUsageAnnotationXAI', async () => {
       cachedPromptTokens: 10,
     },
   };
-  const annotation = encodeUsageAnnotation(undefined, usage, providerMetadata);
+  const annotation = encodeUsageAnnotation({ kind: 'tool-call', toolCallId: undefined }, usage, providerMetadata);
   const parsed = annotationValidator.safeParse({ type: 'usage', usage: annotation });
   expect(parsed.success).toBe(true);
   if (parsed.data?.type !== 'usage') {

@@ -25,7 +25,7 @@ export async function checkTokenUsage(
 }
 
 export function encodeUsageAnnotation(
-  toolCallId: { kind: 'tool-call'; toolCallId: string } | { kind: 'final' },
+  toolCallId: { kind: 'tool-call'; toolCallId: string | undefined } | { kind: 'final' },
   usage: LanguageModelUsage,
   providerMetadata: ProviderMetadata | undefined,
 ) {
