@@ -1,11 +1,13 @@
 /* eslint-disable curly */
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { JsonView } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 import type { CoreMessage, FilePart, ToolCallPart, TextPart } from 'ai';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
+import { ClipboardIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { useDebugPrompt } from '~/hooks/useDebugPrompt';
 import type { Usage } from '~/lib/.server/validators';
+import { IconButton } from '~/components/ui/IconButton';
 
 /*
  * The heirarchy here is:
@@ -125,6 +127,21 @@ function getMessageCharCount(message: CoreMessage): number {
 function estimateTokenCount(charCount: number, totalChars: number, totalTokens: number): number {
   if (totalChars === 0) return 0;
   return Math.round((charCount / totalChars) * totalTokens);
+}
+
+function shorten(text: string) {
+  // Get first line and add ellipsis if there are more lines
+  const lines = text.split('\n').filter((line) => line.trim().length);
+  if (lines.length > 1) {
+    return lines[0];
+  }
+  return text.slice(0, 300);
+}
+
+// Add this CSS class name generator
+function getPreviewClass(text: string) {
+  // Create a unique class name based on the content
+  return `preview-${Math.abs(text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0))}`;
 }
 
 function findLastAssistantMessage(prompt: CoreMessage[]): string {
@@ -356,38 +373,42 @@ function CoreMessageView({ message, getTokenEstimate, totalInputTokens, totalOut
   const tokenEstimate = getTokenEstimate(message);
   const totalTokens = message.role === 'assistant' ? totalOutputTokens : totalInputTokens;
   const percentage = totalTokens ? Math.round((tokenEstimate / totalTokens) * 100) : 0;
+  const hiddenUntilFoundRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (hiddenUntilFoundRef.current) {
+      hiddenUntilFoundRef.current.hidden = (isExpanded ? false : 'until-found') as any;
+    }
+  }, [isExpanded]);
 
   return (
-    <div className={`rounded border px-4 py-1 ${roleColor}`} onClick={() => setIsExpanded(!isExpanded)}>
-      {!isExpanded ? (
-        <div className="flex cursor-pointer items-center gap-2">
-          <div className="text-gray-500">
-            <ChevronRightIcon className="size-5" />
-          </div>
-          <div className="font-medium capitalize">{message.role}</div>
-          <div className="text-xs text-gray-500" title="token estimate is approximate">
-            {tokenEstimate} tokens ({percentage}%)
-          </div>
-          <div className="flex-1 truncate text-sm text-gray-600 dark:text-gray-300">{preview}</div>
+    <div className={`rounded border px-4 py-1 ${roleColor}`}>
+      <div className="flex cursor-pointer items-center gap-2" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="text-gray-500">
+          {isExpanded ? <ChevronDownIcon className="size-5" /> : <ChevronRightIcon className="size-5" />}
         </div>
-      ) : (
-        <>
-          <div className="flex cursor-pointer items-center gap-2">
-            <div className="text-gray-500">
-              <ChevronDownIcon className="size-5" />
-            </div>
-            <div className="font-medium capitalize">{message.role}</div>
-            <div className="text-xs text-gray-500" title="Token estimate is approximate">
-              {tokenEstimate} tokens ({percentage}%)
-            </div>
-          </div>
-          <div>
-            <div className="mt-2 cursor-default" onClick={(e) => e.stopPropagation()}>
+        <div className="font-medium capitalize">{message.role}</div>
+        <div className="text-xs text-gray-500" title="token estimate is approximate">
+          {tokenEstimate} tokens ({percentage}%)
+        </div>
+        <style>{`
+          .${getPreviewClass(preview)}::before {
+            content: "${shorten(preview).replace(/"/g, '\\"')}";
+          }
+        `}</style>
+        <div
+          className={`flex-1 truncate text-sm text-gray-600 dark:text-gray-300 ${getPreviewClass(preview)} before:block before:truncate`}
+        />
+      </div>
+
+      <div ref={hiddenUntilFoundRef}>
+        <div className="mt-2">
+          <div className={'text-sm text-gray-600 dark:text-gray-300'}>
+            <div className="cursor-default" onClick={(e) => e.stopPropagation()}>
               <MessageContentView content={message.content} />
             </div>
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -516,47 +537,49 @@ export default function DebugAllPromptsForChat({ chatInitialId, onClose, isDebug
         >
           ✕
         </button>
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold">Debug Prompt View</h2>
-            <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">Chat ID: {chatInitialId}</div>
-          </div>
-          {isDebugPage ? (
-            <button
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold">
+            {promptsAndResponses[0]?._creationTime ? (
+              <>Prompt from {new Date(promptsAndResponses[0]._creationTime).toLocaleString()}</>
+            ) : (
+              'Debug Prompt View'
+            )}
+          </h2>
+          <div className="mt-1 flex items-center space-x-1">
+            <div className="text-sm text-gray-500 dark:text-gray-400">Chat ID: {chatInitialId}</div>
+            <IconButton
+              icon={<ClipboardIcon className="size-4" />}
               onClick={() => {
-                const url = `${window.location.origin}/admin/prompt-debug?id=${encodeURIComponent(chatInitialId)}`;
-                navigator.clipboard.writeText(url);
+                navigator.clipboard.writeText(chatInitialId);
               }}
-              className="ml-4 inline-flex items-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              Copy Link
-              <svg className="ml-1 size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2M15 5v2m0 4v2m0-8h3m-3 0h-3m3 0l-3-3m0 0l-3 3m3-3v13"
+              title="Copy Chat ID"
+              size="sm"
+            />
+            {isDebugPage ? (
+              <div className="flex items-center space-x-1">
+                <IconButton
+                  icon={<ClipboardIcon className="size-4" />}
+                  onClick={() => {
+                    const url = `${window.location.origin}/admin/prompt-debug?id=${encodeURIComponent(chatInitialId)}`;
+                    navigator.clipboard.writeText(url);
+                  }}
+                  title="Copy Debug Page Link"
+                  size="sm"
                 />
-              </svg>
-            </button>
-          ) : (
-            <a
-              href={`/admin/prompt-debug?id=${encodeURIComponent(chatInitialId)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-4 inline-flex items-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              Open in Debug Page
-              <svg className="ml-1 size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
-            </a>
-          )}
+                <span className="text-sm text-gray-500 dark:text-gray-400">(copy link)</span>
+              </div>
+            ) : (
+              <IconButton
+                icon={<ArrowTopRightOnSquareIcon className="size-4" />}
+                onClick={() => {
+                  const url = `${window.location.origin}/admin/prompt-debug?id=${encodeURIComponent(chatInitialId)}`;
+                  window.open(url, '_blank');
+                }}
+                title="Open in Debug Page"
+                size="sm"
+              />
+            )}
+          </div>
         </div>
         <div className="space-y-4 overflow-auto">
           {userPromptGroups.map((group, index) => (
