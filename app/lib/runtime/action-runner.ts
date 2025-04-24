@@ -486,7 +486,7 @@ export class ActionRunner {
         kind: 'error',
         result: message,
         toolCallId: action.parsedContent.toolCallId,
-        toolName: parsed.toolName,
+        toolName: parsed.toolName as ConvexToolName,
       });
       throw e;
     }
