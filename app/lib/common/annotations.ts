@@ -44,7 +44,7 @@ export type Usage = UsageAnnotation & {
 };
 
 const modelValidator = z.enum(['anthropic', 'openai', 'xai', 'google', 'unknown']);
-type ModelType = z.infer<typeof modelValidator>;
+export type ModelType = z.infer<typeof modelValidator>;
 
 export const annotationValidator = z.discriminatedUnion('type', [
   z.object({
@@ -116,25 +116,4 @@ export const parseAnnotations = (
     usageForToolCall,
     modelForToolCall,
   };
-};
-
-export const getModelForParts = (
-  toolCallIdsForParts: Array<string | null>,
-  modelForToolCall: Record<string, ModelType>,
-): Array<ModelType> => {
-  const reversedModels: Array<ModelType> = [];
-  let lastModel: ModelType | null = modelForToolCall['final'] ?? null;
-  // iterate backwards and associate any non-text parts with the model on the
-  // annotation that follows it
-  for (let i = toolCallIdsForParts.length - 1; i >= 0; i--) {
-    const toolCallId = toolCallIdsForParts[i];
-    if (toolCallId) {
-      const model = modelForToolCall[toolCallId];
-      if (model) {
-        lastModel = model;
-      }
-    }
-    reversedModels.push(lastModel);
-  }
-  return reversedModels.reverse();
 };

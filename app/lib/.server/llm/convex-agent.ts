@@ -206,30 +206,30 @@ async function onFinishHandler({
     dataStream.writeMessageAnnotation({ type: 'failure', reason: REPEATED_ERROR_REASON });
   }
 
-  // Stash this part's usage as an annotation if we're not done yet.
-  if (result.finishReason !== 'stop') {
-    let toolCallId: string | undefined;
-    if (result.finishReason === 'tool-calls') {
-      if (result.toolCalls.length === 1) {
-        toolCallId = result.toolCalls[0].toolCallId;
-      } else {
-        logger.warn('Stopped with not exactly one tool call', {
-          toolCalls: result.toolCalls,
-        });
-      }
+  let toolCallId: { kind: 'tool-call'; toolCallId: string } | { kind: 'final' } | undefined;
+  // Always stash this part's usage as an annotation -- these are used for
+  // displaying usage info in the UI as well as calculating usage when the message
+  // finishes.
+  if (result.finishReason === 'tool-calls') {
+    if (result.toolCalls.length === 1) {
+      toolCallId = { kind: 'tool-call', toolCallId: result.toolCalls[0].toolCallId };
+    } else {
+      logger.warn('Stopped with not exactly one tool call', {
+        toolCalls: result.toolCalls,
+      });
     }
+  } else if (result.finishReason === 'stop') {
+    toolCallId = { kind: 'final' };
+  }
+  if (toolCallId) {
     const annotation = encodeUsageAnnotation(toolCallId, usage, providerMetadata);
     dataStream.writeMessageAnnotation({ type: 'usage', usage: annotation });
-    const modelAnnotation = encodeModelAnnotation(
-      { kind: 'tool-call', toolCallId: toolCallId ?? null },
-      providerMetadata,
-    );
+    const modelAnnotation = encodeModelAnnotation(toolCallId, providerMetadata);
     dataStream.writeMessageAnnotation({ type: 'model', ...modelAnnotation });
   }
-  // Otherwise, record usage once we've generated the final part.
-  else {
-    const modelAnnotation = encodeModelAnnotation({ kind: 'final' }, providerMetadata);
-    dataStream.writeMessageAnnotation({ type: 'model', ...modelAnnotation });
+
+  // Record usage once we've generated the final part.
+  if (result.finishReason === 'stop') {
     await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata });
   }
   if (recordRawPromptsForDebugging) {

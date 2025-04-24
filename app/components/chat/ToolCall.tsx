@@ -43,8 +43,6 @@ export const ToolCall = memo(function ToolCall({
 }: {
   partId: PartId;
   toolCallId: string;
-  model: ModelType;
-  usage: LanguageModelUsage;
 }) {
   const userToggledAction = useRef(false);
   const [showAction, setShowAction] = useState(false);
@@ -130,8 +128,6 @@ export const ToolCall = memo(function ToolCall({
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="text-xs text-content-secondary">{model}</div>
-      <div className="text-xs text-content-secondary">{JSON.stringify(usage)}</div>
     </div>
   );
 });

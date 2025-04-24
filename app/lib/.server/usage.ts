@@ -25,12 +25,12 @@ export async function checkTokenUsage(
 }
 
 export function encodeUsageAnnotation(
-  toolCallId: string | undefined,
+  toolCallId: { kind: 'tool-call'; toolCallId: string } | { kind: 'final' },
   usage: LanguageModelUsage,
   providerMetadata: ProviderMetadata | undefined,
 ) {
   const payload: UsageAnnotation = {
-    toolCallId,
+    toolCallId: toolCallId.kind === 'tool-call' ? toolCallId.toolCallId : 'final',
     completionTokens: usage.completionTokens,
     promptTokens: usage.promptTokens,
     totalTokens: usage.totalTokens,
