@@ -22,4 +22,10 @@ export const WORK_DIR = `/home/${WORK_DIR_NAME}`;
 export const PREWARM_PATHS = [`${WORK_DIR}/package.json`, `${WORK_DIR}/convex/schema.ts`, `${WORK_DIR}/src/App.tsx`];
 
 // A list of files that we block the LLM from modifying
-export const EXCLUDED_FILE_PATHS = ['convex/auth.ts', 'convex/http.ts', 'src/main.tsx', 'src/SignInForm.tsx', 'src/SignOutButton.tsx'];
+export const EXCLUDED_FILE_PATHS = [
+  'convex/auth.ts',
+  'convex/http.ts',
+  'src/main.tsx',
+  'src/SignInForm.tsx',
+  'src/SignOutButton.tsx',
+];
