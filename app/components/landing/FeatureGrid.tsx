@@ -44,7 +44,7 @@ export default function FeatureGrid() {
           })}
         >
           {/* TODO: Add icons. */}
-          <h3 className="mb-2 text-xl font-semibold leading-none">{feature.title}</h3>
+          <h2 className="mb-2 text-xl font-semibold leading-none">{feature.title}</h2>
           <p className="text-pretty text-sm text-neutral-10 dark:text-neutral-4 lg:text-base">{feature.description}</p>
         </div>
       ))}
