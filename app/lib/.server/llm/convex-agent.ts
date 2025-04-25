@@ -28,7 +28,7 @@ import type { SystemPromptOptions } from 'chef-agent/types';
 import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { cleanupAssistantMessages } from 'chef-agent/cleanupAssistantMessages';
 import { logger } from 'chef-agent/utils/logger';
-import { calculateUsage, encodeUsageAnnotation } from '~/lib/.server/usage';
+import { calculateChefTokens, encodeUsageAnnotation, usageFromGeneration } from '~/lib/.server/usage';
 import { compressWithLz4Server } from '~/lib/compression.server';
 import { REPEATED_ERROR_REASON } from '~/lib/common/errors';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
@@ -421,6 +421,7 @@ async function onFinishHandler({
   coreMessages: CoreMessage[];
 }) {
   const { providerMetadata } = result;
+  // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
   const usage = {
     completionTokens: normalizeUsage(result.usage.completionTokens),
     promptTokens: normalizeUsage(result.usage.promptTokens),
@@ -476,7 +477,7 @@ async function onFinishHandler({
     const responseCoreMessages = result.response.messages as (CoreAssistantMessage | CoreToolMessage)[];
     // don't block the request but keep the request alive in Vercel Lambdas
     waitUntil(
-      storeDebugPrompt(coreMessages, chatInitialId, responseCoreMessages, result, messages[messages.length - 1], {
+      storeDebugPrompt(coreMessages, chatInitialId, responseCoreMessages, result, {
         usage,
         providerMetadata,
       }),
@@ -542,18 +543,12 @@ async function storeDebugPrompt(
   chatInitialId: string,
   responseCoreMessages: CoreMessage[],
   result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
-  lastMessage: Message,
   generation: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
 ) {
   try {
     const finishReason = result.finishReason;
     const modelId = result.response.modelId || '';
-    const {
-      totalBillableUsage: billableUsage,
-      totalUnbillableUsage: unbillableUsage,
-      totalBillableChefTokens: billableChefTokens,
-      totalUnbillableChefTokens: unbillableChefTokens,
-    } = calculateUsage({ ...generation, lastMessage });
+    const usage = usageFromGeneration(generation);
 
     const promptMessageData = new TextEncoder().encode(JSON.stringify(promptCoreMessages));
     const compressedData = compressWithLz4Server(promptMessageData);
@@ -565,10 +560,8 @@ async function storeDebugPrompt(
       responseCoreMessages,
       finishReason,
       modelId,
-      billableUsage: buildUsageRecord(billableUsage),
-      unbillableUsage: buildUsageRecord(unbillableUsage),
-      billableChefTokens,
-      unbillableChefTokens,
+      usage: buildUsageRecord(usage),
+      chefTokens: calculateChefTokens(usage, generation.providerMetadata),
     } satisfies Metadata;
 
     const formData = new FormData();
@@ -587,6 +580,7 @@ async function storeDebugPrompt(
       captureMessage(message);
     }
   } catch (error) {
+    console.error(error);
     captureException(error);
   }
 }

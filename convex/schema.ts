@@ -186,10 +186,13 @@ export default defineSchema({
     promptCoreMessagesStorageId: v.id("_storage"),
     finishReason: v.string(),
     modelId: v.string(),
-    // Not necessarily billed because personal API key use shows up here too
-    billableUsage: usageRecordValidator,
-    unbillableUsage: usageRecordValidator,
-    billableChefTokens: v.number(),
-    unbillableChefTokens: v.number(),
+
+    // Not necessarily the usage we billed because
+    // - personal API key use shows up here too
+    // - failed tool calls count here but we try not to bill for those
+    // - usage code uses the provider for the final generation to bill for all LLM calls in the same interation
+    //   but this debug info uses the correct provider for each call
+    usage: usageRecordValidator,
+    chefTokens: v.number(),
   }).index("byChatId", ["chatId"]),
 });

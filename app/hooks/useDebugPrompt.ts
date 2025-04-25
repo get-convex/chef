@@ -110,7 +110,8 @@ export function useDebugPrompt(chatInitialId: string) {
     data: queries.map((query, i) => {
       const { responseCoreMessages, ...rest } = promptMetadatas[i];
       return {
-        prompt: query.data ? [...query.data, ...responseCoreMessages] : undefined,
+        prompt: query.data || undefined,
+        completion: responseCoreMessages,
         ...rest,
       };
     }),

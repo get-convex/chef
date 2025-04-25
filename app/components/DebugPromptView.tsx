@@ -7,7 +7,6 @@ import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 import { ClipboardIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { useDebugPrompt } from '~/hooks/useDebugPrompt';
 import { IconButton } from '~/components/ui/IconButton';
-import type { UsageRecord } from '@convex/schema';
 
 /*
  * The heirarchy here is:
@@ -88,9 +87,11 @@ type AllPromptsForUserInteraction = {
   promptAndResponses: LlmPromptAndResponse[];
   summary: {
     triggeringUserMessage: string;
-    totalInputTokens: number;
+    totalCompletionTokens: number;
+    cachedCompletionTokens: number;
     totalOutputTokens: number;
-    modelId: string;
+    modelId: string[];
+    totalChefTokens: number;
   };
 };
 
@@ -162,47 +163,36 @@ function findLastAssistantMessage(prompt: CoreMessage[]): string {
   return 'No assistant message';
 }
 
-function summarizeUsage(data: {
-  billableUsage: UsageRecord;
-  unbillableUsage: UsageRecord;
-  billableChefTokens: number;
-  unbillableChefTokens: number;
-}) {
-  const inputTokensTotal = data.billableUsage.promptTokens + data.unbillableUsage.promptTokens;
-  const outputTokens = data.billableUsage.completionTokens + data.unbillableUsage.completionTokens;
-  const cachedInputTokens = data.billableUsage.cachedPromptTokens + data.unbillableUsage.completionTokens;
-
-  return { inputTokensTotal, outputTokens, cachedInputTokens };
+function formatNumber(num: number): string {
+  return new Intl.NumberFormat().format(num);
 }
 
 // Everything we sent to an LLM, plus the response we recieved (an Assistant message);
 function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: LlmPromptAndResponse }) {
-  const { prompt, finishReason, modelId } = promptAndResponse;
+  const { prompt, completion, finishReason, modelId } = promptAndResponse;
 
   const [isExpanded, setIsExpanded] = useState(true);
-  const { inputTokensTotal, outputTokens, cachedInputTokens } = summarizeUsage(promptAndResponse);
+  const completionTokensTotal = promptAndResponse.usage.promptTokens;
+  const cachedCompletionTokens = promptAndResponse.usage.cachedPromptTokens;
+  const outputTokens = promptAndResponse.usage.completionTokens;
 
   // Calculate character counts and token estimates
-  const inputMessages = prompt?.filter((m) => m.role === 'system' || m.role === 'user' || m.role === 'tool') ?? [];
-  const outputMessages = prompt?.filter((m) => m.role === 'assistant') ?? [];
-
-  const totalInputChars = inputMessages.reduce((sum, msg) => sum + getMessageCharCount(msg), 0);
-  const totalOutputChars = outputMessages.reduce((sum, msg) => sum + getMessageCharCount(msg), 0);
+  const totalInputChars = (prompt || []).reduce((sum, msg) => sum + getMessageCharCount(msg), 0);
 
   const getTokenEstimate = (message: CoreMessage) => {
     const charCount = getMessageCharCount(message);
-    if (message.role === 'assistant') {
-      return estimateTokenCount(charCount, totalOutputChars, outputTokens);
-    } else {
-      return estimateTokenCount(charCount, totalInputChars, inputTokensTotal);
-    }
+    return estimateTokenCount(charCount, totalInputChars, completionTokensTotal);
   };
 
-  const lastAssistantMessage = prompt ? findLastAssistantMessage(prompt) : 'Loading...';
+  const lastAssistantMessage = prompt ? findLastAssistantMessage(completion) : 'Loading...';
 
   return (
-    <div onClick={() => setIsExpanded(!isExpanded)} className="cursor-pointer rounded border p-4 dark:border-gray-700">
-      <div className="flex items-center gap-2">
+    <div className="rounded border p-4 dark:border-gray-700">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center gap-2 text-left"
+        aria-expanded={isExpanded}
+      >
         <div className="text-gray-500">
           {isExpanded ? <ChevronDownIcon className="size-5" /> : <ChevronRightIcon className="size-5" />}
         </div>
@@ -210,39 +200,47 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
           <div className="font-medium text-gray-900 dark:text-gray-100">{lastAssistantMessage}</div>
           <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
             <div>
-              {inputTokensTotal}
-              {cachedInputTokens ? ` (${inputTokensTotal - cachedInputTokens} uncached)` : ''} input
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                {formatNumber(completionTokensTotal - cachedCompletionTokens)}
+              </span>{' '}
+              uncached prompt tokens
+              {cachedCompletionTokens ? ` (plus ${formatNumber(cachedCompletionTokens)} cached)` : ''}
             </div>
-            <div>{outputTokens} output</div>
+            <div>{formatNumber(outputTokens)} completion tokens</div>
             <div>finish: {finishReason}</div>
             <div>model: {modelId}</div>
           </div>
         </div>
-      </div>
-      <div onClick={(e) => e.stopPropagation()}>
-        {isExpanded && prompt && (
+      </button>
+      {isExpanded && prompt && (
+        <div className="mt-4">
           <div className="mt-4 space-y-1">
+            <div>{formatNumber(outputTokens)} prompt tokens</div>
             {prompt.map((message, idx) => (
               <CoreMessageView
                 key={idx}
                 message={message}
                 getTokenEstimate={getTokenEstimate}
-                totalInputTokens={inputTokensTotal}
-                totalOutputTokens={outputTokens}
+                totalCompletionTokens={completionTokensTotal}
               />
             ))}
           </div>
-        )}
-      </div>
+          <div className="mt-4 space-y-1">
+            <div>{formatNumber(outputTokens)} completion tokens</div>
+            {completion.map((message, idx) => (
+              <CoreMessageView key={idx} message={message} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 type CoreMessageViewProps = {
   message: CoreMessage;
-  getTokenEstimate: (message: CoreMessage) => number;
-  totalInputTokens: number;
-  totalOutputTokens: number;
+  getTokenEstimate?: (message: CoreMessage) => number;
+  totalCompletionTokens?: number;
 };
 
 function getMessagePreview(content: CoreMessage['content']): string {
@@ -342,21 +340,26 @@ function MessageContentView({ content, showRawJson = false }: MessageContentView
   );
 }
 
-function CoreMessageView({ message, getTokenEstimate, totalInputTokens, totalOutputTokens }: CoreMessageViewProps) {
-  const [isExpanded, setIsExpanded] = useState(message.role === 'user');
+const roleColors = {
+  system: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+  user: 'bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800',
+  assistant: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+  tool: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800',
+} as const;
 
-  const roleColors = {
-    system: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-    user: 'bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800',
-    assistant: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-    tool: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800',
-  } as const;
+function CoreMessageView({ message, getTokenEstimate, totalCompletionTokens }: CoreMessageViewProps) {
+  const [isExpanded, setIsExpanded] = useState(message.role === 'user');
 
   const roleColor = roleColors[message.role as keyof typeof roleColors] || roleColors.user;
   const preview = getMessagePreview(message.content);
-  const tokenEstimate = getTokenEstimate(message);
-  const totalTokens = message.role === 'assistant' ? totalOutputTokens : totalInputTokens;
-  const percentage = totalTokens ? Math.round((tokenEstimate / totalTokens) * 100) : 0;
+  const tokenEstimate = getTokenEstimate?.(message) || null;
+  const charCount = getMessageCharCount(message);
+  const percentage =
+    tokenEstimate === null || totalCompletionTokens === null
+      ? null
+      : totalCompletionTokens
+        ? Math.round((tokenEstimate / totalCompletionTokens) * 100)
+        : 0;
   const hiddenUntilFoundRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (hiddenUntilFoundRef.current) {
@@ -366,14 +369,20 @@ function CoreMessageView({ message, getTokenEstimate, totalInputTokens, totalOut
 
   return (
     <div className={`rounded border px-4 py-1 ${roleColor}`}>
-      <div className="flex cursor-pointer items-center gap-2" onClick={() => setIsExpanded(!isExpanded)}>
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center gap-2 text-left"
+        aria-expanded={isExpanded}
+      >
         <div className="text-gray-500">
           {isExpanded ? <ChevronDownIcon className="size-5" /> : <ChevronRightIcon className="size-5" />}
         </div>
         <div className="font-medium capitalize">{message.role}</div>
-        <div className="text-xs text-gray-500" title="token estimate is approximate">
-          {tokenEstimate} tokens ({percentage}%)
-        </div>
+        {percentage !== null && tokenEstimate !== null && (
+          <div className="text-xs text-gray-500" title="token estimate is approximate">
+            {tokenEstimate} tokens ({percentage}%) ({charCount} characters)
+          </div>
+        )}
         <style>{`
           .${getPreviewClass(preview)}::before {
             content: "${shorten(preview).replace(/"/g, '\\"')}";
@@ -382,23 +391,26 @@ function CoreMessageView({ message, getTokenEstimate, totalInputTokens, totalOut
         <div
           className={`flex-1 truncate text-sm text-gray-600 dark:text-gray-300 ${getPreviewClass(preview)} before:block before:truncate`}
         />
-      </div>
+      </button>
 
       <div ref={hiddenUntilFoundRef}>
-        <div className="mt-2">
-          <div className={'text-sm text-gray-600 dark:text-gray-300'}>
-            <div className="cursor-default" onClick={(e) => e.stopPropagation()}>
-              <MessageContentView content={message.content} />
+        {isExpanded && (
+          <div className="mt-2">
+            <div className={'text-sm text-gray-600 dark:text-gray-300'}>
+              <div>
+                <MessageContentView content={message.content} />
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 }
 
 function findTriggeringUserMessage(promptAndResponses: LlmPromptAndResponse[]): string {
-  // Look through all prompt and responses in reverse order
+  // Look through all prompt and responses in reverse order.
+  // Generally this should be the final CoreMessage of the prompt.
   for (let i = promptAndResponses.length - 1; i >= 0; i--) {
     const promptAndResponse = promptAndResponses[i];
     // Look through messages in reverse order to find the last user message
@@ -414,6 +426,7 @@ function findTriggeringUserMessage(promptAndResponses: LlmPromptAndResponse[]): 
   return 'No user message found';
 }
 
+/** Group into arrays of all LLM interactions necessary to respond to a single user query. */
 function groupIntoUserPrompts(data: LlmPromptAndResponse[]): AllPromptsForUserInteraction[] {
   const groups: AllPromptsForUserInteraction[] = [];
   let currentGroup: LlmPromptAndResponse[] = [];
@@ -422,25 +435,37 @@ function groupIntoUserPrompts(data: LlmPromptAndResponse[]): AllPromptsForUserIn
     currentGroup.push(item);
 
     // If this item has a finish reason other than tool-call, or if it's the last item,
-    // we end the current group and start a new one
+    // we end the current group and start a new one.
     if (item.finishReason !== 'tool-calls' || index === data.length - 1) {
       if (currentGroup.length > 0) {
-        const totalInputTokens = currentGroup.reduce((sum, item) => {
-          const usage = summarizeUsage(item);
-          return sum + usage.inputTokensTotal;
+        const totalCompletionTokens = currentGroup.reduce((sum, item) => {
+          const usage = item.usage;
+          return sum + usage.promptTokens;
+        }, 0);
+        const cachedCompletionTokens = currentGroup.reduce((sum, item) => {
+          const usage = item.usage;
+          return sum + usage.cachedPromptTokens;
         }, 0);
         const totalOutputTokens = currentGroup.reduce((sum, item) => {
-          const usage = summarizeUsage(item);
-          return sum + usage.outputTokens;
+          const usage = item.usage;
+          return sum + usage.completionTokens;
         }, 0);
+        const totalChefTokens = currentGroup.reduce((sum, item) => {
+          return sum + (item.chefTokens || 0);
+        }, 0);
+
+        // Collect unique model IDs using a Set
+        const uniqueModelIds = new Set(currentGroup.map((item) => item.modelId));
 
         groups.push({
           promptAndResponses: [...currentGroup],
           summary: {
             triggeringUserMessage: findTriggeringUserMessage(currentGroup),
-            totalInputTokens,
+            totalCompletionTokens,
+            cachedCompletionTokens,
             totalOutputTokens,
-            modelId: currentGroup[0].modelId,
+            modelId: Array.from(uniqueModelIds),
+            totalChefTokens,
           },
         });
         currentGroup = [];
@@ -452,6 +477,11 @@ function groupIntoUserPrompts(data: LlmPromptAndResponse[]): AllPromptsForUserIn
 }
 
 function UserPrompt({ group }: { group: AllPromptsForUserInteraction }) {
+  // Price: $0.10 per million chef tokens
+  const rawPrice = (group.summary.totalChefTokens / 1_000_000) * 0.1;
+  // If less than a penny, show 3 decimal places, otherwise show 2 and trim trailing zeros
+  const estimatedPrice = rawPrice < 0.01 ? rawPrice.toFixed(3) : Number(rawPrice.toFixed(2)).toString();
+
   return (
     <div className="space-y-2 rounded-lg border-2 border-gray-200 p-4 dark:border-gray-700">
       <div className="mb-4 border-b border-gray-200 pb-2 dark:border-gray-700">
@@ -459,9 +489,28 @@ function UserPrompt({ group }: { group: AllPromptsForUserInteraction }) {
           {group.summary.triggeringUserMessage}
         </div>
         <div className="mt-1 flex gap-4 text-sm text-gray-500 dark:text-gray-400">
-          <div>Model: {group.summary.modelId}</div>
-          <div>Input tokens: {group.summary.totalInputTokens}</div>
-          <div>Output tokens: {group.summary.totalOutputTokens}</div>
+          <div>Model(s): {group.summary.modelId.join(', ')}</div>
+          <div>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">
+              {formatNumber(group.summary.totalCompletionTokens - group.summary.cachedCompletionTokens)}
+            </span>{' '}
+            uncached prompt tokens
+            {group.summary.cachedCompletionTokens
+              ? ` (plus ${formatNumber(group.summary.cachedCompletionTokens)} cached)`
+              : ''}
+          </div>
+          <div>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">
+              {formatNumber(group.summary.totalOutputTokens)}
+            </span>{' '}
+            completion tokens
+          </div>
+          <div>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">
+              {formatNumber(group.summary.totalChefTokens)}
+            </span>{' '}
+            chef tokens (${estimatedPrice})
+          </div>
         </div>
       </div>
       {group.promptAndResponses.map((promptAndResponse, index) => (

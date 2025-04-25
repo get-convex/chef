@@ -40,40 +40,31 @@ export function encodeUsageAnnotation(
   return { payload: serialized };
 }
 
-export function calculateUsage({
-  usage,
-  providerMetadata,
-  lastMessage,
-}: {
+export function usageFromGeneration(generation: {
   usage: LanguageModelUsage;
   providerMetadata?: ProviderMetadata;
-  lastMessage?: Message;
-}): {
-  totalBillableUsage: Usage;
-  totalUnbillableUsage: Usage;
-  totalBillableChefTokens: number;
-  totalUnbillableChefTokens: number;
-} {
-  const totalBillableUsage = {
-    completionTokens: usage.completionTokens,
-    promptTokens: usage.promptTokens,
-    totalTokens: usage.totalTokens,
-    providerMetadata,
-    anthropicCacheCreationInputTokens: Number(providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0),
-    anthropicCacheReadInputTokens: Number(providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
-    openaiCachedPromptTokens: Number(providerMetadata?.openai?.cachedPromptTokens ?? 0),
-    xaiCachedPromptTokens: Number(providerMetadata?.xai?.cachedPromptTokens ?? 0),
-  } satisfies Usage;
-  const totalUnbillableUsage = {
-    completionTokens: 0,
-    promptTokens: 0,
-    totalTokens: 0,
-    providerMetadata,
-    anthropicCacheCreationInputTokens: 0,
-    anthropicCacheReadInputTokens: 0,
-    openaiCachedPromptTokens: 0,
-    xaiCachedPromptTokens: 0,
-  } satisfies typeof totalBillableUsage;
+}): Usage {
+  return {
+    completionTokens: generation.usage.completionTokens,
+    promptTokens: generation.usage.promptTokens,
+    totalTokens: generation.usage.totalTokens,
+    providerMetadata: generation.providerMetadata,
+    anthropicCacheCreationInputTokens: Number(generation.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0),
+    anthropicCacheReadInputTokens: Number(generation.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
+    openaiCachedPromptTokens: Number(generation.providerMetadata?.openai?.cachedPromptTokens ?? 0),
+    xaiCachedPromptTokens: Number(generation.providerMetadata?.xai?.cachedPromptTokens ?? 0),
+  };
+}
+
+export async function recordUsage(
+  provisionHost: string,
+  token: string,
+  teamSlug: string,
+  deploymentName: string | undefined,
+  lastMessage: Message | undefined,
+  finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
+) {
+  const totalUsage = usageFromGeneration(finalGeneration);
 
   const failedToolCalls: Set<string> = new Set();
   for (const part of lastMessage?.parts ?? []) {
@@ -87,7 +78,6 @@ export function calculateUsage({
 
   if (lastMessage && lastMessage.role === 'assistant') {
     for (const annotation of lastMessage.annotations ?? []) {
-      let totalUsage = totalBillableUsage;
       const parsed = annotationValidator.safeParse(annotation);
       if (!parsed.success) {
         console.error('Invalid annotation', parsed.error);
@@ -105,7 +95,7 @@ export function calculateUsage({
       }
       if (payload.toolCallId && failedToolCalls.has(payload.toolCallId)) {
         console.warn('Skipping usage for failed tool call', payload.toolCallId);
-        totalUsage = totalUnbillableUsage;
+        continue;
       }
       totalUsage.completionTokens += payload.completionTokens;
       totalUsage.promptTokens += payload.promptTokens;
@@ -118,60 +108,10 @@ export function calculateUsage({
     }
   }
 
-  let totalBillableChefTokens = 0;
-  let totalUnbillableChefTokens = 0;
-
-  for (const totalUsage of [totalBillableUsage, totalUnbillableUsage]) {
-    // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
-    let chefTokens = 0;
-    if (providerMetadata?.anthropic) {
-      chefTokens += totalUsage.completionTokens * 200;
-      chefTokens += totalUsage.promptTokens * 40;
-      chefTokens += totalUsage.anthropicCacheCreationInputTokens * 40 + totalUsage.anthropicCacheReadInputTokens * 3;
-    } else if (providerMetadata?.openai) {
-      chefTokens += totalUsage.completionTokens * 100;
-      chefTokens += totalUsage.openaiCachedPromptTokens * 5;
-      chefTokens += (totalUsage.promptTokens - totalUsage.openaiCachedPromptTokens) * 26;
-    } else if (providerMetadata?.xai) {
-      // TODO: This is a guess. Billing like openai
-      chefTokens += totalUsage.completionTokens * 200;
-      chefTokens += totalUsage.promptTokens * 40;
-      // TODO - never seen xai set this field to anything but 0, so holding off until we understand.
-      //chefTokens += totalUsage.xaiCachedPromptTokens * 3;
-    } else if (providerMetadata?.google) {
-      chefTokens += totalUsage.completionTokens * 140;
-      chefTokens += totalUsage.promptTokens * 18;
-      // TODO: Implement Google billing for the prompt tokens that are cached. Google doesn't offer caching yet.
-    } else {
-      console.error('WARNING: Unknown provider. Not recording usage. Giving away for free.', providerMetadata);
-    }
-    if (totalUsage === totalBillableUsage) {
-      totalBillableChefTokens = chefTokens;
-    } else if (totalUsage === totalUnbillableUsage) {
-      totalUnbillableChefTokens = chefTokens;
-    } else {
-      throw new Error('impossible');
-    }
-  }
-
-  return { totalBillableUsage, totalUnbillableUsage, totalBillableChefTokens, totalUnbillableChefTokens };
-}
-
-export async function recordUsage(
-  provisionHost: string,
-  token: string,
-  teamSlug: string,
-  deploymentName: string | undefined,
-  lastMessage: Message | undefined,
-  finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
-) {
-  const { totalBillableUsage: totalUsage, totalBillableChefTokens: chefTokens } = calculateUsage({
-    ...finalGeneration,
-    lastMessage,
-  });
-
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/record_tokens`;
+  // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
+  const chefTokens = calculateChefTokens(totalUsage, finalGeneration.providerMetadata);
   logger.info('Logging total usage', JSON.stringify(totalUsage), 'corresponding to chef tokens', chefTokens);
   const response = await fetch(url, {
     method: 'POST',
@@ -190,4 +130,32 @@ export async function recordUsage(
 
   const { centitokensUsed, centitokensQuota } = await response.json();
   logger.info(`${teamSlug}/${deploymentName}: Tokens used: ${centitokensUsed} / ${centitokensQuota}`);
+}
+
+// TODO this these wrong
+// Based on how the final generation came from (which may not be the provided used for the other generations came from)
+export function calculateChefTokens(totalUsage: Usage, providerMetadata?: ProviderMetadata) {
+  let chefTokens = 0;
+  if (providerMetadata?.anthropic) {
+    chefTokens += totalUsage.completionTokens * 200;
+    chefTokens += totalUsage.promptTokens * 40;
+    chefTokens += totalUsage.anthropicCacheCreationInputTokens * 40 + totalUsage.anthropicCacheReadInputTokens * 3;
+  } else if (providerMetadata?.openai) {
+    chefTokens += totalUsage.completionTokens * 100;
+    chefTokens += totalUsage.openaiCachedPromptTokens * 5;
+    chefTokens += (totalUsage.promptTokens - totalUsage.openaiCachedPromptTokens) * 26;
+  } else if (providerMetadata?.xai) {
+    // TODO: This is a guess. Billing like openai
+    chefTokens += totalUsage.completionTokens * 200;
+    chefTokens += totalUsage.promptTokens * 40;
+    // TODO - never seen xai set this field to anything but 0, so holding off until we understand.
+    //chefTokens += totalUsage.xaiCachedPromptTokens * 3;
+  } else if (providerMetadata?.google) {
+    chefTokens += totalUsage.completionTokens * 140;
+    chefTokens += totalUsage.promptTokens * 18;
+    // TODO: Implement Google billing for the prompt tokens that are cached. Google doesn't offer caching yet.
+  } else {
+    console.error('WARNING: Unknown provider. Not recording usage. Giving away for free.', providerMetadata);
+  }
+  return chefTokens;
 }

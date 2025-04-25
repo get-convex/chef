@@ -23,10 +23,8 @@ export const storeDebugPrompt = internalMutation({
     promptCoreMessagesStorageId: v.id("_storage"),
     finishReason: v.string(),
     modelId: v.optional(v.string()),
-    billableUsage: usageRecordValidator,
-    unbillableUsage: usageRecordValidator,
-    billableChefTokens: v.number(),
-    unbillableChefTokens: v.number(),
+    usage: usageRecordValidator,
+    chefTokens: v.number(),
   },
   handler: async (ctx, args) => {
     const {
@@ -35,10 +33,8 @@ export const storeDebugPrompt = internalMutation({
       promptCoreMessagesStorageId,
       finishReason,
       modelId,
-      billableUsage,
-      unbillableUsage,
-      billableChefTokens,
-      unbillableChefTokens,
+      usage,
+      chefTokens,
     } = args;
     const chat = await getChatByInitialId(ctx, chatInitialId);
     await ctx.db.insert("debugChatApiRequestLog", {
@@ -47,10 +43,8 @@ export const storeDebugPrompt = internalMutation({
       promptCoreMessagesStorageId,
       finishReason,
       modelId: modelId ?? "",
-      billableUsage,
-      unbillableUsage,
-      billableChefTokens,
-      unbillableChefTokens,
+      usage,
+      chefTokens,
     });
   },
 });
