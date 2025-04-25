@@ -215,7 +215,6 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
       {isExpanded && prompt && (
         <div className="mt-4">
           <div className="mt-4 space-y-1">
-            <div>{formatNumber(outputTokens)} prompt tokens</div>
             {prompt.map((message, idx) => (
               <CoreMessageView
                 key={idx}
