@@ -2,8 +2,8 @@ import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
 import type { ProviderType, Usage, UsageAnnotation } from '~/lib/common/annotations';
-import { annotationValidator, usageAnnotationValidator } from '~/lib/common/annotations';
 import { modelForProvider } from './llm/provider';
+import { calculateTotalUsageForMessage, calculateChefTokens } from '../common/usage';
 
 const logger = createScopedLogger('usage');
 
@@ -65,22 +65,6 @@ export function encodeModelAnnotation(
   return { toolCallId: call.kind === 'tool-call' ? call.toolCallId : 'final', provider, model };
 }
 
-export function usageFromGeneration(generation: {
-  usage: LanguageModelUsage;
-  providerMetadata?: ProviderMetadata;
-}): Usage {
-  return {
-    completionTokens: generation.usage.completionTokens,
-    promptTokens: generation.usage.promptTokens,
-    totalTokens: generation.usage.totalTokens,
-    providerMetadata: generation.providerMetadata,
-    anthropicCacheCreationInputTokens: Number(generation.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0),
-    anthropicCacheReadInputTokens: Number(generation.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
-    openaiCachedPromptTokens: Number(generation.providerMetadata?.openai?.cachedPromptTokens ?? 0),
-    xaiCachedPromptTokens: Number(generation.providerMetadata?.xai?.cachedPromptTokens ?? 0),
-  };
-}
-
 export async function recordUsage(
   provisionHost: string,
   token: string,
@@ -89,55 +73,13 @@ export async function recordUsage(
   lastMessage: Message | undefined,
   finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
 ) {
-  const totalUsage = usageFromGeneration(finalGeneration);
-
-  const failedToolCalls: Set<string> = new Set();
-  for (const part of lastMessage?.parts ?? []) {
-    if (part.type !== 'tool-invocation') {
-      continue;
-    }
-    if (part.toolInvocation.state === 'result' && part.toolInvocation.result.startsWith('Error:')) {
-      failedToolCalls.add(part.toolInvocation.toolCallId);
-    }
-  }
-
-  if (lastMessage && lastMessage.role === 'assistant') {
-    for (const annotation of lastMessage.annotations ?? []) {
-      const parsed = annotationValidator.safeParse(annotation);
-      if (!parsed.success) {
-        console.error('Invalid annotation', parsed.error);
-        continue;
-      }
-      if (parsed.data.type !== 'usage') {
-        continue;
-      }
-      let payload: UsageAnnotation;
-      try {
-        payload = usageAnnotationValidator.parse(JSON.parse(parsed.data.usage.payload));
-      } catch (e) {
-        console.error('Invalid payload', parsed.data.usage.payload, e);
-        continue;
-      }
-      if (payload.toolCallId && failedToolCalls.has(payload.toolCallId)) {
-        console.warn('Skipping usage for failed tool call', payload.toolCallId);
-        continue;
-      }
-      totalUsage.completionTokens += payload.completionTokens;
-      totalUsage.promptTokens += payload.promptTokens;
-      totalUsage.totalTokens += payload.totalTokens;
-      totalUsage.anthropicCacheCreationInputTokens +=
-        payload.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0;
-      totalUsage.anthropicCacheReadInputTokens += payload.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0;
-      totalUsage.openaiCachedPromptTokens += payload.providerMetadata?.openai?.cachedPromptTokens ?? 0;
-      totalUsage.xaiCachedPromptTokens += payload.providerMetadata?.xai?.cachedPromptTokens ?? 0;
-    }
-  }
+  const { totalUsageBilledFor } = await calculateTotalUsageForMessage(lastMessage, finalGeneration);
+  const chefTokens = calculateChefTokens(totalUsageBilledFor, finalGeneration.providerMetadata);
 
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/record_tokens`;
-  // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
-  const chefTokens = calculateChefTokens(totalUsage, finalGeneration.providerMetadata);
-  logger.info('Logging total usage', JSON.stringify(totalUsage), 'corresponding to chef tokens', chefTokens);
+
+  logger.info('Logging total usage', JSON.stringify(totalUsageBilledFor), 'corresponding to chef tokens', chefTokens);
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -155,32 +97,4 @@ export async function recordUsage(
 
   const { centitokensUsed, centitokensQuota } = await response.json();
   logger.info(`${teamSlug}/${deploymentName}: Tokens used: ${centitokensUsed} / ${centitokensQuota}`);
-}
-
-// TODO this these wrong
-// Based on how the final generation came from (which may not be the provided used for the other generations came from)
-export function calculateChefTokens(totalUsage: Usage, providerMetadata?: ProviderMetadata) {
-  let chefTokens = 0;
-  if (providerMetadata?.anthropic) {
-    chefTokens += totalUsage.completionTokens * 200;
-    chefTokens += totalUsage.promptTokens * 40;
-    chefTokens += totalUsage.anthropicCacheCreationInputTokens * 40 + totalUsage.anthropicCacheReadInputTokens * 3;
-  } else if (providerMetadata?.openai) {
-    chefTokens += totalUsage.completionTokens * 100;
-    chefTokens += totalUsage.openaiCachedPromptTokens * 5;
-    chefTokens += (totalUsage.promptTokens - totalUsage.openaiCachedPromptTokens) * 26;
-  } else if (providerMetadata?.xai) {
-    // TODO: This is a guess. Billing like openai
-    chefTokens += totalUsage.completionTokens * 200;
-    chefTokens += totalUsage.promptTokens * 40;
-    // TODO - never seen xai set this field to anything but 0, so holding off until we understand.
-    //chefTokens += totalUsage.xaiCachedPromptTokens * 3;
-  } else if (providerMetadata?.google) {
-    chefTokens += totalUsage.completionTokens * 140;
-    chefTokens += totalUsage.promptTokens * 18;
-    // TODO: Implement Google billing for the prompt tokens that are cached. Google doesn't offer caching yet.
-  } else {
-    console.error('WARNING: Unknown provider. Not recording usage. Giving away for free.', providerMetadata);
-  }
-  return chefTokens;
 }
