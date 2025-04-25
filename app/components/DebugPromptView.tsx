@@ -184,7 +184,7 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
     return estimateTokenCount(charCount, totalInputChars, completionTokensTotal);
   };
 
-  const lastAssistantMessage = prompt ? findLastAssistantMessage(completion) : 'Loading...';
+  const lastAssistantMessage = findLastAssistantMessage(completion);
 
   return (
     <div className="rounded border p-4 dark:border-gray-700">
