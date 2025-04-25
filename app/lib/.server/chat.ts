@@ -64,6 +64,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       | undefined;
     shouldDisableTools: boolean;
     skipSystemPrompt: boolean;
+    smallFiles: boolean;
     recordRawPromptsForDebugging?: boolean;
   };
   const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug, recordRawPromptsForDebugging } =
@@ -149,6 +150,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       userApiKey,
       shouldDisableTools: body.shouldDisableTools,
       skipSystemPrompt: body.skipSystemPrompt,
+      smallFiles: body.smallFiles,
       recordUsageCb,
       recordRawPromptsForDebugging: !!recordRawPromptsForDebugging,
     });

@@ -224,7 +224,7 @@ export const Chat = memo(
       }
     }
 
-    const { enableSkipSystemPrompt } = useFlags();
+    const { enableSkipSystemPrompt, smallFiles } = useFlags();
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
       api: '/api/chat',
@@ -265,6 +265,7 @@ export const Chat = memo(
           userApiKey: retries.numFailures < MAX_RETRIES ? apiKey : { ...apiKey, preference: 'always' },
           shouldDisableTools: shouldDisableToolsStore.get(),
           skipSystemPrompt: skipSystemPromptStore.get(),
+          smallFiles,
           recordRawPromptsForDebugging,
         };
       },

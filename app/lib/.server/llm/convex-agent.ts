@@ -48,6 +48,7 @@ export async function convexAgent(args: {
   userApiKey: string | undefined;
   shouldDisableTools: boolean;
   skipSystemPrompt: boolean;
+  smallFiles: boolean;
   recordUsageCb: (
     lastMessage: Message | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
@@ -63,6 +64,7 @@ export async function convexAgent(args: {
     userApiKey,
     shouldDisableTools,
     skipSystemPrompt,
+    smallFiles,
     recordUsageCb,
     recordRawPromptsForDebugging,
   } = args;
@@ -81,6 +83,7 @@ export async function convexAgent(args: {
     usingGoogle: modelProvider == 'Google',
     resendProxyEnabled: getEnv('RESEND_PROXY_ENABLED') == '1',
     skipSystemPrompt,
+    smallFiles,
   };
   const tools: ConvexToolSet = {
     deploy: deployTool,
