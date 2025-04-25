@@ -1,24 +1,25 @@
+import { Callout } from '@ui/Callout';
 import type { Message } from 'ai';
+import { useFlags } from 'launchdarkly-react-client-sdk';
 import React, { type ReactNode, type RefCallback, useCallback, useMemo } from 'react';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
-import { classNames } from '~/utils/classNames';
-import { Messages } from './Messages.client';
-import styles from './BaseChat.module.css';
-import type { ActionAlert } from '~/types/actions';
-import ChatAlert from './ChatAlert';
-import { SuggestionButtons } from './SuggestionButtons';
-import StreamingIndicator from './StreamingIndicator';
 import type { ToolStatus } from '~/lib/common/types';
-import type { TerminalInitializationOptions } from '~/types/terminal';
-import { useFlags } from 'launchdarkly-react-client-sdk';
-import type { ModelSelection } from '~/utils/constants';
-import { Callout } from '@ui/Callout';
-import { MessageInput } from './MessageInput';
-import { messageInputStore } from '~/lib/stores/messageInput';
-import { useChatId } from '~/lib/stores/chatId';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
+import { useChatId } from '~/lib/stores/chatId';
+import { messageInputStore } from '~/lib/stores/messageInput';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import type { ActionAlert } from '~/types/actions';
+import type { TerminalInitializationOptions } from '~/types/terminal';
+import { classNames } from '~/utils/classNames';
+import type { ModelSelection } from '~/utils/constants';
+import Landing from '../landing/Landing';
+import styles from './BaseChat.module.css';
+import ChatAlert from './ChatAlert';
+import { MessageInput } from './MessageInput';
+import { Messages } from './Messages.client';
+import StreamingIndicator from './StreamingIndicator';
+import { SuggestionButtons } from './SuggestionButtons';
 
 interface BaseChatProps {
   // Refs
@@ -208,11 +209,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   messageInputStore.set(suggestion);
                 }}
               />
-              {!chatStarted && (
-                <div className="my-16 h-[1200px] w-full max-w-7xl border-2 border-blue-500 lg:my-24">
-                  TODO: Page content.
-                </div>
-              )}
+              {!chatStarted && <Landing />}
             </div>
             <Workbench
               chatStarted={chatStarted}
