@@ -1,5 +1,4 @@
 import { stripIndents } from '../utils/stripIndent.js';
-import { systemConstraints } from './systemConstraints.js';
 import type { SystemPromptOptions } from '../types.js';
 import { solutionConstraints } from './solutionConstraints.js';
 import { formattingInstructions } from './formattingInstructions.js';
@@ -29,7 +28,6 @@ export function generalSystemPrompt(options: SystemPromptOptions) {
   const result = stripIndents`${GENERAL_SYSTEM_PROMPT_PRELUDE}
   ${openAi(options)}
   ${google(options)}
-  ${systemConstraints(options)}
   ${solutionConstraints(options)}
   ${formattingInstructions(options)}
   ${exampleDataInstructions(options)}
