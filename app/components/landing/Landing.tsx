@@ -2,7 +2,7 @@ import FeatureGrid from './FeatureGrid';
 
 export default function Landing() {
   return (
-    <div className="my-24 flex w-full max-w-7xl flex-col gap-24 lg:my-36 lg:gap-36">
+    <div className="mb-24 mt-12 flex w-full max-w-7xl flex-col gap-16 lg:mb-48 lg:mt-24 lg:gap-32">
       <FeatureGrid />
       <div className="flex flex-col items-center">
         <h2 className="font-bold">AI models for full-stack Convex apps</h2>
