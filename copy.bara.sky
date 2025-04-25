@@ -1,0 +1,33 @@
+CHEF_URL = "https://github.com/get-convex/chef"
+PARTNER_URL = "https://github.com/get-convex/chef-%s"
+
+# To add a partner
+# 
+# 1) create a new repo on github called chef-${PARTNER}
+# 2) Add the partner to the PARTNERS variable below
+# 3) Install copybara if you haven't https://github.com/get-convex/convex/blob/main/ops/release.md#install-copybara
+# 4) Manually run once `copybara copy.bara.sky push_${PARTNER} main`. May take a while.
+# 5) Submit/land your PR that updates the PARTNERS variable - to auto-keep things up to date.
+PARTNERS = ["testcustomer"]
+
+def push_to_partner(partner):
+    return core.workflow(
+        name = "push_%s" % partner,
+        description = "push code from chef -> chef-%s" % partner,
+        mode = "ITERATIVE",
+        origin = git.origin(
+            url = CHEF_URL,
+            # ref from the command line
+            ref = "${COPYBARA_CONTEXT_REFERENCE}",
+        ),
+        destination = git.destination(
+            url = PARTNER_URL % partner,
+            fetch = "main",
+            push = "main",
+        ),
+        origin_files = glob(["**"], exclude=["copy.bara.sky", ".github/workflows/copybara.yml"]),
+        authoring = authoring.pass_thru("Convex, Inc. <no-reply@convex.dev>"),
+        check_last_rev_state = True,
+    )
+
+[push_to_partner(partner) for partner in PARTNERS]

@@ -3,7 +3,7 @@ import { useConvex } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { getStoredTeamSlug } from '~/lib/stores/convexTeams';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
-import { VITE_PROVISION_HOST } from '~/components/chat/Chat';
+import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
 import { TeamSelector } from '~/components/convex/TeamSelector';
@@ -30,14 +30,18 @@ export function UsageCard() {
     centitokensQuota: number;
     isPaidPlan: boolean;
   } | null>(null);
+  const token = getConvexAuthToken(convex);
   useEffect(() => {
     async function fetchTokenUsage() {
       if (!selectedTeamSlug) {
         return;
       }
+
       setIsLoadingUsage(true);
+      if (!token) {
+        return;
+      }
       try {
-        const token = getConvexAuthToken(convex);
         if (token) {
           const usage = await getTokenUsage(VITE_PROVISION_HOST, token, selectedTeamSlug);
           if (usage.status === 'success') {
@@ -53,7 +57,7 @@ export function UsageCard() {
       }
     }
     void fetchTokenUsage();
-  }, [selectedTeamSlug, convex]);
+  }, [selectedTeamSlug, convex, token]);
 
   const usagePercentage = tokenUsage ? (tokenUsage.centitokensUsed / tokenUsage.centitokensQuota) * 100 : 0;
 

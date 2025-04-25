@@ -114,10 +114,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
             <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
               {!chatStarted && (
                 <div id="intro" className="mx-auto mt-[16vh] max-w-chat px-4 text-center lg:px-0">
-                  <h1 className="mb-4 animate-fadeInFromLoading font-display text-4xl font-black tracking-tight text-content-primary lg:text-6xl">
+                  <h1 className="mb-4 animate-fadeInFromLoading font-display text-4xl font-black tracking-tight text-content-primary sm:text-5xl md:text-6xl">
                     Now you&rsquo;re cooking
                   </h1>
-                  <p className="mb-8 animate-fadeInFromLoading text-balance font-display text-xl font-medium text-content-secondary [animation-delay:200ms] [animation-fill-mode:backwards] lg:text-2xl">
+                  <p className="mb-8 animate-fadeInFromLoading text-balance font-display text-xl font-medium text-content-secondary [animation-delay:200ms] [animation-fill-mode:backwards] md:text-2xl">
                     Generate and launch realtime full‑stack apps you never thought possible
                   </p>
                 </div>

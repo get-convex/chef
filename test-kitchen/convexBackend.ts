@@ -62,13 +62,13 @@ export async function withConvexBackend<T>(backendDir: string, fn: (backend: Con
         openSync(path.join(backendDir, 'backend.stderr.log'), 'w'),
       ],
     });
-    return { port, siteProxyPort, process };
-  });
-  try {
     await healthcheck(port);
     if (process.exitCode !== null) {
       throw new Error(`Convex backend exited with code ${process.exitCode}`);
     }
+    return { port, siteProxyPort, process };
+  });
+  try {
     const project = {
       deploymentUrl: `http://localhost:${port}`,
       deploymentName: instance_name,

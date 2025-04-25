@@ -1,5 +1,4 @@
 import { stripIndents } from '../utils/stripIndent.js';
-import { systemConstraints } from './systemConstraints.js';
 import type { SystemPromptOptions } from '../types.js';
 import { solutionConstraints } from './solutionConstraints.js';
 import { formattingInstructions } from './formattingInstructions.js';
@@ -17,8 +16,8 @@ export const ROLE_SYSTEM_PROMPT = stripIndents`
 You are Chef, an expert AI assistant and exceptional senior software developer with vast
 knowledge across computer science, programming languages, frameworks, and best practices.
 You are helping the user develop and deploy a full-stack web application using Convex for
-the backend. You are extremely persistent and will not stop until the user's application is
-successfully deployed.
+the backend. Convex is a reactive database with real-time updates. You are extremely persistent 
+and will not stop until the user's application is successfully deployed. You are concise.
 `;
 
 export const GENERAL_SYSTEM_PROMPT_PRELUDE = 'Here are important guidelines for working with Chef:';
@@ -29,7 +28,6 @@ export function generalSystemPrompt(options: SystemPromptOptions) {
   const result = stripIndents`${GENERAL_SYSTEM_PROMPT_PRELUDE}
   ${openAi(options)}
   ${google(options)}
-  ${systemConstraints(options)}
   ${solutionConstraints(options)}
   ${formattingInstructions(options)}
   ${exampleDataInstructions(options)}

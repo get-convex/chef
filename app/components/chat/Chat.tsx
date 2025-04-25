@@ -22,7 +22,6 @@ import type { PartId } from '~/lib/stores/artifacts';
 import { captureMessage } from '@sentry/remix';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import { chatIdStore, initialIdStore } from '~/lib/stores/chatId';
-import type { ModelProvider } from '~/lib/.server/llm/convex-agent';
 import { useConvex, useQuery } from 'convex/react';
 import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
@@ -35,12 +34,14 @@ import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import type { Doc, Id } from 'convex/_generated/dataModel';
+import { useFlags } from 'launchdarkly-react-client-sdk';
+import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
+import type { ProviderType } from '~/lib/common/annotations';
+import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 
 const logger = createScopedLogger('Chat');
 
 const MAX_RETRIES = 4;
-
-export const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
 const processSampledMessages = createSampler(
   (options: {
@@ -82,7 +83,8 @@ const retryState = atom({
   numFailures: 0,
   nextRetry: Date.now(),
 });
-
+const shouldDisableToolsStore = atom(false);
+const skipSystemPromptStore = atom(false);
 export const Chat = memo(
   ({
     initialMessages,
@@ -122,6 +124,7 @@ export const Chat = memo(
         }
       }
     };
+    const { recordRawPromptsForDebugging } = useFlags();
 
     const title = useStore(description);
 
@@ -221,6 +224,7 @@ export const Chat = memo(
       }
     }
 
+    const { enableSkipSystemPrompt } = useFlags();
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
       api: '/api/chat',
@@ -236,11 +240,11 @@ export const Chat = memo(
         if (!teamSlug) {
           throw new Error('No team slug');
         }
-        let modelProvider: ModelProvider;
+        let modelProvider: ProviderType;
         const retries = retryState.get();
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
           // Send all traffic to Anthropic first before failing over to Bedrock.
-          const providers: ModelProvider[] = ['Anthropic', 'Bedrock'];
+          const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
           modelProvider = providers[retries.numFailures % providers.length];
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
@@ -259,13 +263,24 @@ export const Chat = memo(
           modelProvider,
           // Fall back to the user's API key if the request has failed too many times
           userApiKey: retries.numFailures < MAX_RETRIES ? apiKey : { ...apiKey, preference: 'always' },
+          shouldDisableTools: shouldDisableToolsStore.get(),
+          skipSystemPrompt: skipSystemPromptStore.get(),
+          recordRawPromptsForDebugging,
         };
       },
       maxSteps: 64,
       async onToolCall({ toolCall }) {
         console.log('Starting tool call', toolCall);
-        const result = await workbenchStore.waitOnToolCall(toolCall.toolCallId);
+        const { result, shouldDisableTools, skipSystemPrompt } = await workbenchStore.waitOnToolCall(
+          toolCall.toolCallId,
+        );
         console.log('Tool call finished', result);
+        if (shouldDisableTools) {
+          shouldDisableToolsStore.set(true);
+        }
+        if (skipSystemPrompt && enableSkipSystemPrompt) {
+          skipSystemPromptStore.set(true);
+        }
         return result;
       },
       onError: async (e: Error) => {
@@ -327,12 +342,12 @@ export const Chat = memo(
       },
     });
 
-    (window as any).chefMessages = messages;
+    setChefDebugProperty('messages', messages);
 
     // AKA "processed messages," since parsing has side effects
     const { parsedMessages, parseMessages } = useMessageParser(partCache);
 
-    (window as any).chefParsedMessages = parsedMessages;
+    setChefDebugProperty('parsedMessages', parsedMessages);
 
     useEffect(() => {
       chatStore.setKey('started', initialMessages.length > 0);
@@ -445,6 +460,8 @@ export const Chat = memo(
         const modifiedFiles = workbenchStore.getModifiedFiles();
         chatStore.setKey('aborted', false);
 
+        shouldDisableToolsStore.set(false);
+        skipSystemPromptStore.set(false);
         if (modifiedFiles !== undefined) {
           const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
           append({

@@ -1,6 +1,8 @@
 import { defineSchema, defineTable } from "convex/server";
-import { v, type VAny } from "convex/values";
+import { v } from "convex/values";
+import type { Infer, Validator, VAny } from "convex/values";
 import type { SerializedMessage } from "./messages";
+import type { CoreMessage } from "ai";
 
 export const apiKeyValidator = v.object({
   preference: v.union(v.literal("always"), v.literal("quotaExhausted")),
@@ -10,6 +12,16 @@ export const apiKeyValidator = v.object({
   xai: v.optional(v.string()),
   google: v.optional(v.string()),
 });
+
+// A stable-enough way to store token usage.
+export const usageRecordValidator = v.object({
+  completionTokens: v.number(),
+  promptTokens: v.number(),
+  /** Included in promptTokens total! */
+  cachedPromptTokens: v.number(),
+});
+
+export type UsageRecord = Infer<typeof usageRecordValidator>;
 
 export default defineSchema({
   /*
@@ -28,6 +40,16 @@ export default defineSchema({
     tokenIdentifier: v.string(),
     apiKey: v.optional(apiKeyValidator),
   }).index("byTokenIdentifier", ["tokenIdentifier"]),
+
+  /*
+   * Admin status means being on the convex team on the provision host.
+   * It doesn't work when using a local big brain (provision host).
+   */
+  convexAdmins: defineTable({
+    convexMemberId: v.id("convexMembers"), // should be unique
+    lastCheckedForAdminStatus: v.number(),
+    wasAdmin: v.boolean(),
+  }).index("byConvexMemberId", ["convexMemberId"]),
 
   /*
    * All chats have two IDs -- an `initialId` that is always set (UUID) and a `urlId`
@@ -143,4 +165,34 @@ export default defineSchema({
   })
     .index("byMemberId", ["memberId"])
     .index("byToken", ["token"]),
+
+  /*
+   * The entire prompt sent to a LLM and the response we received.
+   * Associated with an initialChatId but does not reset on rewind
+   * and is not duplicated in a "share" (fork) to a new account.
+   * This is roughly equivalent to what Braintrust logs would provide.
+   * https://www.braintrust.dev/docs/guides/logs
+   *
+   * This is not designed to be load-bearing data, it is just for debugging.
+   * Do not use this table to power non-debug UI or make agent decisions,
+   * it may be missing or incomplete for any given chat.
+   */
+  debugChatApiRequestLog: defineTable({
+    chatId: v.id("chats"),
+    // Such a loose type doesn't feel so bad since this is debugging data, but if we try
+    // to display older versions of this we need to make any fields added to CoreMessage in
+    // later versions of the Vercel AI SDK optional on the read path.
+    responseCoreMessages: v.array(v.any() as Validator<CoreMessage, "required", any>),
+    promptCoreMessagesStorageId: v.id("_storage"),
+    finishReason: v.string(),
+    modelId: v.string(),
+
+    // Not necessarily the usage we billed because
+    // - personal API key use shows up here too
+    // - failed tool calls count here but we try not to bill for those
+    // - usage code uses the provider for the final generation to bill for all LLM calls in the same interation
+    //   but this debug info uses the correct provider for each call
+    usage: usageRecordValidator,
+    chefTokens: v.number(),
+  }).index("byChatId", ["chatId"]),
 });

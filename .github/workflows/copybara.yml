@@ -1,0 +1,98 @@
+name: Copybara
+on:
+  pull_request:
+    branches: [main]
+    paths: ['copy.bara.sky', '.github/workflows/copybara.yml']
+  push:
+    branches: [main]
+
+env:
+  COPYBARA_REF: 6394e1a4f2eb9ad7473cbd3c827fb3a6360f92b2
+
+# Ensuring that only one workflow runs at a time for a given branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  copybara_partners:
+    name: Copybara Partners
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: bazelbuild/setup-bazelisk@v3
+
+      - run: echo "DRY_RUN_FLAG=--dry-run" >> $GITHUB_ENV
+        if: github.event_name == 'pull_request'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Mount bazel cache
+        uses: actions/cache@v4
+        with:
+          path: '~/.cache/bazel'
+          key: bazel-${{ env.COPYBARA_REF }}
+
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: 851068 # our copybara app
+          private-key: ${{ secrets.COPYBARA_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Configure git authentication
+        run: |
+          git config --global user.email "no-reply@convex.dev"
+          git config --global user.name "Convex, Inc."
+          git config --global credential.helper store
+
+          # Assuming GITHUB_TOKEN is the personal access token or GitHub automatically generated token
+          echo "https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com" > ~/.git-credentials
+
+      - name: Checkout copybara repo
+        uses: actions/checkout@v4
+        with:
+          repository: google/copybara
+          path: copybara
+          ref: ${{ env.COPYBARA_REF }}
+
+      - name: java version
+        run: java --version
+
+      - name: Build copybara
+        working-directory: copybara
+        run: bazel build java/com/google/copybara:copybara_deploy.jar
+
+      - name: Checkout copy.bara.sky from Convex repo
+        uses: actions/checkout@v4
+        with:
+          path: chef
+          sparse-checkout: copy.bara.sky
+
+      # Sync the code. If this starts failing, you must sync by hand / debug further
+      #
+      # If it fails with:
+      # Migration of last-rev '168f9e54d7f66e942959d51c0d17749820b03596' didn't result in an empty change.
+      #
+      # It's likely because someone changed the copy.bara.sky. Make sure that's the case, and after
+      # confirming, sync manually with this command.
+      # Once you're sure it works, run without `--dry-run`.
+      #
+      # copybara copy.bara.sky ${PARTNER} main --ignore-noop --git-committer-email "team@convex.dev" --git-committer-name "Convex, Inc." --force --dry-run
+      #
+      # Exit code 4 occurs as a "NOOP" and can be treated as a success
+      # https://github.com/google/copybara/blob/9d41eddf6a5e30b9661a47bc3eb6e769d38ee03d/java/com/google/copybara/Main.java#L265
+      - name: Sync partners
+        run: |
+          set -ex
+          PARTNERS=$(java -jar copybara/bazel-bin/java/com/google/copybara/copybara_deploy.jar \
+            info --info-list-only chef/copy.bara.sky 2>&1 | grep MIGRATIONS | cut -d' ' -f5 | tr ',' ' ')
+          for PARTNER in $PARTNERS; do
+            java -jar copybara/bazel-bin/java/com/google/copybara/copybara_deploy.jar \
+            chef/copy.bara.sky ${PARTNER} main --ignore-noop $DRY_RUN_FLAG || [ $? -eq 4 ]
+          done

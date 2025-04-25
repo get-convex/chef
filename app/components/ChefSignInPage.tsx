@@ -10,7 +10,7 @@ import { useConvex, useConvexAuth } from 'convex/react';
 import { fetchOptIns } from '~/lib/convexOptins';
 import { Button } from '@ui/Button';
 import { Spinner } from '@ui/Spinner';
-
+import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 export const ChefSignInPage = () => {
   const chefAuth = useChefAuthContext();
 
@@ -56,8 +56,6 @@ function ConvexSignInForm() {
     </div>
   );
 }
-
-const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
 
 type OptInToAccept = {
   optIn: {

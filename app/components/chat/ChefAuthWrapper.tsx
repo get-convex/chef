@@ -12,6 +12,7 @@ import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
 import { useAuth0 } from '@auth0/auth0-react';
 import { fetchOptIns } from '~/lib/convexOptins';
+import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 type ChefAuthState =
   | {
       kind: 'loading';
@@ -68,6 +69,9 @@ export const ChefAuthProvider = ({
     function setSessionId(sessionId: Id<'sessions'> | null) {
       setSessionIdFromLocalStorage(sessionId);
       sessionIdStore.set(sessionId);
+      if (sessionId) {
+        setChefDebugProperty('sessionId', sessionId);
+      }
     }
 
     const isUnauthenticated = !isAuthenticated && !isConvexAuthLoading;

@@ -6,10 +6,10 @@ import { createScopedLogger } from 'chef-agent/utils/logger';
 import { unreachable } from 'chef-agent/utils/unreachable';
 import type { ActionCallbackData } from 'chef-agent/message-parser';
 import type { ToolInvocation } from 'ai';
-import { withResolvers } from '~/utils/promises';
 import { viewParameters } from 'chef-agent/tools/view';
 import { renderDirectory } from 'chef-agent/utils/renderDirectory';
 import { renderFile } from 'chef-agent/utils/renderFile';
+import { readPath, workDirRelative } from '~/utils/fileUtils';
 import { ContainerBootState, waitForContainerBootState } from '~/lib/stores/containerBootState';
 import { npmInstallToolParameters } from 'chef-agent/tools/npmInstall';
 import { workbenchStore } from '~/lib/stores/workbench.client';
@@ -19,10 +19,9 @@ import { getAbsolutePath } from 'chef-agent/utils/workDir';
 import { cleanConvexOutput } from 'chef-agent/utils/shell';
 import type { BoltAction } from 'chef-agent/types';
 import type { BoltShell } from '~/utils/shell';
-import { workDirRelative } from '~/utils/fileUtils';
-import { readPath } from '~/utils/fileUtils';
 import { streamOutput } from '~/utils/process';
-import { outputLabels, type OutputLabels } from './deployToolOutputLabels';
+import { outputLabels, type OutputLabels } from '~/lib/runtime/deployToolOutputLabels';
+import type { ConvexToolName } from '~/lib/common/types';
 
 const logger = createScopedLogger('ActionRunner');
 
@@ -84,22 +83,35 @@ class ActionCommandError extends Error {
 export class ActionRunner {
   #webcontainer: Promise<WebContainer>;
   #currentExecutionPromise: Promise<void> = Promise.resolve();
-  #shellTerminal: () => BoltShell;
+  #shellTerminal: BoltShell;
   runnerId = atom<string>(`${Date.now()}`);
   actions: ActionsMap = map({});
   onAlert?: (alert: ActionAlert) => void;
   buildOutput?: { path: string; exitCode: number; output: string };
   terminalOutput: WritableAtom<string> = atom('');
-
+  onToolCallComplete: (args: {
+    kind: 'success' | 'error';
+    result: string;
+    toolCallId: string;
+    toolName: ConvexToolName;
+  }) => void;
   constructor(
-    private toolCalls: Map<string, PromiseWithResolvers<string>>,
     webcontainerPromise: Promise<WebContainer>,
-    getShellTerminal: () => BoltShell,
-    onAlert?: (alert: ActionAlert) => void,
+    shellTerminal: BoltShell,
+    callbacks: {
+      onAlert?: (alert: ActionAlert) => void;
+      onToolCallComplete: (args: {
+        kind: 'success' | 'error';
+        result: string;
+        toolCallId: string;
+        toolName: ConvexToolName;
+      }) => void;
+    },
   ) {
     this.#webcontainer = webcontainerPromise;
-    this.#shellTerminal = getShellTerminal;
-    this.onAlert = onAlert;
+    this.#shellTerminal = shellTerminal;
+    this.onAlert = callbacks.onAlert;
+    this.onToolCallComplete = callbacks.onToolCallComplete;
   }
 
   addAction(data: ActionCallbackData) {
@@ -140,8 +152,7 @@ export class ActionRunner {
     });
   }
 
-  async runAction(data: ActionCallbackData, isStreaming: boolean = false) {
-    console.log('runAction', data);
+  async runAction(data: ActionCallbackData, args: { isStreaming: boolean }) {
     const { actionId } = data;
     const action = this.actions.get()[actionId];
 
@@ -153,15 +164,15 @@ export class ActionRunner {
       return; // No return value here
     }
 
-    if (isStreaming && action.type !== 'file') {
+    if (args.isStreaming && action.type !== 'file') {
       return; // No return value here
     }
 
-    this.updateAction(actionId, { ...action, ...data.action, executed: !isStreaming });
+    this.updateAction(actionId, { ...action, ...data.action, executed: !args.isStreaming });
 
     this.#currentExecutionPromise = this.#currentExecutionPromise
       .then(() => {
-        return this.#executeAction(actionId, isStreaming);
+        return this.#executeAction(actionId, args);
       })
       .catch((error) => {
         console.error('Action failed:', error);
@@ -172,7 +183,7 @@ export class ActionRunner {
     return;
   }
 
-  async #executeAction(actionId: string, isStreaming: boolean = false) {
+  async #executeAction(actionId: string, args: { isStreaming: boolean }) {
     const action = this.actions.get()[actionId];
 
     this.updateAction(actionId, { status: 'running' });
@@ -193,7 +204,7 @@ export class ActionRunner {
       }
 
       this.updateAction(actionId, {
-        status: isStreaming ? 'running' : action.abortSignal.aborted ? 'aborted' : 'complete',
+        status: args.isStreaming ? 'running' : action.abortSignal.aborted ? 'aborted' : 'complete',
       });
     } catch (error) {
       if (action.abortSignal.aborted) {
@@ -284,8 +295,13 @@ export class ActionRunner {
     return nodePath.join('.history', filePath);
   }
 
-  async #runToolUseAction(actionId: string, action: ActionState) {
-    const parsed: ToolInvocation = JSON.parse(action.content);
+  async #runToolUseAction(_actionId: string, action: ActionState) {
+    if (action.type !== 'toolUse') {
+      unreachable('Expected tool use action');
+    }
+
+    const parsed: ToolInvocation = action.parsedContent;
+
     if (parsed.state === 'result') {
       return;
     }
@@ -293,11 +309,6 @@ export class ActionRunner {
       throw new Error('Tool call is still in progress');
     }
 
-    let resolvers = this.toolCalls.get(parsed.toolCallId);
-    if (!resolvers) {
-      resolvers = withResolvers<string>();
-      this.toolCalls.set(parsed.toolCallId, resolvers);
-    }
     let result: string;
     try {
       switch (parsed.toolName) {
@@ -449,8 +460,7 @@ export class ActionRunner {
 
           // Start the default preview if it's not already running
           if (!workbenchStore.isDefaultPreviewRunning()) {
-            const shell = this.#shellTerminal();
-            await shell.startCommand('vite --open');
+            await this.#shellTerminal.startCommand('vite --open');
             result += '\n\nDev server started successfully!';
           }
 
@@ -460,14 +470,24 @@ export class ActionRunner {
           throw new Error(`Unknown tool: ${parsed.toolName}`);
         }
       }
-      resolvers.resolve(result);
+      this.onToolCallComplete({
+        kind: 'success',
+        result,
+        toolCallId: action.parsedContent.toolCallId,
+        toolName: parsed.toolName,
+      });
     } catch (e: any) {
       console.error('Error on tool call', e);
       let message = e.toString();
       if (!message.startsWith('Error:')) {
         message = 'Error: ' + message;
       }
-      resolvers.resolve(message);
+      this.onToolCallComplete({
+        kind: 'error',
+        result: message,
+        toolCallId: action.parsedContent.toolCallId,
+        toolName: parsed.toolName as ConvexToolName,
+      });
       throw e;
     }
   }

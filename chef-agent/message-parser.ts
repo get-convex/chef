@@ -1,5 +1,5 @@
 import type { PartId } from './partId.js';
-import type { BoltAction, BoltArtifactData, BoltActionData, ActionType, FileAction } from './types.js';
+import type { BoltAction, BoltArtifactData, ActionType, FileAction } from './types.js';
 import { createScopedLogger } from './utils/logger.js';
 import { getRelativePath } from './utils/workDir.js';
 import { unreachable } from './utils/unreachable.js';
@@ -49,7 +49,7 @@ interface MessageState {
   insideArtifact: boolean;
   insideAction: boolean;
   currentArtifact?: BoltArtifactData;
-  currentAction: BoltActionData;
+  currentAction: BoltAction | null;
   actionId: number;
   hasCreatedArtifact: boolean;
 }
@@ -87,7 +87,7 @@ export class StreamingMessageParser {
         position: 0,
         insideAction: false,
         insideArtifact: false,
-        currentAction: { content: '' },
+        currentAction: null,
         actionId: 0,
         hasCreatedArtifact: false,
       };
@@ -108,16 +108,20 @@ export class StreamingMessageParser {
         }
 
         if (state.insideAction) {
+          if (!state.currentAction) {
+            unreachable('Action not initialized');
+          }
+
           const closeIndex = input.indexOf(ARTIFACT_ACTION_TAG_CLOSE, i);
 
           const currentAction = state.currentAction;
 
           if (closeIndex !== -1) {
-            currentAction.content += input.slice(i, closeIndex);
+            const actionContent = input.slice(i, closeIndex);
 
-            let content = currentAction.content.trim();
+            let content = actionContent.trim();
 
-            if ('type' in currentAction && currentAction.type === 'file') {
+            if (currentAction && currentAction.type === 'file') {
               // Remove markdown code block syntax if present and file is not markdown
               if (!currentAction.filePath.endsWith('.md')) {
                 content = cleanoutMarkdownSyntax(content);
@@ -144,11 +148,11 @@ export class StreamingMessageParser {
             });
 
             state.insideAction = false;
-            state.currentAction = { content: '' };
+            state.currentAction = null;
 
             i = closeIndex + ARTIFACT_ACTION_TAG_CLOSE.length;
           } else {
-            if ('type' in currentAction && currentAction.type === 'file') {
+            if (currentAction && currentAction.type === 'file') {
               let content = input.slice(i);
 
               if (!currentAction.filePath.endsWith('.md')) {

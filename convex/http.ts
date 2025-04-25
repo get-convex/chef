@@ -9,7 +9,9 @@ import { compressMessages } from "./compressMessages";
 import { resendProxy } from "./resendProxy";
 
 const http = httpRouter();
-const httpWithCors = corsRouter(http, {});
+const httpWithCors = corsRouter(http, {
+  allowedHeaders: ["Content-Type", "X-Chef-Admin-Token"],
+});
 
 // This is particularly useful with CORS, where an unhandled error won't have CORS
 // headers applied to it.
@@ -186,6 +188,97 @@ httpWithCors.route({
     });
     return new Response(null, {
       status: 200,
+    });
+  }),
+});
+
+http.route({
+  path: "/__debug/download_messages",
+  method: "OPTIONS",
+  handler: httpActionWithErrorHandling(async (ctx, request) => {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": request.headers.get("Origin") ?? "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Chef-Admin-Token",
+        "Access-Control-Allow-Credentials": "true",
+      },
+    });
+  }),
+});
+
+http.route({
+  path: "/__debug/download_messages",
+  method: "POST",
+  handler: httpActionWithErrorHandling(async (ctx, request) => {
+    const body = await request.json();
+    // We auth either via the Auth0 token or with a custom header
+    const header = request.headers.get("X-Chef-Admin-Token");
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader === null) {
+      if (header !== process.env.CHEF_ADMIN_TOKEN) {
+        return new Response(JSON.stringify({ code: "Unauthorized", message: "Invalid admin token" }), {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      }
+    }
+    const chatUuid = body.chatUuid;
+    const storageId = await ctx.runQuery(internal.messages.getMessagesByChatInitialIdBypassingAccessControl, {
+      id: chatUuid,
+      ensureAdmin: authHeader === null,
+    });
+    if (!storageId) {
+      return new Response(null, {
+        status: 204,
+      });
+    }
+    const blob = await ctx.storage.get(storageId);
+    return new Response(blob, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": request.headers.get("Origin") ?? "*",
+        Vary: "Origin",
+      },
+    });
+  }),
+});
+
+httpWithCors.route({
+  path: "/upload_debug_prompt",
+  method: "POST",
+  handler: httpActionWithErrorHandling(async (ctx, request) => {
+    const formData = await request.formData();
+    const metadataStr = formData.get("metadata");
+    const messagesBlob = formData.get("promptCoreMessages") as Blob;
+
+    if (!metadataStr || !messagesBlob) {
+      throw new ConvexError("metadata and messages are required in form data");
+    }
+
+    let metadata;
+    try {
+      metadata = JSON.parse(metadataStr as string);
+    } catch (_e) {
+      throw new ConvexError("Invalid metadata: must be valid JSON");
+    }
+
+    const promptCoreMessagesStorageId = await ctx.storage.store(messagesBlob);
+    try {
+      await ctx.runMutation(internal.debugPrompt.storeDebugPrompt, { ...metadata, promptCoreMessagesStorageId });
+    } catch (e) {
+      await ctx.storage.delete(promptCoreMessagesStorageId);
+      throw e;
+    }
+
+    return new Response(JSON.stringify({ promptCoreMessagesStorageId }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   }),
 });

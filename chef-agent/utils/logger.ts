@@ -1,3 +1,5 @@
+import { setChefDebugProperty } from './chefDebug.js';
+
 const levelOrder = ['trace', 'debug', 'info', 'warn', 'error'] as const;
 type DebugLevel = (typeof levelOrder)[number];
 
@@ -41,7 +43,7 @@ export function chefSetLogLevel(level: DebugLevel) {
 
 if (typeof window !== 'undefined') {
   // Global debugging interface, allowed in production.
-  (window as any).chefSetLogLevel = chefSetLogLevel;
+  setChefDebugProperty('setLogLevel', chefSetLogLevel);
 }
 
 function log(level: DebugLevel, scope: string | undefined, messages: any[]) {

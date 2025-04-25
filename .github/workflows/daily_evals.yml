@@ -1,0 +1,27 @@
+name: Daily Evals
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run at midnight UTC daily
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  run-evals:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup and Build
+        uses: ./.github/actions/setup-and-build
+
+      - name: Run evaluations
+        env:
+          ENVIRONMENT: ci
+          BRAINTRUST_API_KEY: ${{ secrets.BRAINTRUST_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+        run: cd test-kitchen && npx braintrust eval initialGeneration.eval.ts

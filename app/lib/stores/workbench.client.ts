@@ -20,12 +20,14 @@ import { createSampler } from '~/utils/sampler';
 import type { ActionAlert } from '~/types/actions';
 import type { WebContainer } from '@webcontainer/api';
 import { withResolvers } from '~/utils/promises';
-import type { Artifacts, PartId } from './artifacts';
+import type { Artifacts } from './artifacts';
 import { WORK_DIR } from 'chef-agent/constants';
+import { parsePartId, type PartId, type MessageId } from 'chef-agent/partId.js';
 import { generateReadmeContent } from '~/lib/download/readmeContent';
 import { setupMjsContent } from '~/lib/download/setupMjsContent';
 import type { ConvexProject } from 'chef-agent/types';
 import { cursorRulesContent } from '~/lib/download/cursorRulesContent';
+import type { ConvexToolName } from '~/lib/common/types';
 
 const { saveAs } = fileSaver;
 
@@ -40,13 +42,17 @@ export interface ArtifactState {
 type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard';
+const MAX_CONSECUTIVE_DEPLOY_ERRORS = 5;
 
 export class WorkbenchStore {
   #previewsStore = new PreviewsStore(webcontainer);
   #filesStore = new FilesStore(webcontainer);
   #editorStore = new EditorStore(this.#filesStore);
   #terminalStore = new TerminalStore(webcontainer);
-  #toolCalls: Map<string, PromiseWithResolvers<string> & { done: boolean }> = new Map();
+  #toolCalls: Map<
+    string,
+    PromiseWithResolvers<{ result: string; shouldDisableTools: boolean; skipSystemPrompt: boolean }> & { done: boolean }
+  > = new Map();
 
   #reloadedParts = import.meta.hot?.data.reloadedParts ?? new Set<string>();
 
@@ -62,6 +68,8 @@ export class WorkbenchStore {
   modifiedFiles = new Set<string>();
   partIdList: PartId[] = [];
   #globalExecutionQueue = Promise.resolve();
+  _toolCallResults: Map<MessageId, Array<{ partId: PartId; kind: 'success' | 'error'; toolName: ConvexToolName }>> =
+    new Map();
 
   constructor() {
     if (import.meta.hot) {
@@ -124,10 +132,15 @@ export class WorkbenchStore {
     return this.#filesStore.prewarmWorkdir(container);
   }
 
-  async waitOnToolCall(toolCallId: string): Promise<string> {
+  async waitOnToolCall(
+    toolCallId: string,
+  ): Promise<{ result: string; shouldDisableTools: boolean; skipSystemPrompt: boolean }> {
     let resolvers = this.#toolCalls.get(toolCallId);
     if (!resolvers) {
-      resolvers = { ...withResolvers<string>(), done: false };
+      resolvers = {
+        ...withResolvers<{ result: string; shouldDisableTools: boolean; skipSystemPrompt: boolean }>(),
+        done: false,
+      };
       this.#toolCalls.set(toolCallId, resolvers);
     }
     return await resolvers.promise;
@@ -341,6 +354,10 @@ export class WorkbenchStore {
   }
 
   addArtifact({ partId, title, id, type }: ArtifactCallbackData) {
+    const messageId = parsePartId(partId).messageId;
+    if (!this._toolCallResults.has(messageId)) {
+      this._toolCallResults.set(messageId, []);
+    }
     const artifact = this.#getArtifact(partId);
 
     if (artifact) {
@@ -356,18 +373,58 @@ export class WorkbenchStore {
       title,
       closed: false,
       type,
-      runner: new ActionRunner(
-        this.#toolCalls,
-        webcontainer,
-        () => this.boltTerminal,
-        (alert) => {
+      runner: new ActionRunner(webcontainer, this.boltTerminal, {
+        onAlert: (alert) => {
           if (this.#reloadedParts.has(partId)) {
             return;
           }
 
           this.actionAlert.set(alert);
         },
-      ),
+        onToolCallComplete: ({ kind, result, toolCallId, toolName }) => {
+          const toolCallPromise = this.#toolCalls.get(toolCallId);
+          if (!toolCallPromise) {
+            console.error('Tool call promise not found');
+            return;
+          }
+          const messageId = parsePartId(partId).messageId;
+          const toolCallResults = this._toolCallResults.get(messageId);
+          if (!toolCallResults) {
+            console.error('Tool call results not found');
+            toolCallPromise.resolve({ result, shouldDisableTools: false, skipSystemPrompt: false });
+            return;
+          }
+          toolCallResults.push({ partId, kind, toolName });
+
+          if (kind === 'success') {
+            toolCallPromise.resolve({
+              result,
+              shouldDisableTools: false,
+              // Skip sending the system prompt if the last tool call was a successful deploy. The model should not need any Convex information at that point.
+              skipSystemPrompt: toolName === 'deploy',
+            });
+            return;
+          }
+          if (kind === 'error') {
+            let numConsecutiveDeployErrors = 0;
+            for (let i = toolCallResults.length - 1; i >= 0; i--) {
+              const toolCallResult = toolCallResults[i];
+              if (toolCallResult.toolName === 'deploy') {
+                if (toolCallResult.kind === 'error') {
+                  numConsecutiveDeployErrors++;
+                } else {
+                  break;
+                }
+              }
+            }
+            toolCallPromise.resolve({
+              result,
+              shouldDisableTools: numConsecutiveDeployErrors >= MAX_CONSECUTIVE_DEPLOY_ERRORS,
+              skipSystemPrompt: false,
+            });
+          }
+        },
+      }),
     });
   }
 
@@ -381,8 +438,6 @@ export class WorkbenchStore {
     this.artifacts.setKey(partId, { ...artifact, ...state });
   }
   addAction(data: ActionCallbackData) {
-    // this._addAction(data);
-
     this.addToExecutionQueue(() => this._addAction(data));
   }
   async _addAction(data: ActionCallbackData) {
@@ -441,7 +496,7 @@ export class WorkbenchStore {
       const doc = this.#editorStore.documents.get()[fullPath];
 
       if (!doc) {
-        await artifact.runner.runAction(data, isStreaming);
+        await artifact.runner.runAction(data, { isStreaming: !!isStreaming });
       }
 
       // Where does this initial newline come from? The tool parsing incorrectly?
@@ -450,11 +505,22 @@ export class WorkbenchStore {
       this.#editorStore.updateFile(fullPath, newContent);
 
       if (!isStreaming) {
-        await artifact.runner.runAction(data);
+        await artifact.runner.runAction(data, { isStreaming: !!isStreaming });
         this.resetAllFileModifications();
       }
     } else {
-      await artifact.runner.runAction(data);
+      const action = data.action;
+      if (action.type === 'toolUse') {
+        let toolCallPromise = this.#toolCalls.get(action.parsedContent.toolCallId);
+        if (!toolCallPromise) {
+          toolCallPromise = {
+            ...withResolvers<{ result: string; shouldDisableTools: boolean; skipSystemPrompt: boolean }>(),
+            done: false,
+          };
+          this.#toolCalls.set(action.parsedContent.toolCallId, toolCallPromise);
+        }
+      }
+      await artifact.runner.runAction(data, { isStreaming: !!isStreaming });
     }
   }
 

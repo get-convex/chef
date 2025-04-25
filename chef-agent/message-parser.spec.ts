@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { StreamingMessageParser, type ActionCallback, type ArtifactCallback } from './message-parser.js';
+import { makePartId } from './partId.js';
 
 interface ExpectedResult {
   output: string;
@@ -14,12 +15,14 @@ interface ExpectedResult {
 describe('StreamingMessageParser', () => {
   it('should pass through normal text', () => {
     const parser = new StreamingMessageParser();
-    expect(parser.parse('test_id-0', 'Hello, world!')).toBe('Hello, world!');
+    expect(parser.parse(makePartId('test_id', 0), 'Hello, world!')).toBe('Hello, world!');
   });
 
   it('should allow normal HTML tags', () => {
     const parser = new StreamingMessageParser();
-    expect(parser.parse('test_id-0', 'Hello <strong>world</strong>!')).toBe('Hello <strong>world</strong>!');
+    expect(parser.parse(makePartId('test_id', 0), 'Hello <strong>world</strong>!')).toBe(
+      'Hello <strong>world</strong>!',
+    );
   });
 
   describe('no artifacts', () => {
@@ -196,7 +199,7 @@ function runTest(input: string | string[], outputOrExpectedResult: string | Expe
   for (const chunk of chunks) {
     message += chunk;
 
-    result += parser.parse('message_1-0', message);
+    result += parser.parse(makePartId('message_1', 0), message);
   }
 
   for (const name in expected.callbacks) {

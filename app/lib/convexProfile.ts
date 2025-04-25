@@ -1,4 +1,4 @@
-const VITE_PROVISION_HOST = import.meta.env.VITE_PROVISION_HOST || 'https://api.convex.dev';
+import { VITE_PROVISION_HOST } from './convexProvisionHost';
 
 interface ConvexProfile {
   name: string;

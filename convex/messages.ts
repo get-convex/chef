@@ -14,6 +14,7 @@ import { isValidSession } from "./sessions";
 import type { Doc, Id } from "./_generated/dataModel";
 import { ensureEnvVar, startProvisionConvexProjectHelper } from "./convexProjects";
 import { internal } from "./_generated/api";
+import { assertIsConvexAdmin } from "./admin";
 
 export type SerializedMessage = Omit<AIMessage, "createdAt" | "content"> & {
   createdAt: number | undefined;
@@ -295,6 +296,32 @@ export const getInitialMessagesStorageInfo = internalQuery({
       partIndex: doc.partIndex,
       snapshotId: doc.snapshotId,
     };
+  },
+});
+
+// Used for debugging, and thus does not do access control checks
+export const getMessagesByChatInitialIdBypassingAccessControl = internalQuery({
+  args: {
+    id: v.string(),
+    ensureAdmin: v.optional(v.boolean()),
+  },
+  returns: v.union(v.id("_storage"), v.null()),
+  handler: async (ctx, args) => {
+    if (args.ensureAdmin) {
+      await assertIsConvexAdmin(ctx);
+    }
+    const chat = await ctx.db
+      .query("chats")
+      .withIndex("byInitialId", (q) => q.eq("initialId", args.id))
+      .unique();
+    if (!chat) {
+      throw new ConvexError({ code: "NotFound", message: "Chat not found" });
+    }
+    const storageInfo = await getLatestChatMessageStorageState(ctx, chat);
+    if (storageInfo === null) {
+      throw new ConvexError({ code: "NotFound", message: "Chat messages storage state not found" });
+    }
+    return storageInfo.storageId;
   },
 });
 

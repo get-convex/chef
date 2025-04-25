@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
-import { annotationValidator, encodeUsageAnnotation, usageValidator } from './usage';
+import { encodeUsageAnnotation } from './usage';
+import { annotationValidator, usageAnnotationValidator } from '~/lib/common/annotations';
 
 test('encodeUsageAnnotationAnthropic', async () => {
   const usage = {
@@ -13,10 +14,14 @@ test('encodeUsageAnnotationAnthropic', async () => {
       cacheReadInputTokens: 20,
     },
   };
-  const annotation = encodeUsageAnnotation(undefined, usage, providerMetadata);
+  const annotation = encodeUsageAnnotation({ kind: 'tool-call', toolCallId: undefined }, usage, providerMetadata);
   const parsed = annotationValidator.safeParse({ type: 'usage', usage: annotation });
   expect(parsed.success).toBe(true);
-  const payload = usageValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
+  if (parsed.data?.type !== 'usage') {
+    // Note -- this mostly functions as a typeguard for the following line
+    throw new Error('Expected usage annotation');
+  }
+  const payload = usageAnnotationValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
   expect(payload).toEqual({
     completionTokens: 100,
     promptTokens: 200,
@@ -41,10 +46,13 @@ test('encodeUsageAnnotationOpenAI', async () => {
       cachedPromptTokens: 10,
     },
   };
-  const annotation = encodeUsageAnnotation(undefined, usage, providerMetadata);
+  const annotation = encodeUsageAnnotation({ kind: 'tool-call', toolCallId: undefined }, usage, providerMetadata);
   const parsed = annotationValidator.safeParse({ type: 'usage', usage: annotation });
   expect(parsed.success).toBe(true);
-  const payload = usageValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
+  if (parsed.data?.type !== 'usage') {
+    throw new Error('Expected usage annotation');
+  }
+  const payload = usageAnnotationValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
   expect(payload).toEqual({
     completionTokens: 100,
     promptTokens: 200,
@@ -68,10 +76,13 @@ test('encodeUsageAnnotationXAI', async () => {
       cachedPromptTokens: 10,
     },
   };
-  const annotation = encodeUsageAnnotation(undefined, usage, providerMetadata);
+  const annotation = encodeUsageAnnotation({ kind: 'tool-call', toolCallId: undefined }, usage, providerMetadata);
   const parsed = annotationValidator.safeParse({ type: 'usage', usage: annotation });
   expect(parsed.success).toBe(true);
-  const payload = usageValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
+  if (parsed.data?.type !== 'usage') {
+    throw new Error('Expected usage annotation');
+  }
+  const payload = usageAnnotationValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
   expect(payload).toEqual({
     completionTokens: 100,
     promptTokens: 200,

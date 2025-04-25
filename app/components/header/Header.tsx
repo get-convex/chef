@@ -15,6 +15,7 @@ import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
 import { FeedbackButton } from './FeedbackButton';
 import { DiscordButton } from './DiscordButton';
+import { PromptDebugButton } from './PromptDebugButton';
 
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
@@ -78,6 +79,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
               {!isLoggedIn && <LoggedOutHeaderButtons />}
               {chat.started && (
                 <>
+                  <PromptDebugButton />
                   <DownloadButton />
                   <ShareButton />
                   <DeployButton />
