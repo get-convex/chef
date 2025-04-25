@@ -151,8 +151,8 @@ function templateInfo() {
       This code configures Convex Auth to use just a username/password login method. Do NOT modify this
       file. If the user asks to support other login methods, tell them that this isn't currently possible
       within Chef. They can download the code and do it themselves.
-      IMPORTANT: Do NOT modify the \`convex/auth.ts\` file under any circumstances. This file is locked, and
-      your changes will not be persisted if you try to modify it.
+      IMPORTANT: Do NOT modify the \`convex/auth.ts\`, \`src/SignInForm.tsx\`, or \`src/SignOutButton.tsx\` files under any circumstances. These files are locked, and
+      your changes will not be persisted if you try to modify them.
     </file>
 
     <file path="convex/http.ts">
