@@ -205,13 +205,13 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
         </div>
         <div className="flex flex-1 flex-col gap-1">
           <div className="font-medium text-gray-900 dark:text-gray-100">{lastAssistantMessage}</div>
-          <div className="flex justify-between gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex justify-between gap-1 text-xs text-gray-500 dark:text-gray-400">
             <div>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
                 {formatNumber(promptTokensTotal - cachedPromptTokens)}
               </span>{' '}
               uncached prompt tokens
-              {cachedPromptTokens ? ` (plus ${formatNumber(cachedPromptTokens)} cached)` : ''} (
+              {cachedPromptTokens ? ` (+${formatNumber(cachedPromptTokens)} cached)` : ''} (
               {formatNumber(totalInputChars)} chars total)
             </div>
             <div>
@@ -523,7 +523,7 @@ function UserPrompt({ group }: { group: AllPromptsForUserInteraction }) {
             </span>{' '}
             uncached prompt tokens
             {group.summary.cachedCompletionTokens
-              ? ` (plus ${formatNumber(group.summary.cachedCompletionTokens)} cached)`
+              ? ` (+${formatNumber(group.summary.cachedCompletionTokens)} cached)`
               : ''}{' '}
             ({formatNumber(totalPromptChars)} chars total)
           </div>
@@ -667,7 +667,7 @@ export default function DebugAllPromptsForChat({ chatInitialId, onClose, isDebug
                 {formatNumber(totals.promptTokens - totals.cachedPromptTokens)}
               </span>{' '}
               total prompt tokens
-              {totals.cachedPromptTokens ? ` (plus ${formatNumber(totals.cachedPromptTokens)} cached)` : ''}
+              {totals.cachedPromptTokens ? ` (+${formatNumber(totals.cachedPromptTokens)} cached)` : ''}
             </div>
             <div>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
