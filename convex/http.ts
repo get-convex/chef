@@ -213,18 +213,23 @@ http.route({
   method: "POST",
   handler: httpActionWithErrorHandling(async (ctx, request) => {
     const body = await request.json();
+    // We auth either via the Auth0 token or with a custom header
     const header = request.headers.get("X-Chef-Admin-Token");
-    if (header !== process.env.CHEF_ADMIN_TOKEN) {
-      return new Response(JSON.stringify({ code: "Unauthorized", message: "Invalid admin token" }), {
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader === null) {
+      if (header !== process.env.CHEF_ADMIN_TOKEN) {
+        return new Response(JSON.stringify({ code: "Unauthorized", message: "Invalid admin token" }), {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      }
     }
     const chatUuid = body.chatUuid;
     const storageId = await ctx.runQuery(internal.messages.getMessagesByChatInitialIdBypassingAccessControl, {
       id: chatUuid,
+      ensureAdmin: authHeader === null,
     });
     if (!storageId) {
       return new Response(null, {

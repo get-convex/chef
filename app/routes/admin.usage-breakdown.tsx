@@ -32,6 +32,7 @@ function UsageBreakdownContent() {
   const [searchParams] = useSearchParams();
   const initialId = searchParams.get('id');
   const [chatId, setChatId] = useState(initialId || '');
+  const [fileContent, setFileContent] = useState<Blob | null>(null);
   const [showDebug, setShowDebug] = useState(!!initialId);
   const [convexSiteUrl, setConvexSiteUrl] = useState(getConvexSiteUrl());
   // Update state when URL parameter changes
@@ -77,7 +78,7 @@ function UsageBreakdownContent() {
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+          <div className="flex flex-col gap-2 rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Chat Initial ID
               <input
@@ -103,9 +104,19 @@ function UsageBreakdownContent() {
                 placeholder="Enter convex site URL"
               />
             </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              File Upload
+              <input
+                type="file"
+                onChange={(e) => {
+                  setFileContent(e.target.files?.[0] || null);
+                }}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
+            </label>
             <button
-              onClick={() => chatId && setShowDebug(true)}
-              disabled={!chatId}
+              onClick={() => setShowDebug(true)}
+              disabled={!chatId && !fileContent}
               className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-gray-400"
             >
               Show Debug View
@@ -114,7 +125,9 @@ function UsageBreakdownContent() {
         </div>
       </div>
 
-      {showDebug && <UsageBreakdownView chatInitialId={chatId} convexSiteUrl={convexSiteUrl} />}
+      {showDebug && (
+        <UsageBreakdownView chatInitialId={chatId} convexSiteUrl={convexSiteUrl} fileContent={fileContent} />
+      )}
     </div>
   );
 }

@@ -11,6 +11,8 @@ import { type Usage } from '~/lib/common/annotations';
 import { calculateTotalUsageForMessage, calculateChefTokens } from '~/lib/common/usage';
 import { decompressWithLz4 } from '~/lib/compression.client';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { getConvexAuthToken } from '~/lib/stores/sessionId';
+import { useConvex } from 'convex/react';
 // Register Chart.js components - needs to include ALL required elements
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -31,6 +33,7 @@ type DebugUsageData = {
   chatTotalChefBreakdown: ChefBreakdown;
   usagePerMessage: Array<{
     messageIdx: number;
+    parts: string[];
     rawUsage: Usage;
     billedUsage: Usage;
     chefTokens: number;
@@ -44,7 +47,7 @@ const chartOptions: ChartOptions<'pie'> = {
   plugins: {
     tooltip: {
       callbacks: {
-        label: function (context) {
+        label: (context) => {
           const label = context.label || '';
           const value = context.raw as number;
           const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
@@ -59,30 +62,48 @@ const chartOptions: ChartOptions<'pie'> = {
   },
 };
 
-export function UsageBreakdownView({ chatInitialId, convexSiteUrl }: { chatInitialId: string; convexSiteUrl: string }) {
+export function UsageBreakdownView({
+  chatInitialId,
+  convexSiteUrl,
+  fileContent,
+}: {
+  chatInitialId: string | null;
+  fileContent: Blob | null;
+  convexSiteUrl: string;
+}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [usageData, setUsageData] = useState<DebugUsageData | null>(null);
-
+  const convex = useConvex();
   useEffect(() => {
-    const fetchUsageData = async () => {
-      const response = await fetch(`${convexSiteUrl}/__debug/download_messages`, {
-        method: 'POST',
-        body: JSON.stringify({ chatUuid: chatInitialId }),
-        headers: {
-          'X-Chef-Admin-Token': import.meta.env.VITE_CHEF_ADMIN_TOKEN,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch usage data');
+    if (fileContent !== null) {
+      async function parseFileContent(blob: Blob) {
+        const decompressed = decompressWithLz4(new Uint8Array(await blob.arrayBuffer()));
+        const messages = JSON.parse(new TextDecoder().decode(decompressed));
+        setMessages(messages);
       }
-      const bytes = await response.arrayBuffer();
-      const decompressed = decompressWithLz4(new Uint8Array(bytes));
-      const messages = JSON.parse(new TextDecoder().decode(decompressed));
-      setMessages(messages);
-    };
-    void fetchUsageData();
-  }, [chatInitialId]);
+      void parseFileContent(fileContent);
+    } else {
+      const fetchUsageData = async () => {
+        const authToken = await getConvexAuthToken(convex);
+        const response = await fetch(`${convexSiteUrl}/__debug/download_messages`, {
+          method: 'POST',
+          body: JSON.stringify({ chatUuid: chatInitialId }),
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch usage data');
+        }
+        const bytes = await response.arrayBuffer();
+        const decompressed = decompressWithLz4(new Uint8Array(bytes));
+        const messages = JSON.parse(new TextDecoder().decode(decompressed));
+        setMessages(messages);
+      };
+      void fetchUsageData();
+    }
+  }, [chatInitialId, fileContent, convexSiteUrl, convex]);
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -119,6 +140,13 @@ export function UsageBreakdownView({ chatInitialId, convexSiteUrl }: { chatIniti
               chefTokens={usage.chefTokens}
               chefBreakdown={usage.chefBreakdown}
             />
+            <CollapsibleView title="Content" startOpen={true}>
+              {usage.parts.map((part, idx) => (
+                <p className="whitespace-pre-wrap border-b border-gray-500 pb-4" key={idx}>
+                  {part}
+                </p>
+              ))}
+            </CollapsibleView>
           </CollapsibleView>
         ))}
       </div>
@@ -126,7 +154,7 @@ export function UsageBreakdownView({ chatInitialId, convexSiteUrl }: { chatIniti
   );
 }
 
-const renderPieChart = (data: Record<string, number>, title: string) => {
+const renderPieChart = (data: Record<string, number>) => {
   const chartData = {
     labels: Object.keys(data),
     datasets: [
@@ -139,7 +167,7 @@ const renderPieChart = (data: Record<string, number>, title: string) => {
   };
 
   return (
-    <div className="w-64 h-64 relative">
+    <div className="relative size-64">
       <Pie data={chartData} options={chartOptions} />
     </div>
   );
@@ -185,7 +213,7 @@ function BreakdownView({
               <p>Total Tokens: {formatNumber(rawUsage.totalTokens)}</p>
             </div>
             <div>
-              <JsonView data={rawUsage} shouldExpandNode={(level, value) => level < 1} />
+              <JsonView data={rawUsage} shouldExpandNode={(level) => level < 1} />
             </div>
           </div>
         </CollapsibleView>
@@ -197,7 +225,7 @@ function BreakdownView({
               <p>Total Tokens: {formatNumber(billedUsage.totalTokens)}</p>
             </div>
             <div>
-              <JsonView data={billedUsage} shouldExpandNode={(level, value) => level < 1} />
+              <JsonView data={billedUsage} shouldExpandNode={(level) => level < 1} />
             </div>
           </div>
         </CollapsibleView>
@@ -206,10 +234,10 @@ function BreakdownView({
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-4">
               <p className="text-2xl font-bold">{formatNumber(chefTokens)}</p>
-              <div className="flex flex-wrap gap-8">{renderPieChart(tokensData, 'Chef Tokens')}</div>
+              <div className="flex flex-wrap gap-8">{renderPieChart(tokensData)}</div>
             </div>
             <div>
-              <JsonView data={chefBreakdown} shouldExpandNode={(level, value) => level < 1} />
+              <JsonView data={chefBreakdown} shouldExpandNode={(level) => level < 1} />
             </div>
           </div>
         </CollapsibleView>
@@ -218,7 +246,7 @@ function BreakdownView({
   );
 }
 async function getUsageBreakdown(messages: Message[]) {
-  let chatTotalRawUsage = {
+  const chatTotalRawUsage = {
     completionTokens: 0,
     promptTokens: 0,
     totalTokens: 0,
@@ -227,7 +255,7 @@ async function getUsageBreakdown(messages: Message[]) {
     openaiCachedPromptTokens: 0,
     xaiCachedPromptTokens: 0,
   };
-  let chatTotalUsageBilledFor = {
+  const chatTotalUsageBilledFor = {
     completionTokens: 0,
     promptTokens: 0,
     totalTokens: 0,
@@ -237,7 +265,7 @@ async function getUsageBreakdown(messages: Message[]) {
     xaiCachedPromptTokens: 0,
   };
   let chatTotalChefTokens = 0;
-  let chatTotalChefBreakdown: ChefBreakdown = {
+  const chatTotalChefBreakdown: ChefBreakdown = {
     completionTokens: {
       anthropic: 0,
       openai: 0,
@@ -264,6 +292,7 @@ async function getUsageBreakdown(messages: Message[]) {
   };
   const usagePerMessage: Array<{
     messageIdx: number;
+    parts: string[];
     rawUsage: Usage;
     billedUsage: Usage;
     chefTokens: number;
@@ -293,6 +322,15 @@ async function getUsageBreakdown(messages: Message[]) {
     const { chefTokens, breakdown } = calculateChefTokens(totalUsageBilledFor, finalGeneration.providerMetadata);
     usagePerMessage.push({
       messageIdx: idx,
+      parts: message.parts
+        ? message.parts
+            .filter((p) => p.type === 'text' || p.type === 'tool-invocation')
+            .map((p) =>
+              p.type === 'text'
+                ? p.text
+                : `Tool invocation: ${p.toolInvocation.toolName} (${p.toolInvocation.toolCallId})\n\n${p.toolInvocation.state === 'result' ? p.toolInvocation.result : '(incomplete call)'}`,
+            )
+        : [message.content],
       rawUsage: totalRawUsage,
       billedUsage: totalUsageBilledFor,
       chefTokens,
@@ -302,28 +340,6 @@ async function getUsageBreakdown(messages: Message[]) {
     addUsage(chatTotalUsageBilledFor, totalUsageBilledFor);
     addBreakdown(chatTotalChefBreakdown, breakdown);
     chatTotalChefTokens += chefTokens;
-    // let finalAnnotation: UsageAnnotation | null = null;
-    // for (const annotation of message.annotations ?? []) {
-    //     const parsedAnnotation = annotationValidator.safeParse(annotation);
-    //     if (!parsedAnnotation.success) {
-    //         console.error('Invalid annotation', annotation);
-    //         continue;
-    //     }
-    //     if (parsedAnnotation.data.type !== 'usage') {
-    //         console.log('Skipping non-usage annotation', parsedAnnotation.data.type);
-    //         continue;
-    //     }
-    //     const parsedUsage = usageAnnotationValidator.parse(JSON.parse(parsedAnnotation.data.usage.payload));
-    //     if (!parsedUsage.success) {
-    //         console.error('Invalid usage annotation', parsedAnnotation.data.usage.payload);
-    //         continue;
-    //     }
-    //     finalAnnotation = parsedUsage.data;
-    //     break;
-    //   };
-    //   totalRawUsage.completionTokens += annotation.completionTokens;
-    //   totalRawUsage.totalPromptTokens += annotation.promptTokens;
-    //   totalRawUsage.totalTokens += annotation.totalTokens;
   }
   return {
     chatTotalRawUsage,
@@ -396,7 +412,7 @@ function CollapsibleView({
   return (
     <div className="flex flex-col gap-4">
       <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2">
-        {isOpen ? <ChevronDownIcon className="w-4 h-4" /> : <ChevronRightIcon className="w-4 h-4" />} {title}
+        {isOpen ? <ChevronDownIcon className="size-4" /> : <ChevronRightIcon className="size-4" />} {title}
       </button>
       {isOpen && children}
     </div>
