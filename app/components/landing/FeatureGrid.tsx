@@ -35,11 +35,12 @@ export default function FeatureGrid() {
         <div
           key={index}
           className={classNames('border-neutral-1 px-4 py-6 dark:border-neutral-10', {
-            'border-b md:border-b-0': index !== features.length - 1,
-            'md:border-b lg:border-b-0': index < 4,
-            'md:border-r lg:border-r-0': index % 2 === 0,
-            'lg:border-b': index < 3,
-            'lg:border-r': index % 3 !== 2,
+            'border-b': index !== 5,
+            'md:border-b-0': index === 4,
+            'lg:border-b-0': index === 3,
+            'md:border-r': index % 2 === 0,
+            'lg:border-r-0': index === 2,
+            'lg:border-r': [1, 3].includes(index),
           })}
         >
           {/* TODO: Add icons. */}
