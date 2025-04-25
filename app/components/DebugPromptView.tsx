@@ -167,21 +167,28 @@ function formatNumber(num: number): string {
   return new Intl.NumberFormat().format(num);
 }
 
+function formatChefTokenPrice(chefTokens: number): string {
+  const rawPrice = (chefTokens / 1_000_000) * 0.1;
+  return rawPrice < 0.01 ? rawPrice.toFixed(3) : Number(rawPrice.toFixed(2)).toString();
+}
+
 // Everything we sent to an LLM, plus the response we recieved (an Assistant message);
 function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: LlmPromptAndResponse }) {
   const { prompt, completion, finishReason, modelId } = promptAndResponse;
 
   const [isExpanded, setIsExpanded] = useState(true);
-  const completionTokensTotal = promptAndResponse.usage.promptTokens;
-  const cachedCompletionTokens = promptAndResponse.usage.cachedPromptTokens;
+  const promptTokensTotal = promptAndResponse.usage.promptTokens;
+  const cachedPromptTokens = promptAndResponse.usage.cachedPromptTokens;
   const outputTokens = promptAndResponse.usage.completionTokens;
+  const chefTokens = promptAndResponse.chefTokens || 0;
 
-  // Calculate character counts and token estimates
+  // Calculate total characters
   const totalInputChars = (prompt || []).reduce((sum, msg) => sum + getMessageCharCount(msg), 0);
+  const totalOutputChars = (completion || []).reduce((sum, msg) => sum + getMessageCharCount(msg), 0);
 
   const getTokenEstimate = (message: CoreMessage) => {
     const charCount = getMessageCharCount(message);
-    return estimateTokenCount(charCount, totalInputChars, completionTokensTotal);
+    return estimateTokenCount(charCount, totalInputChars, promptTokensTotal);
   };
 
   const lastAssistantMessage = findLastAssistantMessage(completion);
@@ -198,15 +205,25 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
         </div>
         <div className="flex flex-1 flex-col gap-1">
           <div className="font-medium text-gray-900 dark:text-gray-100">{lastAssistantMessage}</div>
-          <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex justify-between gap-2 text-sm text-gray-500 dark:text-gray-400">
             <div>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {formatNumber(completionTokensTotal - cachedCompletionTokens)}
+                {formatNumber(promptTokensTotal - cachedPromptTokens)}
               </span>{' '}
               uncached prompt tokens
-              {cachedCompletionTokens ? ` (plus ${formatNumber(cachedCompletionTokens)} cached)` : ''}
+              {cachedPromptTokens ? ` (plus ${formatNumber(cachedPromptTokens)} cached)` : ''} (
+              {formatNumber(totalInputChars)} chars total)
             </div>
-            <div>{formatNumber(outputTokens)} completion tokens</div>
+            <div>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{formatNumber(outputTokens)}</span>{' '}
+              completion tokens ({formatNumber(totalOutputChars)} chars)
+            </div>
+            {chefTokens > 0 && (
+              <div>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">{formatNumber(chefTokens)}</span> chef
+                tokens (${formatChefTokenPrice(chefTokens)})
+              </div>
+            )}
             <div>finish: {finishReason}</div>
             <div>model: {modelId}</div>
           </div>
@@ -214,18 +231,26 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
       </button>
       {isExpanded && prompt && (
         <div className="mt-4">
-          <div className="mt-4 space-y-1">
+          <div className="mt-4 space-y-0 rounded border border-gray-200 p-2 dark:border-gray-700">
+            <div>
+              {formatNumber(cachedPromptTokens)} cached prompt tokens +{' '}
+              {formatNumber(promptTokensTotal - cachedPromptTokens)} uncached prompt tokens (
+              {formatNumber(totalInputChars)} chars total)
+            </div>
+
             {prompt.map((message, idx) => (
               <CoreMessageView
                 key={idx}
                 message={message}
                 getTokenEstimate={getTokenEstimate}
-                totalCompletionTokens={completionTokensTotal}
+                totalCompletionTokens={promptTokensTotal}
               />
             ))}
           </div>
-          <div className="mt-4 space-y-1">
-            <div>{formatNumber(outputTokens)} completion tokens</div>
+          <div className="mt-4 space-y-0 rounded border border-gray-200 p-2 dark:border-gray-700">
+            <div>
+              {formatNumber(outputTokens)} completion tokens ({formatNumber(totalOutputChars)} chars)
+            </div>
             {completion.map((message, idx) => (
               <CoreMessageView key={idx} message={message} />
             ))}
@@ -347,7 +372,7 @@ const roleColors = {
 } as const;
 
 function CoreMessageView({ message, getTokenEstimate, totalCompletionTokens }: CoreMessageViewProps) {
-  const [isExpanded, setIsExpanded] = useState(message.role === 'user');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const roleColor = roleColors[message.role as keyof typeof roleColors] || roleColors.user;
   const preview = getMessagePreview(message.content);
@@ -359,9 +384,11 @@ function CoreMessageView({ message, getTokenEstimate, totalCompletionTokens }: C
       : totalCompletionTokens
         ? Math.round((tokenEstimate / totalCompletionTokens) * 100)
         : 0;
+
   const hiddenUntilFoundRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (hiddenUntilFoundRef.current) {
+      console.log('hiddenUntilFoundRef.current', hiddenUntilFoundRef.current);
       hiddenUntilFoundRef.current.hidden = (isExpanded ? false : 'until-found') as any;
     }
   }, [isExpanded]);
@@ -379,7 +406,7 @@ function CoreMessageView({ message, getTokenEstimate, totalCompletionTokens }: C
         <div className="font-medium capitalize">{message.role}</div>
         {percentage !== null && tokenEstimate !== null && (
           <div className="text-xs text-gray-500" title="token estimate is approximate">
-            {tokenEstimate} tokens ({percentage}%) ({charCount} characters)
+            {formatNumber(charCount)} chars (~{formatNumber(tokenEstimate)} tokens, ~{percentage}%)
           </div>
         )}
         <style>{`
@@ -393,15 +420,13 @@ function CoreMessageView({ message, getTokenEstimate, totalCompletionTokens }: C
       </button>
 
       <div ref={hiddenUntilFoundRef}>
-        {isExpanded && (
-          <div className="mt-2">
-            <div className={'text-sm text-gray-600 dark:text-gray-300'}>
-              <div>
-                <MessageContentView content={message.content} />
-              </div>
+        <div className="mt-2">
+          <div className={'text-sm text-gray-600 dark:text-gray-300'}>
+            <div>
+              <MessageContentView content={message.content} />
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -476,10 +501,13 @@ function groupIntoUserPrompts(data: LlmPromptAndResponse[]): AllPromptsForUserIn
 }
 
 function UserPrompt({ group }: { group: AllPromptsForUserInteraction }) {
-  // Price: $0.10 per million chef tokens
-  const rawPrice = (group.summary.totalChefTokens / 1_000_000) * 0.1;
-  // If less than a penny, show 3 decimal places, otherwise show 2 and trim trailing zeros
-  const estimatedPrice = rawPrice < 0.01 ? rawPrice.toFixed(3) : Number(rawPrice.toFixed(2)).toString();
+  // Calculate total characters for the group
+  const totalPromptChars = group.promptAndResponses.reduce((sum, item) => {
+    return sum + (item.prompt?.reduce((msgSum, msg) => msgSum + getMessageCharCount(msg), 0) || 0);
+  }, 0);
+  const totalCompletionChars = group.promptAndResponses.reduce((sum, item) => {
+    return sum + (item.completion?.reduce((msgSum, msg) => msgSum + getMessageCharCount(msg), 0) || 0);
+  }, 0);
 
   return (
     <div className="space-y-2 rounded-lg border-2 border-gray-200 p-4 dark:border-gray-700">
@@ -496,19 +524,20 @@ function UserPrompt({ group }: { group: AllPromptsForUserInteraction }) {
             uncached prompt tokens
             {group.summary.cachedCompletionTokens
               ? ` (plus ${formatNumber(group.summary.cachedCompletionTokens)} cached)`
-              : ''}
+              : ''}{' '}
+            ({formatNumber(totalPromptChars)} chars total)
           </div>
           <div>
             <span className="font-semibold text-gray-900 dark:text-gray-100">
               {formatNumber(group.summary.totalOutputTokens)}
             </span>{' '}
-            completion tokens
+            completion tokens ({formatNumber(totalCompletionChars)} chars)
           </div>
           <div>
             <span className="font-semibold text-gray-900 dark:text-gray-100">
               {formatNumber(group.summary.totalChefTokens)}
             </span>{' '}
-            chef tokens (${estimatedPrice})
+            chef tokens (${formatChefTokenPrice(group.summary.totalChefTokens)})
           </div>
         </div>
       </div>
@@ -559,6 +588,26 @@ export default function DebugAllPromptsForChat({ chatInitialId, onClose, isDebug
   }
 
   const userPromptGroups = groupIntoUserPrompts(promptsAndResponses);
+
+  // Calculate totals across all groups
+  const totals = userPromptGroups.reduce(
+    (acc, group) => {
+      return {
+        promptTokens: acc.promptTokens + group.summary.totalCompletionTokens,
+        cachedPromptTokens: acc.cachedPromptTokens + group.summary.cachedCompletionTokens,
+        completionTokens: acc.completionTokens + group.summary.totalOutputTokens,
+        chefTokens: acc.chefTokens + group.summary.totalChefTokens,
+      };
+    },
+    {
+      promptTokens: 0,
+      cachedPromptTokens: 0,
+      completionTokens: 0,
+      chefTokens: 0,
+    },
+  );
+
+  const totalPrice = formatChefTokenPrice(totals.chefTokens);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -611,6 +660,25 @@ export default function DebugAllPromptsForChat({ chatInitialId, onClose, isDebug
                 size="sm"
               />
             )}
+          </div>
+          <div className="mt-2 flex gap-4 text-sm text-gray-500 dark:text-gray-400">
+            <div>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                {formatNumber(totals.promptTokens - totals.cachedPromptTokens)}
+              </span>{' '}
+              total prompt tokens
+              {totals.cachedPromptTokens ? ` (plus ${formatNumber(totals.cachedPromptTokens)} cached)` : ''}
+            </div>
+            <div>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                {formatNumber(totals.completionTokens)}
+              </span>{' '}
+              total completion tokens
+            </div>
+            <div>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{formatNumber(totals.chefTokens)}</span>{' '}
+              total chef tokens (${totalPrice})
+            </div>
           </div>
         </div>
         <div className="space-y-4 overflow-auto">
