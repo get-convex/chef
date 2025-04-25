@@ -29,9 +29,7 @@ export async function calculateTotalUsageForMessage(
   // The main distinction is we don't count usage from failed tool calls in
   // totalUsageBilledFor.
   const totalUsageBilledFor = usageFromGeneration(finalGeneration);
-  const totalRawUsage = {
-    ...totalUsageBilledFor,
-  };
+  const totalRawUsage = JSON.parse(JSON.stringify(totalUsageBilledFor));
 
   const failedToolCalls: Set<string> = new Set();
   for (const part of lastMessage?.parts ?? []) {

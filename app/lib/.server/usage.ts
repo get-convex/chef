@@ -1,9 +1,9 @@
 import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
-import type { ProviderType, Usage, UsageAnnotation } from '~/lib/common/annotations';
+import type { ProviderType, UsageAnnotation } from '~/lib/common/annotations';
 import { modelForProvider } from './llm/provider';
-import { calculateTotalUsageForMessage, calculateChefTokens } from '../common/usage';
+import { calculateTotalUsageForMessage, calculateChefTokens } from '~/lib/common/usage';
 
 const logger = createScopedLogger('usage');
 

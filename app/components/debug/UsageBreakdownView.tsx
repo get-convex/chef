@@ -117,7 +117,7 @@ export function UsageBreakdownView({
   }
 
   return (
-    <div className="flex flex-col gap-4 max-w-4xl mx-auto">
+    <div className="mx-auto flex max-w-4xl flex-col gap-4">
       <h1>Total Usage</h1>
       <BreakdownView
         rawUsage={usageData.chatTotalRawUsage}
