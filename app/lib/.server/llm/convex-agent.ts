@@ -21,12 +21,7 @@ import { captureException, captureMessage } from '@sentry/remix';
 import type { SystemPromptOptions } from 'chef-agent/types';
 import { cleanupAssistantMessages } from 'chef-agent/cleanupAssistantMessages';
 import { logger } from 'chef-agent/utils/logger';
-import {
-  calculateChefTokens,
-  encodeUsageAnnotation,
-  usageFromGeneration,
-  encodeModelAnnotation,
-} from '~/lib/.server/usage';
+import { encodeUsageAnnotation, encodeModelAnnotation } from '~/lib/.server/usage';
 import { compressWithLz4Server } from '~/lib/compression.server';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { REPEATED_ERROR_REASON } from '~/lib/common/annotations';
@@ -36,6 +31,8 @@ import type { Usage } from '~/lib/.server/validators';
 import type { UsageRecord } from '@convex/schema';
 import { getProvider, type ModelProvider } from '~/lib/.server/llm/provider';
 import { getEnv } from '~/lib/.server/env';
+import { calculateChefTokens } from '~/lib/common/usage';
+import { usageFromGeneration } from '~/lib/common/usage';
 
 type Messages = Message[];
 
@@ -316,6 +313,7 @@ async function storeDebugPrompt(
     const compressedData = compressWithLz4Server(promptMessageData);
 
     type Metadata = Omit<(typeof internal.debugPrompt.storeDebugPrompt)['_args'], 'promptCoreMessagesStorageId'>;
+    const { chefTokens } = calculateChefTokens(usage, generation.providerMetadata);
 
     const metadata = {
       chatInitialId,
@@ -323,7 +321,7 @@ async function storeDebugPrompt(
       finishReason,
       modelId,
       usage: buildUsageRecord(usage),
-      chefTokens: calculateChefTokens(usage, generation.providerMetadata),
+      chefTokens,
     } satisfies Metadata;
 
     const formData = new FormData();

@@ -201,7 +201,7 @@ http.route({
       headers: {
         "Access-Control-Allow-Origin": request.headers.get("Origin") ?? "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Chef-Admin-Token",
         "Access-Control-Allow-Credentials": "true",
       },
     });

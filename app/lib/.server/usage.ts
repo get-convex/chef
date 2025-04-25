@@ -74,7 +74,7 @@ export async function recordUsage(
   finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
 ) {
   const { totalUsageBilledFor } = await calculateTotalUsageForMessage(lastMessage, finalGeneration);
-  const chefTokens = calculateChefTokens(totalUsageBilledFor, finalGeneration.providerMetadata);
+  const { chefTokens } = calculateChefTokens(totalUsageBilledFor, finalGeneration.providerMetadata);
 
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/record_tokens`;

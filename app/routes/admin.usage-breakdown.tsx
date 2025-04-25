@@ -7,6 +7,7 @@ import { useIsAdmin } from '~/hooks/useDebugPrompt';
 import { useSearchParams } from '@remix-run/react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { UsageBreakdownView } from '~/components/debug/UsageBreakdownView';
+import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Prompt Debug | Chef Admin' }];
@@ -25,27 +26,6 @@ export default function PromptDebug() {
     </ChefAuthProvider>
   );
 }
-
-type DebugUsageData = any;
-
-type AxiomMatch = {
-  _rowId: string;
-  _id: string;
-  _sysTime: string;
-  _time: string;
-  data: {
-    'attributes.custom': {
-      'usage.promptTokens': number;
-      'usage.totalTokens': number;
-      chatInitialId: string;
-      finishReason: string;
-      'usage.completionTokens': number;
-    };
-  };
-};
-type RawAxiomJson = {
-  matches: AxiomMatch[];
-};
 
 function UsageBreakdownContent() {
   const isAdmin = useIsAdmin();

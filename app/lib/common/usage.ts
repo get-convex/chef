@@ -1,10 +1,10 @@
-import { usageAnnotationValidator } from '../.server/validators';
-
-import type { UsageAnnotation } from '../.server/validators';
-
 import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
-import { annotationValidator } from '../.server/validators';
-import type { Usage } from '../.server/validators';
+import {
+  type Usage,
+  type UsageAnnotation,
+  annotationValidator,
+  usageAnnotationValidator,
+} from '~/lib/common/annotations';
 
 export function usageFromGeneration(generation: {
   usage: LanguageModelUsage;
@@ -89,26 +89,80 @@ function addUsage(totalUsage: Usage, payload: UsageAnnotation) {
 // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
 export function calculateChefTokens(totalUsage: Usage, providerMetadata?: ProviderMetadata) {
   let chefTokens = 0;
+  const breakdown = {
+    completionTokens: {
+      anthropic: 0,
+      openai: 0,
+      xai: 0,
+      google: 0,
+    },
+    promptTokens: {
+      anthropic: {
+        uncached: 0,
+        cached: 0,
+      },
+      openai: {
+        uncached: 0,
+        cached: 0,
+      },
+      xai: {
+        uncached: 0,
+        cached: 0,
+      },
+      google: {
+        uncached: 0,
+        cached: 0,
+      },
+    },
+  };
   if (providerMetadata?.anthropic) {
-    chefTokens += totalUsage.completionTokens * 200;
-    chefTokens += totalUsage.promptTokens * 40;
-    chefTokens += totalUsage.anthropicCacheCreationInputTokens * 40 + totalUsage.anthropicCacheReadInputTokens * 3;
+    const anthropicCompletionTokens = totalUsage.completionTokens * 200;
+    chefTokens += anthropicCompletionTokens;
+    breakdown.completionTokens.anthropic = anthropicCompletionTokens;
+
+    const anthropicPromptTokens = totalUsage.promptTokens * 40;
+    chefTokens += anthropicPromptTokens;
+    breakdown.promptTokens.anthropic.uncached = anthropicPromptTokens;
+    const cacheCreationInputTokens = totalUsage.anthropicCacheCreationInputTokens * 40;
+    chefTokens += cacheCreationInputTokens;
+    breakdown.promptTokens.anthropic.cached = cacheCreationInputTokens;
+    const cacheReadInputTokens = totalUsage.anthropicCacheReadInputTokens * 3;
+    chefTokens += cacheReadInputTokens;
+    breakdown.promptTokens.anthropic.cached += cacheReadInputTokens;
   } else if (providerMetadata?.openai) {
-    chefTokens += totalUsage.completionTokens * 100;
-    chefTokens += totalUsage.openaiCachedPromptTokens * 5;
-    chefTokens += (totalUsage.promptTokens - totalUsage.openaiCachedPromptTokens) * 26;
+    const openaiCompletionTokens = totalUsage.completionTokens * 100;
+    chefTokens += openaiCompletionTokens;
+    breakdown.completionTokens.openai = openaiCompletionTokens;
+    const openaiCachedPromptTokens = totalUsage.openaiCachedPromptTokens * 5;
+    chefTokens += openaiCachedPromptTokens;
+    breakdown.promptTokens.openai.cached = openaiCachedPromptTokens;
+    const openaiUncachedPromptTokens = (totalUsage.promptTokens - totalUsage.openaiCachedPromptTokens) * 26;
+    chefTokens += openaiUncachedPromptTokens;
+    breakdown.promptTokens.openai.uncached = openaiUncachedPromptTokens;
   } else if (providerMetadata?.xai) {
     // TODO: This is a guess. Billing like openai
-    chefTokens += totalUsage.completionTokens * 200;
-    chefTokens += totalUsage.promptTokens * 40;
+    const xaiCompletionTokens = totalUsage.completionTokens * 200;
+    chefTokens += xaiCompletionTokens;
+    breakdown.completionTokens.xai = xaiCompletionTokens;
+    const xaiPromptTokens = totalUsage.promptTokens * 40;
+    chefTokens += xaiPromptTokens;
+    breakdown.promptTokens.xai.uncached = xaiPromptTokens;
     // TODO - never seen xai set this field to anything but 0, so holding off until we understand.
     //chefTokens += totalUsage.xaiCachedPromptTokens * 3;
   } else if (providerMetadata?.google) {
-    chefTokens += totalUsage.completionTokens * 140;
-    chefTokens += totalUsage.promptTokens * 18;
+    const googleCompletionTokens = totalUsage.completionTokens * 140;
+    chefTokens += googleCompletionTokens;
+    breakdown.completionTokens.google = googleCompletionTokens;
+    const googlePromptTokens = totalUsage.promptTokens * 18;
+    chefTokens += googlePromptTokens;
+    breakdown.promptTokens.google.uncached = googlePromptTokens;
     // TODO: Implement Google billing for the prompt tokens that are cached. Google doesn't offer caching yet.
   } else {
     console.error('WARNING: Unknown provider. Not recording usage. Giving away for free.', providerMetadata);
   }
-  return chefTokens;
+
+  return {
+    chefTokens,
+    breakdown,
+  };
 }
