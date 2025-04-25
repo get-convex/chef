@@ -21,7 +21,7 @@ import type { BoltAction } from 'chef-agent/types';
 import type { BoltShell } from '~/utils/shell';
 import { streamOutput } from '~/utils/process';
 import { outputLabels, type OutputLabels } from '~/lib/runtime/deployToolOutputLabels';
-import type { ConvexToolName } from '../common/types';
+import type { ConvexToolName } from '~/lib/common/types';
 
 const logger = createScopedLogger('ActionRunner');
 

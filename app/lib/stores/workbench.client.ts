@@ -27,7 +27,7 @@ import { generateReadmeContent } from '~/lib/download/readmeContent';
 import { setupMjsContent } from '~/lib/download/setupMjsContent';
 import type { ConvexProject } from 'chef-agent/types';
 import { cursorRulesContent } from '~/lib/download/cursorRulesContent';
-import type { ConvexToolName } from '../common/types';
+import type { ConvexToolName } from '~/lib/common/types';
 
 const { saveAs } = fileSaver;
 
