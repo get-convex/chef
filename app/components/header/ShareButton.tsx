@@ -83,20 +83,17 @@ export function ShareButton() {
           align="end"
         >
           <div className="p-4">
-            <h2 className="mb-4 text-base font-medium text-content-primary">Share Project</h2>
+            <h3>Share Project</h3>
 
             {status === 'idle' && (
               <>
-                <p className="mb-4 text-sm text-content-secondary">
+                <p className="mb-4 text-sm">
                   This will create a shareable link to your code and chat history that anyone can access.
                 </p>
                 <div className="flex justify-end">
-                  <button
-                    className="rounded-md bg-bolt-elements-item-backgroundAccent px-3 py-1.5 text-sm text-bolt-elements-item-contentAccent"
-                    onClick={handleShare}
-                  >
+                  <Button variant="neutral" onClick={handleShare}>
                     Generate Link
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
