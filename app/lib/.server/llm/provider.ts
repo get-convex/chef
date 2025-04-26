@@ -7,7 +7,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { captureException } from '@sentry/remix';
 import { logger } from 'chef-agent/utils/logger';
-import { ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
+import { GENERAL_SYSTEM_PROMPT_PRELUDE, ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
 import type { ProviderType } from '~/lib/common/annotations';
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
@@ -241,6 +241,11 @@ const userKeyApiFetch = (provider: ModelProvider) => {
 // `providerOptions.anthropic.cacheControl` doesn't seem to do
 // anything. So, we instead directly inject the cache control
 // header into the body of the request.
+//
+// tom, 2025-04-25: This is still an outstanding bug
+// https://github.com/vercel/ai/issues/5942
+// I've made this a little more general: only cache if the first
+// or second element starts with GENERAL_SYSTEM_PROMPT_PRELUDE.
 function anthropicInjectCacheControl(options?: RequestInit) {
   const start = Date.now();
   if (!options) {
@@ -263,16 +268,18 @@ function anthropicInjectCacheControl(options?: RequestInit) {
 
   const body = JSON.parse(options.body);
 
-  if (body.system.length < 2) {
-    throw new Error('Body must contain at least two system messages');
+  for (let i = 0; i < body.system.length; i++) {
+    if (body.system[i].text === ROLE_SYSTEM_PROMPT) {
+      continue;
+    }
+    if (body.system[i].text.startsWith(GENERAL_SYSTEM_PROMPT_PRELUDE)) {
+      // Inject the cache control header after the constant prompt, but leave
+      // the dynamic system prompts uncached.
+      body.system[i].cache_control = { type: 'ephemeral' };
+      break;
+    }
+    break;
   }
-  if (body.system[0].text !== ROLE_SYSTEM_PROMPT) {
-    throw new Error('First system message must be the roleSystemPrompt');
-  }
-
-  // Inject the cache control header after the constant prompt, but leave
-  // the dynamic system prompts uncached.
-  body.system[1].cache_control = { type: 'ephemeral' };
 
   const newBody = JSON.stringify(body);
   console.log(`Injected system messages in ${Date.now() - start}ms`);
