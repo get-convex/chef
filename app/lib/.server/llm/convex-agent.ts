@@ -130,6 +130,7 @@ export async function convexAgent(args: {
             toolsDisabledFromRepeatedErrors: shouldDisableTools,
             recordRawPromptsForDebugging,
             coreMessages: messagesForDataStream,
+            smallFiles,
           });
         },
         onError({ error }) {
@@ -164,6 +165,7 @@ async function onFinishHandler({
   toolsDisabledFromRepeatedErrors,
   recordRawPromptsForDebugging,
   coreMessages,
+  smallFiles,
 }: {
   dataStream: DataStreamWriter;
   messages: Messages;
@@ -177,6 +179,7 @@ async function onFinishHandler({
   recordRawPromptsForDebugging: boolean;
   toolsDisabledFromRepeatedErrors: boolean;
   coreMessages: CoreMessage[];
+  smallFiles: boolean;
 }) {
   const { providerMetadata } = result;
   // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
@@ -198,6 +201,7 @@ async function onFinishHandler({
     span.setAttribute('usage.completionTokens', usage.completionTokens);
     span.setAttribute('usage.promptTokens', usage.promptTokens);
     span.setAttribute('usage.totalTokens', usage.totalTokens);
+    span.setAttribute('featureFlags.smallFiles', smallFiles);
     if (providerMetadata) {
       const anthropic: any = providerMetadata.anthropic;
       if (anthropic) {
