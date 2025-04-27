@@ -112,6 +112,21 @@ export function solutionConstraints(options: SystemPromptOptions) {
         The \`useQuery()\` hook is live-updating! It causes the React component is it used in to rerender, so Convex is a
         perfect fix for collaborative, live-updating websites.
 
+        You can use \`useQuery()\` or other \`use\` hooks conditionally. The following example is invalid:
+
+        \`\`\`tsx
+        const avatarUrl = profile?.avatarId ? useQuery(api.profiles.getAvatarUrl, { storageId: profile.avatarId }) : null;
+        \`\`\`
+
+        You should do this instead:
+
+        \`\`\`tsx
+        const avatarUrl = useQuery(
+          api.profiles.getAvatarUrl,
+          profile?.avatarId ? { storageId: profile.avatarId } : "skip"
+        );
+        \`\`\`
+
         If you want to use a UI element, you MUST create it. DO NOT use external libraries like Shadcn/UI.
 
         When writing a UI component and you want to use a Convex function, you MUST import the \`api\` object. For example:
