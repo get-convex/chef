@@ -555,4 +555,12 @@ describe("messages", () => {
       expectedPartIndex: 0,
     });
   });
+
+  // test("messages cannot be null if there exist messages in the chat", async () => {
+  //   const { sessionId, chatId } = await createChat(t);
+  //   await storeChat(t, chatId, sessionId, {
+  //     snapshot: new Blob(["initial snapshot content"]),
+  //   });
+
+  // });
 });
