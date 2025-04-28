@@ -4,6 +4,7 @@ import { getTokenUsage } from '~/lib/convexUsage';
 import type { ProviderType, UsageAnnotation } from '~/lib/common/annotations';
 import { modelForProvider, getProviderType } from './llm/provider';
 import { calculateTotalBilledUsageForMessage, calculateChefTokens } from '~/lib/common/usage';
+import { captureMessage } from '@sentry/remix';
 
 const logger = createScopedLogger('usage');
 
@@ -68,6 +69,7 @@ export function encodeModelAnnotation(
 export async function recordUsage(
   provisionHost: string,
   token: string,
+  modelProvider: ModelProvider,
   teamSlug: string,
   deploymentName: string | undefined,
   lastMessage: Message | undefined,
@@ -75,6 +77,17 @@ export async function recordUsage(
 ) {
   const totalUsageBilledFor = await calculateTotalBilledUsageForMessage(lastMessage, finalGeneration);
   const { chefTokens } = calculateChefTokens(totalUsageBilledFor, getProviderType(finalGeneration.providerMetadata));
+
+  if (chefTokens === 0) {
+    captureMessage('Recorded usage was 0. Something wrong with provider?', {
+      level: 'warning',
+      tags: {
+        teamSlug,
+        deploymentName,
+        modelProvider,
+      },
+    });
+  }
 
   const Authorization = `Bearer ${token}`;
   const url = `${provisionHost}/api/dashboard/teams/${teamSlug}/usage/record_tokens`;

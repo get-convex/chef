@@ -134,7 +134,15 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => {
     if (!userApiKey) {
-      await recordUsage(PROVISION_HOST, token, teamSlug, deploymentName, lastMessage, finalGeneration);
+      await recordUsage(
+        PROVISION_HOST,
+        token,
+        body.modelProvider,
+        teamSlug,
+        deploymentName,
+        lastMessage,
+        finalGeneration,
+      );
     }
   };
 
