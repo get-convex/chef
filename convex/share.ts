@@ -1,9 +1,7 @@
 import { ConvexError, v } from "convex/values";
-import { internalAction, internalMutation, mutation, query, type DatabaseReader } from "./_generated/server";
-import { getChatByIdOrUrlIdEnsuringAccess, getLatestChatMessageStorageState, type SerializedMessage } from "./messages";
+import { mutation, query, type DatabaseReader } from "./_generated/server";
+import { getChatByIdOrUrlIdEnsuringAccess, getLatestChatMessageStorageState } from "./messages";
 import { startProvisionConvexProjectHelper } from "./convexProjects";
-import { internal } from "./_generated/api";
-import { compressMessages } from "./compressMessages";
 
 export const create = mutation({
   args: {
@@ -20,84 +18,31 @@ export const create = mutation({
 
     const storageState = await getLatestChatMessageStorageState(ctx, chat);
 
-    if (storageState) {
-      if (storageState.storageId === null) {
-        throw new ConvexError("Chat history not found");
-      }
-      const snapshotId = storageState.snapshotId ?? chat.snapshotId;
-      if (!snapshotId) {
-        throw new ConvexError("Your project has never been saved.");
-      }
-      await ctx.db.insert("shares", {
-        chatId: chat._id,
-
-        // It is safe to use the snapshotId from the chat because the user’s
-        // snapshot excludes .env.local.
-        snapshotId,
-
-        chatHistoryId: storageState.storageId,
-
-        code,
-        lastMessageRank: storageState.lastMessageRank,
-        partIndex: storageState.partIndex,
-        description: chat.description,
-      });
-      return { code };
-    } else {
-      if (!chat.snapshotId) {
-        throw new ConvexError("Your project has never been saved.");
-      }
-      console.warn("No storage state found for chat, using last message rank");
-      const messages = await ctx.db
-        .query("chatMessages")
-        .withIndex("byChatId", (q) => q.eq("chatId", chat._id))
-        .order("desc")
-        .collect();
-      const compressedMessages = await compressMessages(messages.map((m) => m.content));
-      const lastMessage = messages[messages.length - 1];
-      const partIndex = ((lastMessage?.content as SerializedMessage)?.parts?.length ?? 0) - 1;
-      const shareId = await ctx.db.insert("shares", {
-        chatId: chat._id,
-        code,
-        chatHistoryId: null,
-        lastMessageRank: lastMessage?.rank ?? -1,
-        partIndex,
-        description: chat.description,
-        snapshotId: chat.snapshotId,
-      });
-      await ctx.scheduler.runAfter(0, internal.share.intializeShareWithStorage, {
-        shareId,
-        compressedMessages: compressedMessages.buffer,
-      });
-      return { code };
+    if (!storageState) {
+      throw new ConvexError("Your project has never been saved.");
     }
-  },
-});
+    if (storageState.storageId === null) {
+      throw new ConvexError("Chat history not found");
+    }
+    const snapshotId = storageState.snapshotId ?? chat.snapshotId;
+    if (!snapshotId) {
+      throw new ConvexError("Your project has never been saved.");
+    }
+    await ctx.db.insert("shares", {
+      chatId: chat._id,
 
-export const intializeShareWithStorage = internalAction({
-  args: {
-    shareId: v.id("shares"),
-    compressedMessages: v.bytes(),
-  },
-  handler: async (ctx, { shareId, compressedMessages }) => {
-    const blob = new Blob([compressedMessages]);
-    const storageId = await ctx.storage.store(blob);
-    await ctx.runMutation(internal.share.updateShareWithStorage, {
-      shareId,
-      storageId,
-    });
-  },
-});
+      // It is safe to use the snapshotId from the chat because the user’s
+      // snapshot excludes .env.local.
+      snapshotId,
 
-export const updateShareWithStorage = internalMutation({
-  args: {
-    shareId: v.id("shares"),
-    storageId: v.id("_storage"),
-  },
-  handler: async (ctx, { shareId, storageId }) => {
-    await ctx.db.patch(shareId, {
-      chatHistoryId: storageId,
+      chatHistoryId: storageState.storageId,
+
+      code,
+      lastMessageRank: storageState.lastMessageRank,
+      partIndex: storageState.partIndex,
+      description: chat.description,
     });
+    return { code };
   },
 });
 
@@ -190,26 +135,18 @@ export const clone = mutation({
     };
     const clonedChatId = await ctx.db.insert("chats", clonedChat);
 
-    if (getShare.chatHistoryId) {
-      await ctx.db.insert("chatMessagesStorageState", {
-        chatId: clonedChatId,
-        storageId: getShare.chatHistoryId,
-        lastMessageRank: getShare.lastMessageRank,
-        partIndex: getShare.partIndex ?? -1,
+    if (!getShare.chatHistoryId) {
+      throw new ConvexError({
+        code: "NotFound",
+        message: "The original chat history was not found. It may have been deleted.",
       });
-    } else {
-      const messages = await ctx.db
-        .query("chatMessages")
-        .withIndex("byChatId", (q) => q.eq("chatId", parentChat._id).lte("rank", getShare.lastMessageRank))
-        .collect();
-      for (const message of messages) {
-        await ctx.db.insert("chatMessages", {
-          chatId: clonedChatId,
-          content: message.content,
-          rank: message.rank,
-        });
-      }
     }
+    await ctx.db.insert("chatMessagesStorageState", {
+      chatId: clonedChatId,
+      storageId: getShare.chatHistoryId,
+      lastMessageRank: getShare.lastMessageRank,
+      partIndex: getShare.partIndex ?? -1,
+    });
 
     await startProvisionConvexProjectHelper(ctx, {
       sessionId,

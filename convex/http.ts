@@ -5,7 +5,6 @@ import type { Id } from "./_generated/dataModel";
 import { ConvexError } from "convex/values";
 import { openaiProxy } from "./openaiProxy";
 import { corsRouter } from "convex-helpers/server/cors";
-import { compressMessages } from "./compressMessages";
 import { resendProxy } from "./resendProxy";
 
 const http = httpRouter();
@@ -94,42 +93,20 @@ httpWithCors.route({
       sessionId,
       chatId,
     });
-    if (storageInfo) {
-      if (!storageInfo.storageId) {
-        return new Response(null, {
-          status: 204,
-        });
-      }
-      const blob = await ctx.storage.get(storageInfo.storageId);
-      return new Response(blob, {
-        status: 200,
-      });
-    } else {
-      const messages = await ctx.runQuery(internal.messages.getInitialMessagesInternal, {
-        sessionId,
-        id: chatId,
-      });
-      if (messages.length === 0) {
-        // No content
-        return new Response(null, {
-          status: 204,
-        });
-      }
-      const compressed = await compressMessages(messages);
-      const blob = new Blob([compressed]);
-      const storageId = await ctx.storage.store(blob);
-      await ctx.runMutation(internal.messages.handleStorageStateMigration, {
-        sessionId,
-        chatId,
-        storageId,
-        lastMessageRank: messages.length - 1,
-        partIndex: (messages.at(-1)?.parts?.length ?? 0) - 1,
-      });
-
-      return new Response(blob, {
-        status: 200,
+    if (!storageInfo) {
+      return new Response(`Chat not found: ${chatId}`, {
+        status: 404,
       });
     }
+    if (!storageInfo.storageId) {
+      return new Response(null, {
+        status: 204,
+      });
+    }
+    const blob = await ctx.storage.get(storageInfo.storageId);
+    return new Response(blob, {
+      status: 200,
+    });
   }),
 });
 
