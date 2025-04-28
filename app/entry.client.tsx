@@ -9,7 +9,6 @@ declare global {
   }
 }
 
-console.log('HELOO!!!', window.VERCEL_ENV);
 const environment = window.VERCEL_ENV === 'production' ? 'production' : 'development';
 
 Sentry.init({

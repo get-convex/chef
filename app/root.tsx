@@ -33,7 +33,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const CONVEX_URL = process.env.VITE_CONVEX_URL || globalThis.process.env.CONVEX_URL!;
   const CONVEX_OAUTH_CLIENT_ID = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID!;
   const VERCEL_ENV = globalThis.process.env.VERCEL_ENV!;
-  console.log('VERCEL_ENV', VERCEL_ENV);
   return json({
     ENV: { CONVEX_URL, CONVEX_OAUTH_CLIENT_ID, experience, VERCEL_ENV },
   });
