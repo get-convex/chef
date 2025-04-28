@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
 import { apiKeyValidator } from "./schema";
 
 export const apiKeyForCurrentMember = query({
@@ -178,5 +178,77 @@ export const deleteGoogleApiKeyForCurrentMember = mutation({
         google: undefined,
       },
     });
+  },
+});
+
+export const validateAnthropicApiKey = action({
+  args: {
+    apiKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": args.apiKey,
+      },
+    });
+
+    if (response.status === 401) {
+      return false;
+    }
+    return true;
+  },
+});
+
+export const validateOpenaiApiKey = action({
+  args: {
+    apiKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${args.apiKey}`,
+      },
+    });
+
+    if (response.status === 401) {
+      return false;
+    }
+    return true;
+  },
+});
+
+export const validateGoogleApiKey = action({
+  args: {
+    apiKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${args.apiKey}`);
+
+    if (response.status === 400) {
+      return false;
+    }
+    return true;
+  },
+});
+
+export const validateXaiApiKey = action({
+  args: {
+    apiKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const response = await fetch("https://api.x.ai/v1/models", {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${args.apiKey}`,
+      },
+    });
+    if (response.status === 400) {
+      return false;
+    }
+    return true;
   },
 });
