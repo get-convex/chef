@@ -37,27 +37,27 @@ export function ApiKeyCard() {
 
   const hasAnyKey = apiKey && (apiKey.value || apiKey.openai || apiKey.xai || apiKey.google);
 
-  const validateAnthropicApiKey = async () => {
+  const validateAnthropicApiKey = async (apiKey: string) => {
     return await convex.action(api.apiKeys.validateAnthropicApiKey, {
-      apiKey: apiKey?.value || '',
+      apiKey,
     });
   };
 
-  const validateOpenaiApiKey = async () => {
+  const validateOpenaiApiKey = async (apiKey: string) => {
     return await convex.action(api.apiKeys.validateOpenaiApiKey, {
-      apiKey: apiKey?.openai || '',
+      apiKey,
     });
   };
 
-  const validateGoogleApiKey = async () => {
+  const validateGoogleApiKey = async (apiKey: string) => {
     return await convex.action(api.apiKeys.validateGoogleApiKey, {
-      apiKey: apiKey?.google || '',
+      apiKey,
     });
   };
 
-  const validateXaiApiKey = async () => {
+  const validateXaiApiKey = async (apiKey: string) => {
     return await convex.action(api.apiKeys.validateXaiApiKey, {
-      apiKey: apiKey?.xai || '',
+      apiKey,
     });
   };
 
@@ -164,7 +164,7 @@ function ApiKeyItem(props: {
   isLoading: boolean;
   keyType: KeyType;
   value: string;
-  onValidate: () => Promise<boolean>;
+  onValidate: (key: string) => Promise<boolean>;
 }) {
   const convex = useConvex();
   const [showKey, setShowKey] = useState(false);
@@ -188,7 +188,7 @@ function ApiKeyItem(props: {
       setValidationError(null);
 
       try {
-        const isValidResult = await props.onValidate();
+        const isValidResult = await props.onValidate(debouncedKeyValue);
 
         if (!isValidResult) {
           setValidationError(
