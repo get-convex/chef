@@ -18,6 +18,7 @@ import { messageInputStore } from '~/lib/stores/messageInput';
 import { useChatId } from '~/lib/stores/chatId';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { Sheet } from '@ui/Sheet';
 
 interface BaseChatProps {
   // Refs
@@ -163,21 +164,25 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       resendMessage={resendMessage}
                     />
                   )}
-                  {disableChatMessage && (
-                    <div className="absolute bottom-0 z-40 h-fit min-w-full animate-fadeInFromLoading">
+                  {disableChatMessage ? (
+                    <Sheet
+                      className="flex min-h-full w-full animate-fadeInFromLoading flex-col gap-6 rounded-lg bg-background-secondary p-2 pl-4"
+                      padding={false}
+                    >
                       {disableChatMessage}
-                    </div>
+                    </Sheet>
+                  ) : (
+                    <MessageInput
+                      chatStarted={chatStarted}
+                      isStreaming={isStreaming}
+                      sendMessageInProgress={sendMessageInProgress}
+                      disabled={disableChatMessage !== null || maintenanceMode}
+                      modelSelection={modelSelection}
+                      setModelSelection={setModelSelection}
+                      onStop={onStop}
+                      onSend={onSend}
+                    />
                   )}
-                  <MessageInput
-                    chatStarted={chatStarted}
-                    isStreaming={isStreaming}
-                    sendMessageInProgress={sendMessageInProgress}
-                    disabled={disableChatMessage !== null || maintenanceMode}
-                    modelSelection={modelSelection}
-                    setModelSelection={setModelSelection}
-                    onStop={onStop}
-                    onSend={onSend}
-                  />
                 </div>
               </div>
               {maintenanceMode && (

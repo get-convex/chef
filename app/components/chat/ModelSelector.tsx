@@ -8,6 +8,27 @@ import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import type { Doc } from '@convex/_generated/dataModel';
 
+export type ModelProvider = 'openai' | 'google' | 'xai' | 'anthropic' | 'auto';
+
+export function displayModelProviderName(provider: ModelProvider) {
+  switch (provider) {
+    case 'openai':
+      return 'OpenAI';
+    case 'google':
+      return 'Google';
+    case 'xai':
+      return 'xAI';
+    case 'anthropic':
+      return 'Anthropic';
+    case 'auto':
+      return 'Anthropic';
+    default: {
+      const exhaustiveCheck: never = provider;
+      throw new Error(`Unknown model provider: ${exhaustiveCheck}`);
+    }
+  }
+}
+
 function svgIcon(url: string) {
   return <img className="size-4" height="16" width="16" src={url} alt="" />;
 }
@@ -43,7 +64,7 @@ const models: Partial<
       name: string;
       recommended?: boolean;
       requireKey?: boolean;
-      provider: 'openai' | 'google' | 'xai' | 'anthropic' | 'auto';
+      provider: ModelProvider;
     }
   >
 > = {
@@ -147,10 +168,7 @@ export const ModelSelector = React.memo(function ModelSelector({
   );
 });
 
-const keyForProvider = (
-  apiKeys: Doc<'convexMembers'>['apiKey'],
-  provider: 'openai' | 'google' | 'xai' | 'anthropic' | 'auto',
-) => {
+const keyForProvider = (apiKeys: Doc<'convexMembers'>['apiKey'], provider: ModelProvider) => {
   if (provider === 'auto' || provider === 'anthropic') {
     return apiKeys?.value;
   }

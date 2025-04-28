@@ -7,23 +7,23 @@ import { EyeNoneIcon, EyeOpenIcon } from '@radix-ui/react-icons';
 import { api } from '@convex/_generated/api';
 import { captureException } from '@sentry/remix';
 import type { ModelSelection } from '~/utils/constants';
-import { ModelSelector } from './ModelSelector';
+import { ModelSelector, type ModelProvider, displayModelProviderName } from './ModelSelector';
 import { KeyIcon } from '@heroicons/react/24/outline';
-import { Sheet } from '@ui/Sheet';
+import type { Doc } from '@convex/_generated/dataModel';
 
-export interface MissingApiKeyOverlayProps {
-  provider: string;
+export interface MissingApiKeyProps {
+  provider: ModelProvider;
   resetDisableChatMessage: () => void;
   modelSelection: ModelSelection;
   setModelSelection: (model: ModelSelection) => Promise<void>;
 }
 
-export function MissingApiKeyOverlay({
+export function MissingApiKey({
   provider,
   resetDisableChatMessage,
   modelSelection,
   setModelSelection,
-}: MissingApiKeyOverlayProps) {
+}: MissingApiKeyProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newKeyValue, setNewKeyValue] = useState('');
@@ -35,7 +35,7 @@ export function MissingApiKeyOverlay({
     try {
       setIsSaving(true);
 
-      const apiKeyMutation = {
+      const apiKeyMutation: Doc<'convexMembers'>['apiKey'] = {
         preference: 'always' as 'always' | 'quotaExhausted',
         value: undefined as string | undefined,
         openai: undefined as string | undefined,
@@ -43,7 +43,7 @@ export function MissingApiKeyOverlay({
         google: undefined as string | undefined,
       };
 
-      switch (provider.toLowerCase()) {
+      switch (provider) {
         case 'anthropic':
           apiKeyMutation.value = newKeyValue.trim();
           break;
@@ -56,19 +56,26 @@ export function MissingApiKeyOverlay({
         case 'xai':
           apiKeyMutation.xai = newKeyValue.trim();
           break;
+        case 'auto':
+          apiKeyMutation.value = newKeyValue.trim();
+          break;
+        default: {
+          const _exhaustiveCheck: never = provider;
+          throw new Error(`Unknown provider: ${_exhaustiveCheck}`);
+        }
       }
 
       await convex.mutation(api.apiKeys.setApiKeyForCurrentMember, {
         apiKey: apiKeyMutation,
       });
 
-      toast.success(`${provider} API key saved`);
+      toast.success(`${displayModelProviderName(provider)} API key saved`);
       setIsAdding(false);
       setNewKeyValue('');
       resetDisableChatMessage();
     } catch (error) {
       captureException(error as Error);
-      toast.error(`Failed to save ${provider} API key`);
+      toast.error(`Failed to save ${displayModelProviderName(provider)} API key`);
     } finally {
       setIsSaving(false);
     }
@@ -110,7 +117,10 @@ export function MissingApiKeyOverlay({
   const handleModelChange = async (model: ModelSelection) => {
     try {
       setIsChangingModel(true);
-      await setModelSelection(model);
+      await setModelSelection(model).catch((error) => {
+        console.error('Error changing model selection:', error);
+        // Still continue with setting isChangingModel to false
+      });
       // The message will be cleared by the `handleModelSelectionChange` if appropriate
     } catch (error) {
       captureException(error as Error);
@@ -121,17 +131,14 @@ export function MissingApiKeyOverlay({
   };
 
   return (
-    <Sheet
-      className="flex min-h-full w-full flex-col gap-6 rounded-lg bg-background-secondary/50 p-2 backdrop-blur-sm"
-      padding={false}
-    >
+    <>
       <div className="flex flex-col gap-2">
-        <h3>Select an option to continue</h3>
+        <h3>Choose an option to continue</h3>
         <p className="max-w-prose text-pretty">
           You&apos;ve chosen to always use your own API keys, but haven&apos;t set a{' '}
-          <span className="font-semibold">{provider}</span> API key yet. You may choose to use a different model
-          provider, use Chef tokens instead of your own API keys, or add an API key for{' '}
-          <span className="font-semibold">{provider}</span>.
+          <span className="font-semibold">{displayModelProviderName(provider)}</span> API key yet. You may choose to use
+          a different model provider, use Chef tokens instead of your own API keys, or add an API key for{' '}
+          <span className="font-semibold">{displayModelProviderName(provider)}</span>.
         </p>
       </div>
 
@@ -163,7 +170,7 @@ export function MissingApiKeyOverlay({
             {isSaving ? 'Updating...' : 'Use Chef tokens instead'}
           </Button>
           <Button className="w-fit" onClick={() => setIsAdding(true)} icon={<KeyIcon className="size-4" />}>
-            Add {provider} API key
+            Add {displayModelProviderName(provider)} API key
           </Button>
         </div>
       ) : (
@@ -174,7 +181,7 @@ export function MissingApiKeyOverlay({
               type={showKey ? 'text' : 'password'}
               value={newKeyValue}
               onChange={(e) => setNewKeyValue(e.target.value)}
-              placeholder={`Enter your ${provider} API key`}
+              placeholder={`Enter your ${displayModelProviderName(provider)} API key`}
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-expect-error Unclear issue with typing of design system
               action={(): void => {
@@ -191,6 +198,6 @@ export function MissingApiKeyOverlay({
           </Button>
         </div>
       )}
-    </Sheet>
+    </>
   );
 }

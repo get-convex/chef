@@ -34,7 +34,6 @@ export const MessageInput = memo(function MessageInput({
   onStop,
   onSend,
   disabled,
-
   modelSelection,
   setModelSelection,
 }: {
@@ -44,7 +43,6 @@ export const MessageInput = memo(function MessageInput({
   onStop: () => void;
   onSend: (message: string) => Promise<void>;
   disabled: boolean;
-
   modelSelection: ModelSelection;
   setModelSelection: (modelSelection: ModelSelection) => void;
 }) {

@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import type { Message } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
-import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useMessageParser, type PartCache } from '~/lib/hooks/useMessageParser';
 import { useSnapScroll } from '~/lib/hooks/useSnapScroll';
 import { description } from '~/lib/stores/description';
@@ -19,7 +19,7 @@ import { selectedTeamSlugStore, setSelectedTeamSlug, useSelectedTeamSlug } from 
 import { convexProjectStore } from '~/lib/stores/convexProject';
 import { toast } from 'sonner';
 import type { PartId } from '~/lib/stores/artifacts';
-import { captureMessage } from '@sentry/remix';
+import { captureException, captureMessage } from '@sentry/remix';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import { chatIdStore, initialIdStore } from '~/lib/stores/chatId';
 import { useConvex, useQuery } from 'convex/react';
@@ -38,8 +38,8 @@ import { useFlags } from 'launchdarkly-react-client-sdk';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import type { ProviderType } from '~/lib/common/annotations';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
-import { MissingApiKeyOverlay } from './MissingApiKeyOverlay';
-import { Callout } from '@ui/Callout';
+import { MissingApiKey } from './MissingApiKey';
+import type { ModelProvider } from '~/components/chat/ModelSelector';
 
 const logger = createScopedLogger('Chat');
 
@@ -170,65 +170,43 @@ export const Chat = memo(
     const [disableChatMessage, setDisableChatMessage] = useState<
       | { type: 'ExceededQuota' }
       | { type: 'TeamDisabled'; isPaidPlan: boolean }
-      | { type: 'MissingApiKey'; provider: string }
+      | { type: 'MissingApiKey'; provider: ModelProvider }
       | null
     >(null);
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
-    function hasApiKeySet() {
-      const useAnthropic = modelSelection === 'claude-3.5-sonnet' || modelSelection === 'auto';
-      const useOpenai = modelSelection === 'gpt-4.1';
-      const useXai = modelSelection === 'grok-3-mini';
-      const useGoogle = modelSelection === 'gemini-2.5-pro';
-      if (useAnthropic && apiKey && apiKey.value) {
-        return true;
-      }
-      if (useOpenai && apiKey && apiKey.openai) {
-        return true;
-      }
-      if (useXai && apiKey && apiKey.xai) {
-        return true;
-      }
-      if (useGoogle && apiKey && apiKey.google) {
-        return true;
-      }
-      return false;
-    }
+    const checkApiKeyForCurrentModel = useCallback(
+      (model: ModelSelection): { hasMissingKey: boolean; provider?: ModelProvider } => {
+        if (apiKey?.preference !== 'always') {
+          return { hasMissingKey: false };
+        }
 
-    function checkApiKeyForCurrentModel(model: ModelSelection): { hasMissingKey: boolean; provider?: string } {
-      if (apiKey?.preference !== 'always') {
+        // Map models to their respective providers
+        const MODEL_TO_PROVIDER_MAP: {
+          [K in ModelSelection]: { providerName: ModelProvider; apiKeyField: keyof typeof apiKey };
+        } = {
+          auto: { providerName: 'anthropic', apiKeyField: 'value' },
+          'claude-3.5-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
+          'gpt-4.1': { providerName: 'openai', apiKeyField: 'openai' },
+          'grok-3-mini': { providerName: 'xai', apiKeyField: 'xai' },
+          'gemini-2.5-pro': { providerName: 'google', apiKeyField: 'google' },
+        };
+
+        // Get provider info for the current model
+        const providerInfo = MODEL_TO_PROVIDER_MAP[model];
+
+        // Check if the API key for this provider is missing
+        const keyValue = apiKey[providerInfo.apiKeyField];
+        if (!keyValue || keyValue.trim() === '') {
+          return { hasMissingKey: true, provider: providerInfo.providerName };
+        }
+
         return { hasMissingKey: false };
-      }
+      },
+      [apiKey],
+    );
 
-      // Map models to their respective providers
-      const MODEL_TO_PROVIDER_MAP: Record<string, { providerName: string; apiKeyField: keyof typeof apiKey }> = {
-        auto: { providerName: 'Anthropic', apiKeyField: 'value' },
-        'claude-3.5-sonnet': { providerName: 'Anthropic', apiKeyField: 'value' },
-        'gpt-4.1': { providerName: 'OpenAI', apiKeyField: 'openai' },
-        'grok-3-mini': { providerName: 'xAI', apiKeyField: 'xai' },
-        'gemini-2.5-pro': { providerName: 'Google', apiKeyField: 'google' },
-      };
-
-      // Get provider info for the current model
-      const providerInfo = MODEL_TO_PROVIDER_MAP[model];
-
-      if (!providerInfo) {
-        // If a new model is added to ModelSelection but not to this map,
-        // default to not requiring a key to avoid blocking the UI
-        captureMessage(`Unknown model in checkApiKeyForCurrentModel: ${model}`);
-        return { hasMissingKey: false };
-      }
-
-      // Check if the API key for this provider is missing
-      const keyValue = apiKey[providerInfo.apiKeyField];
-      if (!keyValue || keyValue.trim() === '') {
-        return { hasMissingKey: true, provider: providerInfo.providerName };
-      }
-
-      return { hasMissingKey: false };
-    }
-
-    async function checkTokenUsage() {
+    const checkTokenUsage = useCallback(async () => {
       // First, check if preference is 'always' but key for model is missing
       const { hasMissingKey, provider } = checkApiKeyForCurrentModel(modelSelection);
       if (hasMissingKey && provider) {
@@ -236,39 +214,43 @@ export const Chat = memo(
         return;
       }
 
-      if (hasApiKeySet()) {
+      if (hasApiKeySet(modelSelection, apiKey)) {
         setDisableChatMessage(null);
         return;
       }
 
-      const teamSlug = selectedTeamSlugStore.get();
-      if (!teamSlug) {
-        console.error('No team slug');
-        throw new Error('No team slug');
-      }
-      const token = getConvexAuthToken(convex);
-      if (!token) {
-        console.error('No token');
-        throw new Error('No token');
-      }
+      try {
+        const teamSlug = selectedTeamSlugStore.get();
+        if (!teamSlug) {
+          console.error('No team slug');
+          return; // Just return instead of throwing
+        }
+        const token = getConvexAuthToken(convex);
+        if (!token) {
+          console.error('No token');
+          return; // Just return instead of throwing
+        }
 
-      const tokenUsage = await getTokenUsage(VITE_PROVISION_HOST, token, teamSlug);
-      if (tokenUsage.status === 'error') {
-        console.error('Failed to check for token usage', tokenUsage.httpStatus, tokenUsage.httpBody);
-      } else {
-        const { centitokensUsed, centitokensQuota, isTeamDisabled, isPaidPlan } = tokenUsage;
-        if (centitokensUsed !== undefined && centitokensQuota !== undefined) {
-          console.log(`Convex tokens used/quota: ${centitokensUsed} / ${centitokensQuota}`);
-          if (isTeamDisabled) {
-            setDisableChatMessage({ type: 'TeamDisabled', isPaidPlan });
-          } else if (!isPaidPlan && centitokensUsed > centitokensQuota && !hasAnyApiKeySet(apiKey)) {
-            setDisableChatMessage({ type: 'ExceededQuota' });
-          } else {
-            setDisableChatMessage(null);
+        const tokenUsage = await getTokenUsage(VITE_PROVISION_HOST, token, teamSlug);
+        if (tokenUsage.status === 'error') {
+          console.error('Failed to check for token usage', tokenUsage.httpStatus, tokenUsage.httpBody);
+        } else {
+          const { centitokensUsed, centitokensQuota, isTeamDisabled, isPaidPlan } = tokenUsage;
+          if (centitokensUsed !== undefined && centitokensQuota !== undefined) {
+            console.log(`Convex tokens used/quota: ${centitokensUsed} / ${centitokensQuota}`);
+            if (isTeamDisabled) {
+              setDisableChatMessage({ type: 'TeamDisabled', isPaidPlan });
+            } else if (!isPaidPlan && centitokensUsed > centitokensQuota && !hasAnyApiKeySet(apiKey)) {
+              setDisableChatMessage({ type: 'ExceededQuota' });
+            } else {
+              setDisableChatMessage(null);
+            }
           }
         }
+      } catch (error) {
+        captureException(error);
       }
-    }
+    }, [apiKey, checkApiKeyForCurrentModel, convex, modelSelection, setDisableChatMessage]);
 
     const { enableSkipSystemPrompt, smallFiles } = useFlags();
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
@@ -437,7 +419,7 @@ export const Chat = memo(
     const sendMessage = async (messageInput: string) => {
       const now = Date.now();
       const retries = retryState.get();
-      if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet()) {
+      if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet(modelSelection, apiKey)) {
         let message: string | ReactNode = 'Chef is too busy cooking right now. ';
         if (retries.numFailures >= MAX_RETRIES) {
           message = (
@@ -542,46 +524,31 @@ export const Chat = memo(
 
     const { messageRef, scrollRef, enableAutoScroll } = useSnapScroll();
 
-    const handleModelSelectionChange = async (newModel: ModelSelection) => {
-      setModelSelection(newModel);
+    const handleModelSelectionChange = useCallback(
+      async (newModel: ModelSelection) => {
+        setModelSelection(newModel);
 
-      const { hasMissingKey, provider } = checkApiKeyForCurrentModel(newModel);
+        // First check if we have a key for this model, which is the most important case
+        if (hasApiKeySet(newModel, apiKey)) {
+          // If we have a key for this model, clear the message and exit early
+          setDisableChatMessage(null);
+          return;
+        }
 
-      // Function to check if we have a key for the given model
-      const hasKeyForModel = (model: ModelSelection): boolean => {
-        const useAnthropic = model === 'claude-3.5-sonnet' || model === 'auto';
-        const useOpenai = model === 'gpt-4.1';
-        const useXai = model === 'grok-3-mini';
-        const useGoogle = model === 'gemini-2.5-pro';
+        const { hasMissingKey, provider } = checkApiKeyForCurrentModel(newModel);
 
-        if (useAnthropic && apiKey && apiKey.value && apiKey.value.trim() !== '') {
-          return true;
+        if (hasMissingKey && provider) {
+          // If the model requires a key that's not set, show the message
+          setDisableChatMessage({ type: 'MissingApiKey', provider });
+        } else {
+          // For other cases (like free tier or no key required), check full token usage
+          await checkTokenUsage().catch((error) => {
+            console.error('Error checking token usage after model change:', error);
+          });
         }
-        if (useOpenai && apiKey && apiKey.openai && apiKey.openai.trim() !== '') {
-          return true;
-        }
-        if (useXai && apiKey && apiKey.xai && apiKey.xai.trim() !== '') {
-          return true;
-        }
-        if (useGoogle && apiKey && apiKey.google && apiKey.google.trim() !== '') {
-          return true;
-        }
-        return false;
-      };
-
-      if (hasMissingKey && provider) {
-        // If the model requires a key that's not set, show the message
-        setDisableChatMessage({ type: 'MissingApiKey', provider });
-      } else if (hasKeyForModel(newModel)) {
-        // If we have a key for this model, clear the message
-        setDisableChatMessage(null);
-      } else {
-        // For other cases (like free tier or no key required), check full token usage
-        await checkTokenUsage().catch((error) => {
-          console.error('Error checking token usage after model change:', error);
-        });
-      }
-    };
+      },
+      [apiKey, checkApiKeyForCurrentModel, checkTokenUsage, setDisableChatMessage, setModelSelection],
+    );
 
     return (
       <BaseChat
@@ -609,7 +576,7 @@ export const Chat = memo(
               resetDisableChatMessage={() => setDisableChatMessage(null)}
             />
           ) : disableChatMessage?.type === 'MissingApiKey' ? (
-            <MissingApiKeyOverlay
+            <MissingApiKey
               provider={disableChatMessage.provider}
               resetDisableChatMessage={() => setDisableChatMessage(null)}
               modelSelection={modelSelection}
@@ -695,45 +662,40 @@ function getConvexAuthToken(convex: ConvexReactClient): string | null {
 export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMessage: () => void }) {
   const selectedTeamSlug = useSelectedTeamSlug();
   return (
-    <Callout
-      variant="upsell"
-      className="min-w-full rounded-lg bg-util-accent/20 backdrop-blur-md dark:bg-util-accent/50"
-    >
-      <div className="flex w-full flex-col gap-4">
-        <h3>You&apos;ve used all the tokens included with your free plan.</h3>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            href={
-              selectedTeamSlug
-                ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
-                : 'https://dashboard.convex.dev/team/settings/billing'
-            }
-            className="w-fit"
-            rel="noopener noreferrer"
-            icon={<ExternalLinkIcon />}
-          >
-            Upgrade to a paid plan
-          </Button>{' '}
-          <span>
-            or{' '}
-            <a href="/settings" target="_blank" rel="noopener noreferrer" className="text-content-link hover:underline">
-              add your own API key
-            </a>{' '}
-            to continue.
-          </span>
-        </div>
-        <div className="ml-auto">
-          <TeamSelector
-            description="Your project will be created in this Convex team"
-            selectedTeamSlug={selectedTeamSlug}
-            setSelectedTeamSlug={(slug) => {
-              setSelectedTeamSlug(slug);
-              resetDisableChatMessage();
-            }}
-          />
-        </div>
+    <div className="flex w-full flex-col gap-4">
+      <h3>You&apos;ve used all the tokens included with your free plan.</h3>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          href={
+            selectedTeamSlug
+              ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
+              : 'https://dashboard.convex.dev/team/settings/billing'
+          }
+          className="w-fit"
+          rel="noopener noreferrer"
+          icon={<ExternalLinkIcon />}
+        >
+          Upgrade to a paid plan
+        </Button>{' '}
+        <span>
+          or{' '}
+          <a href="/settings" target="_blank" rel="noopener noreferrer" className="text-content-link hover:underline">
+            add your own API key
+          </a>{' '}
+          to continue.
+        </span>
       </div>
-    </Callout>
+      <div className="ml-auto">
+        <TeamSelector
+          description="Your project will be created in this Convex team"
+          selectedTeamSlug={selectedTeamSlug}
+          setSelectedTeamSlug={(slug) => {
+            setSelectedTeamSlug(slug);
+            resetDisableChatMessage();
+          }}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -746,43 +708,38 @@ export function DisabledText({
 }) {
   const selectedTeamSlug = useSelectedTeamSlug();
   return (
-    <Callout
-      variant="upsell"
-      className="min-w-full rounded-lg bg-util-accent/20 backdrop-blur-md dark:bg-util-accent/50"
-    >
-      <div className="flex w-full flex-col gap-4">
-        <h3>
-          {isPaidPlan
-            ? "You've exceeded your spending limits, so your deployments have been disabled."
-            : "You've exceeded the free plan limits, so your deployments have been disabled."}
-        </h3>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            href={
-              selectedTeamSlug
-                ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
-                : 'https://dashboard.convex.dev/team/settings/billing'
-            }
-            className="w-fit"
-            icon={<ExternalLinkIcon />}
-            rel="noopener noreferrer"
-          >
-            {isPaidPlan ? 'Increase spending limit' : 'Upgrade to Pro'}
-          </Button>
-          {isPaidPlan && <span>or wait until limits reset</span>}
-        </div>
-        <div className="ml-auto">
-          <TeamSelector
-            description="Your project will be created in this Convex team"
-            selectedTeamSlug={selectedTeamSlug}
-            setSelectedTeamSlug={(slug) => {
-              setSelectedTeamSlug(slug);
-              resetDisableChatMessage();
-            }}
-          />
-        </div>
+    <div className="flex w-full flex-col gap-4">
+      <h3>
+        {isPaidPlan
+          ? "You've exceeded your spending limits, so your deployments have been disabled."
+          : "You've exceeded the free plan limits, so your deployments have been disabled."}
+      </h3>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          href={
+            selectedTeamSlug
+              ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
+              : 'https://dashboard.convex.dev/team/settings/billing'
+          }
+          className="w-fit"
+          icon={<ExternalLinkIcon />}
+          rel="noopener noreferrer"
+        >
+          {isPaidPlan ? 'Increase spending limit' : 'Upgrade to Pro'}
+        </Button>
+        {isPaidPlan && <span>or wait until limits reset</span>}
       </div>
-    </Callout>
+      <div className="ml-auto">
+        <TeamSelector
+          description="Your project will be created in this Convex team"
+          selectedTeamSlug={selectedTeamSlug}
+          setSelectedTeamSlug={(slug) => {
+            setSelectedTeamSlug(slug);
+            resetDisableChatMessage();
+          }}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -799,4 +756,24 @@ function hasAnyApiKeySet(apiKey?: Doc<'convexMembers'>['apiKey'] | null) {
     }
     return false;
   });
+}
+
+function hasApiKeySet(modelSelection: ModelSelection, apiKey?: Doc<'convexMembers'>['apiKey'] | null) {
+  const useAnthropic = modelSelection === 'claude-3.5-sonnet' || modelSelection === 'auto';
+  const useOpenai = modelSelection === 'gpt-4.1';
+  const useXai = modelSelection === 'grok-3-mini';
+  const useGoogle = modelSelection === 'gemini-2.5-pro';
+  if (useAnthropic && apiKey && apiKey.value && apiKey.value.trim() !== '') {
+    return true;
+  }
+  if (useOpenai && apiKey && apiKey.openai && apiKey.openai.trim() !== '') {
+    return true;
+  }
+  if (useXai && apiKey && apiKey.xai && apiKey.xai.trim() !== '') {
+    return true;
+  }
+  if (useGoogle && apiKey && apiKey.google && apiKey.google.trim() !== '') {
+    return true;
+  }
+  return false;
 }
