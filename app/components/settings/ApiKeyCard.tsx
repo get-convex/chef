@@ -355,7 +355,7 @@ function ApiKeyItem(props: {
             {showKey ? props.value : '•'.repeat(props.value.length)}
           </span>
           <Button
-            onClick={() => setShowKey(!showKey)}
+            // onClick={() => setShowKey(!showKey)}
             icon={showKey ? <EyeNoneIcon /> : <EyeOpenIcon />}
             aria-label={showKey ? 'Hide API Key' : 'Show API Key'}
             variant="neutral"
@@ -377,7 +377,9 @@ function ApiKeyItem(props: {
                 action={(): void => {
                   setShowKey(!showKey);
                 }}
-                icon={showKey ? <EyeNoneIcon /> : <EyeOpenIcon />}
+                Icon={() => {
+                  return showKey ? <EyeNoneIcon /> : <EyeOpenIcon />;
+                }}
                 error={newKeyValue.trim() && validationError ? validationError : undefined}
               />
             </div>
