@@ -233,7 +233,7 @@ function ApiKeyItem(props: {
 
       {hasKey ? (
         <div className="flex items-center gap-2 py-1.5">
-          <span className="font-mono" aria-label="API key value">
+          <span className="max-w-80 truncate font-mono" aria-label="API key value">
             {showKey ? props.value : '•'.repeat(props.value.length)}
           </span>
           <Button
