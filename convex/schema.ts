@@ -1,7 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import type { Infer, Validator, VAny } from "convex/values";
-import type { SerializedMessage } from "./messages";
+import type { Infer, Validator } from "convex/values";
 import type { CoreMessage } from "ai";
 
 export const apiKeyValidator = v.object({
@@ -101,13 +100,6 @@ export default defineSchema({
     memberId: v.optional(v.id("convexMembers")),
     projectDeployKey: v.string(),
   }).index("bySlugs", ["teamSlug", "projectSlug"]),
-
-  chatMessages: defineTable({
-    content: v.any() as VAny<SerializedMessage>,
-    rank: v.number(),
-    chatId: v.id("chats"),
-    deletedAt: v.optional(v.number()),
-  }).index("byChatId", ["chatId", "rank"]),
   chatMessagesStorageState: defineTable({
     chatId: v.id("chats"),
     storageId: v.union(v.id("_storage"), v.null()),
@@ -118,15 +110,6 @@ export default defineSchema({
     .index("byChatId", ["chatId", "lastMessageRank", "partIndex"])
     .index("byStorageId", ["storageId"])
     .index("bySnapshotId", ["snapshotId"]),
-  inviteCodes: defineTable({
-    code: v.string(),
-    sessionId: v.id("sessions"),
-    lastUsedTime: v.union(v.number(), v.null()),
-    issuedReason: v.string(),
-    isActive: v.boolean(),
-  })
-    .index("byCode", ["code"])
-    .index("bySessionId", ["sessionId"]),
 
   shares: defineTable({
     chatId: v.id("chats"),
