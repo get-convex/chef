@@ -48,7 +48,7 @@ export async function storeChat(
     snapshot?: Blob;
     doNotUpdateMessages?: boolean;
   },
-  expectedErrorCode?: string,
+  expectedError = false,
 ): Promise<Response> {
   const formData = new FormData();
   if (args.messages && !args.doNotUpdateMessages) {
@@ -71,19 +71,13 @@ export async function storeChat(
     method: "POST",
     body: formData,
   });
-  if (expectedErrorCode) {
-    if (response.status !== 200) {
-      const body = await response.json();
-      const error = JSON.parse(body.error);
-      expect(error.code).toBe(expectedErrorCode);
-    }
-    if (response.status === 200) {
+  if (expectedError) {
+    if (response.ok) {
       throw new Error("Expected failure, but got success");
     }
   } else {
-    if (response.status !== 200) {
-      const body = await response.json();
-      throw new Error(`Failed to store chat: ${JSON.stringify(body)}`);
+    if (!response.ok) {
+      throw new Error(`Failed to store chat: ${response.statusText}`);
     }
   }
   return response;

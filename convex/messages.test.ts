@@ -568,7 +568,7 @@ describe("messages", () => {
       {
         snapshot: new Blob(["new snapshot content"]),
       },
-      "No messages stored",
+      true,
     );
   });
 });

@@ -377,10 +377,7 @@ export const updateStorageState = internalMutation({
     }
 
     if (previous.storageId !== null && storageId === null) {
-      throw new ConvexError({
-        code: "No messages stored",
-        message: "Received null storageId for a chat with messages",
-      });
+      throw new Error("Received null storageId for a chat with messages");
     }
 
     await ctx.db.insert("chatMessagesStorageState", {
