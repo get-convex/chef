@@ -10,7 +10,6 @@ import {
 import { ConvexError, v } from "convex/values";
 import { getChatByIdOrUrlIdEnsuringAccess } from "./messages";
 import { internal } from "./_generated/api";
-import { getInviteCode } from "./sessions";
 import type { Id } from "./_generated/dataModel";
 
 export const hasConnectedConvexProject = query({
@@ -120,40 +119,27 @@ export async function startProvisionConvexProjectHelper(
     console.error(`Session not found: ${args.sessionId}`);
     throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
   }
-  if (session.memberId !== undefined) {
-    // OAuth flow
-    if (args.projectInitParams === undefined) {
-      console.error(`Must provide projectInitParams for oauth: ${args.sessionId}`);
-      throw new ConvexError({ code: "NotAuthorized", message: "Invalid flow for connecting a project" });
-    }
-
-    await ctx.scheduler.runAfter(0, internal.convexProjects.connectConvexProjectForOauth, {
-      sessionId: args.sessionId,
-      chatId: args.chatId,
-      accessToken: args.projectInitParams.auth0AccessToken,
-      teamSlug: args.projectInitParams.teamSlug,
-    });
-    const jobId = await ctx.scheduler.runAfter(CHECK_CONNECTION_DEADLINE_MS, internal.convexProjects.checkConnection, {
-      sessionId: args.sessionId,
-      chatId: args.chatId,
-    });
-    await ctx.db.patch(chat._id, { convexProject: { kind: "connecting", checkConnectionJobId: jobId } });
-    return;
+  if (session.memberId === undefined) {
+    throw new ConvexError({ code: "NotAuthorized", message: "Must be logged in to connect a project" });
+  }
+  // OAuth flow
+  if (args.projectInitParams === undefined) {
+    console.error(`Must provide projectInitParams for oauth: ${args.sessionId}`);
+    throw new ConvexError({ code: "NotAuthorized", message: "Invalid flow for connecting a project" });
   }
 
-  // Invite code flow
-  const inviteCode = await getInviteCode(ctx, { sessionId: args.sessionId });
-  const projectName = chat.urlId ?? inviteCode.code;
-  await ctx.scheduler.runAfter(0, internal.convexProjects.connectConvexProjectForInviteCode, {
+  await ctx.scheduler.runAfter(0, internal.convexProjects.connectConvexProjectForOauth, {
     sessionId: args.sessionId,
     chatId: args.chatId,
-    projectName,
+    accessToken: args.projectInitParams.auth0AccessToken,
+    teamSlug: args.projectInitParams.teamSlug,
   });
   const jobId = await ctx.scheduler.runAfter(CHECK_CONNECTION_DEADLINE_MS, internal.convexProjects.checkConnection, {
     sessionId: args.sessionId,
     chatId: args.chatId,
   });
   await ctx.db.patch(chat._id, { convexProject: { kind: "connecting", checkConnectionJobId: jobId } });
+  return;
 }
 
 export const recordProvisionedConvexProjectCredentials = internalMutation({
@@ -411,57 +397,6 @@ export const getProjectName = internalQuery({
       throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
     }
     return chat.urlId ?? null;
-  },
-});
-
-export const connectConvexProjectForInviteCode = internalAction({
-  args: {
-    sessionId: v.id("sessions"),
-    projectName: v.string(),
-    chatId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const bigBrainHost = ensureEnvVar("BIG_BRAIN_HOST");
-    const bigBrainApiKey = ensureEnvVar("BIG_BRAIN_API_KEY");
-    const teamSlug = ensureEnvVar("DEMO_TEAM_SLUG");
-
-    const response = await fetch(`${bigBrainHost}/api/create_project`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${bigBrainApiKey}`,
-      },
-      body: JSON.stringify({
-        team: teamSlug,
-        projectName: args.projectName,
-        deploymentType: "dev",
-      }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Failed to create project: ${response.statusText} ${text}`);
-    }
-
-    const data: {
-      projectSlug: string;
-      projectId: number;
-      teamSlug: string;
-      deploymentName: string;
-      // This is in fact the dev URL
-      prodUrl: string;
-      projectsRemaining: number;
-      adminKey: string;
-    } = await response.json();
-
-    await ctx.runMutation(internal.convexProjects.recordProvisionedConvexProjectCredentials, {
-      sessionId: args.sessionId,
-      chatId: args.chatId,
-      projectSlug: data.projectSlug,
-      projectDeployKey: data.adminKey,
-      deploymentUrl: data.prodUrl,
-      deploymentName: data.deploymentName,
-    });
   },
 });
 

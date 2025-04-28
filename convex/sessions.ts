@@ -4,34 +4,10 @@ import { ConvexError } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { getChatByIdOrUrlIdEnsuringAccess } from "./messages";
 
-export const getSession = mutation({
-  args: {
-    code: v.string(),
-  },
-  returns: v.id("sessions"),
-  handler: async (ctx, args) => {
-    const inviteCodes = await ctx.db
-      .query("inviteCodes")
-      .withIndex("byCode", (q) => q.eq("code", args.code))
-      .collect();
-
-    const activeInviteCode = inviteCodes.find((inviteCode) => inviteCode.isActive);
-
-    if (!activeInviteCode) {
-      throw new ConvexError({ code: "NotAuthorized", message: "Invalid invite code" });
-    }
-    await ctx.db.patch(activeInviteCode._id, {
-      lastUsedTime: Date.now(),
-    });
-
-    return activeInviteCode.sessionId;
-  },
-});
-
 export const verifySession = query({
   args: {
     sessionId: v.string(),
-    flexAuthMode: v.optional(v.union(v.literal("InviteCode"), v.literal("ConvexOAuth"))),
+    flexAuthMode: v.optional(v.literal("ConvexOAuth")),
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
@@ -39,112 +15,20 @@ export const verifySession = query({
     if (!sessionId) {
       return false;
     }
-    if (args.flexAuthMode === "InviteCode") {
-      return isValidSessionForInviteCode(ctx, { sessionId });
-    } else if (args.flexAuthMode === "ConvexOAuth") {
-      const session = await ctx.db.get(sessionId);
-      if (!session) {
-        return false;
-      }
-      if (!session.memberId) {
-        return false;
-      }
-      return isValidSessionForConvexOAuth(ctx, { sessionId, memberId: session.memberId });
+    const session = await ctx.db.get(sessionId);
+    if (!session || !session.memberId) {
+      return false;
     }
-    return isValidSession(ctx, { sessionId });
-  },
-});
-
-export const issueInviteCode = internalMutation({
-  args: {
-    code: v.optional(v.string()),
-    issuedReason: v.string(),
-  },
-  returns: v.string(),
-  handler: async (ctx, args) => {
-    return await _issueInviteCode(ctx, args);
-  },
-});
-
-export const issueInviteCodeForPreviewDeployment = internalMutation({
-  args: {},
-  returns: v.string(),
-  handler: async (ctx) => {
-    return await _issueInviteCode(ctx, { code: "preview-test", issuedReason: "Preview deployment" });
-  },
-});
-
-async function _issueInviteCode(ctx: MutationCtx, args: { code?: string; issuedReason: string }) {
-  const code = args.code ?? crypto.randomUUID();
-  if (code.length < 3) {
-    // so they can be used as the default project name for
-    // convexProjects:connectConvexProject
-    throw new Error("Invite codes must be at least three letters");
-  }
-
-  const existing = await ctx.db
-    .query("inviteCodes")
-    .withIndex("byCode", (q) => q.eq("code", code))
-    .collect();
-
-  if (existing.length > 0) {
-    throw new Error("Invite code has already been issued");
-  }
-
-  const sessionId = await ctx.db.insert("sessions", {});
-
-  await ctx.db.insert("inviteCodes", {
-    sessionId,
-    code,
-    lastUsedTime: null,
-    issuedReason: args.issuedReason,
-    isActive: true,
-  });
-
-  return code;
-}
-
-export const revokeInviteCode = internalMutation({
-  args: {
-    code: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const code = args.code ?? crypto.randomUUID();
-
-    const existing = await ctx.db
-      .query("inviteCodes")
-      .withIndex("byCode", (q) => q.eq("code", code))
-      .collect();
-
-    for (const inviteCode of existing) {
-      if (inviteCode.isActive) {
-        await ctx.db.patch(inviteCode._id, {
-          isActive: false,
-        });
-      }
-    }
-    console.log(`Revoked ${existing.length} invite codes`, code);
+    return isValidSessionForConvexOAuth(ctx, { sessionId, memberId: session.memberId });
   },
 });
 
 export async function isValidSession(ctx: QueryCtx, args: { sessionId: Id<"sessions"> }) {
   const session = await ctx.db.get(args.sessionId);
-  if (!session) {
+  if (!session || !session.memberId) {
     return false;
   }
-  if (session.memberId) {
-    return await isValidSessionForConvexOAuth(ctx, { sessionId: args.sessionId, memberId: session.memberId });
-  }
-  return await isValidSessionForInviteCode(ctx, args);
-}
-
-async function isValidSessionForInviteCode(ctx: QueryCtx, args: { sessionId: Id<"sessions"> }) {
-  const inviteCode = await ctx.db
-    .query("inviteCodes")
-    .withIndex("bySessionId", (q) => q.eq("sessionId", args.sessionId))
-    .unique();
-
-  return inviteCode !== null && inviteCode.isActive;
+  return await isValidSessionForConvexOAuth(ctx, { sessionId: args.sessionId, memberId: session.memberId });
 }
 
 async function isValidSessionForConvexOAuth(
@@ -258,17 +142,6 @@ export async function getCurrentMember(ctx: QueryCtx) {
     throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
   }
   return existingMember;
-}
-
-export async function getInviteCode(ctx: QueryCtx, args: { sessionId: Id<"sessions"> }) {
-  const inviteCode = await ctx.db
-    .query("inviteCodes")
-    .withIndex("bySessionId", (q) => q.eq("sessionId", args.sessionId))
-    .unique();
-  if (inviteCode === null || !inviteCode.isActive) {
-    throw new ConvexError({ code: "NotAuthorized", message: "Invite code not found" });
-  }
-  return inviteCode;
 }
 
 export const cleanupInactiveSession = internalMutation({
