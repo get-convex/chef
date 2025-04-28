@@ -366,9 +366,9 @@ export const updateStorageState = internalMutation({
     }
 
     if (previous.lastMessageRank === lastMessageRank && previous.partIndex === partIndex) {
-      if (messageHistoryStorageId !== null) {
+      if (messageHistoryStorageId !== null && snapshotId === null) {
         // Should this error?
-        console.warn(
+        console.log(
           `Received duplicate update for message history, message ${lastMessageRank} part ${partIndex}, ignoring`,
         );
         return;

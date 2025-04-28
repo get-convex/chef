@@ -229,7 +229,6 @@ describe("messages", () => {
     await storeChat(t, chatId, sessionId, {
       snapshot: updatedSnapshotBlob,
       messages: [firstMessage, secondMessage],
-      doNotUpdateMessages: true,
     });
 
     const finalMessagesStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
@@ -556,11 +555,20 @@ describe("messages", () => {
     });
   });
 
-  // test("messages cannot be null if there exist messages in the chat", async () => {
-  //   const { sessionId, chatId } = await createChat(t);
-  //   await storeChat(t, chatId, sessionId, {
-  //     snapshot: new Blob(["initial snapshot content"]),
-  //   });
-
-  // });
+  test("messages cannot be null if there exist messages in the chat", async () => {
+    const { sessionId, chatId } = await createChat(t);
+    await storeChat(t, chatId, sessionId, {
+      snapshot: new Blob(["initial snapshot content"]),
+      messages: [createMessage({ role: "user", parts: [{ text: "Hello, world!", type: "text" }] })],
+    });
+    await storeChat(
+      t,
+      chatId,
+      sessionId,
+      {
+        snapshot: new Blob(["new snapshot content"]),
+      },
+      "No messages stored",
+    );
+  });
 });

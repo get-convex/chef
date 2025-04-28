@@ -1,17 +1,22 @@
 import { test } from "vitest";
 import { api, internal } from "./_generated/api";
 import { createChat, setupTest, storeChat, verifyStoredContent } from "./test.setup";
+import type { SerializedMessage } from "./messages";
 
 test("referenced snapshots are not deleted", async () => {
   const t = setupTest();
   const { sessionId, chatId } = await createChat(t);
+  const messages: SerializedMessage[] = [
+    { id: "1", role: "user", parts: [{ text: "Hello, world!", type: "text" }], createdAt: Date.now() },
+  ];
   await storeChat(t, chatId, sessionId, {
-    messages: [{ id: "1", role: "user", parts: [{ text: "Hello, world!", type: "text" }], createdAt: Date.now() }],
+    messages,
     snapshot: new Blob(["Hello, world!"]),
   });
 
   const { code } = await t.mutation(api.share.create, { sessionId, id: chatId });
   await storeChat(t, chatId, sessionId, {
+    messages,
     snapshot: new Blob(["foobar"]),
   });
 
