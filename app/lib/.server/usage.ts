@@ -80,7 +80,7 @@ export async function recordUsage(
 
   if (chefTokens === 0) {
     captureMessage('Recorded usage was 0. Something wrong with provider?', {
-      level: 'warning',
+      level: 'error',
       tags: {
         teamSlug,
         deploymentName,
