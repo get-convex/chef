@@ -181,7 +181,7 @@ export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) 
     // TODO: Implement Google billing for the prompt tokens that are cached. Google doesn't offer caching yet.
   } else {
     captureMessage('WARNING: Unknown provider. Not recording usage. Giving away for free.', {
-      level: 'warning',
+      level: 'error',
       tags: {
         provider,
       },
