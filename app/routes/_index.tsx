@@ -12,7 +12,7 @@ export const meta: MetaFunction = () => {
     { name: 'description', content: 'Cook up something hot with Chef, the full-stack AI coding agent from Convex' },
     {
       property: 'og:image',
-      content: '/social_preview_index.jpg',
+      content: '/social_preview_index.png',
     },
   ];
 };
