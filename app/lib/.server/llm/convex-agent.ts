@@ -27,12 +27,11 @@ import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { REPEATED_ERROR_REASON } from '~/lib/common/annotations';
 import { waitUntil } from '@vercel/functions';
 import type { internal } from '@convex/_generated/api';
-import type { Usage } from '~/lib/.server/validators';
+import type { Usage } from '~/lib/common/annotations';
 import type { UsageRecord } from '@convex/schema';
 import { getProvider, getProviderType, type ModelProvider } from '~/lib/.server/llm/provider';
 import { getEnv } from '~/lib/.server/env';
-import { calculateChefTokens } from '~/lib/common/usage';
-import { usageFromGeneration } from '~/lib/common/usage';
+import { calculateChefTokens, usageFromGeneration } from '~/lib/common/usage';
 
 type Messages = Message[];
 
