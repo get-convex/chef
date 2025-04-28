@@ -167,7 +167,7 @@ export function MissingApiKey({
               </svg>
             }
           >
-            {isSaving ? 'Updating...' : 'Use Chef tokens instead'}
+            {isSaving ? 'Updating...' : 'Use Chef tokens'}
           </Button>
           <Button className="w-fit" onClick={() => setIsAdding(true)} icon={<KeyIcon className="size-4" />}>
             Add {displayModelProviderName(provider)} API key
