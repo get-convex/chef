@@ -3,8 +3,14 @@ import { RemixBrowser, useLocation, useMatches } from '@remix-run/react';
 import { startTransition, useEffect } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 
-console.log('HELOO!!!', import.meta.env.VERCEL_ENV);
-const environment = import.meta.env.VERCEL_ENV === 'production' ? 'production' : 'development';
+declare global {
+  interface Window {
+    VERCEL_ENV: string;
+  }
+}
+
+console.log('HELOO!!!', window.VERCEL_ENV);
+const environment = window.VERCEL_ENV === 'production' ? 'production' : 'development';
 
 Sentry.init({
   dsn: 'https://16615d9875b4630cfabeed5d376c4343@o1192621.ingest.us.sentry.io/4509097600811008',

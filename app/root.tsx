@@ -76,15 +76,20 @@ const inlineThemeCode = stripIndents`
   }
 `;
 
-export const Head = createHead(() => (
-  <>
-    <meta charSet="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <Meta />
-    <Links />
-    <script dangerouslySetInnerHTML={{ __html: inlineThemeCode }} />
-  </>
-));
+export const Head = createHead(() => {
+  const loaderData = useRouteLoaderData<typeof loader>('root');
+  const { VERCEL_ENV } = (loaderData?.ENV as any) || {};
+  return (
+    <>
+      <meta charSet="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <Meta />
+      <Links />
+      <script dangerouslySetInnerHTML={{ __html: `window.VERCEL_ENV = '${VERCEL_ENV}'` }} />
+      <script dangerouslySetInnerHTML={{ __html: inlineThemeCode }} />
+    </>
+  );
+});
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const theme = useStore(themeStore);
