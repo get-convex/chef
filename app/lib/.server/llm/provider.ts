@@ -288,22 +288,3 @@ function anthropicInjectCacheControl(options?: RequestInit) {
   console.log(`Injected system messages in ${Date.now() - start}ms`);
   return { ...options, body: newBody };
 }
-
-export function getProviderType(providerMetadata?: ProviderMetadata) {
-  if (!providerMetadata) {
-    return 'Unknown';
-  }
-  if (providerMetadata.anthropic) {
-    return 'Anthropic';
-  }
-  if (providerMetadata.openai) {
-    return 'OpenAI';
-  }
-  if (providerMetadata.xai) {
-    return 'XAI';
-  }
-  if (providerMetadata.google) {
-    return 'Google';
-  }
-  return 'Unknown';
-}

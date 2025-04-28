@@ -29,7 +29,7 @@ import { waitUntil } from '@vercel/functions';
 import type { internal } from '@convex/_generated/api';
 import type { Usage } from '~/lib/common/annotations';
 import type { UsageRecord } from '@convex/schema';
-import { getProvider, getProviderType, type ModelProvider } from '~/lib/.server/llm/provider';
+import { getProvider, type ModelProvider } from '~/lib/.server/llm/provider';
 import { getEnv } from '~/lib/.server/env';
 import { calculateChefTokens, usageFromGeneration } from '~/lib/common/usage';
 
@@ -127,6 +127,7 @@ export async function convexAgent(args: {
             recordRawPromptsForDebugging,
             coreMessages: messagesForDataStream,
             smallFiles,
+            modelProvider,
           });
         },
         onError({ error }) {
@@ -162,6 +163,7 @@ async function onFinishHandler({
   recordRawPromptsForDebugging,
   coreMessages,
   smallFiles,
+  modelProvider,
 }: {
   dataStream: DataStreamWriter;
   messages: Messages;
@@ -176,6 +178,7 @@ async function onFinishHandler({
   toolsDisabledFromRepeatedErrors: boolean;
   coreMessages: CoreMessage[];
   smallFiles: boolean;
+  modelProvider: ModelProvider;
 }) {
   const { providerMetadata } = result;
   // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
@@ -242,10 +245,17 @@ async function onFinishHandler({
     const responseCoreMessages = result.response.messages as (CoreAssistantMessage | CoreToolMessage)[];
     // don't block the request but keep the request alive in Vercel Lambdas
     waitUntil(
-      storeDebugPrompt(coreMessages, chatInitialId, responseCoreMessages, result, {
-        usage,
-        providerMetadata,
-      }),
+      storeDebugPrompt(
+        coreMessages,
+        chatInitialId,
+        responseCoreMessages,
+        result,
+        {
+          usage,
+          providerMetadata,
+        },
+        modelProvider,
+      ),
     );
   }
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -309,6 +319,7 @@ async function storeDebugPrompt(
   responseCoreMessages: CoreMessage[],
   result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
   generation: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
+  modelProvider: ModelProvider,
 ) {
   try {
     const finishReason = result.finishReason;
@@ -319,7 +330,7 @@ async function storeDebugPrompt(
     const compressedData = compressWithLz4Server(promptMessageData);
 
     type Metadata = Omit<(typeof internal.debugPrompt.storeDebugPrompt)['_args'], 'promptCoreMessagesStorageId'>;
-    const { chefTokens } = calculateChefTokens(usage, getProviderType(generation.providerMetadata));
+    const { chefTokens } = calculateChefTokens(usage, modelProvider);
 
     const metadata = {
       chatInitialId,
