@@ -210,7 +210,7 @@ export const validateOpenaiApiKey = action({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${args.apiKey}`,
+        Authorization: `Bearer ${args.apiKey}`,
       },
     });
 
@@ -243,7 +243,7 @@ export const validateXaiApiKey = action({
     const response = await fetch("https://api.x.ai/v1/models", {
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${args.apiKey}`,
+        Authorization: `Bearer ${args.apiKey}`,
       },
     });
     if (response.status === 400) {
