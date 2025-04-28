@@ -10,23 +10,8 @@ import { Checkbox } from '@ui/Checkbox';
 import { Tooltip } from '@ui/Tooltip';
 import { captureException } from '@sentry/remix';
 import { Spinner } from '@ui/Spinner';
+import { useDebounce } from '@uidotdev/usehooks';
 
-// Helper function to debounce API calls
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 export function ApiKeyCard() {
   const convex = useConvex();
@@ -355,7 +340,7 @@ function ApiKeyItem(props: {
             {showKey ? props.value : '•'.repeat(props.value.length)}
           </span>
           <Button
-            // onClick={() => setShowKey(!showKey)}
+            onClick={() => setShowKey(!showKey)}
             icon={showKey ? <EyeNoneIcon /> : <EyeOpenIcon />}
             aria-label={showKey ? 'Hide API Key' : 'Show API Key'}
             variant="neutral"

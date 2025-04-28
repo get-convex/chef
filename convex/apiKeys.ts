@@ -186,6 +186,11 @@ export const validateAnthropicApiKey = action({
     apiKey: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
+    }
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -206,6 +211,11 @@ export const validateOpenaiApiKey = action({
     apiKey: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
+    }
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -226,6 +236,11 @@ export const validateGoogleApiKey = action({
     apiKey: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
+    }
+
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${args.apiKey}`);
 
     if (response.status === 400) {
@@ -240,6 +255,11 @@ export const validateXaiApiKey = action({
     apiKey: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
+    }
+
     const response = await fetch("https://api.x.ai/v1/models", {
       headers: {
         "Content-Type": "application/json",
