@@ -2,7 +2,7 @@ import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
 import type { ProviderType, UsageAnnotation } from '~/lib/common/annotations';
-import { modelForProvider, getProviderType } from './llm/provider';
+import { modelForProvider, getProviderType, type ModelProvider } from './llm/provider';
 import { calculateTotalBilledUsageForMessage, calculateChefTokens } from '~/lib/common/usage';
 import { captureMessage } from '@sentry/remix';
 
