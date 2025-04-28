@@ -13,7 +13,6 @@ import type { ToolStatus } from '~/lib/common/types';
 import type { TerminalInitializationOptions } from '~/types/terminal';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import type { ModelSelection } from '~/utils/constants';
-import { Callout } from '@ui/Callout';
 import { MessageInput } from './MessageInput';
 import { messageInputStore } from '~/lib/stores/messageInput';
 import { useChatId } from '~/lib/stores/chatId';
@@ -165,12 +164,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     />
                   )}
                   {disableChatMessage && (
-                    <Callout
-                      variant="upsell"
-                      className="absolute bottom-0 z-40 h-fit min-w-full animate-fadeInFromLoading rounded-lg bg-util-accent/20 backdrop-blur-md dark:bg-util-accent/50"
-                    >
+                    <div className="absolute bottom-0 z-40 h-fit min-w-full animate-fadeInFromLoading">
                       {disableChatMessage}
-                    </Callout>
+                    </div>
                   )}
                   <MessageInput
                     chatStarted={chatStarted}
@@ -189,7 +185,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   <div className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700 dark:border-red-600 dark:bg-red-900 dark:text-red-200">
                     <p className="font-bold">Chef is temporarily unavailable</p>
                     <p className="text-sm">
-                      We’re experiencing high load and will be back soon. Thank you for your patience.
+                      We&apos;re experiencing high load and will be back soon. Thank you for your patience.
                     </p>
                   </div>
                 </div>
