@@ -32,9 +32,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // These environment variables are available in the client (they aren't secret).
   const CONVEX_URL = process.env.VITE_CONVEX_URL || globalThis.process.env.CONVEX_URL!;
   const CONVEX_OAUTH_CLIENT_ID = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID!;
-  const VERCEL_ENV = globalThis.process.env.VERCEL_ENV!;
   return json({
-    ENV: { CONVEX_URL, CONVEX_OAUTH_CLIENT_ID, experience, VERCEL_ENV },
+    ENV: { CONVEX_URL, CONVEX_OAUTH_CLIENT_ID, experience },
   });
 }
 
@@ -75,20 +74,15 @@ const inlineThemeCode = stripIndents`
   }
 `;
 
-export const Head = createHead(() => {
-  const loaderData = useRouteLoaderData<typeof loader>('root');
-  const { VERCEL_ENV } = (loaderData?.ENV as any) || {};
-  return (
-    <>
-      <meta charSet="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <Meta />
-      <Links />
-      <script dangerouslySetInnerHTML={{ __html: `window.VERCEL_ENV = '${VERCEL_ENV}'` }} />
-      <script dangerouslySetInnerHTML={{ __html: inlineThemeCode }} />
-    </>
-  );
-});
+export const Head = createHead(() => (
+  <>
+    <meta charSet="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <Meta />
+    <Links />
+    <script dangerouslySetInnerHTML={{ __html: inlineThemeCode }} />
+  </>
+));
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const theme = useStore(themeStore);
