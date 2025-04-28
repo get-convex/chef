@@ -38,25 +38,25 @@ export function ApiKeyCard() {
   const hasAnyKey = apiKey && (apiKey.value || apiKey.openai || apiKey.xai || apiKey.google);
 
   const validateAnthropicApiKey = async () => {
-    const _result = await convex.action(api.apiKeys.validateAnthropicApiKey, {
+    return await convex.action(api.apiKeys.validateAnthropicApiKey, {
       apiKey: apiKey?.value || '',
     });
   };
 
   const validateOpenaiApiKey = async () => {
-    const _result = await convex.action(api.apiKeys.validateOpenaiApiKey, {
+    return await convex.action(api.apiKeys.validateOpenaiApiKey, {
       apiKey: apiKey?.openai || '',
     });
   };
 
   const validateGoogleApiKey = async () => {
-    const _result = await convex.action(api.apiKeys.validateGoogleApiKey, {
+    return await convex.action(api.apiKeys.validateGoogleApiKey, {
       apiKey: apiKey?.google || '',
     });
   };
 
   const validateXaiApiKey = async () => {
-    const _result = await convex.action(api.apiKeys.validateXaiApiKey, {
+    return await convex.action(api.apiKeys.validateXaiApiKey, {
       apiKey: apiKey?.xai || '',
     });
   };
@@ -164,7 +164,7 @@ function ApiKeyItem(props: {
   isLoading: boolean;
   keyType: KeyType;
   value: string;
-  onValidate: () => Promise<void>;
+  onValidate: () => Promise<boolean>;
 }) {
   const convex = useConvex();
   const [showKey, setShowKey] = useState(false);
@@ -188,30 +188,7 @@ function ApiKeyItem(props: {
       setValidationError(null);
 
       try {
-        let isValidResult = false;
-
-        switch (props.keyType) {
-          case 'anthropic':
-            isValidResult = await convex.action(api.apiKeys.validateAnthropicApiKey, {
-              apiKey: debouncedKeyValue.trim(),
-            });
-            break;
-          case 'google':
-            isValidResult = await convex.action(api.apiKeys.validateGoogleApiKey, {
-              apiKey: debouncedKeyValue.trim(),
-            });
-            break;
-          case 'openai':
-            isValidResult = await convex.action(api.apiKeys.validateOpenaiApiKey, {
-              apiKey: debouncedKeyValue.trim(),
-            });
-            break;
-          case 'xai':
-            isValidResult = await convex.action(api.apiKeys.validateXaiApiKey, {
-              apiKey: debouncedKeyValue.trim(),
-            });
-            break;
-        }
+        const isValidResult = await props.onValidate();
 
         if (!isValidResult) {
           setValidationError(
