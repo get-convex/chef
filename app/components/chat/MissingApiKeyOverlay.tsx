@@ -130,7 +130,8 @@ export function MissingApiKeyOverlay({
         <p className="max-w-prose text-pretty">
           You&apos;ve chosen to always use your own API keys, but haven&apos;t set a{' '}
           <span className="font-semibold">{provider}</span> API key yet. You may choose to use a different model
-          provider, use Chef tokens instead, or add an API key for <span className="font-semibold">{provider}</span>.
+          provider, use Chef tokens instead of your own API keys, or add an API key for{' '}
+          <span className="font-semibold">{provider}</span>.
         </p>
       </div>
 
