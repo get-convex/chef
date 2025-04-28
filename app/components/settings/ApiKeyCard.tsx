@@ -12,7 +12,6 @@ import { captureException } from '@sentry/remix';
 import { Spinner } from '@ui/Spinner';
 import { useDebounce } from '@uidotdev/usehooks';
 
-
 export function ApiKeyCard() {
   const convex = useConvex();
 
