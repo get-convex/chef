@@ -7,12 +7,19 @@ import { JsonView } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, type ChartOptions } from 'chart.js';
-import { type Usage } from '~/lib/common/annotations';
-import { calculateTotalUsageForMessage, calculateChefTokens } from '~/lib/common/usage';
+import { parseAnnotations, type ProviderType, type Usage, type UsageAnnotation } from '~/lib/common/annotations';
+import {
+  calculateChefTokens,
+  getFailedToolCalls,
+  calculateTotalUsage,
+  initializeUsage,
+  usageFromGeneration,
+} from '~/lib/common/usage';
 import { decompressWithLz4 } from '~/lib/compression.client';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { useConvex } from 'convex/react';
+import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 // Register Chart.js components - needs to include ALL required elements
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -33,7 +40,18 @@ type DebugUsageData = {
   chatTotalChefBreakdown: ChefBreakdown;
   usagePerMessage: Array<{
     messageIdx: number;
-    parts: string[];
+    parts: {
+      partIdx: number;
+      partType: string;
+      partText: string;
+      usageInfo: {
+        rawUsage: Usage;
+        billedUsage: Usage;
+        chefTokens: number;
+        chefBreakdown: ChefBreakdown;
+      } | null;
+    }[];
+    messageSummaryInfo: { numParts: number; numToolInvocations: number; numFailedToolInvocations: number };
     rawUsage: Usage;
     billedUsage: Usage;
     chefTokens: number;
@@ -80,6 +98,7 @@ export function UsageBreakdownView({
         const decompressed = decompressWithLz4(new Uint8Array(await blob.arrayBuffer()));
         const messages = JSON.parse(new TextDecoder().decode(decompressed));
         setMessages(messages);
+        setChefDebugProperty('messages', messages);
       }
       void parseFileContent(fileContent);
     } else {
@@ -100,6 +119,7 @@ export function UsageBreakdownView({
         const decompressed = decompressWithLz4(new Uint8Array(bytes));
         const messages = JSON.parse(new TextDecoder().decode(decompressed));
         setMessages(messages);
+        setChefDebugProperty('messages', messages);
       };
       void fetchUsageData();
     }
@@ -134,19 +154,48 @@ export function UsageBreakdownView({
             title={`Message ${usage.messageIdx} -- ${formatNumber(usage.chefTokens)} chef tokens`}
             key={usage.messageIdx.toString()}
           >
-            <BreakdownView
-              rawUsage={usage.rawUsage}
-              billedUsage={usage.billedUsage}
-              chefTokens={usage.chefTokens}
-              chefBreakdown={usage.chefBreakdown}
-            />
-            <CollapsibleView title="Content" startOpen={true}>
-              {usage.parts.map((part, idx) => (
-                <p className="whitespace-pre-wrap border-b border-gray-500 pb-4" key={idx}>
-                  {part}
-                </p>
-              ))}
-            </CollapsibleView>
+            <div className="ml-4">
+              <p>
+                {usage.messageSummaryInfo.numParts} parts, {usage.messageSummaryInfo.numToolInvocations} tool
+                invocations, {usage.messageSummaryInfo.numFailedToolInvocations} failed tool invocations
+              </p>
+              <BreakdownView
+                rawUsage={usage.rawUsage}
+                billedUsage={usage.billedUsage}
+                chefTokens={usage.chefTokens}
+                chefBreakdown={usage.chefBreakdown}
+              />
+              <CollapsibleView title="Parts" startOpen={false}>
+                <div className="ml-4 flex flex-col gap-4">
+                  {usage.parts.map((part, idx) => (
+                    <div className="flex flex-col gap-4" key={idx}>
+                      <CollapsibleView
+                        title={`Part ${idx} -- Chef Tokens: ${formatNumber(part.usageInfo?.chefTokens ?? 0)}`}
+                        startOpen={false}
+                      >
+                        <div className="ml-4 flex flex-col gap-4">
+                          <CollapsibleView title={`Content`} startOpen={false}>
+                            <p className="whitespace-pre-wrap border-b border-gray-500 pb-4" key={idx}>
+                              {part.partText}
+                            </p>
+                          </CollapsibleView>
+                          {part.usageInfo ? (
+                            <BreakdownView
+                              rawUsage={part.usageInfo.rawUsage}
+                              billedUsage={part.usageInfo.billedUsage}
+                              chefTokens={part.usageInfo.chefTokens}
+                              chefBreakdown={part.usageInfo.chefBreakdown}
+                            />
+                          ) : (
+                            <p>No usage info</p>
+                          )}
+                        </div>
+                      </CollapsibleView>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleView>
+            </div>
           </CollapsibleView>
         ))}
       </div>
@@ -230,7 +279,7 @@ function BreakdownView({
           </div>
         </CollapsibleView>
 
-        <CollapsibleView title="Chef Breakdown" startOpen={startOpen}>
+        <CollapsibleView title="Chef Breakdown" startOpen={true}>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-4">
               <p className="text-2xl font-bold">{formatNumber(chefTokens)}</p>
@@ -292,7 +341,18 @@ async function getUsageBreakdown(messages: Message[]) {
   };
   const usagePerMessage: Array<{
     messageIdx: number;
-    parts: string[];
+    parts: {
+      partIdx: number;
+      partType: string;
+      partText: string;
+      usageInfo: {
+        rawUsage: Usage;
+        billedUsage: Usage;
+        chefTokens: number;
+        chefBreakdown: ChefBreakdown;
+      } | null;
+    }[];
+    messageSummaryInfo: { numParts: number; numToolInvocations: number; numFailedToolInvocations: number };
     rawUsage: Usage;
     billedUsage: Usage;
     chefTokens: number;
@@ -303,38 +363,32 @@ async function getUsageBreakdown(messages: Message[]) {
     if (message.role !== 'assistant') {
       continue;
     }
-    // This is incorrect -- TODO -- try and extract from the annotations
-    const finalGeneration = {
-      usage: {
-        completionTokens: 0,
-        promptTokens: 0,
-        totalTokens: 0,
-      },
-      providerMetadata: {
-        anthropic: {
-          cacheCreationInputTokens: 0,
-          cacheReadInputTokens: 0,
-          cachedPromptTokens: 0,
-        },
-      },
-    };
-    const { totalRawUsage, totalUsageBilledFor } = await calculateTotalUsageForMessage(message, finalGeneration);
-    const { chefTokens, breakdown } = calculateChefTokens(totalUsageBilledFor, finalGeneration.providerMetadata);
+    const parsedAnnotations = parseAnnotations(message.annotations);
+    const failedToolCalls = getFailedToolCalls(message);
+    const { totalRawUsage, totalUsageBilledFor } = await calculateTotalUsage({
+      startUsage: null,
+      usageAnnotationsForToolCalls: parsedAnnotations.usageForToolCall,
+      failedToolCalls,
+    });
+    const provider = parsedAnnotations.modelForToolCall.final?.provider ?? 'Anthropic';
+    const { chefTokens, breakdown } = calculateChefTokens(totalUsageBilledFor, provider);
     usagePerMessage.push({
       messageIdx: idx,
-      parts: message.parts
-        ? message.parts
-            .filter((p) => p.type === 'text' || p.type === 'tool-invocation')
-            .map((p) =>
-              p.type === 'text'
-                ? p.text
-                : `Tool invocation: ${p.toolInvocation.toolName} (${p.toolInvocation.toolCallId})\n\n${p.toolInvocation.state === 'result' ? p.toolInvocation.result : '(incomplete call)'}`,
-            )
-        : [message.content],
+      parts: getPartInfos({
+        message,
+        failedToolCalls,
+        usageAnnotationsForToolCalls: parsedAnnotations.usageForToolCall,
+        providerAnnotationsForToolCalls: parsedAnnotations.modelForToolCall,
+      }),
       rawUsage: totalRawUsage,
       billedUsage: totalUsageBilledFor,
       chefTokens,
       chefBreakdown: breakdown,
+      messageSummaryInfo: {
+        numParts: message.parts?.length ?? 0,
+        numToolInvocations: message.parts?.filter((p) => p.type === 'tool-invocation').length ?? 0,
+        numFailedToolInvocations: failedToolCalls.size,
+      },
     });
     addUsage(chatTotalRawUsage, totalRawUsage);
     addUsage(chatTotalUsageBilledFor, totalUsageBilledFor);
@@ -348,6 +402,80 @@ async function getUsageBreakdown(messages: Message[]) {
     chatTotalChefBreakdown,
     usagePerMessage,
   };
+}
+
+function getPartInfos({
+  message,
+  failedToolCalls,
+  usageAnnotationsForToolCalls,
+  providerAnnotationsForToolCalls,
+}: {
+  message: Message;
+  failedToolCalls: Set<string>;
+  usageAnnotationsForToolCalls: Record<string, UsageAnnotation | null>;
+  providerAnnotationsForToolCalls: Record<string, { provider: ProviderType; model: string | undefined }>;
+}) {
+  const partInfos: Array<{
+    partIdx: number;
+    partType: string;
+    partText: string;
+    usageInfo: {
+      rawUsage: Usage;
+      billedUsage: Usage;
+      chefTokens: number;
+      chefBreakdown: ChefBreakdown;
+    } | null;
+  }> = [];
+  for (const [idx, part] of message.parts?.entries() ?? []) {
+    if (part.type === 'text') {
+      partInfos.push({
+        partIdx: idx,
+        partType: 'text',
+        partText: part.text,
+        usageInfo: null,
+      });
+    } else if (part.type === 'tool-invocation') {
+      const provider = providerAnnotationsForToolCalls[part.toolInvocation.toolCallId]?.provider ?? 'Anthropic';
+      const isFailedToolCall = failedToolCalls.has(part.toolInvocation.toolCallId);
+      const rawUsageForPart = usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]
+        ? usageFromGeneration({
+            usage: usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]!,
+            providerMetadata: usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]?.providerMetadata,
+          })
+        : initializeUsage();
+      const billedUsageForPart = isFailedToolCall ? initializeUsage() : rawUsageForPart;
+      const { chefTokens, breakdown } = calculateChefTokens(billedUsageForPart, provider);
+      partInfos.push({
+        partIdx: idx,
+        partType: 'tool-invocation',
+        partText: `Tool invocation: ${part.toolInvocation.toolName} (${part.toolInvocation.toolCallId})\n\n${part.toolInvocation.state === 'result' ? part.toolInvocation.result : '(incomplete call)'}`,
+        usageInfo: {
+          rawUsage: rawUsageForPart,
+          billedUsage: billedUsageForPart,
+          chefTokens,
+          chefBreakdown: breakdown,
+        },
+      });
+    }
+  }
+  const finalUsage = usageFromGeneration({
+    usage: usageAnnotationsForToolCalls.final ?? initializeUsage(),
+    providerMetadata: usageAnnotationsForToolCalls.final?.providerMetadata ?? undefined,
+  });
+  const provider = providerAnnotationsForToolCalls.final?.provider ?? 'Anthropic';
+  const { chefTokens, breakdown } = calculateChefTokens(finalUsage, provider);
+  partInfos.push({
+    partIdx: message.parts?.length ?? 0,
+    partType: 'final',
+    partText: 'Final usage',
+    usageInfo: {
+      rawUsage: finalUsage,
+      billedUsage: finalUsage,
+      chefTokens,
+      chefBreakdown: breakdown,
+    },
+  });
+  return partInfos;
 }
 
 function addUsage(usageA: Usage, update: Usage) {
@@ -414,7 +542,7 @@ function CollapsibleView({
       <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2">
         {isOpen ? <ChevronDownIcon className="size-4" /> : <ChevronRightIcon className="size-4" />} {title}
       </button>
-      {isOpen && children}
+      <div className="ml-4 border-l border-gray-500 pl-4">{isOpen && children}</div>
     </div>
   );
 }

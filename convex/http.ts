@@ -229,7 +229,7 @@ http.route({
     const chatUuid = body.chatUuid;
     const storageId = await ctx.runQuery(internal.messages.getMessagesByChatInitialIdBypassingAccessControl, {
       id: chatUuid,
-      ensureAdmin: authHeader === null,
+      ensureAdmin: authHeader !== null,
     });
     if (!storageId) {
       return new Response(null, {

@@ -1,10 +1,5 @@
 import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
-import {
-  type Usage,
-  type UsageAnnotation,
-  annotationValidator,
-  usageAnnotationValidator,
-} from '~/lib/common/annotations';
+import { type ProviderType, type Usage, type UsageAnnotation, parseAnnotations } from '~/lib/common/annotations';
 
 export function usageFromGeneration(generation: {
   usage: LanguageModelUsage;
@@ -22,17 +17,21 @@ export function usageFromGeneration(generation: {
   };
 }
 
-export async function calculateTotalUsageForMessage(
-  lastMessage: Message | undefined,
-  finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
-): Promise<{ totalRawUsage: Usage; totalUsageBilledFor: Usage }> {
-  // The main distinction is we don't count usage from failed tool calls in
-  // totalUsageBilledFor.
-  const totalUsageBilledFor = usageFromGeneration(finalGeneration);
-  const totalRawUsage = JSON.parse(JSON.stringify(totalUsageBilledFor));
+export function initializeUsage(): Usage {
+  return {
+    completionTokens: 0,
+    promptTokens: 0,
+    totalTokens: 0,
+    anthropicCacheCreationInputTokens: 0,
+    anthropicCacheReadInputTokens: 0,
+    openaiCachedPromptTokens: 0,
+    xaiCachedPromptTokens: 0,
+  };
+}
 
+export function getFailedToolCalls(message: Message): Set<string> {
   const failedToolCalls: Set<string> = new Set();
-  for (const part of lastMessage?.parts ?? []) {
+  for (const part of message.parts ?? []) {
     if (part.type !== 'tool-invocation') {
       continue;
     }
@@ -40,36 +39,49 @@ export async function calculateTotalUsageForMessage(
       failedToolCalls.add(part.toolInvocation.toolCallId);
     }
   }
+  return failedToolCalls;
+}
 
-  if (lastMessage && lastMessage.role === 'assistant') {
-    for (const annotation of lastMessage.annotations ?? []) {
-      const parsed = annotationValidator.safeParse(annotation);
-      if (!parsed.success) {
-        console.error('Invalid annotation', parsed.error);
-        continue;
-      }
-      if (parsed.data.type !== 'usage') {
-        continue;
-      }
-      let payload: UsageAnnotation;
-      try {
-        payload = usageAnnotationValidator.parse(JSON.parse(parsed.data.usage.payload));
-      } catch (e) {
-        console.error('Invalid payload', parsed.data.usage.payload, e);
-        continue;
-      }
-      addUsage(totalRawUsage, payload);
-      if (payload.toolCallId && failedToolCalls.has(payload.toolCallId)) {
-        console.warn('Skipping usage for failed tool call', payload.toolCallId);
-        continue;
-      }
-      addUsage(totalUsageBilledFor, payload);
+export function calculateTotalUsage(args: {
+  startUsage: Usage | null;
+  usageAnnotationsForToolCalls: Record<string, UsageAnnotation | null>;
+  failedToolCalls: Set<string>;
+}): { totalRawUsage: Usage; totalUsageBilledFor: Usage } {
+  const { startUsage, usageAnnotationsForToolCalls, failedToolCalls } = args;
+  const totalRawUsage = startUsage ? JSON.parse(JSON.stringify(startUsage)) : initializeUsage();
+  const totalUsageBilledFor = startUsage ? JSON.parse(JSON.stringify(startUsage)) : initializeUsage();
+  for (const [toolCallId, payload] of Object.entries(usageAnnotationsForToolCalls)) {
+    if (!payload) {
+      continue;
     }
+    addUsage(totalRawUsage, payload);
+    if (toolCallId && failedToolCalls.has(toolCallId)) {
+      console.warn('Skipping usage for failed tool call', toolCallId);
+      continue;
+    }
+    addUsage(totalUsageBilledFor, payload);
   }
   return {
     totalRawUsage,
     totalUsageBilledFor,
   };
+}
+
+export async function calculateTotalBilledUsageForMessage(
+  lastMessage: Message | undefined,
+  finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
+): Promise<Usage> {
+  const { usageForToolCall } = parseAnnotations(lastMessage?.annotations ?? []);
+  const failedToolCalls: Set<string> = lastMessage ? getFailedToolCalls(lastMessage) : new Set();
+  // If there's an annotation for the final part, start with an empty usage, otherwise, create a
+  // usage object from the passed in final generation.
+  const startUsage = usageForToolCall.final ? initializeUsage() : usageFromGeneration(finalGeneration);
+  const { totalUsageBilledFor } = calculateTotalUsage({
+    startUsage,
+    usageAnnotationsForToolCalls: usageForToolCall,
+    failedToolCalls,
+  });
+  return totalUsageBilledFor;
 }
 
 function addUsage(totalUsage: Usage, payload: UsageAnnotation) {
@@ -85,7 +97,7 @@ function addUsage(totalUsage: Usage, payload: UsageAnnotation) {
 // TODO this these wrong
 // Based on how the final generation came from (which may not be the provided used for the other generations came from)
 // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
-export function calculateChefTokens(totalUsage: Usage, providerMetadata?: ProviderMetadata) {
+export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) {
   let chefTokens = 0;
   const breakdown = {
     completionTokens: {
@@ -113,7 +125,7 @@ export function calculateChefTokens(totalUsage: Usage, providerMetadata?: Provid
       },
     },
   };
-  if (providerMetadata?.anthropic) {
+  if (provider === 'Anthropic') {
     const anthropicCompletionTokens = totalUsage.completionTokens * 200;
     chefTokens += anthropicCompletionTokens;
     breakdown.completionTokens.anthropic = anthropicCompletionTokens;
@@ -127,7 +139,7 @@ export function calculateChefTokens(totalUsage: Usage, providerMetadata?: Provid
     const cacheReadInputTokens = totalUsage.anthropicCacheReadInputTokens * 3;
     chefTokens += cacheReadInputTokens;
     breakdown.promptTokens.anthropic.cached += cacheReadInputTokens;
-  } else if (providerMetadata?.openai) {
+  } else if (provider === 'OpenAI') {
     const openaiCompletionTokens = totalUsage.completionTokens * 100;
     chefTokens += openaiCompletionTokens;
     breakdown.completionTokens.openai = openaiCompletionTokens;
@@ -137,7 +149,7 @@ export function calculateChefTokens(totalUsage: Usage, providerMetadata?: Provid
     const openaiUncachedPromptTokens = (totalUsage.promptTokens - totalUsage.openaiCachedPromptTokens) * 26;
     chefTokens += openaiUncachedPromptTokens;
     breakdown.promptTokens.openai.uncached = openaiUncachedPromptTokens;
-  } else if (providerMetadata?.xai) {
+  } else if (provider === 'XAI') {
     // TODO: This is a guess. Billing like openai
     const xaiCompletionTokens = totalUsage.completionTokens * 200;
     chefTokens += xaiCompletionTokens;
@@ -147,7 +159,7 @@ export function calculateChefTokens(totalUsage: Usage, providerMetadata?: Provid
     breakdown.promptTokens.xai.uncached = xaiPromptTokens;
     // TODO - never seen xai set this field to anything but 0, so holding off until we understand.
     //chefTokens += totalUsage.xaiCachedPromptTokens * 3;
-  } else if (providerMetadata?.google) {
+  } else if (provider === 'Google') {
     const googleCompletionTokens = totalUsage.completionTokens * 140;
     chefTokens += googleCompletionTokens;
     breakdown.completionTokens.google = googleCompletionTokens;
@@ -156,7 +168,7 @@ export function calculateChefTokens(totalUsage: Usage, providerMetadata?: Provid
     breakdown.promptTokens.google.uncached = googlePromptTokens;
     // TODO: Implement Google billing for the prompt tokens that are cached. Google doesn't offer caching yet.
   } else {
-    console.error('WARNING: Unknown provider. Not recording usage. Giving away for free.', providerMetadata);
+    console.error('WARNING: Unknown provider. Not recording usage. Giving away for free.');
   }
 
   return {

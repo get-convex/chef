@@ -1,4 +1,4 @@
-import type { LanguageModelV1 } from 'ai';
+import type { LanguageModelV1, ProviderMetadata } from 'ai';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
@@ -284,4 +284,23 @@ function anthropicInjectCacheControl(options?: RequestInit) {
   const newBody = JSON.stringify(body);
   console.log(`Injected system messages in ${Date.now() - start}ms`);
   return { ...options, body: newBody };
+}
+
+export function getProviderType(providerMetadata?: ProviderMetadata) {
+  if (!providerMetadata) {
+    return 'Unknown';
+  }
+  if (providerMetadata.anthropic) {
+    return 'Anthropic';
+  }
+  if (providerMetadata.openai) {
+    return 'OpenAI';
+  }
+  if (providerMetadata.xai) {
+    return 'XAI';
+  }
+  if (providerMetadata.google) {
+    return 'Google';
+  }
+  return 'Unknown';
 }
