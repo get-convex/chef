@@ -158,7 +158,14 @@ export function ApiKeyCard() {
 
 type KeyType = 'anthropic' | 'google' | 'openai' | 'xai';
 
-function ApiKeyItem(props: {
+function ApiKeyItem({
+  label,
+  description,
+  isLoading,
+  keyType,
+  value,
+  onValidate,
+}: {
   label: string;
   description: React.ReactNode;
   isLoading: boolean;
@@ -188,7 +195,7 @@ function ApiKeyItem(props: {
       setValidationError(null);
 
       try {
-        const isValidResult = await props.onValidate(debouncedKeyValue);
+        const isValidResult = await onValidate(debouncedKeyValue);
 
         if (!isValidResult) {
           setValidationError(
@@ -205,19 +212,19 @@ function ApiKeyItem(props: {
     if (debouncedKeyValue.trim()) {
       validateKey();
     }
-  }, [debouncedKeyValue, convex, props.keyType]);
+  }, [debouncedKeyValue, convex, onValidate]);
 
-  if (props.isLoading) {
+  if (isLoading) {
     return <div className="h-[78px] w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />;
   }
 
-  const hasKey = !!props.value;
+  const hasKey = !!value;
 
   const handleRemoveKey = async () => {
     try {
       setIsSaving(true);
 
-      switch (props.keyType) {
+      switch (keyType) {
         case 'anthropic':
           await convex.mutation(api.apiKeys.deleteAnthropicApiKeyForCurrentMember);
           toast.success('Anthropic API key removed', { id: 'anthropic-removed' });
@@ -237,7 +244,7 @@ function ApiKeyItem(props: {
       }
     } catch (error) {
       captureException(error);
-      toast.error(`Failed to remove ${props.keyType} API key`);
+      toast.error(`Failed to remove ${keyType} API key`);
     } finally {
       setIsSaving(false);
     }
@@ -257,7 +264,7 @@ function ApiKeyItem(props: {
         google: undefined as string | undefined,
       };
 
-      switch (props.keyType) {
+      switch (keyType) {
         case 'anthropic':
           apiKeyMutation.value = cleanApiKey(newKeyValue);
           break;
@@ -276,13 +283,13 @@ function ApiKeyItem(props: {
         apiKey: apiKeyMutation,
       });
 
-      toast.success(`${props.label} saved`, { id: props.keyType });
+      toast.success(`${label} saved`, { id: keyType });
       setIsAdding(false);
       setNewKeyValue('');
       setValidationError(null);
     } catch (error) {
       captureException(error);
-      toast.error(`Failed to save ${props.keyType} API key`);
+      toast.error(`Failed to save ${keyType} API key`);
     } finally {
       setIsSaving(false);
     }
@@ -306,14 +313,14 @@ function ApiKeyItem(props: {
   return (
     <div>
       <div className="mb-1.5">
-        <span className="font-medium text-content-primary">{props.label}</span>
+        <span className="font-medium text-content-primary">{label}</span>
       </div>
-      <div className="mb-2 text-xs text-content-secondary">{props.description}</div>
+      <div className="mb-2 text-xs text-content-secondary">{description}</div>
 
       {hasKey ? (
         <div className="flex items-center gap-2 py-1.5">
           <span className="max-w-80 truncate font-mono text-sm" aria-label="API key value">
-            {showKey ? props.value : '•'.repeat(props.value.length)}
+            {showKey ? value : '•'.repeat(value.length)}
           </span>
           <Button
             onClick={() => setShowKey(!showKey)}
@@ -326,13 +333,14 @@ function ApiKeyItem(props: {
         </div>
       ) : isAdding ? (
         <form onSubmit={handleSaveKey} className="flex flex-col gap-1">
-          <div className="flex items-start gap-2">
+          <div className="flex flex-col items-start gap-2">
             <div className="-mt-1 w-80">
               <TextInput
+                autoFocus
                 type={showKey ? 'text' : 'password'}
                 value={newKeyValue}
                 onChange={handleKeyValueChange}
-                placeholder={`Enter your ${props.label}`}
+                placeholder={`Enter your ${label}`}
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error Unclear issue with typing of design system
                 action={(): void => {
@@ -344,17 +352,19 @@ function ApiKeyItem(props: {
                 error={newKeyValue.trim() && validationError ? validationError : undefined}
               />
             </div>
-            <Button type="submit" disabled={isSaving || !newKeyValue.trim()} icon={isSaving && <Spinner />}>
-              Save
-            </Button>
-            <Button type="button" variant="neutral" onClick={handleCancel} disabled={isSaving}>
-              Cancel
-            </Button>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={isSaving || !newKeyValue.trim()} icon={isSaving && <Spinner />}>
+                Save
+              </Button>
+              <Button type="button" variant="neutral" onClick={handleCancel} disabled={isSaving}>
+                Cancel
+              </Button>
+            </div>
           </div>
         </form>
       ) : (
         <Button variant="neutral" onClick={() => setIsAdding(true)} icon={<PlusIcon />}>
-          Add {props.label}
+          Add {label}
         </Button>
       )}
     </div>
