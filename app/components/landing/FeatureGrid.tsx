@@ -63,7 +63,7 @@ export default function FeatureGrid() {
       {features.map((feature, index) => (
         <div
           key={index}
-          className={classNames('border-neutral-1 px-4 py-6 dark:border-neutral-10', {
+          className={classNames('border-neutral-1 px-4 py-6 dark:border-neutral-10 relative group', {
             'border-b': index !== 5,
             'md:border-b-0': index === 4,
             'lg:border-b-0': index === 3,
@@ -72,9 +72,23 @@ export default function FeatureGrid() {
             'lg:border-r': [1, 3].includes(index),
           })}
         >
-          <div className="mb-4 text-neutral-9 dark:text-neutral-2">{feature.icon}</div>
-          <h2 className="mb-2 text-xl font-semibold leading-none">{feature.title}</h2>
-          <p className="text-pretty text-sm text-neutral-10 dark:text-neutral-4 lg:text-base">{feature.description}</p>
+          <div className="relative z-10 mb-4 text-neutral-9 transition-colors group-hover:text-neutral-12 dark:text-neutral-2 dark:group-hover:text-white">
+            {feature.icon}
+          </div>
+          <div className="relative z-10 mb-2 inline-flex flex-col items-start justify-start">
+            <h2 className="pb-2 text-xl font-semibold leading-none">{feature.title}</h2>
+            <div
+              className="h-1 w-0 rounded-full bg-purple-300 transition-all duration-300 group-hover:w-full dark:bg-purple-600"
+              aria-hidden
+            />
+          </div>
+          <p className="relative z-10 text-pretty text-sm text-neutral-10 dark:text-neutral-4 lg:text-base">
+            {feature.description}
+          </p>
+          <div
+            className="absolute inset-0 bg-gradient-to-b from-neutral-1/50 opacity-0 transition-opacity duration-200 group-hover:opacity-100 dark:from-neutral-1/10"
+            aria-hidden
+          />
         </div>
       ))}
     </div>
