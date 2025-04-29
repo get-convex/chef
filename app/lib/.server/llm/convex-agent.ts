@@ -206,6 +206,9 @@ async function onFinishHandler({
         span.setAttribute('providerMetadata.anthropic.cacheReadInputTokens', anthropic.cacheReadInputTokens);
       }
     }
+    if (result.finishReason === 'stop') {
+      span.setAttribute('tools.disabledFromRepeatedErrors', toolsDisabledFromRepeatedErrors ? 'true' : 'false');
+    }
     span.end();
   }
 
