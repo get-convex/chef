@@ -13,6 +13,7 @@ import type * as apiKeys from "../apiKeys.js";
 import type * as compressMessages from "../compressMessages.js";
 import type * as convexProjects from "../convexProjects.js";
 import type * as debugPrompt from "../debugPrompt.js";
+import type * as deploy from "../deploy.js";
 import type * as dev from "../dev.js";
 import type * as http from "../http.js";
 import type * as lz4 from "../lz4.js";
@@ -24,6 +25,7 @@ import type * as resendProxy from "../resendProxy.js";
 import type * as sessions from "../sessions.js";
 import type * as share from "../share.js";
 import type * as snapshot from "../snapshot.js";
+import type * as socialShare from "../socialShare.js";
 
 import type {
   ApiFromModules,
@@ -45,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   compressMessages: typeof compressMessages;
   convexProjects: typeof convexProjects;
   debugPrompt: typeof debugPrompt;
+  deploy: typeof deploy;
   dev: typeof dev;
   http: typeof http;
   lz4: typeof lz4;
@@ -56,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   sessions: typeof sessions;
   share: typeof share;
   snapshot: typeof snapshot;
+  socialShare: typeof socialShare;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

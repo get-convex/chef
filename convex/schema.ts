@@ -38,6 +38,15 @@ export default defineSchema({
   convexMembers: defineTable({
     tokenIdentifier: v.string(),
     apiKey: v.optional(apiKeyValidator),
+    // Not authoritative - just a cache of the user's profile from Auth0/provision host
+    cachedProfile: v.optional(
+      v.object({
+        username: v.string(),
+        avatar: v.string(),
+        email: v.string(),
+        id: v.string(),
+      }),
+    ),
   }).index("byTokenIdentifier", ["tokenIdentifier"]),
 
   /*
@@ -67,6 +76,7 @@ export default defineSchema({
     metadata: v.optional(v.any()), // TODO migration to remove this column
     snapshotId: v.optional(v.id("_storage")),
     lastMessageRank: v.optional(v.number()),
+    hasBeenDeployed: v.optional(v.boolean()),
     convexProject: v.optional(
       v.union(
         v.object({
@@ -111,6 +121,10 @@ export default defineSchema({
     .index("byStorageId", ["storageId"])
     .index("bySnapshotId", ["snapshotId"]),
 
+  // This type of share is for forking from a specific point in time.
+  // Call it a debugging snapshot or a fork point. There can be multiple per chat.
+  // The main thing they are used for is forking a project at a set point
+  // into another user's account.
   shares: defineTable({
     chatId: v.id("chats"),
     snapshotId: v.optional(v.id("_storage")),
@@ -119,7 +133,7 @@ export default defineSchema({
     chatHistoryId: v.optional(v.union(v.id("_storage"), v.null())),
 
     // Shares are created at one point in time, so this makes sure
-    // people using the link don’t see newer messages.
+    // people using the link don't see newer messages.
     lastMessageRank: v.number(),
     partIndex: v.optional(v.number()),
     // The description of the chat at the time the share was created.
@@ -129,6 +143,25 @@ export default defineSchema({
     .index("bySnapshotId", ["snapshotId"])
     .index("byChatHistoryId", ["chatHistoryId"])
     .index("byChatId", ["chatId"]),
+
+  // This type of share is for sharing a "project."
+  // You only get one for a given project for now.
+  socialShares: defineTable({
+    chatId: v.id("chats"),
+    code: v.string(),
+    thumbnailImageStorageId: v.optional(v.id("_storage")),
+    // Show a share card at all.
+    shared: v.boolean(),
+    // Allow others to fork this project at its most recent state.
+    allowForkFromLatest: v.boolean(),
+    // Allow to be shown in gallery (doesn't mean we actual show it)
+    allowShowInGallery: v.boolean(),
+    // Link to the deployed version from the share card.
+    linkToDeployed: v.boolean(),
+  })
+    .index("byCode", ["code"])
+    .index("byChatId", ["chatId"])
+    .index("byAllowShowInGallery", ["allowShowInGallery"]),
 
   memberOpenAITokens: defineTable({
     memberId: v.id("convexMembers"),

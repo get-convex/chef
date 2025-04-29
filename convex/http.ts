@@ -260,4 +260,41 @@ httpWithCors.route({
   }),
 });
 
+httpWithCors.route({
+  path: "/upload_thumbnail",
+  method: "POST",
+  handler: httpActionWithErrorHandling(async (ctx, request) => {
+    const url = new URL(request.url);
+    const sessionId = url.searchParams.get("sessionId");
+    const urlId = url.searchParams.get("chatId");
+
+    if (!sessionId || !urlId) {
+      return new Response("Missing sessionId or chatId", { status: 400 });
+    }
+
+    const imageBlob = await request.blob();
+
+    // Add a 5MB size limit for thumbnails
+    const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+    if (imageBlob.size > MAX_THUMBNAIL_SIZE) {
+      return new Response(JSON.stringify({ error: "Thumbnail image exceeds maximum size of 5MB" }), {
+        status: 413, // Payload Too Large
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const storageId = await ctx.storage.store(imageBlob);
+
+    await ctx.runMutation(internal.socialShare.saveThumbnail, {
+      sessionId: sessionId as Id<"sessions">,
+      urlId,
+      storageId,
+    });
+
+    return new Response(JSON.stringify({ storageId }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }),
+});
+
 export default httpWithCors.http;

@@ -67,6 +67,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
             <p className="text-sm text-content-primary">Are you sure you want to continue?</p>
             <div className="flex justify-end gap-2">
               <Button
+                key="cancel"
                 variant="neutral"
                 onClick={() => {
                   setIsModalOpen(false);
@@ -76,6 +77,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                 Cancel
               </Button>
               <Button
+                key="rewind"
                 variant="danger"
                 onClick={() => {
                   setIsModalOpen(false);

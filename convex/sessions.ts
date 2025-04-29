@@ -143,3 +143,24 @@ export async function getCurrentMember(ctx: QueryCtx) {
   }
   return existingMember;
 }
+
+export const updateCachedProfile = mutation({
+  args: {
+    profile: v.object({
+      username: v.string(),
+      avatar: v.string(),
+      email: v.string(),
+      id: v.union(v.string(), v.number()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const member = await getCurrentMember(ctx);
+    const profile = {
+      ...args.profile,
+      id: String(args.profile.id),
+    };
+    await ctx.db.patch(member._id, {
+      cachedProfile: profile,
+    });
+  },
+});

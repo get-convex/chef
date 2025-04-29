@@ -7,6 +7,7 @@ import { useChatId } from '~/lib/stores/chatId';
 import { setProfile } from '~/lib/stores/profile';
 import { getConvexProfile } from '~/lib/convexProfile';
 import { useLDClient, withLDProvider, basicLogger } from 'launchdarkly-react-client-sdk';
+import { api } from '@convex/_generated/api';
 
 export const UserProvider = withLDProvider<any>({
   clientSideID: import.meta.env.VITE_LD_CLIENT_SIDE_ID,
@@ -51,22 +52,26 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
           const token = getConvexAuthToken(convex);
           if (token) {
             const convexProfile = await getConvexProfile(token);
-            setProfile({
+            const profile = {
               username: convexProfile.name || user.name || user.nickname || '',
               email: convexProfile.email || user.email || '',
               avatar: user.picture || '',
               id: convexProfile.id || user.sub || '',
-            });
+            };
+            setProfile(profile);
+            void convex.mutation(api.sessions.updateCachedProfile, { profile });
           }
         } catch (error) {
           console.error('Failed to fetch Convex profile:', error);
           // Fallback to Auth0 profile if Convex profile fetch fails
-          setProfile({
+          const profile = {
             username: user.name ?? user.nickname ?? '',
             email: user.email ?? '',
             avatar: user.picture ?? '',
             id: user.sub ?? '',
-          });
+          };
+          setProfile(profile);
+          void convex.mutation(api.sessions.updateCachedProfile, { profile });
         }
       } else {
         launchdarkly?.identify({

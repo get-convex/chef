@@ -40,7 +40,11 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
       children.push(<ToolCall key={children.length} partId={partId} toolCallId={part.toolInvocation.toolCallId} />);
     }
     if (part.type === 'text') {
-      children.push(<Markdown html>{part.text}</Markdown>);
+      children.push(
+        <Markdown html key={partId}>
+          {part.text}
+        </Markdown>,
+      );
     }
   }
   if (showUsageAnnotations) {

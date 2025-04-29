@@ -388,7 +388,6 @@ function CoreMessageView({ message, getTokenEstimate, totalCompletionTokens }: C
   const hiddenUntilFoundRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (hiddenUntilFoundRef.current) {
-      console.log('hiddenUntilFoundRef.current', hiddenUntilFoundRef.current);
       hiddenUntilFoundRef.current.hidden = (isExpanded ? false : 'until-found') as any;
     }
   }, [isExpanded]);

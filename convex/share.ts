@@ -1,7 +1,9 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query, type DatabaseReader } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
 import { getChatByIdOrUrlIdEnsuringAccess, getLatestChatMessageStorageState } from "./messages";
 import { startProvisionConvexProjectHelper } from "./convexProjects";
+import type { Id } from "./_generated/dataModel";
 
 export const create = mutation({
   args: {
@@ -63,7 +65,8 @@ export const isShareReady = query({
   },
 });
 
-async function generateUniqueCode(db: DatabaseReader) {
+// Unique across shares and socialShares in case these two url namespaces are combined.
+export async function generateUniqueCode(db: DatabaseReader) {
   const code = crypto.randomUUID().replace(/-/g, "").substring(0, 6);
   const existing = await db
     .query("shares")
@@ -88,13 +91,91 @@ export const getShareDescription = query({
       .withIndex("byCode", (q) => q.eq("code", code))
       .first();
     if (!getShare) {
-      throw new ConvexError("Invalid share link");
+      const getShow = await ctx.db
+        .query("socialShares")
+        .withIndex("byCode", (q) => q.eq("code", code))
+        .first();
+      if (!getShow) {
+        throw new ConvexError("Invalid share link");
+      }
+      const chat = await ctx.db.get(getShow.chatId);
+      return {
+        description: chat?.description,
+      };
     }
     return {
       description: getShare.description,
     };
   },
 });
+
+async function cloneShow(
+  ctx: MutationCtx,
+  {
+    showCode,
+    sessionId,
+    projectInitParams,
+  }: { showCode: string; sessionId: Id<"sessions">; projectInitParams: { teamSlug: string; auth0AccessToken: string } },
+): Promise<{ id: string; description?: string }> {
+  const show = await ctx.db
+    .query("socialShares")
+    .withIndex("byCode", (q) => q.eq("code", showCode))
+    .first();
+  if (!show) {
+    throw new ConvexError("Invalid share link");
+  }
+  if (!show.allowForkFromLatest) {
+    throw new ConvexError("This show is not allowed to be forked.");
+  }
+  const parentChat = await ctx.db.get(show.chatId);
+  if (!parentChat) {
+    throw new ConvexError({
+      code: "NotFound",
+      message: "The original chat was not found. It may have been deleted.",
+    });
+  }
+
+  const chatId = crypto.randomUUID();
+
+  const storageState = await getLatestChatMessageStorageState(ctx, parentChat);
+  if (!storageState) {
+    throw new ConvexError("Chat history not found");
+  }
+  if (storageState.storageId === null) {
+    throw new ConvexError("Chat history not found");
+  }
+  const snapshotId = storageState.snapshotId ?? parentChat.snapshotId;
+  if (!snapshotId) {
+    throw new ConvexError("Your project has never been saved.");
+  }
+
+  const clonedChat = {
+    creatorId: sessionId,
+    initialId: chatId,
+    description: parentChat.description,
+    timestamp: new Date().toISOString(),
+    snapshotId,
+  };
+  const clonedChatId = await ctx.db.insert("chats", clonedChat);
+
+  await ctx.db.insert("chatMessagesStorageState", {
+    chatId: clonedChatId,
+    storageId: storageState.storageId,
+    lastMessageRank: storageState.lastMessageRank,
+    partIndex: storageState.partIndex,
+  });
+
+  await startProvisionConvexProjectHelper(ctx, {
+    sessionId,
+    chatId: clonedChat.initialId,
+    projectInitParams,
+  });
+
+  return {
+    id: chatId,
+    description: parentChat.description,
+  };
+}
 
 export const clone = mutation({
   args: {
@@ -115,7 +196,7 @@ export const clone = mutation({
       .withIndex("byCode", (q) => q.eq("code", shareCode))
       .first();
     if (!getShare) {
-      throw new ConvexError("Invalid share link");
+      return cloneShow(ctx, { showCode: shareCode, sessionId, projectInitParams });
     }
 
     const parentChat = await ctx.db.get(getShare.chatId);

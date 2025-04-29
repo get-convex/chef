@@ -91,6 +91,8 @@ export default defineConfig((config) => {
     server: {
       // feel free to disable, just using this to foolproof dev
       strictPort: true,
+      // when debugging
+      allowedHosts: ['cc90-12-117-224-18.ngrok-free.app'],
     },
     plugins: [
       // This is complicated: we're polyfilling the browser (!) for some things
