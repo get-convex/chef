@@ -138,7 +138,7 @@ export function solutionConstraints(options: SystemPromptOptions) {
         The \`useQuery()\` hook is live-updating! It causes the React component is it used in to rerender, so Convex is a
         perfect fix for collaborative, live-updating websites.
 
-        You can use \`useQuery()\` or other \`use\` hooks conditionally. The following example is invalid:
+        You cannot use \`useQuery()\` or other \`use\` hooks conditionally. The following example is invalid:
 
         \`\`\`tsx
         const avatarUrl = profile?.avatarId ? useQuery(api.profiles.getAvatarUrl, { storageId: profile.avatarId }) : null;
