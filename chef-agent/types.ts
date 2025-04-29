@@ -18,6 +18,7 @@ export interface SystemPromptOptions {
   usingGoogle: boolean;
   resendProxyEnabled: boolean;
   skipSystemPrompt: boolean;
+  smallFiles: boolean;
 }
 
 export interface BoltArtifactData {

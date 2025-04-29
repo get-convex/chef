@@ -16,6 +16,8 @@ export type ConvexToolSet = {
 
 type ConvexToolCall = ToolCallUnion<ConvexToolSet>;
 
+export type ConvexToolName = keyof ConvexToolSet;
+
 type ConvexToolResult =
   | {
       toolName: 'deploy';

@@ -14,6 +14,7 @@ import { isValidSession } from "./sessions";
 import type { Doc, Id } from "./_generated/dataModel";
 import { ensureEnvVar, startProvisionConvexProjectHelper } from "./convexProjects";
 import { internal } from "./_generated/api";
+import { assertIsConvexAdmin } from "./admin";
 
 export type SerializedMessage = Omit<AIMessage, "createdAt" | "content"> & {
   createdAt: number | undefined;
@@ -302,9 +303,13 @@ export const getInitialMessagesStorageInfo = internalQuery({
 export const getMessagesByChatInitialIdBypassingAccessControl = internalQuery({
   args: {
     id: v.string(),
+    ensureAdmin: v.optional(v.boolean()),
   },
   returns: v.union(v.id("_storage"), v.null()),
   handler: async (ctx, args) => {
+    if (args.ensureAdmin) {
+      await assertIsConvexAdmin(ctx);
+    }
     const chat = await ctx.db
       .query("chats")
       .withIndex("byInitialId", (q) => q.eq("initialId", args.id))
@@ -355,7 +360,7 @@ export const updateStorageState = internalMutation({
     }
 
     if (previous.lastMessageRank === lastMessageRank && previous.partIndex === partIndex) {
-      if (messageHistoryStorageId !== null) {
+      if (messageHistoryStorageId !== null && snapshotId === null) {
         // Should this error?
         console.warn(
           `Received duplicate update for message history, message ${lastMessageRank} part ${partIndex}, ignoring`,
@@ -369,6 +374,10 @@ export const updateStorageState = internalMutation({
         snapshotId,
       });
       return;
+    }
+
+    if (previous.storageId !== null && storageId === null) {
+      throw new Error("Received null storageId for a chat with messages");
     }
 
     await ctx.db.insert("chatMessagesStorageState", {

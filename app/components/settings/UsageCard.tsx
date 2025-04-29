@@ -10,6 +10,7 @@ import { TeamSelector } from '~/components/convex/TeamSelector';
 import { Callout } from '@ui/Callout';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
+import { ProgressBar } from '@ui/ProgressBar';
 
 export function UsageCard() {
   const convex = useConvex();
@@ -60,6 +61,7 @@ export function UsageCard() {
   }, [selectedTeamSlug, convex, token]);
 
   const usagePercentage = tokenUsage ? (tokenUsage.centitokensUsed / tokenUsage.centitokensQuota) * 100 : 0;
+  console.log('usagePercentage', usagePercentage);
 
   return (
     <div className="rounded-lg border bg-bolt-elements-background-depth-1 shadow-sm">
@@ -78,20 +80,17 @@ export function UsageCard() {
           On free plans, Chef will not be usable once you hit the limit for the current billing period.
         </p>
         <div className="space-y-4">
-          <div className="relative h-4 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          <div className="w-80 max-w-80">
             {isLoadingUsage ? (
-              <div className="relative size-full overflow-hidden bg-gray-200 dark:bg-gray-700">
+              <div className="size-full h-4 overflow-hidden rounded bg-gray-200 dark:bg-gray-700">
                 <div className="animate-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               </div>
             ) : (
-              <div>
-                <div
-                  className="h-4 rounded-full bg-blue-500 transition-all duration-300"
-                  style={{ width: tokenUsage?.centitokensQuota ? `${Math.min(100, usagePercentage)}%` : '0%' }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium text-content-primary">
-                  {Math.round(usagePercentage)}%
+              <div className="flex items-center gap-2 text-sm text-content-secondary">
+                <div className="grow">
+                  <ProgressBar fraction={usagePercentage / 100} variant="solid" ariaLabel="Token Usage percentage" />
                 </div>
+                {usagePercentage.toFixed(0)}% used
               </div>
             )}
           </div>

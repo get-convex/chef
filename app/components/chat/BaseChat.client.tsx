@@ -1,4 +1,4 @@
-import { Callout } from '@ui/Callout';
+import { Sheet } from '@ui/Sheet';
 import type { Message } from 'ai';
 import { useFlags } from 'launchdarkly-react-client-sdk';
 import React, { type ReactNode, type RefCallback, useCallback, useMemo } from 'react';
@@ -172,24 +172,25 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       resendMessage={resendMessage}
                     />
                   )}
-                  {disableChatMessage && (
-                    <Callout
-                      variant="upsell"
-                      className="absolute bottom-0 z-40 h-fit min-w-full animate-fadeInFromLoading rounded-lg bg-util-accent/20 backdrop-blur-md dark:bg-util-accent/50"
+                  {disableChatMessage ? (
+                    <Sheet
+                      className="flex min-h-full w-full animate-fadeInFromLoading flex-col gap-6 rounded-lg bg-background-secondary p-2 pl-4"
+                      padding={false}
                     >
                       {disableChatMessage}
-                    </Callout>
+                    </Sheet>
+                  ) : (
+                    <MessageInput
+                      chatStarted={chatStarted}
+                      isStreaming={isStreaming}
+                      sendMessageInProgress={sendMessageInProgress}
+                      disabled={disableChatMessage !== null || maintenanceMode}
+                      modelSelection={modelSelection}
+                      setModelSelection={setModelSelection}
+                      onStop={onStop}
+                      onSend={onSend}
+                    />
                   )}
-                  <MessageInput
-                    chatStarted={chatStarted}
-                    isStreaming={isStreaming}
-                    sendMessageInProgress={sendMessageInProgress}
-                    disabled={disableChatMessage !== null || maintenanceMode}
-                    modelSelection={modelSelection}
-                    setModelSelection={setModelSelection}
-                    onStop={onStop}
-                    onSend={onSend}
-                  />
                 </div>
               </div>
               {maintenanceMode && (
@@ -197,7 +198,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   <div className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700 dark:border-red-600 dark:bg-red-900 dark:text-red-200">
                     <p className="font-bold">Chef is temporarily unavailable</p>
                     <p className="text-sm">
-                      We’re experiencing high load and will be back soon. Thank you for your patience.
+                      We&apos;re experiencing high load and will be back soon. Thank you for your patience.
                     </p>
                   </div>
                 </div>

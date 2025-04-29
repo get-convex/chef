@@ -129,3 +129,4 @@ There are a few global variables available for debugging too:
 - `chefParsedMessages` is similar
 - `chefSentryEnabled` is whether Sentry is currently enabled
 - `chefSetLogLevel()` can be called with log levels like `"debug"` or `"info"` to get more console logging. `"tracing"` is usually too much.
+- `chefAssertAdmin()` enables admin features (after checking that you are a member of the Convex team in the prod dashboard)

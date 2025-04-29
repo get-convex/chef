@@ -157,6 +157,7 @@ interface DownloadOptions {
   dev?: boolean;
   prod?: boolean;
   messagesFile?: string;
+  messagesRawFile?: string;
   messages?: boolean;
 }
 
@@ -176,7 +177,8 @@ const downloadCommand = new Command('download')
   )
   .addOption(new Option('--prod', 'Use production Chef database').conflicts(['chef-backend-url', 'dev']))
   .addOption(new Option('--dev', 'Use dev Chef database configured in .env.local').conflicts(['chef-site-url', 'prod']))
-  .addOption(new Option('--messages-file <file>', 'File to write conversation messages to'))
+  .addOption(new Option('--messages-file <file>', 'File to write the parsed (JSON) messages to'))
+  .addOption(new Option('--messages-raw-file <file>', 'File to write the compressed messages to'))
   .action(async (chatUuid: string, options: DownloadOptions) => {
     let chefSiteUrl: string | undefined;
     if (options.dev) {
@@ -219,7 +221,13 @@ const downloadCommand = new Command('download')
     }
 
     const messagesBlob = await response.arrayBuffer();
-    const decompressed = await lz4.decompress(new Uint8Array(messagesBlob));
+    const messageBytes = new Uint8Array(messagesBlob);
+    if (options.messagesRawFile) {
+      const messagesPath = resolve(options.messagesRawFile);
+      await writeFile(messagesPath, messageBytes);
+      log(`Wrote raw messages to ${messagesPath}`);
+    }
+    const decompressed = await lz4.decompress(messageBytes);
     const messages = JSON.parse(new TextDecoder().decode(decompressed));
     if (options.messagesFile) {
       const messagesPath = resolve(options.messagesFile);

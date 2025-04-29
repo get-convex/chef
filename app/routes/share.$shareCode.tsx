@@ -16,7 +16,7 @@ import { Loading } from '~/components/Loading';
 import type { MetaFunction } from '@vercel/remix';
 import { Button } from '@ui/Button';
 import { ConvexError } from 'convex/values';
-
+import { Sheet } from '@ui/Sheet';
 export const meta: MetaFunction = () => {
   return [
     { title: 'Cooked with Chef' },
@@ -26,7 +26,7 @@ export const meta: MetaFunction = () => {
     },
     {
       property: 'og:image',
-      content: 'https://chef.convex.dev/social_preview_share.jpg',
+      content: 'https://chef.convex.dev/social_preview_share.png',
     },
   ];
 };
@@ -118,12 +118,7 @@ function ShareProjectContent() {
             </p>
           </div>
 
-          <button
-            className="flex w-full items-center justify-center gap-2 rounded-lg border bg-bolt-elements-button-secondary-background px-6 py-3 text-bolt-elements-button-primary-text hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={signIn}
-          >
-            Sign in
-          </button>
+          <Button onClick={signIn}>Sign in</Button>
         </div>
       </div>
     );
@@ -131,35 +126,31 @@ function ShareProjectContent() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6 rounded-xl border bg-white p-8">
+      <Sheet className="w-full max-w-md space-y-6 border p-8">
         <div className="space-y-2 text-center">
-          <h1 className="text-center text-3xl font-bold">Clone Project</h1>
-          {getShareDescription?.description && (
-            <p className="text-base text-gray-500">{getShareDescription.description}</p>
-          )}
+          <h1 className="text-center font-semibold">Clone Project</h1>
+          {getShareDescription?.description && <p className="text-base">{getShareDescription.description}</p>}
         </div>
 
-        <div className="space-y-4">
+        <div className="flex flex-col items-center space-y-4">
           <div className="space-y-2">
-            <h2 className="text-center text-lg font-semibold">Select Team</h2>
-            <p className="text-center text-sm text-gray-500">Choose where to clone this project</p>
+            <h2 className="text-center">Select Team</h2>
+            <p className="text-center text-sm text-content-secondary">Choose where to clone this project</p>
           </div>
 
           {chefAuthState.kind === 'fullyLoggedIn' && (
-            <div className="rounded-lg border p-4">
-              <TeamSelector selectedTeamSlug={selectedTeamSlug} setSelectedTeamSlug={setSelectedTeamSlug} />
-            </div>
+            <TeamSelector selectedTeamSlug={selectedTeamSlug} setSelectedTeamSlug={setSelectedTeamSlug} />
           )}
         </div>
 
         <Button
-          className="flex w-full items-center justify-center gap-2 rounded-lg border bg-bolt-elements-button-secondary-background px-6 py-3 text-gray-900 hover:bg-bolt-elements-button-secondary-backgroundHover disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 px-6 py-3"
           onClick={handleCloneChat}
           disabled={!selectedTeamSlug}
         >
           Clone Project
         </Button>
-      </div>
+      </Sheet>
     </div>
   );
 }

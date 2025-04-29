@@ -6,7 +6,7 @@ export function solutionConstraints(options: SystemPromptOptions) {
   return stripIndents`
   <solution_constraints>
 
-    ${options.includeTemplate ? templateInfo() : ''}
+    ${options.includeTemplate ? templateInfo(options) : ''}
 
     <convex_guidelines>
       You MUST use Convex for the database, realtime, file storage, functions, scheduling, HTTP handlers,
@@ -14,6 +14,11 @@ export function solutionConstraints(options: SystemPromptOptions) {
       subscriptions. Here are some guidelines, documentation, and best practices for using Convex effectively:
 
       ${convexGuidelines}
+
+      <http_guidelines>
+        - All user-defined HTTP endpoints are defined in \`convex/router.ts\` and require an \`httpAction\` decorator.
+        - The \`convex/http.ts\` file contains the authentication handler for Convex Auth. Do NOT modify this file because it is locked. Instead define all new http actions in \`convex/router.ts\`.
+      </http_guidelines>
 
       <auth_server_guidelines>
         Here are some guidelines for using the template's auth within the app:
@@ -124,7 +129,27 @@ export function solutionConstraints(options: SystemPromptOptions) {
   `;
 }
 
-function templateInfo() {
+function appTsxInstructions(systemPromptOptions: SystemPromptOptions) {
+  const { smallFiles } = systemPromptOptions;
+  return smallFiles
+    ? stripIndents`
+    <file path="src/App.tsx">
+      This is the main React component for the app. It starts with a simple login form and a button to add a
+      random number to a list. It uses "src/SignInForm.tsx" and "src/SignOutButton.tsx" for the login and
+      logout functionality. Add new React components to their own files in the 'src' directory to avoid
+      cluttering the main file.
+    </file>
+  `
+    : stripIndents`
+    <file path="src/App.tsx">
+      This is the main React component for the app. It starts with a simple login form and a button to add a
+      random number to a list. It uses "src/SignInForm.tsx" and "src/SignOutButton.tsx" for the login and
+      logout functionality. 
+    </file>
+  `;
+}
+
+function templateInfo(systemPromptOptions: SystemPromptOptions) {
   return stripIndents`
   <template_info>
     The Chef WebContainer environment starts with a full-stack app template fully loaded at '/home/project',
@@ -151,8 +176,8 @@ function templateInfo() {
       This code configures Convex Auth to use just a username/password login method. Do NOT modify this
       file. If the user asks to support other login methods, tell them that this isn't currently possible
       within Chef. They can download the code and do it themselves.
-      IMPORTANT: Do NOT modify the \`convex/auth.ts\` file under any circumstances. This file is locked, and
-      your changes will not be persisted if you try to modify it.
+      IMPORTANT: Do NOT modify the \`convex/auth.ts\`, \`src/SignInForm.tsx\`, or \`src/SignOutButton.tsx\` files under any circumstances. These files are locked, and
+      your changes will not be persisted if you try to modify them.
     </file>
 
     <file path="convex/http.ts">
@@ -169,12 +194,7 @@ function templateInfo() {
       this file. The \`authTables\` object is imported with \`import { authTables } from "@convex-dev/auth/server";\`.
     </file>
 
-    <file path="src/App.tsx">
-      This is the main React component for the app. It starts with a simple login form and a button to add a
-      random number to a list. It uses "src/SignInForm.tsx" and "src/SignOutButton.tsx" for the login and
-      logout functionality.
-    </file>
-
+    ${appTsxInstructions(systemPromptOptions)}
     <file path="src/main.tsx">
       This file is the entry point for the app and sets up the 'ConvexAuthProvider'.
 

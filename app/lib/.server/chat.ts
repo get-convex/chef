@@ -1,11 +1,13 @@
 import { type ActionFunctionArgs } from '@vercel/remix';
 import { createScopedLogger } from 'chef-agent/utils/logger';
-import { convexAgent, getEnv, type ModelProvider } from '~/lib/.server/llm/convex-agent';
+import { convexAgent } from '~/lib/.server/llm/convex-agent';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { checkTokenUsage, recordUsage } from '~/lib/.server/usage';
 import { disabledText, noTokensText } from '~/lib/convexUsage';
+import type { ModelProvider } from '~/lib/.server/llm/provider';
+import { getEnv } from '~/lib/.server/env';
 
 type Messages = Message[];
 
@@ -14,11 +16,10 @@ const logger = createScopedLogger('api.chat');
 export type Tracer = ReturnType<typeof WebTracerProvider.prototype.getTracer>;
 
 export async function chatAction({ request }: ActionFunctionArgs) {
-  const env = globalThis.process.env;
-  const AXIOM_API_TOKEN = getEnv(env, 'AXIOM_API_TOKEN');
-  const AXIOM_API_URL = getEnv(env, 'AXIOM_API_URL');
-  const AXIOM_DATASET_NAME = getEnv(env, 'AXIOM_DATASET_NAME');
-  const PROVISION_HOST = getEnv(env, 'PROVISION_HOST') || 'https://api.convex.dev';
+  const AXIOM_API_TOKEN = getEnv('AXIOM_API_TOKEN');
+  const AXIOM_API_URL = getEnv('AXIOM_API_URL');
+  const AXIOM_DATASET_NAME = getEnv('AXIOM_DATASET_NAME');
+  const PROVISION_HOST = getEnv('PROVISION_HOST') || 'https://api.convex.dev';
 
   let tracer: Tracer | null = null;
   if (AXIOM_API_TOKEN && AXIOM_API_URL && AXIOM_DATASET_NAME) {
@@ -61,11 +62,13 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     userApiKey:
       | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
       | undefined;
-
     shouldDisableTools: boolean;
     skipSystemPrompt: boolean;
+    smallFiles: boolean;
+    recordRawPromptsForDebugging?: boolean;
   };
-  const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug } = body;
+  const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug, recordRawPromptsForDebugging } =
+    body;
 
   let useUserApiKey = false;
 
@@ -131,7 +134,15 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => {
     if (!userApiKey) {
-      await recordUsage(PROVISION_HOST, token, teamSlug, deploymentName, lastMessage, finalGeneration);
+      await recordUsage(
+        PROVISION_HOST,
+        token,
+        body.modelProvider,
+        teamSlug,
+        deploymentName,
+        lastMessage,
+        finalGeneration,
+      );
     }
   };
 
@@ -140,7 +151,6 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
     const dataStream = await convexAgent({
       chatInitialId,
-      env,
       firstUserMessage,
       messages,
       tracer,
@@ -148,7 +158,9 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       userApiKey,
       shouldDisableTools: body.shouldDisableTools,
       skipSystemPrompt: body.skipSystemPrompt,
+      smallFiles: body.smallFiles,
       recordUsageCb,
+      recordRawPromptsForDebugging: !!recordRawPromptsForDebugging,
     });
 
     return new Response(dataStream, {

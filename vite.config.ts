@@ -13,9 +13,7 @@ dotenv.config();
 export default defineConfig((config) => {
   return {
     define: {
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
       'process.env.VERCEL_ENV': JSON.stringify(process.env.VERCEL_ENV),
-      'process.env.VERCEL_GIT_COMMIT_REF': JSON.stringify(process.env.VERCEL_ENV),
     },
 
     /*
