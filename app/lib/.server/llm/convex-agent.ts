@@ -130,6 +130,7 @@ export async function convexAgent(args: {
             coreMessages: messagesForDataStream,
             smallFiles,
             modelProvider,
+            modelChoice,
           });
         },
         onError({ error }) {
@@ -166,6 +167,7 @@ async function onFinishHandler({
   coreMessages,
   smallFiles,
   modelProvider,
+  modelChoice,
 }: {
   dataStream: DataStreamWriter;
   messages: Messages;
@@ -181,6 +183,7 @@ async function onFinishHandler({
   coreMessages: CoreMessage[];
   smallFiles: boolean;
   modelProvider: ModelProvider;
+  modelChoice: string | undefined;
 }) {
   const { providerMetadata } = result;
   // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
@@ -238,7 +241,7 @@ async function onFinishHandler({
   if (toolCallId) {
     const annotation = encodeUsageAnnotation(toolCallId, usage, providerMetadata);
     dataStream.writeMessageAnnotation({ type: 'usage', usage: annotation });
-    const modelAnnotation = encodeModelAnnotation(toolCallId, providerMetadata);
+    const modelAnnotation = encodeModelAnnotation(toolCallId, providerMetadata, modelChoice);
     dataStream.writeMessageAnnotation({ type: 'model', ...modelAnnotation });
   }
 

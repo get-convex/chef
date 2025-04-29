@@ -45,6 +45,7 @@ export function encodeUsageAnnotation(
 export function encodeModelAnnotation(
   call: { kind: 'tool-call'; toolCallId: string | null } | { kind: 'final' },
   providerMetadata: ProviderMetadata | undefined,
+  modelChoice: string | undefined,
 ) {
   let provider: ProviderType | null = null;
   let model: string | null = null;
@@ -52,16 +53,16 @@ export function encodeModelAnnotation(
     provider = 'Anthropic';
     // This covers both claude on Bedrock vs. Anthropic, unclear if we want to
     // try and differentiate between the two.
-    model = modelForProvider('Anthropic');
+    model = modelForProvider('Anthropic', modelChoice);
   } else if (providerMetadata?.openai) {
     provider = 'OpenAI';
-    model = modelForProvider('OpenAI');
+    model = modelForProvider('OpenAI', modelChoice);
   } else if (providerMetadata?.xai) {
     provider = 'XAI';
-    model = modelForProvider('XAI');
+    model = modelForProvider('XAI', modelChoice);
   } else if (providerMetadata?.google) {
     provider = 'Google';
-    model = modelForProvider('Google');
+    model = modelForProvider('Google', modelChoice);
   }
   return { toolCallId: call.kind === 'tool-call' ? call.toolCallId : 'final', provider, model };
 }
