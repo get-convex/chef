@@ -31,7 +31,7 @@ export default function Landing() {
           </li>
         </ul>
       </div>
-      <div className="flex flex-col items-center rounded-xl border border-neutral-1 bg-neutral-1/50 p-6 dark:border-neutral-10 dark:bg-neutral-11 lg:p-8">
+      <div className="flex flex-col items-center rounded-xl border border-neutral-1 bg-[#F7F3F1] p-6 dark:border-neutral-10 dark:bg-neutral-11 lg:p-8">
         <h2 className="mb-2 text-balance text-center text-2xl font-bold leading-none lg:text-3xl">
           Building an AI Coding Platform? Use Convex.
         </h2>

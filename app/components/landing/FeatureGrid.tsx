@@ -86,7 +86,7 @@ export default function FeatureGrid() {
             {feature.description}
           </p>
           <div
-            className="absolute inset-0 bg-gradient-to-b from-neutral-1/50 opacity-0 transition-opacity duration-200 group-hover:opacity-100 dark:from-neutral-1/10"
+            className="absolute inset-0 bg-gradient-to-b from-[#F7F3F1] opacity-0 transition-opacity duration-200 group-hover:opacity-100 dark:from-neutral-1/10"
             aria-hidden
           />
         </div>
