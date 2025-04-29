@@ -291,6 +291,9 @@ importers:
       react-resizable-panels:
         specifier: ^2.1.7
         version: 2.1.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-tweet:
+        specifier: ^3.2.2
+        version: 3.2.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rehype-raw:
         specifier: ^7.0.0
         version: 7.0.0
@@ -3832,6 +3835,9 @@ packages:
     resolution: {integrity: sha512-IwQk4yfwLdibDlrXVE04jTZYlLnwsTT2PIOQQGNLWfjavGifnk1JD1LcZjZaBTRcxZu2FfPfNLOE04DSu9lqtQ==}
     peerDependencies:
       acorn: ^8.9.0
+
+  '@swc/helpers@0.5.17':
+    resolution: {integrity: sha512-5IKx/Y13RsYd+sauPb2x+U/xZikHjolzfuDgTAl/Tdf3Q8rslRvC19NKDLgAJQ6wsqADk10ntlv08nPFw/gO/A==}
 
   '@tailwindcss/forms@0.5.10':
     resolution: {integrity: sha512-utI1ONF6uf/pPNO68kmN1b8rEwNXv3czukalo8VtJH8ksIkZXr3Q3VYudZLkCsDd4Wku120uF02hYK25XGPorw==}
@@ -7862,6 +7868,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  react-tweet@3.2.2:
+    resolution: {integrity: sha512-hIkxAVPpN2RqWoDEbo3TTnN/pDcp9/Jb6pTgiA4EbXa9S+m2vHIvvZKHR+eS0PDIsYqe+zTmANRa5k6+/iwGog==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
 
   react-universal-interface@0.6.2:
     resolution: {integrity: sha512-dg8yXdcQmvgR13RIlZbTRQOoUrDciFVoSBZILwjE2LFISxZZ8loVJKAkuzswl5js8BHda79bIb2b84ehU8IjXw==}
@@ -13051,6 +13063,10 @@ snapshots:
     dependencies:
       acorn: 8.14.0
 
+  '@swc/helpers@0.5.17':
+    dependencies:
+      tslib: 2.8.1
+
   '@tailwindcss/forms@0.5.10(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@22.14.0)(typescript@5.7.3)))':
     dependencies:
       mini-svg-data-uri: 1.4.4
@@ -18171,6 +18187,14 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 18.3.20
+
+  react-tweet@3.2.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      '@swc/helpers': 0.5.17
+      clsx: 2.1.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      swr: 2.3.2(react@18.3.1)
 
   react-universal-interface@0.6.2(react@18.3.1)(tslib@2.8.1):
     dependencies:

@@ -1,12 +1,15 @@
 import FeatureGrid from './FeatureGrid';
+import Tweets from './Tweets';
 
 export default function Landing() {
   return (
     <div className="mb-24 mt-12 flex w-full max-w-7xl flex-col gap-16 lg:mb-48 lg:mt-24 lg:gap-32">
       <FeatureGrid />
       <div className="flex flex-col items-center">
-        <h2 className="font-bold">AI models for full-stack Convex apps</h2>
-        <div className="mb-4 max-w-prose text-balance text-center text-sm text-neutral-9 dark:text-neutral-2">
+        <h2 className="mb-2 text-balance text-center text-2xl font-bold leading-none lg:text-3xl">
+          AI models for full-stack Convex apps
+        </h2>
+        <div className="mb-6 max-w-prose text-balance text-center text-sm text-neutral-9 dark:text-neutral-2">
           Pick a faster model when you need speed. Switch to a smarter one when the task gets tricky.
         </div>
         <ul className="flex gap-4">
@@ -45,9 +48,12 @@ export default function Landing() {
       </div>
       <div className="flex flex-col items-center">
         <h2 className="mb-2 text-balance text-center text-2xl font-bold leading-none lg:text-3xl">
-          Loved by people all over the universe
+          What developers and vibe coders are saying
         </h2>
-        <div>TODO: Testimonials here.</div>
+        <div className="mb-6 max-w-prose text-balance text-center text-sm text-neutral-9 dark:text-neutral-2">
+          Straight from developers and vibe coders in the kitchen.
+        </div>
+        <Tweets />
       </div>
     </div>
   );
