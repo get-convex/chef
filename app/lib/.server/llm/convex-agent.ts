@@ -206,6 +206,15 @@ async function onFinishHandler({
       }
     }
     if (result.finishReason === 'stop') {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'assistant') {
+        // This field is deprecated, but for some reason, the new field "parts", does not contain all of the tool calls.
+        const toolCalls = lastMessage.toolInvocations?.filter((t) => t.toolName === 'deploy' && t.state === 'result');
+        const successfulDeploys =
+          toolCalls?.filter((t) => t.state === 'result' && !t.result.startsWith('Error:')).length ?? 0;
+        span.setAttribute('tools.successfulDeploys', successfulDeploys);
+        span.setAttribute('tools.failedDeploys', toolCalls ? toolCalls.length - successfulDeploys : 0);
+      }
       span.setAttribute('tools.disabledFromRepeatedErrors', toolsDisabledFromRepeatedErrors ? 'true' : 'false');
     }
     span.end();
