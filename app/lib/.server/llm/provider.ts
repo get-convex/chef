@@ -28,7 +28,10 @@ type Provider = {
   };
 };
 
-export function modelForProvider(provider: ModelProvider) {
+export function modelForProvider(provider: ModelProvider, modelChoice: string | undefined) {
+  if (modelChoice) {
+    return modelChoice;
+  }
   switch (provider) {
     case 'Anthropic':
       return getEnv('ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
@@ -47,7 +50,11 @@ export function modelForProvider(provider: ModelProvider) {
   }
 }
 
-export function getProvider(userApiKey: string | undefined, modelProvider: ModelProvider): Provider {
+export function getProvider(
+  userApiKey: string | undefined,
+  modelProvider: ModelProvider,
+  modelChoice: string | undefined,
+): Provider {
   let model: string;
   let provider: Provider;
 
@@ -56,7 +63,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
 
   switch (modelProvider) {
     case 'Google': {
-      model = modelForProvider(modelProvider);
+      model = modelForProvider(modelProvider, modelChoice);
       const google = createGoogleGenerativeAI({
         apiKey: userApiKey || getEnv('GOOGLE_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
@@ -68,7 +75,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'XAI': {
-      model = getEnv('XAI_MODEL') || 'grok-3-mini';
+      model = modelForProvider(modelProvider, modelChoice);
       const xai = createXai({
         apiKey: userApiKey || getEnv('XAI_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('XAI') : fetch,
@@ -85,7 +92,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'OpenAI': {
-      model = modelForProvider(modelProvider);
+      model = modelForProvider(modelProvider, modelChoice);
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv('OPENAI_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
@@ -99,7 +106,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'Bedrock': {
-      model = modelForProvider(modelProvider);
+      model = modelForProvider(modelProvider, modelChoice);
       let region = getEnv('AWS_REGION');
       if (!region || !ALLOWED_AWS_REGIONS.includes(region)) {
         region = 'us-west-2';
@@ -119,7 +126,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'Anthropic': {
-      model = modelForProvider(modelProvider);
+      model = modelForProvider(modelProvider, modelChoice);
       // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
       const rateLimitAwareFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {

@@ -41,6 +41,7 @@ export async function convexAgent(args: {
   messages: Messages;
   tracer: Tracer | null;
   modelProvider: ModelProvider;
+  modelChoice: string | undefined;
   userApiKey: string | undefined;
   shouldDisableTools: boolean;
   skipSystemPrompt: boolean;
@@ -58,6 +59,7 @@ export async function convexAgent(args: {
     tracer,
     modelProvider,
     userApiKey,
+    modelChoice,
     shouldDisableTools,
     skipSystemPrompt,
     smallFiles,
@@ -69,7 +71,7 @@ export async function convexAgent(args: {
     console.debug('Using user provided API key');
   }
 
-  const provider = getProvider(userApiKey, modelProvider);
+  const provider = getProvider(userApiKey, modelProvider, modelChoice);
   const opts: SystemPromptOptions = {
     enableBulkEdits: true,
     enablePreciseEdits: false,

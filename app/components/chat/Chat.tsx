@@ -295,6 +295,7 @@ export const Chat = memo(
           skipSystemPrompt: skipSystemPromptStore.get(),
           smallFiles,
           recordRawPromptsForDebugging,
+          modelChoice: undefined,
         };
       },
       maxSteps: 64,

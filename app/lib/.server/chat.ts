@@ -59,6 +59,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     teamSlug: string;
     deploymentName: string | undefined;
     modelProvider: ModelProvider;
+    modelChoice: string | undefined;
     userApiKey:
       | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
       | undefined;
@@ -107,6 +108,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   }
 
   let userApiKey: string | undefined;
+  let modelChoice: string | undefined;
   if (useUserApiKey) {
     if (body.modelProvider === 'Anthropic' || body.modelProvider === 'Bedrock') {
       userApiKey = body.userApiKey?.value;
@@ -117,6 +119,11 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       userApiKey = body.userApiKey?.xai;
     } else {
       userApiKey = body.userApiKey?.google;
+    }
+
+    // Set the requested model choice if it was requested and we're using a user API key.
+    if (body.modelChoice) {
+      modelChoice = body.modelChoice;
     }
     if (!userApiKey) {
       return new Response(
@@ -155,6 +162,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       messages,
       tracer,
       modelProvider: body.modelProvider,
+      modelChoice,
       userApiKey,
       shouldDisableTools: body.shouldDisableTools,
       skipSystemPrompt: body.skipSystemPrompt,
