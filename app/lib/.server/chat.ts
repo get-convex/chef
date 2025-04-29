@@ -121,7 +121,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       userApiKey = body.userApiKey?.google;
     }
 
-    // Set the requested model choice if it was requested and we're using a user API key.
+    // Only set the requested model choice if we're using a user API key.
     if (body.modelChoice) {
       modelChoice = body.modelChoice;
     }
