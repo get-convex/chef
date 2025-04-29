@@ -352,6 +352,7 @@ export const Chat = memo(
           nextRetry: Date.now() + backoff,
         });
 
+        workbenchStore.abortAllActions();
         if (isFirstFailure && messages[messages.length - 1].role === 'user') {
           reload();
         }
