@@ -479,7 +479,6 @@ export const earliestRewindableMessageRank = query({
   },
 });
 
-// TODO: Implement fast-forward
 export const rewindChat = mutation({
   args: {
     sessionId: v.id("sessions"),
@@ -492,6 +491,14 @@ export const rewindChat = mutation({
     if (!chat) {
       throw new ConvexError({ code: "NotFound", message: "Chat not found" });
     }
+    const latestStorageState = await getLatestChatMessageStorageState(ctx, { _id: chat._id, lastMessageRank });
+    if (latestStorageState === null) {
+      throw new Error(`Storage state not found for lastMessageRank ${lastMessageRank} in chat ${chatId}`);
+    }
+    if (latestStorageState.storageId === null) {
+      throw new ConvexError({ code: "NoMessagesSaved", message: "Cannot rewind to a chat with no messages saved" });
+    }
+
     if (chat.lastMessageRank !== undefined && chat.lastMessageRank < lastMessageRank) {
       throw new ConvexError({
         code: "RewindToFuture",
