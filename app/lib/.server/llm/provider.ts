@@ -1,4 +1,4 @@
-import type { LanguageModelV1, ProviderMetadata } from 'ai';
+import type { LanguageModelV1 } from 'ai';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
