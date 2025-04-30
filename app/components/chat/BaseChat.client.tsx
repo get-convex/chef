@@ -6,20 +6,21 @@ import Landing from '~/components/landing/Landing';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import type { ToolStatus } from '~/lib/common/types';
-import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
+import type { TerminalInitializationOptions } from '~/types/terminal';
+import type { ModelSelection } from '~/utils/constants';
+import { MessageInput } from './MessageInput';
 import { useChatId } from '~/lib/stores/chatId';
+import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { messageInputStore } from '~/lib/stores/messageInput';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import type { ActionAlert } from '~/types/actions';
-import type { TerminalInitializationOptions } from '~/types/terminal';
 import { classNames } from '~/utils/classNames';
-import type { ModelSelection } from '~/utils/constants';
 import styles from './BaseChat.module.css';
 import ChatAlert from './ChatAlert';
-import { MessageInput } from './MessageInput';
 import { Messages } from './Messages.client';
 import StreamingIndicator from './StreamingIndicator';
 import { SuggestionButtons } from './SuggestionButtons';
+import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 
 interface BaseChatProps {
   // Refs
@@ -82,7 +83,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     },
     ref,
   ) => {
-    const { maintenanceMode } = useFlags();
+    const { maintenanceMode } = useLaunchDarkly();
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
 

@@ -12,7 +12,7 @@ import { PersonIcon } from '@radix-ui/react-icons';
 import { ResetIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
-import { useFlags } from 'launchdarkly-react-client-sdk';
+import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 
 interface MessagesProps {
   id?: string;
@@ -34,7 +34,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
   }: MessagesProps,
   ref: ForwardedRef<HTMLDivElement> | undefined,
 ) {
-  const { rewindButton } = useFlags();
+  const { rewindButton } = useLaunchDarkly();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMessageIndex, setSelectedMessageIndex] = useState<number | null>(null);

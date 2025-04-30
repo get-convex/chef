@@ -5,13 +5,13 @@ import { ToolCall } from './ToolCall';
 import { makePartId } from 'chef-agent/partId.js';
 import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
 import { parseAnnotations, type ProviderType, type UsageAnnotation } from '~/lib/common/annotations';
-import { useFlags } from 'launchdarkly-react-client-sdk';
+import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 interface AssistantMessageProps {
   message: Message;
 }
 
 export const AssistantMessage = memo(function AssistantMessage({ message }: AssistantMessageProps) {
-  const { showUsageAnnotations } = useFlags();
+  const { showUsageAnnotations } = useLaunchDarkly();
   const parsedAnnotations = useMemo(() => parseAnnotations(message.annotations), [message.annotations]);
   if (!message.parts) {
     return (

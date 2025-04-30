@@ -34,12 +34,12 @@ import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import type { Doc, Id } from 'convex/_generated/dataModel';
-import { useFlags } from 'launchdarkly-react-client-sdk';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import type { ProviderType } from '~/lib/common/annotations';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 import { MissingApiKey } from './MissingApiKey';
 import type { ModelProvider } from '~/components/chat/ModelSelector';
+import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 
 const logger = createScopedLogger('Chat');
 
@@ -126,7 +126,7 @@ export const Chat = memo(
         }
       }
     };
-    const { recordRawPromptsForDebugging } = useFlags();
+    const { recordRawPromptsForDebugging } = useLaunchDarkly();
 
     const title = useStore(description);
 
@@ -252,7 +252,7 @@ export const Chat = memo(
       }
     }, [apiKey, checkApiKeyForCurrentModel, convex, modelSelection, setDisableChatMessage]);
 
-    const { enableSkipSystemPrompt, smallFiles } = useFlags();
+    const { enableSkipSystemPrompt, smallFiles } = useLaunchDarkly();
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
       api: '/api/chat',
