@@ -1,3 +1,4 @@
+import Dashboard from './Dashboard';
 import FeatureGrid from './FeatureGrid';
 import Tweets from './Tweets';
 
@@ -5,6 +6,7 @@ export default function Landing() {
   return (
     <div className="mb-24 mt-12 flex w-full max-w-7xl flex-col gap-16 lg:mb-48 lg:mt-24 lg:gap-32">
       <FeatureGrid />
+      <Dashboard />
       <div className="flex flex-col items-center">
         <h2 className="mb-2 text-balance text-center text-2xl font-bold leading-none lg:text-3xl">
           AI models for full-stack Convex apps
