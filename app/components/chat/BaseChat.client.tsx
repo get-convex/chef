@@ -118,15 +118,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               })}
             >
               {!chatStarted && (
-                <div
-                  id="intro"
-                  className="mx-auto mb-8 mt-12 max-w-chat px-4 text-center md:mt-16 lg:mb-12 lg:mt-24 lg:px-0"
-                >
-                  <h1 className="mb-4 animate-fadeInFromLoading font-display text-4xl font-black tracking-tight text-content-primary sm:text-5xl md:text-6xl">
+                <div id="intro" className="mx-auto mb-8 mt-12 max-w-chat px-4 text-center md:mt-16 lg:px-0">
+                  <h1 className="mb-4 animate-fadeInFromLoading font-display text-4xl font-black leading-none tracking-tight text-content-primary md:text-5xl lg:text-6xl">
                     Now you&rsquo;re cooking
                   </h1>
-                  <p className="animate-fadeInFromLoading text-balance font-display text-xl font-medium text-content-secondary [animation-delay:200ms] [animation-fill-mode:backwards] md:text-2xl">
-                    Generate and launch realtime full‑stack apps you never thought possible
+                  <p className="animate-fadeInFromLoading text-balance font-display text-lg font-medium leading-tight text-content-secondary [animation-delay:200ms] [animation-fill-mode:backwards] md:text-xl md:leading-none">
+                    Generate and launch realtime full-stack apps you never thought possible
                   </p>
                 </div>
               )}
