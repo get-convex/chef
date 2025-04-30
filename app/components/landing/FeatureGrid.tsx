@@ -78,7 +78,7 @@ export default function FeatureGrid() {
           <div className="relative z-10 mb-2 inline-flex flex-col items-start justify-start">
             <h2 className="pb-2 text-xl font-semibold leading-none">{feature.title}</h2>
             <div
-              className="h-1 w-0 rounded-full bg-[#EE342F] transition-all duration-300 group-hover:w-full"
+              className="h-1 w-0 rounded-full bg-[#EE342F] opacity-0 transition-all duration-300 group-hover:w-full group-hover:opacity-100"
               aria-hidden
             />
           </div>

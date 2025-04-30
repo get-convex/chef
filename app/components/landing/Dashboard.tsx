@@ -43,7 +43,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col items-center rounded-xl border border-neutral-1 bg-[#F7F3F1] p-4 dark:border-neutral-10 dark:bg-neutral-11 lg:p-8">
+    <div className="flex flex-col items-center rounded-xl border border-neutral-1 bg-[#F7F3F1] p-4 dark:border-neutral-10 dark:bg-neutral-11 xl:p-6">
       <h2 className="mb-2 text-balance text-center text-2xl font-bold leading-none lg:text-3xl">Convex Dashboard</h2>
       <div className="mb-8 max-w-prose text-balance text-center leading-tight text-neutral-9 dark:text-neutral-2">
         Chef embeds Convex&rsquo;s full dashboard into the builder, so you can manage real-time data, logs, and
