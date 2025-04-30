@@ -59,6 +59,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     teamSlug: string;
     deploymentName: string | undefined;
     modelProvider: ModelProvider;
+    modelChoice: string | undefined;
     userApiKey:
       | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
       | undefined;
@@ -118,6 +119,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     } else {
       userApiKey = body.userApiKey?.google;
     }
+
     if (!userApiKey) {
       return new Response(
         JSON.stringify({ code: 'missing-api-key', error: `Tried to use missing ${body.modelProvider} API key.` }),
@@ -155,6 +157,8 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       messages,
       tracer,
       modelProvider: body.modelProvider,
+      // Only set the requested model choice if we're using a user API key.
+      modelChoice: userApiKey ? body.modelChoice : undefined,
       userApiKey,
       shouldDisableTools: body.shouldDisableTools,
       skipSystemPrompt: body.skipSystemPrompt,

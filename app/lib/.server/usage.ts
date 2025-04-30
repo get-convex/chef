@@ -2,7 +2,7 @@ import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
 import type { ProviderType, UsageAnnotation } from '~/lib/common/annotations';
-import { modelForProvider, getProviderType, type ModelProvider } from './llm/provider';
+import { modelForProvider, type ModelProvider } from './llm/provider';
 import { calculateTotalBilledUsageForMessage, calculateChefTokens } from '~/lib/common/usage';
 import { captureMessage } from '@sentry/remix';
 
@@ -45,6 +45,7 @@ export function encodeUsageAnnotation(
 export function encodeModelAnnotation(
   call: { kind: 'tool-call'; toolCallId: string | null } | { kind: 'final' },
   providerMetadata: ProviderMetadata | undefined,
+  modelChoice: string | undefined,
 ) {
   let provider: ProviderType | null = null;
   let model: string | null = null;
@@ -52,16 +53,16 @@ export function encodeModelAnnotation(
     provider = 'Anthropic';
     // This covers both claude on Bedrock vs. Anthropic, unclear if we want to
     // try and differentiate between the two.
-    model = modelForProvider('Anthropic');
+    model = modelForProvider('Anthropic', modelChoice);
   } else if (providerMetadata?.openai) {
     provider = 'OpenAI';
-    model = modelForProvider('OpenAI');
+    model = modelForProvider('OpenAI', modelChoice);
   } else if (providerMetadata?.xai) {
     provider = 'XAI';
-    model = modelForProvider('XAI');
+    model = modelForProvider('XAI', modelChoice);
   } else if (providerMetadata?.google) {
     provider = 'Google';
-    model = modelForProvider('Google');
+    model = modelForProvider('Google', modelChoice);
   }
   return { toolCallId: call.kind === 'tool-call' ? call.toolCallId : 'final', provider, model };
 }
@@ -76,7 +77,7 @@ export async function recordUsage(
   finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
 ) {
   const totalUsageBilledFor = await calculateTotalBilledUsageForMessage(lastMessage, finalGeneration);
-  const { chefTokens } = calculateChefTokens(totalUsageBilledFor, getProviderType(finalGeneration.providerMetadata));
+  const { chefTokens } = calculateChefTokens(totalUsageBilledFor, modelProvider);
 
   if (chefTokens === 0) {
     captureMessage('Recorded usage was 0. Something wrong with provider?', {

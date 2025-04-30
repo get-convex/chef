@@ -29,7 +29,7 @@ import { waitUntil } from '@vercel/functions';
 import type { internal } from '@convex/_generated/api';
 import type { Usage } from '~/lib/common/annotations';
 import type { UsageRecord } from '@convex/schema';
-import { getProvider, getProviderType, type ModelProvider } from '~/lib/.server/llm/provider';
+import { getProvider, type ModelProvider } from '~/lib/.server/llm/provider';
 import { getEnv } from '~/lib/.server/env';
 import { calculateChefTokens, usageFromGeneration } from '~/lib/common/usage';
 
@@ -41,6 +41,7 @@ export async function convexAgent(args: {
   messages: Messages;
   tracer: Tracer | null;
   modelProvider: ModelProvider;
+  modelChoice: string | undefined;
   userApiKey: string | undefined;
   shouldDisableTools: boolean;
   skipSystemPrompt: boolean;
@@ -58,6 +59,7 @@ export async function convexAgent(args: {
     tracer,
     modelProvider,
     userApiKey,
+    modelChoice,
     shouldDisableTools,
     skipSystemPrompt,
     smallFiles,
@@ -69,7 +71,7 @@ export async function convexAgent(args: {
     console.debug('Using user provided API key');
   }
 
-  const provider = getProvider(userApiKey, modelProvider);
+  const provider = getProvider(userApiKey, modelProvider, modelChoice);
   const opts: SystemPromptOptions = {
     enableBulkEdits: true,
     enablePreciseEdits: false,
@@ -127,6 +129,8 @@ export async function convexAgent(args: {
             recordRawPromptsForDebugging,
             coreMessages: messagesForDataStream,
             smallFiles,
+            modelProvider,
+            modelChoice,
           });
         },
         onError({ error }) {
@@ -162,6 +166,8 @@ async function onFinishHandler({
   recordRawPromptsForDebugging,
   coreMessages,
   smallFiles,
+  modelProvider,
+  modelChoice,
 }: {
   dataStream: DataStreamWriter;
   messages: Messages;
@@ -176,6 +182,8 @@ async function onFinishHandler({
   toolsDisabledFromRepeatedErrors: boolean;
   coreMessages: CoreMessage[];
   smallFiles: boolean;
+  modelProvider: ModelProvider;
+  modelChoice: string | undefined;
 }) {
   const { providerMetadata } = result;
   // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
@@ -206,6 +214,16 @@ async function onFinishHandler({
       }
     }
     if (result.finishReason === 'stop') {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'assistant') {
+        // This field is deprecated, but for some reason, the new field "parts", does not contain all of the tool calls. This is likely a
+        // vercel bug. We do this at the end end the request because it's when we have the results from all of the tool calls.
+        const toolCalls = lastMessage.toolInvocations?.filter((t) => t.toolName === 'deploy' && t.state === 'result');
+        const successfulDeploys =
+          toolCalls?.filter((t) => t.state === 'result' && !t.result.startsWith('Error:')).length ?? 0;
+        span.setAttribute('tools.successfulDeploys', successfulDeploys);
+        span.setAttribute('tools.failedDeploys', toolCalls ? toolCalls.length - successfulDeploys : 0);
+      }
       span.setAttribute('tools.disabledFromRepeatedErrors', toolsDisabledFromRepeatedErrors ? 'true' : 'false');
     }
     span.end();
@@ -233,7 +251,7 @@ async function onFinishHandler({
   if (toolCallId) {
     const annotation = encodeUsageAnnotation(toolCallId, usage, providerMetadata);
     dataStream.writeMessageAnnotation({ type: 'usage', usage: annotation });
-    const modelAnnotation = encodeModelAnnotation(toolCallId, providerMetadata);
+    const modelAnnotation = encodeModelAnnotation(toolCallId, providerMetadata, modelChoice);
     dataStream.writeMessageAnnotation({ type: 'model', ...modelAnnotation });
   }
 
@@ -245,10 +263,17 @@ async function onFinishHandler({
     const responseCoreMessages = result.response.messages as (CoreAssistantMessage | CoreToolMessage)[];
     // don't block the request but keep the request alive in Vercel Lambdas
     waitUntil(
-      storeDebugPrompt(coreMessages, chatInitialId, responseCoreMessages, result, {
-        usage,
-        providerMetadata,
-      }),
+      storeDebugPrompt(
+        coreMessages,
+        chatInitialId,
+        responseCoreMessages,
+        result,
+        {
+          usage,
+          providerMetadata,
+        },
+        modelProvider,
+      ),
     );
   }
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -312,6 +337,7 @@ async function storeDebugPrompt(
   responseCoreMessages: CoreMessage[],
   result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
   generation: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
+  modelProvider: ModelProvider,
 ) {
   try {
     const finishReason = result.finishReason;
@@ -322,7 +348,7 @@ async function storeDebugPrompt(
     const compressedData = compressWithLz4Server(promptMessageData);
 
     type Metadata = Omit<(typeof internal.debugPrompt.storeDebugPrompt)['_args'], 'promptCoreMessagesStorageId'>;
-    const { chefTokens } = calculateChefTokens(usage, getProviderType(generation.providerMetadata));
+    const { chefTokens } = calculateChefTokens(usage, modelProvider);
 
     const metadata = {
       chatInitialId,

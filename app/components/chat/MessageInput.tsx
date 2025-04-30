@@ -154,6 +154,8 @@ export const MessageInput = memo(function MessageInput({
           style={textareaStyle}
           placeholder={chatStarted ? 'Request changes by sending another message…' : 'What app do you want to serve?'}
           translate="no"
+          // Disable Grammarly
+          data-gramm="false"
         />
         <SendButton
           show={input.length > 0 || isStreaming || sendMessageInProgress}

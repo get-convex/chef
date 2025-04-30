@@ -24,8 +24,9 @@ export function solutionConstraints(options: SystemPromptOptions) {
         Here are some guidelines for using the template's auth within the app:
 
         When writing Convex handlers, use the 'getAuthUserId' function to get the logged in user's ID. You
-        can then pass this to 'ctx.db.get' in queries or mutations to get the user's data. For example:
-        \`\`\`ts
+        can then pass this to 'ctx.db.get' in queries or mutations to get the user's data. But, you can only
+        do this within the \`convex/\` directory. For example:
+        \`\`\`ts "convex/users.ts"
         import { getAuthUserId } from "@convex-dev/auth/server";
 
         export const currentLoggedInUser = query({
@@ -42,6 +43,31 @@ export function solutionConstraints(options: SystemPromptOptions) {
             return user;
           }
         })
+        \`\`\`
+
+        If you want to get the current logged in user's data on the frontend, you should use the following function
+        that is defined in \`convex/auth.ts\`:
+
+        \`\`\`ts "convex/auth.ts"
+        export const loggedInUser = query({
+          handler: async (ctx) => {
+            const userId = await getAuthUserId(ctx);
+            if (!userId) {
+              return null;
+            }
+            const user = await ctx.db.get(userId);
+            if (!user) {
+              return null;
+            }
+            return user;
+          },
+        });
+        \`\`\`
+
+        Then, you can use the \`loggedInUser\` query in your React component like this:
+
+        \`\`\`tsx "src/App.tsx"
+        const user = useQuery(api.auth.loggedInUser);
         \`\`\`
 
         The "users" table within 'authTables' has a schema that looks like:
@@ -111,6 +137,21 @@ export function solutionConstraints(options: SystemPromptOptions) {
 
         The \`useQuery()\` hook is live-updating! It causes the React component is it used in to rerender, so Convex is a
         perfect fix for collaborative, live-updating websites.
+
+        You cannot use \`useQuery()\` or other \`use\` hooks conditionally. The following example is invalid:
+
+        \`\`\`tsx
+        const avatarUrl = profile?.avatarId ? useQuery(api.profiles.getAvatarUrl, { storageId: profile.avatarId }) : null;
+        \`\`\`
+
+        You should do this instead:
+
+        \`\`\`tsx
+        const avatarUrl = useQuery(
+          api.profiles.getAvatarUrl,
+          profile?.avatarId ? { storageId: profile.avatarId } : "skip"
+        );
+        \`\`\`
 
         If you want to use a UI element, you MUST create it. DO NOT use external libraries like Shadcn/UI.
 
