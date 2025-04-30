@@ -50,7 +50,7 @@ export default function Dashboard() {
         environment variables without leaving the interface.
       </div>
       <div className="flex flex-col gap-8 xl:flex-row xl:items-start">
-        <div className="w-full xl:w-1/2">
+        <div className="w-full xl:max-w-96">
           <div className="flex flex-col divide-y divide-neutral-2 dark:divide-neutral-9">
             {dashboardFeatures.map((feature, index) => (
               <div key={feature.title}>
@@ -84,7 +84,7 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-        <div className="hidden rounded-xl border bg-white p-2 sm:block xl:w-1/2">
+        <div className="hidden rounded-xl border bg-white p-0.5 sm:block">
           <img
             src={dashboardFeatures[activeFeature].imageUrl}
             alt={`${dashboardFeatures[activeFeature].title} screenshot`}
