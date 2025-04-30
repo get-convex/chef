@@ -48,6 +48,7 @@ export class ChatContextManager {
    *    by the full fidelity recent chat history (~5k tokens).
    */
   prepareContext(messages: UIMessage[], maxCollapsedMessagesSize: number): UIMessage[] {
+    // If the last message is a user message this is the first LLM call that includes that user message.
     // Only update the relevant files if the last message is a user message to avoid clearing the cache as the agent makes changes.
     if (messages[messages.length - 1].role === 'user') {
       this.initialRelevantFiles = this.relevantFiles(messages);
