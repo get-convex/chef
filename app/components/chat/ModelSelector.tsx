@@ -90,6 +90,21 @@ const models: Partial<
     name: 'Grok 3 Mini',
     provider: 'xai',
   },
+  'claude-3-7-sonnet': {
+    name: 'Claude 3.7 Sonnet',
+    provider: 'anthropic',
+    requireKey: true,
+  },
+  'claude-3-5-haiku': {
+    name: 'Claude 3.5 Haiku',
+    provider: 'anthropic',
+    requireKey: true,
+  },
+  'gpt-4.1-mini': {
+    name: 'GPT-4.1 Mini',
+    provider: 'openai',
+    requireKey: true,
+  },
 } as const;
 
 export const ModelSelector = React.memo(function ModelSelector({

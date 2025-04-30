@@ -191,6 +191,9 @@ export const Chat = memo(
           'gpt-4.1': { providerName: 'openai', apiKeyField: 'openai' },
           'grok-3-mini': { providerName: 'xai', apiKeyField: 'xai' },
           'gemini-2.5-pro': { providerName: 'google', apiKeyField: 'google' },
+          'claude-3-7-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
+          'claude-3-5-haiku': { providerName: 'anthropic', apiKeyField: 'value' },
+          'gpt-4.1-mini': { providerName: 'openai', apiKeyField: 'openai' },
         };
 
         // Get provider info for the current model
