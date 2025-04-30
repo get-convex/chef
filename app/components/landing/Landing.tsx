@@ -9,7 +9,7 @@ export default function Landing() {
         <h2 className="mb-2 text-balance text-center text-2xl font-bold leading-none lg:text-3xl">
           AI models for full-stack Convex apps
         </h2>
-        <div className="mb-6 max-w-prose text-balance text-center text-sm text-neutral-9 dark:text-neutral-2">
+        <div className="mb-6 max-w-prose text-balance text-center text-neutral-9 dark:text-neutral-2">
           Pick a faster model when you need speed. Switch to a smarter one when the task gets tricky.
         </div>
         <ul className="flex gap-4">
@@ -48,9 +48,9 @@ export default function Landing() {
       </div>
       <div className="flex flex-col items-center">
         <h2 className="mb-2 text-balance text-center text-2xl font-bold leading-none lg:text-3xl">
-          What developers and vibe coders are saying
+          What Developers and Vibe Coders Are Saying
         </h2>
-        <div className="mb-6 max-w-prose text-balance text-center text-sm text-neutral-9 dark:text-neutral-2">
+        <div className="mb-6 max-w-prose text-balance text-center text-neutral-9 dark:text-neutral-2">
           Straight from developers and vibe coders in the kitchen.
         </div>
         <Tweets />

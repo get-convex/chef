@@ -1,4 +1,5 @@
 import { Tweet } from 'react-tweet';
+
 // Array of tweet IDs showcasing positive feedback or testimonials
 const tweets = [
   '1914609023728357854', // @PritamGhosh010
@@ -19,7 +20,9 @@ export default function Tweets() {
     <div className="mt-0 columns-1 gap-4 p-4 md:columns-2 lg:columns-3 [&>div]:mb-4">
       {tweets.map((id) => (
         <div key={id} className="break-inside-avoid [&>div]:!mt-0">
-          <Tweet id={id} />
+          <div className="[&_.react-tweet-theme]:[--tweet-actions-font-size:0.875rem] [&_.react-tweet-theme]:[--tweet-body-font-size:1rem] [&_.react-tweet-theme]:[--tweet-body-line-height:1.25] [&_.react-tweet-theme]:[--tweet-container-margin:0_0_1.5rem_0] [&_.react-tweet-theme]:[--tweet-header-font-size:0.875rem]">
+            <Tweet id={id} />
+          </div>
         </div>
       ))}
     </div>
