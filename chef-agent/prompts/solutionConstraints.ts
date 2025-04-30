@@ -157,7 +157,6 @@ export function solutionConstraints(options: SystemPromptOptions) {
         \`\`\`
 
         If you want to use a UI element, you MUST create it. DO NOT use external libraries like Shadcn/UI.
-        If you want to use a UI element, you MUST create it. DO NOT use external libraries like Shadcn/UI.
 
         When writing a UI component and you want to use a Convex function, you MUST import the \`api\` object. For example:
 
