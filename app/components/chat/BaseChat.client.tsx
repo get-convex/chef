@@ -1,6 +1,5 @@
 import { Sheet } from '@ui/Sheet';
 import type { Message } from 'ai';
-import { useFlags } from 'launchdarkly-react-client-sdk';
 import React, { type ReactNode, type RefCallback, useCallback, useMemo } from 'react';
 import Landing from '~/components/landing/Landing';
 import { Menu } from '~/components/sidebar/Menu.client';
