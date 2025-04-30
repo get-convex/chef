@@ -144,7 +144,7 @@ export function solutionConstraints(options: SystemPromptOptions) {
         const avatarUrl = profile?.avatarId ? useQuery(api.profiles.getAvatarUrl, { storageId: profile.avatarId }) : null;
         \`\`\`
 
-        You should add the \`useHook\` within a conditionally rendered UI element instead. For example:
+        You should add the \`use\` hook within a conditionally rendered UI element instead. For example:
 
         \`\`\`tsx
         {profile?.avatarId ? (
