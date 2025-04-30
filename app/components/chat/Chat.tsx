@@ -271,13 +271,10 @@ export const Chat = memo(
         }
         let modelProvider: ProviderType;
         const retries = retryState.get();
-        // For non-anthropic models not yet using caching, use a lower message size limit.
-        let maxCollapsedMessagesSizeByProvider = 8192;
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
           // Send all traffic to Anthropic first before failing over to Bedrock.
           const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
           modelProvider = providers[retries.numFailures % providers.length];
-          maxCollapsedMessagesSizeByProvider = maxCollapsedMessagesSize;
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
         } else if (modelSelection === 'gemini-2.5-pro') {
@@ -286,7 +283,10 @@ export const Chat = memo(
           modelProvider = 'OpenAI';
         }
         return {
-          messages: chatContextManager.current.prepareContext(messages, maxCollapsedMessagesSizeByProvider),
+          messages: chatContextManager.current.prepareContext(
+            messages,
+            maxCollapsedMessagesSizeForModel(modelSelection, maxCollapsedMessagesSize),
+          ),
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
           chatInitialId,
           token,
@@ -782,4 +782,16 @@ function hasApiKeySet(modelSelection: ModelSelection, apiKey?: Doc<'convexMember
     return true;
   }
   return false;
+}
+
+function maxCollapsedMessagesSizeForModel(modelSelection: ModelSelection, maxCollapsedMessagesSize: number) {
+  switch (modelSelection) {
+    case 'auto':
+      return maxCollapsedMessagesSize;
+    case 'claude-3.5-sonnet':
+      return maxCollapsedMessagesSize;
+    default:
+      // For non-anthropic models not yet using caching, use a lower message size limit.
+      return 8192;
+  }
 }
