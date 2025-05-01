@@ -44,10 +44,10 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col items-center rounded-xl border border-neutral-1 bg-[#F7F3F1] p-4 dark:border-neutral-10 dark:bg-neutral-11 xl:p-6">
-      <h2 className="my-2 text-balance text-center font-display text-2xl font-bold leading-none tracking-tight lg:text-3xl">
+      <h2 className="my-2 text-balance text-center text-2xl font-bold leading-none tracking-tight lg:text-3xl">
         Convex Dashboard
       </h2>
-      <div className="mb-8 max-w-prose text-balance text-center font-display leading-normal text-neutral-9 dark:text-neutral-2">
+      <div className="mb-8 max-w-prose text-balance text-center leading-normal text-neutral-9 dark:text-neutral-2">
         Chef embeds Convex&rsquo;s full dashboard into the builder, so you can manage real-time data, logs, and
         environment variables without leaving the interface.
       </div>
@@ -58,7 +58,7 @@ export default function Dashboard() {
               <div key={feature.title}>
                 <button
                   onClick={() => toggleFeature(index)}
-                  className="flex w-full items-center justify-between py-4 text-left font-display"
+                  className="flex w-full items-center justify-between py-4 text-left"
                 >
                   <span className={activeFeature === index ? 'font-bold' : 'font-medium'}>{feature.title}</span>
                   <ChevronRightIcon

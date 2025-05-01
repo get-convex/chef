@@ -67,7 +67,7 @@ const features: { icon?: React.ReactNode; title: string; description: string }[]
 
 export default function FeatureGrid() {
   return (
-    <div className="grid grid-cols-1 font-display md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       {features.map((feature, index) => (
         <div
           key={index}

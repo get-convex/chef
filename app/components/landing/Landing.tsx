@@ -43,7 +43,7 @@ export default function Landing() {
         </div>
         <a
           href="https://www.convex.dev/ai-platforms"
-          className="whitespace-nowrap rounded-full bg-yellow-400 px-8 py-3 text-sm font-bold text-neutral-12 "
+          className="whitespace-nowrap rounded-full bg-yellow-400 px-8 py-3 text-sm font-bold text-neutral-12"
         >
           Learn more
         </a>
