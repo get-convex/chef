@@ -20,8 +20,7 @@ window.addEventListener('message', async (message) => {
   if (message.source !== window.parent) return;
   if (message.data.type !== 'chefPreviewRequest') return;
 
-  // TODO change this to be hardcoded to chef.convex.dev
-  const worker = await import('https://cc90-12-117-224-18.ngrok-free.app/scripts/worker.bundled.mjs');
+  const worker = await import('https://chef.convex.dev/scripts/worker.bundled.mjs');
   await worker.respondToMessage(message);
 });
               ${code}
