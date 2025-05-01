@@ -212,8 +212,6 @@ export function ShareButton() {
                     </div>
                   </label>
 
-                  <div>TODO: Show thumbnail/screenshot. {snapshotUrl}</div>
-
                   <div className="flex justify-between">
                     <Button variant="neutral" size="xs" onClick={() => setIsThumbnailModalOpen(true)}>
                       <ImageIcon />
