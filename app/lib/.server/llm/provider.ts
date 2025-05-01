@@ -274,8 +274,6 @@ function anthropicInjectCacheControl(options?: RequestInit) {
   }
 
   const body = JSON.parse(options.body);
-  // Cache tool definitions.
-  body.tools[body.tools.length - 1].cache_control = { type: 'ephemeral' };
 
   // Cache system prompt.
   body.system[body.system.length - 1].cache_control = { type: 'ephemeral' };
