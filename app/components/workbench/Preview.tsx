@@ -305,7 +305,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
                 return;
               }
 
-              // Don't allow the user to enter an absolute URL
+              // Don’t allow the user to enter an absolute URL
               if (url?.startsWith('http://') || url?.startsWith('https://')) {
                 setUrl(iframeUrl.slice(proxyBaseUrl.length));
                 inputRef.current?.blur();

@@ -68,10 +68,16 @@ export const isShareReady = query({
 // Unique across shares and socialShares in case these two url namespaces are combined.
 export async function generateUniqueCode(db: DatabaseReader) {
   const code = crypto.randomUUID().replace(/-/g, "").substring(0, 6);
-  const existing = await db
+  let existing: { _id: any } | null = await db
     .query("shares")
     .withIndex("byCode", (q) => q.eq("code", code))
     .first();
+  if (!existing) {
+    existing = await db
+      .query("socialShares")
+      .withIndex("byCode", (q) => q.eq("code", code))
+      .first();
+  }
   if (existing) {
     return generateUniqueCode(db);
   }

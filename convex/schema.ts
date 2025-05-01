@@ -38,7 +38,7 @@ export default defineSchema({
   convexMembers: defineTable({
     tokenIdentifier: v.string(),
     apiKey: v.optional(apiKeyValidator),
-    // Not authoritative - just a cache of the user's profile from Auth0/provision host
+    // Not authoritative, just a cache of the user's profile from Auth0/provision host.
     cachedProfile: v.optional(
       v.object({
         username: v.string(),
@@ -150,13 +150,14 @@ export default defineSchema({
     chatId: v.id("chats"),
     code: v.string(),
     thumbnailImageStorageId: v.optional(v.id("_storage")),
-    // Show a share card at all.
+    // Does the share link work.
     shared: v.boolean(),
-    // Allow others to fork this project at its most recent state.
+    // Allow others to fork this project at its most recent state. Always true for now.
     allowForkFromLatest: v.boolean(),
-    // Allow to be shown in gallery (doesn't mean we actual show it)
+    // Allow to be shown in gallery (doesn't mean we actual show it).
+    // Always false for now, this doesn't exist yet.
     allowShowInGallery: v.boolean(),
-    // Link to the deployed version from the share card.
+    // Link to the deployed version from the share card. Always true for now.
     linkToDeployed: v.boolean(),
   })
     .index("byCode", ["code"])

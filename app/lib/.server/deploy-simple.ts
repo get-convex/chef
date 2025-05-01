@@ -64,7 +64,6 @@ export async function deploy({ request }: ActionFunctionArgs) {
       console.error(localDevWarning);
       return json({ ...result, localDevWarning });
     }
-    console.log(request.url, new URL(request.url).hostname);
 
     return json(result);
   } catch (error) {
