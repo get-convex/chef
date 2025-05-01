@@ -12,6 +12,7 @@ import type { ProviderType } from '~/lib/common/annotations';
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch as undiciFetch } from 'undici';
 import { getEnv } from '~/lib/.server/env';
+import { GENERAL_SYSTEM_PROMPT_PRELUDE, ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
 
 type Fetch = typeof fetch;
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
@@ -275,7 +276,15 @@ function anthropicInjectCacheControl(options?: RequestInit) {
 
   const body = JSON.parse(options.body);
 
+  if (body.system[0].text !== ROLE_SYSTEM_PROMPT) {
+    throw new Error('First system message must be the role system prompt');
+  }
+  if (!body.system[1].text.startsWith(GENERAL_SYSTEM_PROMPT_PRELUDE)) {
+    throw new Error('Second system message must be the general system prompt prelude');
+  }
   // Cache system prompt.
+  body.system[1].cache_control = { type: 'ephemeral' };
+  // Cache relevant files in system messages that are the same for all LLM requests after a user message.
   body.system[body.system.length - 1].cache_control = { type: 'ephemeral' };
 
   // Cache all messages.
