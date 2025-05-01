@@ -33,8 +33,9 @@ export class ChatContextManager {
     private getFiles: () => FileMap,
     private getUserWrites: () => Map<AbsolutePath, number>,
     initialMessages: UIMessage[],
+    maxRelevantFilesSize: number,
   ) {
-    this.initialRelevantFiles = this.relevantFiles(initialMessages);
+    this.initialRelevantFiles = this.relevantFiles(initialMessages, maxRelevantFilesSize);
   }
 
   /**
@@ -47,18 +48,19 @@ export class ChatContextManager {
    * 3. A potentially collapsed segment of the chat history followed
    *    by the full fidelity recent chat history (~5k tokens).
    */
-  prepareContext(messages: UIMessage[], maxCollapsedMessagesSize: number): UIMessage[] {
+  prepareContext(messages: UIMessage[], maxCollapsedMessagesSize: number, maxRelevantFilesSize: number): UIMessage[] {
     // If the last message is a user message this is the first LLM call that includes that user message.
     // Only update the relevant files if the last message is a user message to avoid clearing the cache as the agent makes changes.
     if (messages[messages.length - 1].role === 'user') {
-      this.initialRelevantFiles = this.relevantFiles(messages);
+      this.initialRelevantFiles = this.relevantFiles(messages, maxRelevantFilesSize);
       console.log('updating relevant files');
     }
     const collapsedMessages = this.collapseMessages(messages, maxCollapsedMessagesSize);
-    return [...this.initialRelevantFiles, ...collapsedMessages];
+    const relevantFiles = this.relevantFiles(messages, maxRelevantFilesSize);
+    return [...relevantFiles, ...collapsedMessages];
   }
 
-  private relevantFiles(messages: UIMessage[]): UIMessage[] {
+  private relevantFiles(messages: UIMessage[], maxRelevantFilesSize: number): UIMessage[] {
     const currentDocument = this.getCurrentDocument();
 
     // Seed the set with the PREWARM_PATHS.
@@ -119,7 +121,7 @@ export class ChatContextManager {
     if (sortedByLastUsed.length > 0) {
       relevantFiles.push(makeSystemMessage('Here are some relevant files in the project (with line numbers).'));
       for (const [path] of sortedByLastUsed) {
-        if (sizeEstimate > MAX_RELEVANT_FILES_SIZE) {
+        if (sizeEstimate > maxRelevantFilesSize) {
           break;
         }
         if (relevantFiles.length >= MAX_RELEVANT_FILES) {

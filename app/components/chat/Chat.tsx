@@ -126,7 +126,13 @@ export const Chat = memo(
         }
       }
     };
-    const { recordRawPromptsForDebugging } = useLaunchDarkly();
+    const {
+      recordRawPromptsForDebugging,
+      enableSkipSystemPrompt,
+      smallFiles,
+      maxCollapsedMessagesSize,
+      maxRelevantFilesSize,
+    } = useLaunchDarkly();
 
     const title = useStore(description);
 
@@ -166,6 +172,7 @@ export const Chat = memo(
         () => workbenchStore.files.get(),
         () => workbenchStore.userWrites,
         initialMessages.filter((message) => message.parts !== undefined) as UIMessage[],
+        maxSizeForModel(modelSelection, maxRelevantFilesSize),
       ),
     );
     const [disableChatMessage, setDisableChatMessage] = useState<
@@ -253,7 +260,6 @@ export const Chat = memo(
       }
     }, [apiKey, checkApiKeyForCurrentModel, convex, modelSelection, setDisableChatMessage]);
 
-    const { enableSkipSystemPrompt, smallFiles, maxCollapsedMessagesSize } = useLaunchDarkly();
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
       api: '/api/chat',
@@ -285,7 +291,8 @@ export const Chat = memo(
         return {
           messages: chatContextManager.current.prepareContext(
             messages,
-            maxCollapsedMessagesSizeForModel(modelSelection, maxCollapsedMessagesSize),
+            maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
+            maxSizeForModel(modelSelection, maxRelevantFilesSize),
           ),
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
           chatInitialId,
@@ -784,12 +791,12 @@ function hasApiKeySet(modelSelection: ModelSelection, apiKey?: Doc<'convexMember
   return false;
 }
 
-function maxCollapsedMessagesSizeForModel(modelSelection: ModelSelection, maxCollapsedMessagesSize: number) {
+function maxSizeForModel(modelSelection: ModelSelection, maxSize: number) {
   switch (modelSelection) {
     case 'auto':
-      return maxCollapsedMessagesSize;
+      return maxSize;
     case 'claude-3.5-sonnet':
-      return maxCollapsedMessagesSize;
+      return maxSize;
     default:
       // For non-anthropic models not yet using caching, use a lower message size limit.
       return 8192;
