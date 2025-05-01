@@ -100,12 +100,15 @@ const ShowInner: FC<ShowInnerProps> = ({ share, preview = false, className }) =>
 
   return (
     <div
-      className={['mx-auto flex w-full flex-col', preview ? 'gap-4 p-4' : 'gap-8 p-8 md:max-w-7xl', className]
+      className={['mx-auto flex w-full flex-col', preview ? 'gap-4 p-4' : 'gap-8 p-8 md:max-w-3xl', className]
         .filter(Boolean)
         .join(' ')}
     >
       <div
-        className={['flex items-start', preview ? 'justify-start' : 'justify-between flex-col gap-4 md:flex-row']
+        className={[
+          'flex items-start',
+          preview ? 'justify-start' : 'justify-between flex-col gap-4 items-center md:flex-row',
+        ]
           .filter(Boolean)
           .join(' ')}
       >
@@ -130,7 +133,7 @@ const ShowInner: FC<ShowInnerProps> = ({ share, preview = false, className }) =>
         {!preview && (
           <div className="flex items-center gap-3">
             <Button href={`/create/${share.code}`} variant="neutral" icon={<CopyIcon />}>
-              Clone this app in Chef
+              Clone app in Chef
             </Button>
 
             {share.hasBeenDeployed && share.deployedUrl && (
@@ -141,7 +144,7 @@ const ShowInner: FC<ShowInnerProps> = ({ share, preview = false, className }) =>
                 variant="primary"
                 icon={<ExternalLinkIcon />}
               >
-                Open app
+                View app
               </Button>
             )}
           </div>
