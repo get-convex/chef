@@ -195,11 +195,6 @@ export function ShareButton() {
                         </a>
                       </div>
                     </div>
-
-                    {/* Preview of how the share will look */}
-                    <div className="mb-4 overflow-hidden rounded border border-bolt-elements-background-depth-3">
-                      <Show code={currentShare.code} preview className="-m-2" />
-                    </div>
                   </>
                 )}
 
@@ -217,6 +212,8 @@ export function ShareButton() {
                       </p>
                     </div>
                   </label>
+
+                  <div>TODO: Show thumbnail/screenshot.</div>
 
                   <div className="flex justify-between">
                     <Button variant="neutral" size="xs" onClick={() => setIsThumbnailModalOpen(true)}>

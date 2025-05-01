@@ -50,7 +50,6 @@ interface ShareData {
 
 interface ShowInnerProps {
   share: ShareData;
-  preview?: boolean;
   className?: string;
 }
 
@@ -88,7 +87,7 @@ const CodeShow: FC<CodeShowProps> = ({ code, ...props }) => {
   return <ShowInner share={share} {...props} />;
 };
 
-const ShowInner: FC<ShowInnerProps> = ({ share, preview = false, className }) => {
+const ShowInner: FC<ShowInnerProps> = ({ share, className }) => {
   const [showIframe, setShowIframe] = useState(false);
   const defaultAuthor = {
     username: 'Chef User',
@@ -99,67 +98,43 @@ const ShowInner: FC<ShowInnerProps> = ({ share, preview = false, className }) =>
   const avatarSrc = author.avatar || generateDefaultAvatar(author.username);
 
   return (
-    <div
-      className={['mx-auto flex w-full flex-col', preview ? 'gap-4 p-4' : 'gap-8 p-8 md:max-w-3xl', className]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      <div
-        className={[
-          'flex items-start',
-          preview ? 'justify-start' : 'justify-between flex-col gap-4 items-center md:flex-row',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-      >
+    <div className={['mx-auto flex w-full flex-col gap-8 p-8 md:max-w-3xl', className].filter(Boolean).join(' ')}>
+      <div className={['flex justify-between flex-col gap-4 items-center md:flex-row'].filter(Boolean).join(' ')}>
         <div className="flex items-start gap-4">
           <div className="flex items-center gap-3">
-            <img
-              src={avatarSrc}
-              alt={author.username}
-              className={['rounded-full', preview ? 'size-8' : 'size-12'].filter(Boolean).join(' ')}
-            />
+            <img src={avatarSrc} alt={author.username} className={['rounded-full size-12'].filter(Boolean).join(' ')} />
             <div className="flex flex-col">
-              <span className={['font-medium', preview ? 'text-sm' : 'text-base'].filter(Boolean).join(' ')}>
-                {share.description}
-              </span>
-              <span className={['text-content-secondary', preview ? 'text-xs' : 'text-sm'].filter(Boolean).join(' ')}>
-                {author.username}
-              </span>
+              <span className={['font-medium text-base'].filter(Boolean).join(' ')}>{share.description}</span>
+              <span className={['text-content-secondary text-sm'].filter(Boolean).join(' ')}>{author.username}</span>
             </div>
           </div>
         </div>
 
-        {!preview && (
-          <div className="flex items-center gap-3">
-            <Button href={`/create/${share.code}`} variant="neutral" icon={<CopyIcon />}>
-              Clone app in Chef
-            </Button>
+        <div className="flex items-center gap-3">
+          <Button href={`/create/${share.code}`} variant="neutral" icon={<CopyIcon />}>
+            Clone app in Chef
+          </Button>
 
-            {share.hasBeenDeployed && share.deployedUrl && (
-              <Button
-                href={share.deployedUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="primary"
-                icon={<ExternalLinkIcon />}
-              >
-                View app
-              </Button>
-            )}
-          </div>
-        )}
+          {share.hasBeenDeployed && share.deployedUrl && (
+            <Button
+              href={share.deployedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="primary"
+              icon={<ExternalLinkIcon />}
+            >
+              View app
+            </Button>
+          )}
+        </div>
       </div>
 
       <div
-        className={[
-          'relative overflow-hidden rounded-lg border border-bolt-elements-background-depth-3',
-          preview ? 'h-[120px]' : 'h-[calc(100vh-12rem)]',
-        ]
+        className={['relative overflow-hidden h-[120px] rounded-lg border border-bolt-elements-background-depth-3']
           .filter(Boolean)
           .join(' ')}
       >
-        {!preview && showIframe && share.deployedUrl ? (
+        {showIframe && share.deployedUrl ? (
           <iframe
             src={share.deployedUrl}
             className="size-full border-none"
@@ -170,18 +145,16 @@ const ShowInner: FC<ShowInnerProps> = ({ share, preview = false, className }) =>
           />
         ) : (
           share.thumbnailUrl && (
-            <div className={preview ? 'size-full' : 'group relative size-full'}>
+            <div className="group relative size-full">
               <img
                 src={share.thumbnailUrl}
-                alt="App preview"
+                alt="App thumbnail"
                 className={`size-full object-contain ${
-                  !preview && share.hasBeenDeployed && share.deployedUrl
-                    ? 'transition-opacity group-hover:opacity-50'
-                    : ''
+                  share.hasBeenDeployed && share.deployedUrl ? 'transition-opacity group-hover:opacity-50' : ''
                 }`}
                 crossOrigin="anonymous"
               />
-              {!preview && share.hasBeenDeployed && share.deployedUrl && (
+              {share.hasBeenDeployed && share.deployedUrl && (
                 <button
                   type="button"
                   onClick={() => setShowIframe(true)}
