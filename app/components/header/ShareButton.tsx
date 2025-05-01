@@ -61,6 +61,7 @@ export function ShareButton() {
   // Update form state when currentShare changes
   useEffect(() => {
     if (currentShare) {
+      console.log('currentShare', currentShare.shared);
       setIsSharedDraft(currentShare.shared === 'shared');
 
       // Set up share URL if we have a code
@@ -129,7 +130,7 @@ export function ShareButton() {
     }
     if (!open) {
       // on close, clear any draft state
-      setIsSharedDraft(!!currentShare?.shared);
+      setIsSharedDraft(currentShare ? currentShare.shared === 'shared' : false);
       setSnapshotStatus('idle');
       setShareStatus('idle');
     }
@@ -145,7 +146,7 @@ export function ShareButton() {
     }
   }, [snapshotCode, snapshotStatus, isSnapshotReady]);
 
-  const hasChanges = currentShare && (currentShare.shared === 'shared' && isSharedDraft) !== isSharedDraft;
+  const hasChanges = currentShare && (currentShare.shared === 'shared') !== isSharedDraft;
 
   return (
     <>
@@ -165,7 +166,7 @@ export function ShareButton() {
           >
             <div className="flex flex-col gap-6 p-4">
               <div>
-                {currentShare && currentShare.shared && (
+                {currentShare && currentShare.shared === 'shared' && (
                   <>
                     {/* Share URL */}
                     <div className="mb-4">
