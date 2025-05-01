@@ -130,7 +130,10 @@ const ShowInner: FC<ShowInnerProps> = ({ share, className }) => {
       </div>
 
       <div
-        className={['relative overflow-hidden h-[120px] rounded-lg border border-bolt-elements-background-depth-3']
+        className={[
+          'relative overflow-hidden rounded-lg border border-bolt-elements-background-depth-3',
+          showIframe ? 'h-[calc(100vh-10rem)]' : '',
+        ]
           .filter(Boolean)
           .join(' ')}
       >

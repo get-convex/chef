@@ -20,7 +20,6 @@ import { Checkbox } from '@ui/Checkbox';
 import type { ChangeEvent } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ThumbnailChooser } from '~/components/workbench/ThumbnailChooser';
-import { Show } from '~/components/Show';
 
 type ShareStatus = 'idle' | 'loading' | 'success';
 type SnapshotStatus = 'idle' | 'loading' | 'success';
@@ -213,7 +212,7 @@ export function ShareButton() {
                     </div>
                   </label>
 
-                  <div>TODO: Show thumbnail/screenshot.</div>
+                  <div>TODO: Show thumbnail/screenshot. {snapshotUrl}</div>
 
                   <div className="flex justify-between">
                     <Button variant="neutral" size="xs" onClick={() => setIsThumbnailModalOpen(true)}>
