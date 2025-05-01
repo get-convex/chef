@@ -42,22 +42,20 @@ export class ChatContextManager {
    * Our request context has a few sections:
    *
    * 1. The Convex guidelines, which are filled in by the server and
-   *    set to be cached by Anthropic (~10k tokens).
+   *    set to be cached by Anthropic (~15k tokens).
    * 2. Some relevant project files, which are filled in from the file
-   *    cache based on LRU (at most ~5k tokens).
+   *    cache based on LRU, up to maxRelevantFilesSize.
    * 3. A potentially collapsed segment of the chat history followed
-   *    by the full fidelity recent chat history (~5k tokens).
+   *    by the full fidelity recent chat history, up to maxCollapsedMessagesSize.
    */
   prepareContext(messages: UIMessage[], maxCollapsedMessagesSize: number, maxRelevantFilesSize: number): UIMessage[] {
     // If the last message is a user message this is the first LLM call that includes that user message.
     // Only update the relevant files if the last message is a user message to avoid clearing the cache as the agent makes changes.
     if (messages[messages.length - 1].role === 'user') {
       this.initialRelevantFiles = this.relevantFiles(messages, maxRelevantFilesSize);
-      console.log('updating relevant files');
     }
     const collapsedMessages = this.collapseMessages(messages, maxCollapsedMessagesSize);
-    const relevantFiles = this.relevantFiles(messages, maxRelevantFilesSize);
-    return [...relevantFiles, ...collapsedMessages];
+    return [...this.initialRelevantFiles, ...collapsedMessages];
   }
 
   private relevantFiles(messages: UIMessage[], maxRelevantFilesSize: number): UIMessage[] {
