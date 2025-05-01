@@ -79,7 +79,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   useEffect(() => {
-    // Note that this the the 'Project API Key' from PostHog, which is
+    // Note that this is the 'Project API Key' from PostHog, which is
     // write-only and PostHog says is safe to use in public apps.
     const key = import.meta.env.VITE_POSTHOG_KEY || '';
     const apiHost = import.meta.env.VITE_POSTHOG_HOST || '';

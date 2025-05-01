@@ -274,8 +274,7 @@ httpWithCors.route({
 
     const imageBlob = await request.blob();
 
-    // Add a 5MB size limit for thumbnails
-    const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+    const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024;
     if (imageBlob.size > MAX_THUMBNAIL_SIZE) {
       return new Response(JSON.stringify({ error: "Thumbnail image exceeds maximum size of 5MB" }), {
         status: 413, // Payload Too Large

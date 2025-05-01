@@ -69,7 +69,7 @@ export function ShareButton() {
         const url =
           origin === 'https://chef.convex.dev'
             ? `https://chef.show/${currentShare.code}`
-            : `${origin}/show/${currentShare.code}`;
+            : `${origin}/share/${currentShare.code}`;
         setShareUrl(url);
       }
     }
