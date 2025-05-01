@@ -88,8 +88,8 @@ export default function Dashboard() {
           <img
             src={dashboardFeatures[activeFeature].imageUrl}
             alt={`${dashboardFeatures[activeFeature].title} screenshot`}
-            width={2172}
-            height={1200}
+            width={2126}
+            height={1158}
           />
         </div>
       </div>
