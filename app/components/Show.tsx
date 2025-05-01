@@ -1,7 +1,7 @@
-import { Link } from '@remix-run/react';
-import { ExternalLinkIcon, CopyIcon } from '@radix-ui/react-icons';
-import { usePreloadedQuery, useQuery, type Preloaded } from 'convex/react';
 import { api } from '@convex/_generated/api';
+import { CopyIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
+import { Button } from '@ui/Button';
+import { usePreloadedQuery, useQuery, type Preloaded } from 'convex/react';
 import { useState, type FC } from 'react';
 
 function generateDefaultAvatar(username: string): string {
@@ -129,24 +129,20 @@ const ShowInner: FC<ShowInnerProps> = ({ share, preview = false, className }) =>
 
         {!preview && (
           <div className="flex items-center gap-3">
-            <Link
-              to={`/create/${share.code}`}
-              className="flex items-center gap-2 rounded bg-bolt-elements-background-depth-3 px-4 py-2 text-sm font-medium hover:bg-bolt-elements-background-depth-4"
-            >
-              <CopyIcon />
+            <Button href={`/create/${share.code}`} variant="neutral" icon={<CopyIcon />}>
               Clone this app in Chef
-            </Link>
+            </Button>
 
             {share.hasBeenDeployed && share.deployedUrl && (
-              <a
+              <Button
                 href={share.deployedUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded bg-bolt-elements-background-depth-3 px-4 py-2 text-sm font-medium hover:bg-bolt-elements-background-depth-4"
+                variant="primary"
+                icon={<ExternalLinkIcon />}
               >
-                <ExternalLinkIcon />
                 Open app
-              </a>
+              </Button>
             )}
           </div>
         )}
