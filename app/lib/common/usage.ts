@@ -95,6 +95,23 @@ function addUsage(totalUsage: Usage, payload: UsageAnnotation) {
   totalUsage.xaiCachedPromptTokens += payload.providerMetadata?.xai?.cachedPromptTokens ?? 0;
 }
 
+export type ChefTokenBreakdown = {
+  completionTokens: {
+    anthropic: number;
+    openai: number;
+    xai: number;
+    google: number;
+    bedrock: number;
+  };
+  promptTokens: {
+    anthropic: { uncached: number; cached: number };
+    openai: { uncached: number; cached: number };
+    xai: { uncached: number; cached: number };
+    google: { uncached: number; cached: number };
+    bedrock: { uncached: number; cached: number };
+  };
+};
+
 // TODO this these wrong
 // Based on how the final generation came from (which may not be the provided used for the other generations came from)
 // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f

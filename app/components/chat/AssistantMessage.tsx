@@ -4,8 +4,9 @@ import type { Message } from 'ai';
 import { ToolCall } from './ToolCall';
 import { makePartId } from 'chef-agent/partId.js';
 import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
-import { parseAnnotations, type ProviderType, type UsageAnnotation } from '~/lib/common/annotations';
+import { parseAnnotations, type ProviderType, type Usage, type UsageAnnotation } from '~/lib/common/annotations';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
+import { calculateChefTokens, usageFromGeneration, type ChefTokenBreakdown } from '~/lib/common/usage';
 interface AssistantMessageProps {
   message: Message;
 }
@@ -27,11 +28,11 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
       if (showUsageAnnotations) {
         const model = parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId];
         const usage = parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId];
-        const success = part.toolInvocation.state === 'result' && part.toolInvocation.result.status === 'success';
+        const success = part.toolInvocation.state === 'result' && !part.toolInvocation.result.startsWith('Error: ');
         children.push(
           displayModelAndUsage({
             model,
-            usage: usage ?? undefined,
+            usageAnnotation: usage ?? undefined,
             success,
           }),
         );
@@ -48,7 +49,7 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
     children.push(
       displayModelAndUsage({
         model: finalModel,
-        usage: finalUsage ?? undefined,
+        usageAnnotation: finalUsage ?? undefined,
         success: true,
       }),
     );
@@ -73,11 +74,11 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
 
 function displayModelAndUsage({
   model,
-  usage,
+  usageAnnotation,
   success,
 }: {
   model: { provider: ProviderType; model: string | undefined } | undefined;
-  usage: UsageAnnotation | undefined;
+  usageAnnotation: UsageAnnotation | undefined;
   success: boolean;
 }) {
   const modelDisplay = displayModel(model ?? { provider: 'Unknown', model: undefined });
@@ -85,12 +86,8 @@ function displayModelAndUsage({
   // what we use to bill users). This attempts to take into account the logic where
   // we don't charge for tokens produced from failed tool calls. This should
   // probably be re-worked to use Chef tokens.
-  const usageDisplay =
-    usage && success ? (
-      <div className="text-xs text-content-secondary">
-        Tokens: {usage.totalTokens} ({usage.promptTokens} prompt, {usage.completionTokens} completion)
-      </div>
-    ) : null;
+
+  const usageDisplay = usageAnnotation ? displayUsage(usageAnnotation, success) : null;
   if (modelDisplay && usageDisplay) {
     return (
       <div className="flex items-center gap-1">
@@ -101,6 +98,46 @@ function displayModelAndUsage({
     );
   }
   return modelDisplay ?? usageDisplay;
+}
+
+function displayUsage(usageAnnotation: UsageAnnotation, success: boolean) {
+  const usage: Usage = usageFromGeneration({
+    usage: usageAnnotation,
+    providerMetadata: usageAnnotation.providerMetadata,
+  });
+  const { chefTokens, breakdown } = calculateChefTokens(usage);
+  if (!success) {
+    return (
+      <div className="text-xs text-content-secondary">
+        Chef Tokens: 0 (failed tool call), Breakdown: {displayBreakdownForSingleAnnotation(breakdown)}
+      </div>
+    );
+  }
+  return (
+    <div className="text-xs text-content-secondary">
+      Chef Tokens: {chefTokens}, Breakdown: {displayBreakdownForSingleAnnotation(breakdown)}
+    </div>
+  );
+}
+
+function displayBreakdownForSingleAnnotation(breakdown: ChefTokenBreakdown) {
+  // A single annotation should always have a single provider.
+  if (breakdown.completionTokens.anthropic > 0) {
+    return `${breakdown.promptTokens.anthropic.uncached} prompt uncached, ${breakdown.promptTokens.anthropic.cached} prompt cached, ${breakdown.completionTokens.anthropic} completion`;
+  }
+  if (breakdown.completionTokens.openai > 0) {
+    return `${breakdown.promptTokens.openai.uncached} prompt uncached, ${breakdown.promptTokens.openai.cached} prompt cached, ${breakdown.completionTokens.openai} completion`;
+  }
+  if (breakdown.completionTokens.xai > 0) {
+    return `${breakdown.promptTokens.xai.uncached} prompt uncached, ${breakdown.promptTokens.xai.cached} prompt cached, ${breakdown.completionTokens.xai} completion`;
+  }
+  if (breakdown.completionTokens.google > 0) {
+    return `${breakdown.promptTokens.google.uncached} prompt uncached, ${breakdown.promptTokens.google.cached} prompt cached, ${breakdown.completionTokens.google} completion`;
+  }
+  if (breakdown.completionTokens.bedrock > 0) {
+    return `${breakdown.promptTokens.bedrock.uncached} prompt uncached, ${breakdown.promptTokens.bedrock.cached} prompt cached, ${breakdown.completionTokens.bedrock} completion`;
+  }
+  return 'unknown';
 }
 
 function displayModel(modelInfo: { provider: ProviderType; model: string | undefined }) {
