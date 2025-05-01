@@ -144,16 +144,13 @@ export function solutionConstraints(options: SystemPromptOptions) {
         const avatarUrl = profile?.avatarId ? useQuery(api.profiles.getAvatarUrl, { storageId: profile.avatarId }) : null;
         \`\`\`
 
-        You should add the \`use\` hook within a conditionally rendered UI element instead. For example:
+        You should do this instead:
 
         \`\`\`tsx
-        {profile?.avatarId ? (
-          <ProfileAvatar profile={profile.avatarId} />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            Anonymous user
-          </div>
-        )}
+        const avatarUrl = useQuery(
+          api.profiles.getAvatarUrl,
+          profile?.avatarId ? { storageId: profile.avatarId } : "skip"
+        );
         \`\`\`
 
         If you want to use a UI element, you MUST create it. DO NOT use external libraries like Shadcn/UI.
