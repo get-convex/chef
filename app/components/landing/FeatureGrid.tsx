@@ -27,7 +27,7 @@ const features: { icon?: React.ReactNode; title: string; description: string }[]
   },
   {
     icon: <RocketIcon className="size-6" />,
-    title: 'One-click Deploy and Live previews',
+    title: 'One-click Deploy and Live Previews',
     description:
       'Chef instantly hosts and deploys your app with a convex.app link, so real users can start using it in seconds.',
   },
@@ -67,7 +67,7 @@ const features: { icon?: React.ReactNode; title: string; description: string }[]
 
 export default function FeatureGrid() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 font-display md:grid-cols-2 lg:grid-cols-3">
       {features.map((feature, index) => (
         <div
           key={index}
@@ -84,7 +84,7 @@ export default function FeatureGrid() {
             {feature.icon}
           </div>
           <div className="relative z-10 mb-2 inline-flex flex-col items-start justify-start">
-            <h2 className="pb-2 text-xl font-semibold leading-none">{feature.title}</h2>
+            <h2 className="mb-1 text-xl font-semibold leading-none tracking-tight">{feature.title}</h2>
             <div
               className="h-1 w-0 rounded-full bg-[#EE342F] opacity-0 transition-all duration-300 group-hover:w-full group-hover:opacity-100"
               aria-hidden
