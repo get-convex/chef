@@ -61,7 +61,7 @@ export function ShareButton() {
   // Update form state when currentShare changes
   useEffect(() => {
     if (currentShare) {
-      setIsSharedDraft(currentShare.shared);
+      setIsSharedDraft(currentShare.shared === 'shared');
 
       // Set up share URL if we have a code
       if (currentShare.code) {
@@ -101,7 +101,7 @@ export function ShareButton() {
       await socialShare({
         sessionId,
         id: chatId,
-        shared: change?.shared !== undefined ? change.shared : isSharedDraft,
+        shared: (change?.shared !== undefined ? change.shared : isSharedDraft) ? 'shared' : 'expresslyUnshared',
         allowForkFromLatest: true,
       });
 
@@ -145,7 +145,7 @@ export function ShareButton() {
     }
   }, [snapshotCode, snapshotStatus, isSnapshotReady]);
 
-  const hasChanges = currentShare && currentShare.shared !== isSharedDraft;
+  const hasChanges = currentShare && (currentShare.shared === 'shared' && isSharedDraft) !== isSharedDraft;
 
   return (
     <>

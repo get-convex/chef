@@ -37,7 +37,7 @@ function generateDefaultAvatar(username: string): string {
 interface ShareData {
   description: string | null;
   code: string;
-  shared: boolean;
+  shared: 'shared' | 'expresslyUnshared' | 'noPreferenceExpressed';
   allowShowInGallery: boolean;
   hasBeenDeployed: boolean;
   deployedUrl: string | null;

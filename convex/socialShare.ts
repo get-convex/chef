@@ -9,7 +9,7 @@ export const share = mutation({
   args: {
     sessionId: v.id("sessions"),
     id: v.string(),
-    shared: v.boolean(),
+    shared: v.union(v.literal("shared"), v.literal("expresslyUnshared"), v.literal("noPreferenceExpressed")),
     allowForkFromLatest: v.boolean(),
     thumbnailImageStorageId: v.optional(v.id("_storage")),
   },
@@ -178,7 +178,7 @@ export const saveThumbnail = internalMutation({
         chatId: chat._id,
         code,
         thumbnailImageStorageId: storageId,
-        shared: false,
+        shared: "noPreferenceExpressed",
         linkToDeployed: true,
         allowForkFromLatest: false,
         allowShowInGallery: false,

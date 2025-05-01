@@ -150,8 +150,8 @@ export default defineSchema({
     chatId: v.id("chats"),
     code: v.string(),
     thumbnailImageStorageId: v.optional(v.id("_storage")),
-    // Does the share link work.
-    shared: v.boolean(),
+    // Does the share link work. Three states so we can immediately share on opening the share dialog.
+    shared: v.union(v.literal("shared"), v.literal("expresslyUnshared"), v.literal("noPreferenceExpressed")),
     // Allow others to fork this project at its most recent state. Always true for now.
     allowForkFromLatest: v.boolean(),
     // Allow to be shown in gallery (doesn't mean we actual show it).
