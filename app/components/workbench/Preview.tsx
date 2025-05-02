@@ -12,7 +12,7 @@ import { ThumbnailChooser } from './ThumbnailChooser';
 type ResizeSide = 'left' | 'right' | null;
 
 export const Preview = memo(function Preview({ showClose, onClose }: { showClose: boolean; onClose: () => void }) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -20,6 +20,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
   const [isPortDropdownOpen, setIsPortDropdownOpen] = useState(false);
   const hasSelectedPreview = useRef(false);
   const previews = useStore(workbenchStore.previews);
+  // "active" here means which preview this Preview component is a view of
   const activePreview = previews[activePreviewIndex];
   const isActivePreviewSet = activePreview !== undefined;
 
@@ -114,44 +115,9 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
   };
 
   const [isThumbnailModalOpen, setIsModalOpen] = useState(false);
-
-  const requestScreenshot = useCallback(async (): Promise<string> => {
-    if (!iframeRef.current?.contentWindow) {
-      throw new Error('No preview yet');
-    }
-
-    const targetOrigin = new URL(iframeRef.current.src).origin;
-    let cleanup: (() => void) | undefined;
-
-    const getScreenshotData = (): Promise<string> =>
-      new Promise<string>((resolve) => {
-        const handleMessage = (e: MessageEvent) => {
-          if (e.origin !== targetOrigin || !('type' in e.data) || e.data.type !== 'screenshot') {
-            return;
-          }
-          resolve(e.data.data as string);
-        };
-        window.addEventListener('message', handleMessage);
-        cleanup = () => window.removeEventListener('message', handleMessage);
-      });
-    try {
-      iframeRef.current?.contentWindow?.postMessage(
-        {
-          type: 'chefPreviewRequest',
-          request: 'screenshot',
-        },
-        targetOrigin,
-      );
-      return await Promise.race([
-        getScreenshotData(),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Screenshot timeout')), 1000)),
-      ]);
-    } finally {
-      cleanup?.();
-    }
-  }, []);
-
-  (window as any).requestScreenshot = requestScreenshot;
+  const requestScreenshot = useCallback(() => {
+    return workbenchStore.requestScreenshot(activePreviewIndex);
+  }, [activePreviewIndex]);
 
   const startResizing = (e: React.MouseEvent, side: ResizeSide) => {
     if (!isDeviceModeOn) {
@@ -270,6 +236,15 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
     }
   };
 
+  const setIframeRefCallback = useCallback(
+    (node: HTMLIFrameElement | null) => {
+      iframeRef.current = node;
+      console.log('Iframe mounted:', node);
+      workbenchStore.setPreviewIframe(activePreviewIndex, node);
+    },
+    [activePreviewIndex],
+  );
+
   return (
     <div ref={containerRef} className="relative flex size-full flex-col">
       {isPortDropdownOpen && (
@@ -305,7 +280,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
                 return;
               }
 
-              // Don’t allow the user to enter an absolute URL
+              // Don't allow the user to enter an absolute URL
               if (url?.startsWith('http://') || url?.startsWith('https://')) {
                 setUrl(iframeUrl.slice(proxyBaseUrl.length));
                 inputRef.current?.blur();
@@ -373,7 +348,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
           {activePreview ? (
             proxyBaseUrl ? (
               <iframe
-                ref={iframeRef}
+                ref={setIframeRefCallback}
                 title="preview"
                 className="size-full border-none bg-bolt-elements-background-depth-1"
                 src={iframeUrl}

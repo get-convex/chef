@@ -19,7 +19,9 @@ import { Tooltip } from '@ui/Tooltip';
 import { Checkbox } from '@ui/Checkbox';
 import type { ChangeEvent } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ThumbnailChooser } from '~/components/workbench/ThumbnailChooser';
+import { ThumbnailChooser, uploadThumbnail } from '~/components/workbench/ThumbnailChooser';
+import { workbenchStore } from '~/lib/stores/workbench.client';
+import { captureException } from '@sentry/remix';
 
 type ShareStatus = 'idle' | 'loading' | 'success';
 type SnapshotStatus = 'idle' | 'loading' | 'success';
@@ -128,6 +130,19 @@ export function ShareButton() {
       setShareStatus('loading');
       await handleShare({ shared: true });
     }
+    if (open && (!currentShare || !currentShare?.thumbnailImageStorageId)) {
+      // Try to grab a screenshot each time the share menu is opened if there isn't one.
+      try {
+        const screenshot = await workbenchStore.requestAnyScreenshot(3000);
+        if (screenshot) {
+          await uploadThumbnail(screenshot, sessionId, chatId);
+        }
+      } catch (error) {
+        // This will happen a lot at first: old projects don't response to screenshot requests.
+        console.error('Error uploading thumbnail:', error);
+        captureException(error);
+      }
+    }
     if (!open) {
       // on close, clear any draft state
       setIsSharedDraft(currentShare ? currentShare.shared === 'shared' : false);
@@ -213,11 +228,24 @@ export function ShareButton() {
                     </div>
                   </label>
 
-                  <div className="flex justify-between">
-                    <Button variant="neutral" size="xs" onClick={() => setIsThumbnailModalOpen(true)}>
-                      <ImageIcon />
-                      <span>Set Thumbnail</span>
-                    </Button>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Button variant="neutral" size="xs" onClick={() => setIsThumbnailModalOpen(true)}>
+                        {shareDetails?.thumbnailUrl ? (
+                          <div className="relative size-4 overflow-hidden rounded">
+                            <img
+                              src={shareDetails.thumbnailUrl}
+                              alt="Share thumbnail"
+                              className="absolute inset-0 size-full object-cover"
+                              crossOrigin="anonymous"
+                            />
+                          </div>
+                        ) : (
+                          <ImageIcon />
+                        )}
+                        <span>Set Thumbnail</span>
+                      </Button>
+                    </div>
 
                     <Button
                       variant="neutral"
@@ -334,7 +362,11 @@ export function ShareButton() {
       </Popover.Root>
 
       <Dialog.Root open={isThumbnailModalOpen} onOpenChange={setIsThumbnailModalOpen}>
-        <ThumbnailChooser isOpen={isThumbnailModalOpen} onOpenChange={setIsThumbnailModalOpen} />
+        <ThumbnailChooser
+          isOpen={isThumbnailModalOpen}
+          onOpenChange={setIsThumbnailModalOpen}
+          onRequestCapture={() => workbenchStore.requestAnyScreenshot()}
+        />
       </Dialog.Root>
     </>
   );

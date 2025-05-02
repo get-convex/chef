@@ -7,6 +7,7 @@ export interface PreviewInfo {
   port: number;
   ready: boolean;
   baseUrl: string;
+  iframe: HTMLIFrameElement | null;
 }
 
 const PROXY_PORT_RANGE_START = 0xc4ef;
@@ -58,7 +59,7 @@ export class PreviewsStore {
       const previews = this.previews.get();
 
       if (!previewInfo) {
-        previewInfo = { port, ready: type === 'open', baseUrl: url };
+        previewInfo = { port, ready: type === 'open', baseUrl: url, iframe: null };
         this.#availablePreviews.set(port, previewInfo);
         previews.push(previewInfo);
       }
@@ -140,5 +141,59 @@ export class PreviewsStore {
     }
 
     proxy.stop();
+  }
+
+  async requestAnyScreenshot(timeout = 30000): Promise<string> {
+    const t0 = performance.now();
+    let previewIndex;
+    do {
+      previewIndex = this.previews.get().findIndex((preview) => preview.iframe);
+      if (previewIndex !== -1) {
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 1000));
+    } while (performance.now() < t0 + timeout);
+
+    return this.requestScreenshot(previewIndex);
+  }
+
+  async requestScreenshot(previewIndex: number): Promise<string> {
+    const iframe = this.previews.get()[previewIndex].iframe;
+    if (!iframe) {
+      throw new Error('No preview yet');
+    }
+    if (!iframe?.contentWindow) {
+      throw new Error('No preview yet');
+    }
+
+    const targetOrigin = new URL(iframe.src).origin;
+    let cleanup: (() => void) | undefined;
+
+    const getScreenshotData = (): Promise<string> =>
+      new Promise<string>((resolve) => {
+        const handleMessage = (e: MessageEvent) => {
+          if (e.origin !== targetOrigin || !('type' in e.data) || e.data.type !== 'screenshot') {
+            return;
+          }
+          resolve(e.data.data as string);
+        };
+        window.addEventListener('message', handleMessage);
+        cleanup = () => window.removeEventListener('message', handleMessage);
+      });
+    try {
+      iframe.contentWindow?.postMessage(
+        {
+          type: 'chefPreviewRequest',
+          request: 'screenshot',
+        },
+        targetOrigin,
+      );
+      return await Promise.race([
+        getScreenshotData(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Screenshot timeout')), 1000)),
+      ]);
+    } finally {
+      cleanup?.();
+    }
   }
 }

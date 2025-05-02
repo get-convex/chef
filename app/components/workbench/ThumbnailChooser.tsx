@@ -9,6 +9,23 @@ import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 
+export async function uploadThumbnail(imageData: string, sessionId: string, chatId: string): Promise<void> {
+  // Convert base64 to blob
+  const response = await fetch(imageData);
+  const blob = await response.blob();
+
+  // Upload to Convex
+  const convexUrl = getConvexSiteUrl();
+  const uploadResponse = await fetch(`${convexUrl}/upload_thumbnail?sessionId=${sessionId}&chatId=${chatId}`, {
+    method: 'POST',
+    body: blob,
+  });
+
+  if (!uploadResponse.ok) {
+    throw new Error('Failed to upload thumbnail');
+  }
+}
+
 type ThumbnailChooserProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -77,20 +94,7 @@ export function ThumbnailChooser({ isOpen, onOpenChange, onRequestCapture }: Thu
     async (imageData: string) => {
       setIsUploading(true);
       try {
-        // Convert base64 to blob
-        const response = await fetch(imageData);
-        const blob = await response.blob();
-
-        // Upload to Convex
-        const convexUrl = getConvexSiteUrl();
-        const uploadResponse = await fetch(`${convexUrl}/upload_thumbnail?sessionId=${sessionId}&chatId=${chatId}`, {
-          method: 'POST',
-          body: blob,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload thumbnail');
-        }
+        await uploadThumbnail(imageData, sessionId, chatId);
 
         // Upload successful, update state
         setLastUploadedPreview(localPreview);
