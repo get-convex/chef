@@ -55,7 +55,7 @@ export class ChatContextManager {
     // Only update the relevant files and the message cutoff indices if the last message is a user message to avoid clearing the cache as the agent makes changes.
     if (messages[messages.length - 1].role === 'user') {
       this.initialRelevantFiles = this.relevantFiles(messages, maxRelevantFilesSize);
-      const [iCutoff, jCutoff] = this.messagePartCutoff(messages, 1000);
+      const [iCutoff, jCutoff] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
       this.messageICutoff = iCutoff;
       this.messageJCutoff = jCutoff;
     }
