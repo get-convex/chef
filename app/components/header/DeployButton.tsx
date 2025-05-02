@@ -151,7 +151,6 @@ export function DeployButton() {
         <Button
           href={`https://${convex.deploymentName}.convex.app`}
           target="_blank"
-          rel="noopener noreferrer"
           size="xs"
           icon={<ExternalLinkIcon />}
         >
