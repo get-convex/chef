@@ -3,7 +3,7 @@ import { ChefAuthProvider } from '~/components/chat/ChefAuthWrapper';
 import type { MetaFunction } from '@vercel/remix';
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import { useState, useEffect } from 'react';
-import { useIsAdmin } from '~/hooks/useDebugPrompt';
+import { useIsAdmin } from '~/lib/hooks/useDebugPrompt';
 import { useSearchParams } from '@remix-run/react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { UsageBreakdownView } from '~/components/debug/UsageBreakdownView';

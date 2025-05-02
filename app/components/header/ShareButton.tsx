@@ -22,6 +22,9 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { ThumbnailChooser, uploadThumbnail } from '~/components/workbench/ThumbnailChooser';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { captureException } from '@sentry/remix';
+import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
+import { selectedTeamSlugStore } from '~/lib/stores/convexTeams';
+import { useStore } from '@nanostores/react';
 
 type ShareStatus = 'idle' | 'loading' | 'success';
 type SnapshotStatus = 'idle' | 'loading' | 'success';
@@ -42,6 +45,9 @@ export function ShareButton() {
   // the user clicks the button.
   const chatId = useChatId();
   const sessionId = useConvexSessionId();
+  const referralCode = useReferralCode();
+  const referralStats = useReferralStats();
+  const teamSlug = useStore(selectedTeamSlugStore);
 
   // private shared project info
   const currentShare = useQuery(api.socialShare.getCurrentSocialShare, {
@@ -105,6 +111,7 @@ export function ShareButton() {
         id: chatId,
         shared: (change?.shared !== undefined ? change.shared : isSharedDraft) ? 'shared' : 'expresslyUnshared',
         allowForkFromLatest: true,
+        referralCode,
       });
 
       setShareStatus('success');
@@ -178,39 +185,8 @@ export function ShareButton() {
             sideOffset={5}
             align="end"
           >
-            <div className="flex flex-col gap-6 p-4">
+            <div className="flex flex-col gap-4 p-4">
               <div>
-                {currentShare && currentShare.shared === 'shared' && (
-                  <>
-                    {/* Share URL */}
-                    <div className="mb-4">
-                      <p className="mb-2 text-sm text-content-secondary">Share URL:</p>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          readOnly
-                          value={shareUrl}
-                          className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
-                        />
-                        <Button
-                          variant="neutral"
-                          size="xs"
-                          onClick={() => copyToClipboard(shareUrl)}
-                          tip="Copy link"
-                          icon={<ClipboardIcon />}
-                        />
-                        <Button
-                          variant="neutral"
-                          size="xs"
-                          onClick={() => window.open(shareUrl, '_blank', 'noopener,noreferrer')}
-                          tip="Open in new tab"
-                          icon={<ExternalLinkIcon />}
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
                 <div className="space-y-4">
                   <label className="group flex cursor-pointer items-start gap-2">
                     <Checkbox
@@ -218,13 +194,60 @@ export function ShareButton() {
                       checked={isSharedDraft}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setIsSharedDraft(e.target.checked)}
                     />
-                    <div className="space-y-1">
-                      <span className="block text-sm font-medium group-hover:text-content-primary">Share project</span>
-                      <p className="text-xs text-content-secondary group-hover:text-content-secondary/80">
-                        Make this project visible to anyone with the link
-                      </p>
-                    </div>
+                    <span className="block text-sm font-medium group-hover:text-content-primary">Share project</span>
                   </label>
+
+                  {/* Share link input and buttons, no label, right below checkbox */}
+                  {currentShare && currentShare.shared === 'shared' && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={shareUrl}
+                        className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
+                      />
+                      <Button
+                        variant="neutral"
+                        size="xs"
+                        onClick={() => copyToClipboard(shareUrl)}
+                        tip="Copy link"
+                        icon={<ClipboardIcon />}
+                      />
+                      <Button
+                        variant="neutral"
+                        size="xs"
+                        onClick={() => window.open(shareUrl, '_blank', 'noopener,noreferrer')}
+                        tip="Open in new tab"
+                        icon={<ExternalLinkIcon />}
+                      />
+                    </div>
+                  )}
+
+                  {currentShare?.shared === 'shared' && (
+                    <div className="group flex items-start gap-2">
+                      <div className="space-y-1">
+                        {referralStats?.left !== 0 && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-content-secondary group-hover:text-content-secondary/80">
+                              Links on this page include your referral code: signups will grant you 85,000 free Chef
+                              tokens each
+                              {referralStats?.left === 5 || !referralStats
+                                ? ' (limit 5)'
+                                : ` (${referralStats.left} / 5)`}
+                            </p>
+                            <a
+                              href={`https://dashboard.convex.dev/t/${teamSlug}/settings/referrals`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-500 hover:text-blue-600"
+                            >
+                              Show referrals in the Convex dashboard
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -266,57 +289,79 @@ export function ShareButton() {
               </div>
 
               <div className="space-y-4 border-t pt-4">
-                {/* Deployed URL if available */}
-                {shareDetails?.hasBeenDeployed && shareDetails.deployedUrl && (
-                  <div className="mb-4">
-                    <p className="mb-2 text-sm text-content-secondary">Deployed app URL:</p>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        readOnly
-                        value={shareDetails.deployedUrl}
-                        className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
-                      />
-                      <Button
-                        variant="neutral"
-                        size="xs"
-                        onClick={() => copyToClipboard(shareDetails.deployedUrl!)}
-                        tip="Copy link"
-                        icon={<ClipboardIcon />}
-                      />
-                      <Button
-                        variant="neutral"
-                        size="xs"
-                        onClick={() => {
-                          const url = shareDetails.deployedUrl;
-                          if (typeof url === 'string') {
-                            window.open(url, '_blank', 'noopener,noreferrer');
-                          }
-                        }}
-                        tip="Open in new tab"
-                        icon={<ExternalLinkIcon />}
-                      />
-                    </div>
-                  </div>
-                )}
                 <details className="group">
                   <summary className="flex cursor-pointer select-none items-center justify-between">
                     <div className="flex items-center gap-2">
                       <ChevronRightIcon className="size-4 transition-transform group-open:rotate-90" />
                       <span className="text-sm text-content-secondary group-hover:text-content-primary">
-                        Advanced options
+                        More ways to share
                       </span>
                     </div>
                   </summary>
-
+                  {/* Deployed URL if available */}
+                  {shareDetails?.hasBeenDeployed && shareDetails.deployedUrl && (
+                    <div className="my-4">
+                      <p className="mb-2 text-sm text-content-secondary">Deployed app link:</p>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={shareDetails.deployedUrl}
+                          className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
+                        />
+                        <Button
+                          variant="neutral"
+                          size="xs"
+                          onClick={() => copyToClipboard(shareDetails.deployedUrl!)}
+                          tip="Copy link"
+                          icon={<ClipboardIcon />}
+                        />
+                        <Button
+                          variant="neutral"
+                          size="xs"
+                          onClick={() => {
+                            const url = shareDetails.deployedUrl;
+                            if (typeof url === 'string') {
+                              window.open(url, '_blank', 'noopener,noreferrer');
+                            }
+                          }}
+                          tip="Open in new tab"
+                          icon={<ExternalLinkIcon />}
+                        />
+                      </div>
+                    </div>
+                  )}
                   <div className="mt-4 space-y-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <Tooltip tip="Create a link to a specific version of your project that others can clone, including all chat history but without database contents. This can be useful for support tickets.">
-                        <InfoCircledIcon className="size-4" />
-                      </Tooltip>
+                    {/* Direct Referral Link first */}
+                    {referralCode && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-content-secondary">Direct Referral Link:</p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={`https://convex.dev/referral/${referralCode}`}
+                            className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
+                          />
+                          <Button
+                            variant="neutral"
+                            size="xs"
+                            onClick={() => copyToClipboard(`https://convex.dev/referral/${referralCode}`)}
+                            tip="Copy link"
+                            icon={<ClipboardIcon />}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Then the snapshot button */}
+                    <div className="flex items-center justify-start gap-2">
                       <Button variant="neutral" onClick={handleCreateSnapshot}>
                         Create Point-In-Time Snapshot
                       </Button>
+                      <Tooltip tip="Create a link to a specific version of your project that others can clone, including all chat history but without database contents. This can be useful for support tickets.">
+                        <InfoCircledIcon className="size-4" />
+                      </Tooltip>
                     </div>
 
                     {snapshotStatus === 'loading' && (

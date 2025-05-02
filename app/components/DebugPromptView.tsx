@@ -5,7 +5,7 @@ import 'react-json-view-lite/dist/index.css';
 import type { CoreMessage, FilePart, ToolCallPart, TextPart } from 'ai';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 import { ClipboardIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
-import { useDebugPrompt } from '~/hooks/useDebugPrompt';
+import { useDebugPrompt } from '~/lib/hooks/useDebugPrompt';
 import { IconButton } from '~/components/ui/IconButton';
 
 /*

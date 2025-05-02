@@ -32,6 +32,9 @@ export default async function handleRequest(
   remixContext: EntryContext,
   _loadContext: AppLoadContext,
 ) {
+  // Share page can stretch more that h-full.
+  const widthFullHeightFull = !new URL(request.url).pathname.startsWith('/share/');
+
   const readable = await renderToReadableStream(<RemixServer context={remixContext} url={request.url} />, {
     // TODO we ought to abort, say by timeout, but it looked involved:
     // see https://github.com/vercel/next.js/issues/56919
@@ -51,7 +54,7 @@ export default async function handleRequest(
       controller.enqueue(
         new Uint8Array(
           new TextEncoder().encode(
-            `<!DOCTYPE html><html lang="en" class="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`,
+            `<!DOCTYPE html><html lang="en" class="${themeStore.value}"><head>${head}</head><body><div id="root" class="${widthFullHeightFull ? 'w-full h-full' : ''}">`,
           ),
         ),
       );

@@ -5,7 +5,7 @@ import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import { useState, useEffect } from 'react';
 import DebugAllPromptsForChat from '~/components/DebugPromptView';
 import { useSearchParams } from '@remix-run/react';
-import { useIsAdmin } from '~/hooks/useDebugPrompt';
+import { useIsAdmin } from '~/lib/hooks/useDebugPrompt';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Prompt Debug | Chef Admin' }];

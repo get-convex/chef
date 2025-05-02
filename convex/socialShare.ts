@@ -12,8 +12,16 @@ export const share = mutation({
     shared: v.union(v.literal("shared"), v.literal("expresslyUnshared"), v.literal("noPreferenceExpressed")),
     allowForkFromLatest: v.boolean(),
     thumbnailImageStorageId: v.optional(v.id("_storage")),
+    referralCode: v.optional(v.union(v.string(), v.null())),
   },
-  handler: async (ctx, { sessionId, id, shared, allowForkFromLatest }) => {
+  handler: async (ctx, { sessionId, id, shared, allowForkFromLatest, referralCode }) => {
+    // Validate referral code if set
+    if (referralCode !== undefined && referralCode !== null) {
+      // Only allow alphanumeric, dashes, and underscores
+      if (!/^[a-zA-Z0-9_-]+$/.test(referralCode)) {
+        throw new ConvexError("Invalid referral code: must be alphanumeric, dashes, or underscores only");
+      }
+    }
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
     if (!chat) {
       throw new ConvexError("Chat not found");
@@ -36,6 +44,7 @@ export const share = mutation({
         linkToDeployed,
         allowForkFromLatest,
         allowShowInGallery,
+        referralCode,
       });
     } else {
       await ctx.db.replace(existing._id, {
@@ -43,6 +52,7 @@ export const share = mutation({
         shared,
         allowForkFromLatest,
         allowShowInGallery,
+        referralCode,
       });
     }
   },
@@ -116,6 +126,7 @@ async function getSocialShareInner(ctx: QueryCtx, code: string) {
     hasBeenDeployed: chatHasBeenDeployed,
     deployedUrl,
     thumbnailUrl,
+    referralCode: socialShare.referralCode || null,
     author: authorProfile
       ? {
           username: authorProfile.username,
@@ -150,6 +161,7 @@ export const getCurrentSocialShare = query({
       allowForkFromLatest: socialShare.allowForkFromLatest,
       code: socialShare.code,
       thumbnailImageStorageId: socialShare.thumbnailImageStorageId,
+      referralCode: socialShare.referralCode,
     };
   },
 });
