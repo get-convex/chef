@@ -674,7 +674,6 @@ export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMess
               : 'https://dashboard.convex.dev/team/settings/billing'
           }
           className="w-fit"
-          rel="noopener noreferrer"
           icon={<ExternalLinkIcon />}
         >
           Upgrade to a paid plan
@@ -725,7 +724,6 @@ export function DisabledText({
           }
           className="w-fit"
           icon={<ExternalLinkIcon />}
-          rel="noopener noreferrer"
         >
           {isPaidPlan ? 'Increase spending limit' : 'Upgrade to Pro'}
         </Button>
