@@ -56,7 +56,6 @@ export class ChatContextManager {
     if (messages[messages.length - 1].role === 'user') {
       this.initialRelevantFiles = this.relevantFiles(messages, maxRelevantFilesSize);
       const [iCutoff, jCutoff] = this.messagePartCutoff(messages, 1000);
-      console.log(`iCutoff: ${iCutoff}, jCutoff: ${jCutoff}`);
       this.messageICutoff = iCutoff;
       this.messageJCutoff = jCutoff;
     }
