@@ -52,7 +52,7 @@ export class ChatContextManager {
    */
   prepareContext(messages: UIMessage[], maxCollapsedMessagesSize: number, maxRelevantFilesSize: number): UIMessage[] {
     // If the last message is a user message this is the first LLM call that includes that user message.
-    // Only update the relevant files if the last message is a user message to avoid clearing the cache as the agent makes changes.
+    // Only update the relevant files and the message cutoff indices if the last message is a user message to avoid clearing the cache as the agent makes changes.
     if (messages[messages.length - 1].role === 'user') {
       this.initialRelevantFiles = this.relevantFiles(messages, maxRelevantFilesSize);
       const [iCutoff, jCutoff] = this.messagePartCutoff(messages, 1000);
