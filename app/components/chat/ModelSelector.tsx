@@ -124,7 +124,7 @@ export const ModelSelector = React.memo(function ModelSelector({
       options={Object.entries(models).map(([value, model]) => ({
         label: model.provider + ' ' + model.name,
         value: value as ModelSelection,
-        disabled: model.requireKey,
+        disabled: model.requireKey && (!apiKey || !keyForProvider(apiKey, model.provider)),
       }))}
       buttonClasses="w-fit"
       selectedOption={modelSelection}

@@ -274,14 +274,21 @@ export const Chat = memo(
         }
         let modelProvider: ProviderType;
         const retries = retryState.get();
+        let modelChoice: string | undefined = undefined;
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
           // Send all traffic to Anthropic first before failing over to Bedrock.
           const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
           modelProvider = providers[retries.numFailures % providers.length];
+        } else if (modelSelection === 'claude-3-5-haiku') {
+          modelProvider = 'Anthropic';
+          modelChoice = modelSelection;
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
         } else if (modelSelection === 'gemini-2.5-pro') {
           modelProvider = 'Google';
+        } else if (modelSelection === 'gpt-4.1-mini') {
+          modelProvider = 'OpenAI';
+          modelChoice = modelSelection;
         } else {
           modelProvider = 'OpenAI';
         }
@@ -302,7 +309,7 @@ export const Chat = memo(
           skipSystemPrompt: skipSystemPromptStore.get(),
           smallFiles,
           recordRawPromptsForDebugging,
-          modelChoice: undefined,
+          modelChoice,
         };
       },
       maxSteps: 64,
