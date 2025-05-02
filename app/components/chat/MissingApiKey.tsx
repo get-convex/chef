@@ -35,12 +35,15 @@ export function MissingApiKey({
     try {
       setIsSaving(true);
 
+      // Get the current API key data
+      const apiKey = await convex.query(api.apiKeys.apiKeyForCurrentMember);
+
       const apiKeyMutation: Doc<'convexMembers'>['apiKey'] = {
-        preference: 'always' as 'always' | 'quotaExhausted',
-        value: undefined as string | undefined,
-        openai: undefined as string | undefined,
-        xai: undefined as string | undefined,
-        google: undefined as string | undefined,
+        preference: apiKey?.preference || 'always' as 'always' | 'quotaExhausted',
+        value: apiKey?.value || undefined,
+        openai: apiKey?.openai || undefined,
+        xai: apiKey?.xai || undefined,
+        google: apiKey?.google || undefined,
       };
 
       switch (provider) {

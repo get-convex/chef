@@ -191,6 +191,9 @@ export function getProvider(
     }
   }
 
+  console.log('provider', provider);
+  console.log('model', model);
+  console.log('userApiKey', userApiKey);
   return provider;
 }
 

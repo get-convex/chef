@@ -73,8 +73,12 @@ export async function chatAction({ request }: ActionFunctionArgs) {
 
   let useUserApiKey = false;
 
+  console.log('body.userApiKey', body.userApiKey);
+  console.log('body.modelProvider', body.modelProvider);
+  console.log('body.modelChoice', body.modelChoice);
+
   // Always use the user's API key if they're set to always mode.
-  if (body.userApiKey?.preference === 'always') {
+  if (body.userApiKey?.preference === 'always' || body.modelChoice) {
     useUserApiKey = true;
   }
 

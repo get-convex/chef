@@ -281,14 +281,14 @@ export const Chat = memo(
           modelProvider = providers[retries.numFailures % providers.length];
         } else if (modelSelection === 'claude-3-5-haiku') {
           modelProvider = 'Anthropic';
-          modelChoice = modelSelection;
+          modelChoice = 'claude-3-5-haiku-latest';
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
         } else if (modelSelection === 'gemini-2.5-pro') {
           modelProvider = 'Google';
         } else if (modelSelection === 'gpt-4.1-mini') {
           modelProvider = 'OpenAI';
-          modelChoice = modelSelection;
+          modelChoice = 'gpt-4.1-mini';
         } else {
           modelProvider = 'OpenAI';
         }
