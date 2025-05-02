@@ -224,7 +224,9 @@ export function ThumbnailChooser({ isOpen, onOpenChange, onRequestCapture }: Thu
           className="flex flex-col gap-4"
         >
           <Dialog.Title className="text-lg font-semibold">Sharing thumbnail</Dialog.Title>
-          <p className="text-content-secondary">This image is used when you share your chat with a link.</p>
+          <Dialog.Description className="text-content-secondary">
+            This image is used when you share your chat with a link.
+          </Dialog.Description>
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}

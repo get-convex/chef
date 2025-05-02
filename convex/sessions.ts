@@ -1,8 +1,9 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { action, internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { ConvexError } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { getChatByIdOrUrlIdEnsuringAccess } from "./messages";
+import { internal } from "./_generated/api";
 
 export const verifySession = query({
   args: {
@@ -144,7 +145,8 @@ export async function getCurrentMember(ctx: QueryCtx) {
   return existingMember;
 }
 
-export const updateCachedProfile = mutation({
+// Internal so we can trust this is actually what's in the Convex dashboard, but it's still just a cache
+export const saveCachedProfile = internalMutation({
   args: {
     profile: v.object({
       username: v.string(),
@@ -164,3 +166,45 @@ export const updateCachedProfile = mutation({
     });
   },
 });
+
+export const updateCachedProfile = action({
+  args: {
+    convexAuthToken: v.string(),
+  },
+  handler: async (ctx, { convexAuthToken }) => {
+    const auth0Profile = await ctx.auth.getUserIdentity();
+    if (!auth0Profile) {
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
+    }
+
+    const url = `${process.env.BIG_BRAIN_HOST}/api/dashboard/profile`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${convexAuthToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Failed to fetch profile: ${response.statusText}: ${body}`);
+    }
+
+    const convexProfile: ConvexProfile = await response.json();
+
+    const profile = {
+      username: convexProfile.name || auth0Profile.name || auth0Profile.nickname || "",
+      email: convexProfile.email || auth0Profile.email || "",
+      avatar: auth0Profile.pictureUrl || "",
+      id: convexProfile.id || auth0Profile.subject || "",
+    };
+
+    await ctx.runMutation(internal.sessions.saveCachedProfile, { profile });
+  },
+});
+
+export interface ConvexProfile {
+  name: string;
+  email: string;
+  id: string;
+}

@@ -1,6 +1,6 @@
 import { VITE_PROVISION_HOST } from './convexProvisionHost';
 
-interface ConvexProfile {
+export interface ConvexProfile {
   name: string;
   email: string;
   id: string;

@@ -15,7 +15,9 @@ export default defineConfig(({ mode }) => ({
           transform(code: string, id: string) {
             if (id.includes("main.tsx")) {
               return {
-                code: `
+                code: `${code}
+
+/* Added by Vite plugin inject-chef-dev */
 window.addEventListener('message', async (message) => {
   if (message.source !== window.parent) return;
   if (message.data.type !== 'chefPreviewRequest') return;
@@ -23,7 +25,6 @@ window.addEventListener('message', async (message) => {
   const worker = await import('https://chef.convex.dev/scripts/worker.bundled.mjs');
   await worker.respondToMessage(message);
 });
-              ${code}
             `,
                 map: null,
               };

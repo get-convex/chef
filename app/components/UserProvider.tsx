@@ -51,27 +51,24 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
         try {
           const token = getConvexAuthToken(convex);
           if (token) {
+            void convex.action(api.sessions.updateCachedProfile, { convexAuthToken: token });
             const convexProfile = await getConvexProfile(token);
-            const profile = {
+            setProfile({
               username: convexProfile.name || user.name || user.nickname || '',
               email: convexProfile.email || user.email || '',
               avatar: user.picture || '',
               id: convexProfile.id || user.sub || '',
-            };
-            setProfile(profile);
-            void convex.mutation(api.sessions.updateCachedProfile, { profile });
+            });
           }
         } catch (error) {
           console.error('Failed to fetch Convex profile:', error);
           // Fallback to Auth0 profile if Convex profile fetch fails
-          const profile = {
+          setProfile({
             username: user.name ?? user.nickname ?? '',
             email: user.email ?? '',
             avatar: user.picture ?? '',
             id: user.sub ?? '',
-          };
-          setProfile(profile);
-          void convex.mutation(api.sessions.updateCachedProfile, { profile });
+          });
         }
       } else {
         launchdarkly?.identify({
