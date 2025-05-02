@@ -116,13 +116,7 @@ const ShowInner: FC<ShowInnerProps> = ({ share, className }) => {
           </Button>
 
           {share.hasBeenDeployed && share.deployedUrl && (
-            <Button
-              href={share.deployedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="primary"
-              icon={<ExternalLinkIcon />}
-            >
+            <Button href={share.deployedUrl} target="_blank" variant="primary" icon={<ExternalLinkIcon />}>
               View app
             </Button>
           )}
