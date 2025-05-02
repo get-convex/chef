@@ -91,7 +91,7 @@ function displayModelAndUsage({
   // we don't charge for tokens produced from failed tool calls. This should
   // probably be re-worked to use Chef tokens.
 
-  const usageDisplay = usageAnnotation ? displayUsage(usageAnnotation, success) : null;
+  const usageDisplay = usageAnnotation ? displayUsage(usageAnnotation, success, model?.provider ?? 'Unknown') : null;
   if (modelDisplay && usageDisplay) {
     return (
       <div className="flex items-center gap-1">
@@ -104,22 +104,31 @@ function displayModelAndUsage({
   return modelDisplay ?? usageDisplay;
 }
 
-function displayUsage(usageAnnotation: UsageAnnotation, success: boolean) {
+function displayChefTokenNumber(num: number) {
+  if (num >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(1)}M`;
+  } else if (num >= 1_000) {
+    return `${(num / 1_000).toFixed(0)}K`;
+  }
+  return num.toString();
+}
+
+function displayUsage(usageAnnotation: UsageAnnotation, success: boolean, provider: ProviderType) {
   const usage: Usage = usageFromGeneration({
     usage: usageAnnotation,
     providerMetadata: usageAnnotation.providerMetadata,
   });
-  const { chefTokens, breakdown } = calculateChefTokens(usage);
+  const { chefTokens, breakdown } = calculateChefTokens(usage, provider);
   if (!success) {
     return (
       <div className="text-xs text-content-secondary">
-        Chef Tokens: 0 (failed tool call), Breakdown: {displayBreakdownForSingleAnnotation(breakdown)}
+        Chef Tokens: 0 (failed tool call), {displayBreakdownForSingleAnnotation(breakdown)}
       </div>
     );
   }
   return (
     <div className="text-xs text-content-secondary">
-      Chef Tokens: {chefTokens}, Breakdown: {displayBreakdownForSingleAnnotation(breakdown)}
+      Chef Tokens: {displayChefTokenNumber(chefTokens)}, {displayBreakdownForSingleAnnotation(breakdown)}
     </div>
   );
 }
@@ -127,19 +136,19 @@ function displayUsage(usageAnnotation: UsageAnnotation, success: boolean) {
 function displayBreakdownForSingleAnnotation(breakdown: ChefTokenBreakdown) {
   // A single annotation should always have a single provider.
   if (breakdown.completionTokens.anthropic > 0) {
-    return `${breakdown.promptTokens.anthropic.uncached} prompt uncached, ${breakdown.promptTokens.anthropic.cached} prompt cached, ${breakdown.completionTokens.anthropic} completion`;
+    return `${displayChefTokenNumber(breakdown.promptTokens.anthropic.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.anthropic.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.anthropic)} completion`;
   }
   if (breakdown.completionTokens.openai > 0) {
-    return `${breakdown.promptTokens.openai.uncached} prompt uncached, ${breakdown.promptTokens.openai.cached} prompt cached, ${breakdown.completionTokens.openai} completion`;
+    return `${displayChefTokenNumber(breakdown.promptTokens.openai.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.openai.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.openai)} completion`;
   }
   if (breakdown.completionTokens.xai > 0) {
-    return `${breakdown.promptTokens.xai.uncached} prompt uncached, ${breakdown.promptTokens.xai.cached} prompt cached, ${breakdown.completionTokens.xai} completion`;
+    return `${displayChefTokenNumber(breakdown.promptTokens.xai.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.xai.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.xai)} completion`;
   }
   if (breakdown.completionTokens.google > 0) {
-    return `${breakdown.promptTokens.google.uncached} prompt uncached, ${breakdown.promptTokens.google.cached} prompt cached, ${breakdown.completionTokens.google} completion`;
+    return `${displayChefTokenNumber(breakdown.promptTokens.google.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.google.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.google)} completion`;
   }
   if (breakdown.completionTokens.bedrock > 0) {
-    return `${breakdown.promptTokens.bedrock.uncached} prompt uncached, ${breakdown.promptTokens.bedrock.cached} prompt cached, ${breakdown.completionTokens.bedrock} completion`;
+    return `${displayChefTokenNumber(breakdown.promptTokens.bedrock.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.bedrock.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.bedrock)} completion`;
   }
   return 'unknown';
 }
