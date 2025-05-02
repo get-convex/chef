@@ -63,7 +63,6 @@ export function ShareButton() {
   // Update form state when currentShare changes
   useEffect(() => {
     if (currentShare) {
-      console.log('currentShare', currentShare.shared);
       setIsSharedDraft(currentShare.shared === 'shared');
 
       // Set up share URL if we have a code

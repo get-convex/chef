@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
+import { Button } from '@ui/Button';
 
 export async function uploadThumbnail(imageData: string, sessionId: string, chatId: string): Promise<void> {
   // Convert base64 to blob
@@ -279,60 +280,44 @@ export function ThumbnailChooser({ isOpen, onOpenChange, onRequestCapture }: Thu
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {onRequestCapture && (
-                <button
-                  type="button"
+                <Button
+                  variant="neutral"
                   onClick={captureNewImage}
                   disabled={isCapturing}
-                  className={`flex min-w-44 items-center gap-2 rounded px-4 py-2 text-sm font-medium transition-colors ${
-                    isCapturing
-                      ? 'cursor-not-allowed bg-bolt-elements-background-depth-4 text-content-secondary'
-                      : 'bg-bolt-elements-background-depth-3 hover:bg-bolt-elements-background-depth-4'
-                  }`}
+                  tip="Take a screenshot of the current preview"
+                  icon={<CameraIcon />}
                 >
-                  <CameraIcon />
                   Take New Screenshot
-                </button>
+                </Button>
               )}
 
-              <button
-                type="button"
+              <Button
+                variant="neutral"
                 onClick={handleFileSelect}
-                className="flex items-center gap-2 rounded bg-bolt-elements-background-depth-3 px-4 py-2 text-sm font-medium text-content-primary hover:bg-bolt-elements-background-depth-4"
+                tip="Upload an image from your computer"
+                icon={<UploadIcon />}
               >
-                <UploadIcon />
                 Paste, drag, or click to upload an image
-              </button>
+              </Button>
 
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
             </div>
 
             <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="rounded px-4 py-2 text-sm font-medium text-content-secondary hover:bg-bolt-elements-background-depth-3"
-              >
+              <Button variant="neutral" onClick={handleCancel} tip="Close without saving changes">
                 Close
-              </button>
+              </Button>
 
               {localPreview && (
-                <button
+                <Button
                   type="submit"
+                  variant="primary"
                   disabled={isUploading}
-                  className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  tip="Use this image as the thumbnail"
+                  icon={isUploading ? <Spinner className="size-4" /> : <CheckIcon />}
                 >
-                  {isUploading ? (
-                    <>
-                      <Spinner className="size-4" />
-                      <span>Uploading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckIcon />
-                      <span>Use This Image</span>
-                    </>
-                  )}
-                </button>
+                  {isUploading ? 'Uploading...' : 'Use This Image'}
+                </Button>
               )}
             </div>
           </div>
