@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import type { Message } from 'ai';
+import type { Message, UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -126,7 +126,13 @@ export const Chat = memo(
         }
       }
     };
-    const { recordRawPromptsForDebugging } = useLaunchDarkly();
+    const {
+      recordRawPromptsForDebugging,
+      enableSkipSystemPrompt,
+      smallFiles,
+      maxCollapsedMessagesSize,
+      maxRelevantFilesSize,
+    } = useLaunchDarkly();
 
     const title = useStore(description);
 
@@ -165,6 +171,8 @@ export const Chat = memo(
         () => workbenchStore.currentDocument.get(),
         () => workbenchStore.files.get(),
         () => workbenchStore.userWrites,
+        initialMessages.filter((message) => message.parts !== undefined) as UIMessage[],
+        maxSizeForModel(modelSelection, maxRelevantFilesSize),
       ),
     );
     const [disableChatMessage, setDisableChatMessage] = useState<
@@ -252,7 +260,6 @@ export const Chat = memo(
       }
     }, [apiKey, checkApiKeyForCurrentModel, convex, modelSelection, setDisableChatMessage]);
 
-    const { enableSkipSystemPrompt, smallFiles } = useLaunchDarkly();
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
       api: '/api/chat',
@@ -282,7 +289,11 @@ export const Chat = memo(
           modelProvider = 'OpenAI';
         }
         return {
-          messages: chatContextManager.current.prepareContext(messages),
+          messages: chatContextManager.current.prepareContext(
+            messages,
+            maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
+            maxSizeForModel(modelSelection, maxRelevantFilesSize),
+          ),
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
           chatInitialId,
           token,
@@ -776,4 +787,16 @@ function hasApiKeySet(modelSelection: ModelSelection, apiKey?: Doc<'convexMember
     return true;
   }
   return false;
+}
+
+function maxSizeForModel(modelSelection: ModelSelection, maxSize: number) {
+  switch (modelSelection) {
+    case 'auto':
+      return maxSize;
+    case 'claude-3.5-sonnet':
+      return maxSize;
+    default:
+      // For non-anthropic models not yet using caching, use a lower message size limit.
+      return 8192;
+  }
 }

@@ -1,37 +1,14 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { action, internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { ConvexError } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { getChatByIdOrUrlIdEnsuringAccess } from "./messages";
-
-export const getSession = mutation({
-  args: {
-    code: v.string(),
-  },
-  returns: v.id("sessions"),
-  handler: async (ctx, args) => {
-    const inviteCodes = await ctx.db
-      .query("inviteCodes")
-      .withIndex("byCode", (q) => q.eq("code", args.code))
-      .collect();
-
-    const activeInviteCode = inviteCodes.find((inviteCode) => inviteCode.isActive);
-
-    if (!activeInviteCode) {
-      throw new ConvexError({ code: "NotAuthorized", message: "Invalid invite code" });
-    }
-    await ctx.db.patch(activeInviteCode._id, {
-      lastUsedTime: Date.now(),
-    });
-
-    return activeInviteCode.sessionId;
-  },
-});
+import { internal } from "./_generated/api";
 
 export const verifySession = query({
   args: {
     sessionId: v.string(),
-    flexAuthMode: v.optional(v.union(v.literal("InviteCode"), v.literal("ConvexOAuth"))),
+    flexAuthMode: v.optional(v.literal("ConvexOAuth")),
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
@@ -39,112 +16,20 @@ export const verifySession = query({
     if (!sessionId) {
       return false;
     }
-    if (args.flexAuthMode === "InviteCode") {
-      return isValidSessionForInviteCode(ctx, { sessionId });
-    } else if (args.flexAuthMode === "ConvexOAuth") {
-      const session = await ctx.db.get(sessionId);
-      if (!session) {
-        return false;
-      }
-      if (!session.memberId) {
-        return false;
-      }
-      return isValidSessionForConvexOAuth(ctx, { sessionId, memberId: session.memberId });
+    const session = await ctx.db.get(sessionId);
+    if (!session || !session.memberId) {
+      return false;
     }
-    return isValidSession(ctx, { sessionId });
-  },
-});
-
-export const issueInviteCode = internalMutation({
-  args: {
-    code: v.optional(v.string()),
-    issuedReason: v.string(),
-  },
-  returns: v.string(),
-  handler: async (ctx, args) => {
-    return await _issueInviteCode(ctx, args);
-  },
-});
-
-export const issueInviteCodeForPreviewDeployment = internalMutation({
-  args: {},
-  returns: v.string(),
-  handler: async (ctx) => {
-    return await _issueInviteCode(ctx, { code: "preview-test", issuedReason: "Preview deployment" });
-  },
-});
-
-async function _issueInviteCode(ctx: MutationCtx, args: { code?: string; issuedReason: string }) {
-  const code = args.code ?? crypto.randomUUID();
-  if (code.length < 3) {
-    // so they can be used as the default project name for
-    // convexProjects:connectConvexProject
-    throw new Error("Invite codes must be at least three letters");
-  }
-
-  const existing = await ctx.db
-    .query("inviteCodes")
-    .withIndex("byCode", (q) => q.eq("code", code))
-    .collect();
-
-  if (existing.length > 0) {
-    throw new Error("Invite code has already been issued");
-  }
-
-  const sessionId = await ctx.db.insert("sessions", {});
-
-  await ctx.db.insert("inviteCodes", {
-    sessionId,
-    code,
-    lastUsedTime: null,
-    issuedReason: args.issuedReason,
-    isActive: true,
-  });
-
-  return code;
-}
-
-export const revokeInviteCode = internalMutation({
-  args: {
-    code: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const code = args.code ?? crypto.randomUUID();
-
-    const existing = await ctx.db
-      .query("inviteCodes")
-      .withIndex("byCode", (q) => q.eq("code", code))
-      .collect();
-
-    for (const inviteCode of existing) {
-      if (inviteCode.isActive) {
-        await ctx.db.patch(inviteCode._id, {
-          isActive: false,
-        });
-      }
-    }
-    console.log(`Revoked ${existing.length} invite codes`, code);
+    return isValidSessionForConvexOAuth(ctx, { sessionId, memberId: session.memberId });
   },
 });
 
 export async function isValidSession(ctx: QueryCtx, args: { sessionId: Id<"sessions"> }) {
   const session = await ctx.db.get(args.sessionId);
-  if (!session) {
+  if (!session || !session.memberId) {
     return false;
   }
-  if (session.memberId) {
-    return await isValidSessionForConvexOAuth(ctx, { sessionId: args.sessionId, memberId: session.memberId });
-  }
-  return await isValidSessionForInviteCode(ctx, args);
-}
-
-async function isValidSessionForInviteCode(ctx: QueryCtx, args: { sessionId: Id<"sessions"> }) {
-  const inviteCode = await ctx.db
-    .query("inviteCodes")
-    .withIndex("bySessionId", (q) => q.eq("sessionId", args.sessionId))
-    .unique();
-
-  return inviteCode !== null && inviteCode.isActive;
+  return await isValidSessionForConvexOAuth(ctx, { sessionId: args.sessionId, memberId: session.memberId });
 }
 
 async function isValidSessionForConvexOAuth(
@@ -260,73 +145,66 @@ export async function getCurrentMember(ctx: QueryCtx) {
   return existingMember;
 }
 
-export async function getInviteCode(ctx: QueryCtx, args: { sessionId: Id<"sessions"> }) {
-  const inviteCode = await ctx.db
-    .query("inviteCodes")
-    .withIndex("bySessionId", (q) => q.eq("sessionId", args.sessionId))
-    .unique();
-  if (inviteCode === null || !inviteCode.isActive) {
-    throw new ConvexError({ code: "NotAuthorized", message: "Invite code not found" });
-  }
-  return inviteCode;
-}
-
-export const cleanupInactiveSession = internalMutation({
+// Internal so we can trust this is actually what's in the Convex dashboard, but it's still just a cache
+export const saveCachedProfile = internalMutation({
   args: {
-    sessionId: v.id("sessions"),
-    forReal: v.boolean(),
+    profile: v.object({
+      username: v.string(),
+      avatar: v.string(),
+      email: v.string(),
+      id: v.union(v.string(), v.number()),
+    }),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
-    if (!session) {
-      console.log("Session not found");
-      return;
-    }
-    const chats = await ctx.db
-      .query("chats")
-      .withIndex("byCreatorAndId", (q) => q.eq("creatorId", session._id))
-      .collect();
-    console.log(`Found ${chats.length} chats for session ${session._id}`);
-    for (const chat of chats) {
-      console.log(`Deleting data for chat ${chat._id}`);
-      const chatMessages = await ctx.db
-        .query("chatMessages")
-        .withIndex("byChatId", (q) => q.eq("chatId", chat._id))
-        .collect();
-      console.log(`Deleting ${chatMessages.length} messages for chat ${chat._id}`);
-      for (const chatMessage of chatMessages) {
-        await ctx.db.delete(chatMessage._id);
-      }
-      const connectedProject = chat.convexProject;
-      if (connectedProject?.kind === "connected") {
-        console.log(`Chat connected to project with deployment ${connectedProject.deploymentName}`);
-        const allCredentials = await ctx.db
-          .query("convexProjectCredentials")
-          .withIndex("bySlugs", (q) =>
-            q.eq("teamSlug", connectedProject.teamSlug).eq("projectSlug", connectedProject.projectSlug),
-          )
-          .collect();
-        const credentials = allCredentials.filter((cred) => cred.memberId === session.memberId);
-        if (credentials.length === 0) {
-          console.log(`No credentials found for chat ${chat._id}`);
-        } else if (credentials.length > 1) {
-          console.warn(
-            `Found ${credentials.length} credentials for chat ${chat._id}, leaving them since this is an unexpected state`,
-          );
-        } else {
-          const credential = credentials[0];
-          console.log(`Deleting credential ${credential._id} for chat ${chat._id}`);
-          await ctx.db.delete(credential._id);
-        }
-      }
-      await ctx.db.delete(chat._id);
-      console.log(`Deleted data for chat ${chat._id}`);
-    }
-    console.log(`Deleting session ${session._id}`);
-    await ctx.db.delete(session._id);
-    if (!args.forReal) {
-      console.error("Failing transaction since this is a dry run. Set --for-real to true to delete the session.");
-      throw new Error("Dry run");
-    }
+    const member = await getCurrentMember(ctx);
+    const profile = {
+      ...args.profile,
+      id: String(args.profile.id),
+    };
+    await ctx.db.patch(member._id, {
+      cachedProfile: profile,
+    });
   },
 });
+
+export const updateCachedProfile = action({
+  args: {
+    convexAuthToken: v.string(),
+  },
+  handler: async (ctx, { convexAuthToken }) => {
+    const auth0Profile = await ctx.auth.getUserIdentity();
+    if (!auth0Profile) {
+      throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
+    }
+
+    const url = `${process.env.BIG_BRAIN_HOST}/api/dashboard/profile`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${convexAuthToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Failed to fetch profile: ${response.statusText}: ${body}`);
+    }
+
+    const convexProfile: ConvexProfile = await response.json();
+
+    const profile = {
+      username: convexProfile.name || auth0Profile.name || auth0Profile.nickname || "",
+      email: convexProfile.email || auth0Profile.email || "",
+      avatar: auth0Profile.pictureUrl || "",
+      id: convexProfile.id || auth0Profile.subject || "",
+    };
+
+    await ctx.runMutation(internal.sessions.saveCachedProfile, { profile });
+  },
+});
+
+export interface ConvexProfile {
+  name: string;
+  email: string;
+  id: string;
+}

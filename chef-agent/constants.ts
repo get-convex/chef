@@ -28,4 +28,5 @@ export const EXCLUDED_FILE_PATHS = [
   'src/main.tsx',
   'src/SignInForm.tsx',
   'src/SignOutButton.tsx',
+  'vite.config.ts',
 ];

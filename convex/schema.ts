@@ -1,7 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import type { Infer, Validator, VAny } from "convex/values";
-import type { SerializedMessage } from "./messages";
+import type { Infer, Validator } from "convex/values";
 import type { CoreMessage } from "ai";
 
 export const apiKeyValidator = v.object({
@@ -39,6 +38,15 @@ export default defineSchema({
   convexMembers: defineTable({
     tokenIdentifier: v.string(),
     apiKey: v.optional(apiKeyValidator),
+    // Not authoritative, just a cache of the user's profile from Auth0/provision host.
+    cachedProfile: v.optional(
+      v.object({
+        username: v.string(),
+        avatar: v.string(),
+        email: v.string(),
+        id: v.string(),
+      }),
+    ),
   }).index("byTokenIdentifier", ["tokenIdentifier"]),
 
   /*
@@ -68,6 +76,7 @@ export default defineSchema({
     metadata: v.optional(v.any()), // TODO migration to remove this column
     snapshotId: v.optional(v.id("_storage")),
     lastMessageRank: v.optional(v.number()),
+    hasBeenDeployed: v.optional(v.boolean()),
     convexProject: v.optional(
       v.union(
         v.object({
@@ -101,13 +110,6 @@ export default defineSchema({
     memberId: v.optional(v.id("convexMembers")),
     projectDeployKey: v.string(),
   }).index("bySlugs", ["teamSlug", "projectSlug"]),
-
-  chatMessages: defineTable({
-    content: v.any() as VAny<SerializedMessage>,
-    rank: v.number(),
-    chatId: v.id("chats"),
-    deletedAt: v.optional(v.number()),
-  }).index("byChatId", ["chatId", "rank"]),
   chatMessagesStorageState: defineTable({
     chatId: v.id("chats"),
     storageId: v.union(v.id("_storage"), v.null()),
@@ -118,16 +120,11 @@ export default defineSchema({
     .index("byChatId", ["chatId", "lastMessageRank", "partIndex"])
     .index("byStorageId", ["storageId"])
     .index("bySnapshotId", ["snapshotId"]),
-  inviteCodes: defineTable({
-    code: v.string(),
-    sessionId: v.id("sessions"),
-    lastUsedTime: v.union(v.number(), v.null()),
-    issuedReason: v.string(),
-    isActive: v.boolean(),
-  })
-    .index("byCode", ["code"])
-    .index("bySessionId", ["sessionId"]),
 
+  // This type of share is for forking from a specific point in time.
+  // Call it a debugging snapshot or a fork point. There can be multiple per chat.
+  // The main thing they are used for is forking a project at a set point
+  // into another user's account.
   shares: defineTable({
     chatId: v.id("chats"),
     snapshotId: v.optional(v.id("_storage")),
@@ -146,6 +143,26 @@ export default defineSchema({
     .index("bySnapshotId", ["snapshotId"])
     .index("byChatHistoryId", ["chatHistoryId"])
     .index("byChatId", ["chatId"]),
+
+  // This type of share is for sharing a "project."
+  // You only get one for a given project for now.
+  socialShares: defineTable({
+    chatId: v.id("chats"),
+    code: v.string(),
+    thumbnailImageStorageId: v.optional(v.id("_storage")),
+    // Does the share link work. Three states so we can immediately share on opening the share dialog.
+    shared: v.union(v.literal("shared"), v.literal("expresslyUnshared"), v.literal("noPreferenceExpressed")),
+    // Allow others to fork this project at its most recent state. Always true for now.
+    allowForkFromLatest: v.boolean(),
+    // Allow to be shown in gallery (doesn't mean we actual show it).
+    // Always false for now, this doesn't exist yet.
+    allowShowInGallery: v.boolean(),
+    // Link to the deployed version from the share card. Always true for now.
+    linkToDeployed: v.boolean(),
+  })
+    .index("byCode", ["code"])
+    .index("byChatId", ["chatId"])
+    .index("byAllowShowInGallery", ["allowShowInGallery"]),
 
   memberOpenAITokens: defineTable({
     memberId: v.id("convexMembers"),

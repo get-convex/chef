@@ -114,7 +114,6 @@ export const ChefAuthProvider = ({
         try {
           isValid = await convex.query(api.sessions.verifySession, {
             sessionId: sessionIdFromLocalStorage as Id<'sessions'>,
-            flexAuthMode: 'ConvexOAuth',
           });
         } catch (error) {
           console.error('Error verifying session', error);

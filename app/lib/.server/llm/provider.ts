@@ -7,12 +7,12 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { captureException } from '@sentry/remix';
 import { logger } from 'chef-agent/utils/logger';
-import { GENERAL_SYSTEM_PROMPT_PRELUDE, ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
 import type { ProviderType } from '~/lib/common/annotations';
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch as undiciFetch } from 'undici';
 import { getEnv } from '~/lib/.server/env';
+import { GENERAL_SYSTEM_PROMPT_PRELUDE, ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
 
 type Fetch = typeof fetch;
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
@@ -200,7 +200,8 @@ const userKeyApiFetch = (provider: ModelProvider) => {
   const fetch = undiciFetch as unknown as Fetch;
 
   return async (input: RequestInfo | URL, init?: RequestInit) => {
-    const result = await fetch(input, init);
+    const requestInit = provider === 'Anthropic' ? anthropicInjectCacheControl(init) : init;
+    const result = await fetch(input, requestInit);
     if (result.status === 401) {
       const text = await result.text();
       throw new Error(JSON.stringify({ error: 'Invalid API key', details: text }));
@@ -254,8 +255,6 @@ const userKeyApiFetch = (provider: ModelProvider) => {
 //
 // tom, 2025-04-25: This is still an outstanding bug
 // https://github.com/vercel/ai/issues/5942
-// I've made this a little more general: only cache if the first
-// or second element starts with GENERAL_SYSTEM_PROMPT_PRELUDE.
 function anthropicInjectCacheControl(options?: RequestInit) {
   const start = Date.now();
   if (!options) {
@@ -278,18 +277,22 @@ function anthropicInjectCacheControl(options?: RequestInit) {
 
   const body = JSON.parse(options.body);
 
-  for (let i = 0; i < body.system.length; i++) {
-    if (body.system[i].text === ROLE_SYSTEM_PROMPT) {
-      continue;
-    }
-    if (body.system[i].text.startsWith(GENERAL_SYSTEM_PROMPT_PRELUDE)) {
-      // Inject the cache control header after the constant prompt, but leave
-      // the dynamic system prompts uncached.
-      body.system[i].cache_control = { type: 'ephemeral' };
-      break;
-    }
-    break;
+  if (body.system[0].text !== ROLE_SYSTEM_PROMPT) {
+    throw new Error('First system message must be the role system prompt');
   }
+  if (!body.system[1].text.startsWith(GENERAL_SYSTEM_PROMPT_PRELUDE)) {
+    throw new Error('Second system message must be the general system prompt prelude');
+  }
+  // Cache system prompt.
+  body.system[1].cache_control = { type: 'ephemeral' };
+  // Cache relevant files in system messages that are the same for all LLM requests after a user message.
+  body.system[body.system.length - 1].cache_control = { type: 'ephemeral' };
+
+  // Cache all messages.
+  const lastMessage = body.messages[body.messages.length - 1];
+  const lastMessagePartIndex = lastMessage.content.length - 1;
+  lastMessage.content[lastMessagePartIndex].cache_control = { type: 'ephemeral' };
+  body.messages[body.messages.length - 1].content[lastMessagePartIndex].cache_control = { type: 'ephemeral' };
 
   const newBody = JSON.stringify(body);
   console.log(`Injected system messages in ${Date.now() - start}ms`);

@@ -4,8 +4,9 @@ import type { Message } from 'ai';
 import { ToolCall } from './ToolCall';
 import { makePartId } from 'chef-agent/partId.js';
 import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
-import { parseAnnotations, type ProviderType, type UsageAnnotation } from '~/lib/common/annotations';
+import { parseAnnotations, type ProviderType, type Usage, type UsageAnnotation } from '~/lib/common/annotations';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
+import { calculateChefTokens, usageFromGeneration, type ChefTokenBreakdown } from '~/lib/common/usage';
 interface AssistantMessageProps {
   message: Message;
 }
@@ -27,11 +28,11 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
       if (showUsageAnnotations) {
         const model = parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId];
         const usage = parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId];
-        const success = part.toolInvocation.state === 'result' && part.toolInvocation.result.status === 'success';
+        const success = part.toolInvocation.state === 'result' && !part.toolInvocation.result.startsWith('Error: ');
         children.push(
           displayModelAndUsage({
             model,
-            usage: usage ?? undefined,
+            usageAnnotation: usage ?? undefined,
             success,
           }),
         );
@@ -39,7 +40,11 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
       children.push(<ToolCall key={children.length} partId={partId} toolCallId={part.toolInvocation.toolCallId} />);
     }
     if (part.type === 'text') {
-      children.push(<Markdown html>{part.text}</Markdown>);
+      children.push(
+        <Markdown html key={partId}>
+          {part.text}
+        </Markdown>,
+      );
     }
   }
   if (showUsageAnnotations) {
@@ -48,7 +53,7 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
     children.push(
       displayModelAndUsage({
         model: finalModel,
-        usage: finalUsage ?? undefined,
+        usageAnnotation: finalUsage ?? undefined,
         success: true,
       }),
     );
@@ -73,11 +78,11 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
 
 function displayModelAndUsage({
   model,
-  usage,
+  usageAnnotation,
   success,
 }: {
   model: { provider: ProviderType; model: string | undefined } | undefined;
-  usage: UsageAnnotation | undefined;
+  usageAnnotation: UsageAnnotation | undefined;
   success: boolean;
 }) {
   const modelDisplay = displayModel(model ?? { provider: 'Unknown', model: undefined });
@@ -85,12 +90,8 @@ function displayModelAndUsage({
   // what we use to bill users). This attempts to take into account the logic where
   // we don't charge for tokens produced from failed tool calls. This should
   // probably be re-worked to use Chef tokens.
-  const usageDisplay =
-    usage && success ? (
-      <div className="text-xs text-content-secondary">
-        Tokens: {usage.totalTokens} ({usage.promptTokens} prompt, {usage.completionTokens} completion)
-      </div>
-    ) : null;
+
+  const usageDisplay = usageAnnotation ? displayUsage(usageAnnotation, success, model?.provider ?? 'Unknown') : null;
   if (modelDisplay && usageDisplay) {
     return (
       <div className="flex items-center gap-1">
@@ -101,6 +102,55 @@ function displayModelAndUsage({
     );
   }
   return modelDisplay ?? usageDisplay;
+}
+
+function displayChefTokenNumber(num: number) {
+  if (num >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(1)}M`;
+  } else if (num >= 1_000) {
+    return `${(num / 1_000).toFixed(0)}K`;
+  }
+  return num.toString();
+}
+
+function displayUsage(usageAnnotation: UsageAnnotation, success: boolean, provider: ProviderType) {
+  const usage: Usage = usageFromGeneration({
+    usage: usageAnnotation,
+    providerMetadata: usageAnnotation.providerMetadata,
+  });
+  const { chefTokens, breakdown } = calculateChefTokens(usage, provider);
+  if (!success) {
+    return (
+      <div className="text-xs text-content-secondary">
+        Chef Tokens: 0 (failed tool call), {displayBreakdownForSingleAnnotation(breakdown)}
+      </div>
+    );
+  }
+  return (
+    <div className="text-xs text-content-secondary">
+      Chef Tokens: {displayChefTokenNumber(chefTokens)}, {displayBreakdownForSingleAnnotation(breakdown)}
+    </div>
+  );
+}
+
+function displayBreakdownForSingleAnnotation(breakdown: ChefTokenBreakdown) {
+  // A single annotation should always have a single provider.
+  if (breakdown.completionTokens.anthropic > 0) {
+    return `${displayChefTokenNumber(breakdown.promptTokens.anthropic.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.anthropic.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.anthropic)} completion`;
+  }
+  if (breakdown.completionTokens.openai > 0) {
+    return `${displayChefTokenNumber(breakdown.promptTokens.openai.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.openai.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.openai)} completion`;
+  }
+  if (breakdown.completionTokens.xai > 0) {
+    return `${displayChefTokenNumber(breakdown.promptTokens.xai.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.xai.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.xai)} completion`;
+  }
+  if (breakdown.completionTokens.google > 0) {
+    return `${displayChefTokenNumber(breakdown.promptTokens.google.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.google.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.google)} completion`;
+  }
+  if (breakdown.completionTokens.bedrock > 0) {
+    return `${displayChefTokenNumber(breakdown.promptTokens.bedrock.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.bedrock.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.bedrock)} completion`;
+  }
+  return 'unknown';
 }
 
 function displayModel(modelInfo: { provider: ProviderType; model: string | undefined }) {

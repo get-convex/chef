@@ -7,6 +7,7 @@ import { useChatId } from '~/lib/stores/chatId';
 import { setProfile } from '~/lib/stores/profile';
 import { getConvexProfile } from '~/lib/convexProfile';
 import { useLDClient, withLDProvider, basicLogger } from 'launchdarkly-react-client-sdk';
+import { api } from '@convex/_generated/api';
 
 export const UserProvider = withLDProvider<any>({
   clientSideID: import.meta.env.VITE_LD_CLIENT_SIDE_ID,
@@ -50,6 +51,7 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
         try {
           const token = getConvexAuthToken(convex);
           if (token) {
+            void convex.action(api.sessions.updateCachedProfile, { convexAuthToken: token });
             const convexProfile = await getConvexProfile(token);
             setProfile({
               username: convexProfile.name || user.name || user.nickname || '',

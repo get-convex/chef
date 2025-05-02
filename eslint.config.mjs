@@ -7,7 +7,15 @@ import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
 export default [
   {
-    ignores: ['**/dist', '**/node_modules', '**/.wrangler', '**/bolt/build', '**/.history', 'template/**'],
+    ignores: [
+      '**/dist',
+      '**/node_modules',
+      '**/.wrangler',
+      '**/bolt/build',
+      '**/.history',
+      'template/**',
+      '**/*.bundled.*',
+    ],
   },
   ...blitzPlugin.configs.recommended(),
   {

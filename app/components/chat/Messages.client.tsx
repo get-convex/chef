@@ -102,7 +102,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
               <div
                 key={index}
                 className={classNames(
-                  'flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)] relative mx-2 border border-neutral-200 dark:border-neutral-700',
+                  'flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)] relative border border-neutral-200 dark:border-neutral-700',
                   {
                     'bg-bolt-elements-messages-background': isUserMessage,
                   },

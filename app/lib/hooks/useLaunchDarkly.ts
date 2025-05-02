@@ -9,6 +9,8 @@ const flagDefaults: {
   showUsageAnnotations: boolean;
   smallFiles: boolean;
   recordRawPromptsForDebugging: boolean;
+  maxCollapsedMessagesSize: number;
+  maxRelevantFilesSize: number;
 } = {
   maintenanceMode: false,
   openAiLaunch202504: false,
@@ -17,6 +19,8 @@ const flagDefaults: {
   showUsageAnnotations: false,
   smallFiles: true,
   recordRawPromptsForDebugging: false,
+  maxCollapsedMessagesSize: 65536,
+  maxRelevantFilesSize: 8192,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {

@@ -4,13 +4,15 @@ import { IconButton } from '~/components/ui/IconButton';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { PortDropdown } from './PortDropdown';
 import { Spinner } from '@ui/Spinner';
-import { UpdateIcon, MobileIcon, ExternalLinkIcon, CrossCircledIcon } from '@radix-ui/react-icons';
+import { UpdateIcon, MobileIcon, ExternalLinkIcon, CrossCircledIcon, ImageIcon } from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/remix';
+import * as Dialog from '@radix-ui/react-dialog';
+import { ThumbnailChooser } from './ThumbnailChooser';
 
 type ResizeSide = 'left' | 'right' | null;
 
 export const Preview = memo(function Preview({ showClose, onClose }: { showClose: boolean; onClose: () => void }) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -18,6 +20,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
   const [isPortDropdownOpen, setIsPortDropdownOpen] = useState(false);
   const hasSelectedPreview = useRef(false);
   const previews = useStore(workbenchStore.previews);
+  // "active" here means which preview this Preview component is a view of
   const activePreview = previews[activePreviewIndex];
   const isActivePreviewSet = activePreview !== undefined;
 
@@ -110,6 +113,11 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
   const toggleDeviceMode = () => {
     setIsDeviceModeOn((prev) => !prev);
   };
+
+  const [isThumbnailModalOpen, setIsModalOpen] = useState(false);
+  const requestScreenshot = useCallback(() => {
+    return workbenchStore.requestScreenshot(activePreviewIndex);
+  }, [activePreviewIndex]);
 
   const startResizing = (e: React.MouseEvent, side: ResizeSide) => {
     if (!isDeviceModeOn) {
@@ -228,6 +236,14 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
     }
   };
 
+  const setIframeRefCallback = useCallback(
+    (node: HTMLIFrameElement | null) => {
+      iframeRef.current = node;
+      workbenchStore.setPreviewIframe(activePreviewIndex, node);
+    },
+    [activePreviewIndex],
+  );
+
   return (
     <div ref={containerRef} className="relative flex size-full flex-col">
       {isPortDropdownOpen && (
@@ -263,7 +279,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
                 return;
               }
 
-              // Don’t allow the user to enter an absolute URL
+              // Don't allow the user to enter an absolute URL
               if (url?.startsWith('http://') || url?.startsWith('https://')) {
                 setUrl(iframeUrl.slice(proxyBaseUrl.length));
                 inputRef.current?.blur();
@@ -291,6 +307,17 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
               previews={previews}
             />
           )}
+
+          <Dialog.Root open={isThumbnailModalOpen} onOpenChange={setIsModalOpen}>
+            <Dialog.Trigger asChild>
+              <IconButton icon={<ImageIcon />} title="View Preview Image" />
+            </Dialog.Trigger>
+            <ThumbnailChooser
+              isOpen={isThumbnailModalOpen}
+              onOpenChange={setIsModalOpen}
+              onRequestCapture={requestScreenshot}
+            />
+          </Dialog.Root>
 
           <IconButton
             icon={<MobileIcon />}
@@ -320,7 +347,7 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
           {activePreview ? (
             proxyBaseUrl ? (
               <iframe
-                ref={iframeRef}
+                ref={setIframeRefCallback}
                 title="preview"
                 className="size-full border-none bg-bolt-elements-background-depth-1"
                 src={iframeUrl}
