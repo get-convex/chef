@@ -6,7 +6,6 @@ import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useChatId } from '~/lib/stores/chatId';
 import { TeamSelector } from './TeamSelector';
-import { Spinner } from '@ui/Spinner';
 import { Link1Icon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 
@@ -58,7 +57,8 @@ export function ConvexConnectButton() {
         />
 
         <Button
-          icon={isLoading ? <Spinner /> : <Link1Icon />}
+          icon={<Link1Icon />}
+          loading={isLoading}
           disabled={isLoading || !selectedTeamSlug}
           onClick={handleClick}
         >

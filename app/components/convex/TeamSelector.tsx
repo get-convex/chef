@@ -1,6 +1,5 @@
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
 import { useStore } from '@nanostores/react';
-import { Spinner } from '@ui/Spinner';
 import { Combobox } from '@ui/Combobox';
 import { memo } from 'react';
 
@@ -15,28 +14,22 @@ export const TeamSelector = memo(function TeamSelector({
 }) {
   const teams = useStore(convexTeamsStore);
 
-  if (!teams) {
-    return (
-      <div className="flex overflow-hidden rounded border text-sm">
-        <div className="flex w-full items-center gap-2 p-1.5">
-          <Spinner />
-          Loading...
-        </div>
-      </div>
-    );
-  }
-
-  const selectedTeam = teams.find((t) => t.slug === selectedTeamSlug) ?? null;
+  const selectedTeam = teams?.find((t) => t.slug === selectedTeamSlug) ?? null;
 
   return (
     <Combobox
       label="Select team"
-      options={teams.map((team) => ({
-        label: team.name,
-        value: team.slug,
-      }))}
+      options={
+        teams?.map((team) => ({
+          label: team.name,
+          value: team.slug,
+        })) ?? []
+      }
       className="w-fit"
       buttonClasses="w-fit"
+      buttonProps={{
+        loading: !teams,
+      }}
       optionsHeader={
         <div className="flex flex-col gap-0.5 px-2">
           <h5>Select Team</h5>
