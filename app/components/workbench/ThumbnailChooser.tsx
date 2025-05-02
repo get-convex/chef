@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
 import { Spinner } from '@ui/Spinner';
 import { CameraIcon, CheckIcon, UploadIcon } from '@radix-ui/react-icons';
 import { useConvexSessionId } from '~/lib/stores/sessionId';
@@ -9,6 +8,7 @@ import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { Button } from '@ui/Button';
+import { Modal } from '@ui/Modal';
 
 export async function uploadThumbnail(imageData: string, sessionId: string, chatId: string): Promise<void> {
   // Convert base64 to blob
@@ -213,39 +213,41 @@ export function ThumbnailChooser({ isOpen, onOpenChange, onRequestCapture }: Thu
     return undefined;
   }, [isOpen, handlePaste]);
 
-  return (
-    <Dialog.Portal>
-      <Dialog.Overlay className="z-max fixed inset-0 bg-black/50" />
-      <Dialog.Content className="z-max fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-bolt-elements-background-depth-1 p-6 shadow-lg">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-          className="flex flex-col gap-4"
-        >
-          <Dialog.Title className="text-lg font-semibold">Sharing thumbnail</Dialog.Title>
-          <Dialog.Description className="text-content-secondary">
-            This image is used when you share your chat with a link.
-          </Dialog.Description>
+  return isOpen ? (
+    <Modal
+      onClose={() => onOpenChange(false)}
+      title="Sharing thumbnail"
+      description="This image is used when you share your chat with a link"
+      size="lg"
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
+        className="flex flex-col gap-4"
+      >
+        <div className="flex justify-center">
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            className={`relative flex h-[600px] w-[800px] flex-col items-center justify-center rounded ${
+            className={`relative flex h-[600px] max-w-[800px] flex-1 flex-col items-center justify-center rounded ${
               isDraggingImage
                 ? 'border-2 border-dashed border-blue-500 bg-blue-500/5'
                 : `${isCapturing ? '' : captureError ? 'border-2 border-red-500/50' : ''}`
-            } shadow-[inset_0_0_16px_rgba(0,0,0,0.08)] transition-colors duration-150`}
+            } transition-colors duration-150`}
           >
             {localPreview || lastUploadedPreview || (!recentlyUploaded && currentThumbnail) ? (
-              <div className="relative size-full">
-                <img
-                  src={localPreview || lastUploadedPreview || currentThumbnail || ''}
-                  alt="Preview"
-                  crossOrigin="anonymous"
-                  className="absolute inset-0 size-full object-contain shadow-[0_0_16px_rgba(0,0,0,0.15)]"
-                />
+              <div className="relative size-full p-4">
+                <div className="flex size-full items-center justify-center">
+                  <img
+                    src={localPreview || lastUploadedPreview || currentThumbnail || ''}
+                    alt="Preview"
+                    crossOrigin="anonymous"
+                    className="max-h-full max-w-full object-contain shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
+                  />
+                </div>
                 {isDraggingImage && (
                   <div className="absolute inset-0 flex items-center justify-center bg-blue-500/5 backdrop-blur-[2px]">
                     <p className="text-lg font-medium text-blue-600">Drop image to replace</p>
@@ -276,53 +278,53 @@ export function ThumbnailChooser({ isOpen, onOpenChange, onRequestCapture }: Thu
               </div>
             )}
           </div>
+        </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {onRequestCapture && (
-                <Button
-                  variant="neutral"
-                  onClick={captureNewImage}
-                  disabled={isCapturing}
-                  tip="Take a screenshot of the current preview"
-                  icon={<CameraIcon />}
-                >
-                  Take New Screenshot
-                </Button>
-              )}
-
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {onRequestCapture && (
               <Button
                 variant="neutral"
-                onClick={handleFileSelect}
-                tip="Upload an image from your computer"
-                icon={<UploadIcon />}
+                onClick={captureNewImage}
+                disabled={isCapturing}
+                tip="Take a screenshot of the current preview"
+                icon={<CameraIcon />}
               >
-                Paste, drag, or click to upload an image
+                Take New Screenshot
               </Button>
+            )}
 
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-            </div>
+            <Button
+              variant="neutral"
+              onClick={handleFileSelect}
+              tip="Upload an image from your computer"
+              icon={<UploadIcon />}
+            >
+              Paste, drag, or click to upload an image
+            </Button>
 
-            <div className="flex items-center gap-4">
-              <Button variant="neutral" onClick={handleCancel} tip="Close without saving changes">
-                Close
-              </Button>
-
-              {localPreview && (
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={isUploading}
-                  tip="Use this image as the thumbnail"
-                  icon={isUploading ? <Spinner className="size-4" /> : <CheckIcon />}
-                >
-                  {isUploading ? 'Uploading...' : 'Use This Image'}
-                </Button>
-              )}
-            </div>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
           </div>
-        </form>
-      </Dialog.Content>
-    </Dialog.Portal>
-  );
+
+          <div className="flex items-center gap-4">
+            <Button variant="neutral" onClick={handleCancel} tip="Close without saving changes">
+              Close
+            </Button>
+
+            {localPreview && (
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isUploading}
+                tip="Use this image as the thumbnail"
+                icon={isUploading ? <Spinner className="size-4" /> : <CheckIcon />}
+              >
+                {isUploading ? 'Uploading...' : 'Use This Image'}
+              </Button>
+            )}
+          </div>
+        </div>
+      </form>
+    </Modal>
+  ) : null;
 }

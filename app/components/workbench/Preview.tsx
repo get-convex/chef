@@ -239,7 +239,6 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
   const setIframeRefCallback = useCallback(
     (node: HTMLIFrameElement | null) => {
       iframeRef.current = node;
-      console.log('Iframe mounted:', node);
       workbenchStore.setPreviewIframe(activePreviewIndex, node);
     },
     [activePreviewIndex],
