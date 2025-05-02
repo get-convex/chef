@@ -232,7 +232,7 @@ export function ShareButton() {
                     <div className="flex items-center gap-2">
                       <Button variant="neutral" size="xs" onClick={() => setIsThumbnailModalOpen(true)}>
                         {shareDetails?.thumbnailUrl ? (
-                          <div className="relative size-4 overflow-hidden rounded">
+                          <div className="relative size-4 overflow-hidden rounded shadow-[0_2px_4px_rgba(0,0,0,0.4)] ring-1 ring-black/10">
                             <img
                               src={shareDetails.thumbnailUrl}
                               alt="Share thumbnail"
