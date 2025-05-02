@@ -192,21 +192,20 @@ export function ShareButton() {
                           value={shareUrl}
                           className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
                         />
-                        <button
-                          type="button"
+                        <Button
+                          variant="neutral"
+                          size="xs"
                           onClick={() => copyToClipboard(shareUrl)}
-                          className="rounded-md border bg-bolt-elements-item-backgroundDefault p-1.5 text-content-primary hover:bg-bolt-elements-item-backgroundActive"
-                        >
-                          <ClipboardIcon />
-                        </button>
-                        <a
-                          href={shareUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-md border bg-bolt-elements-item-backgroundDefault p-1.5 text-content-primary hover:bg-bolt-elements-item-backgroundActive"
-                        >
-                          <ExternalLinkIcon />
-                        </a>
+                          tip="Copy link"
+                          icon={<ClipboardIcon />}
+                        />
+                        <Button
+                          variant="neutral"
+                          size="xs"
+                          onClick={() => window.open(shareUrl, '_blank', 'noopener,noreferrer')}
+                          tip="Open in new tab"
+                          icon={<ExternalLinkIcon />}
+                        />
                       </div>
                     </div>
                   </>
@@ -278,21 +277,25 @@ export function ShareButton() {
                         value={shareDetails.deployedUrl}
                         className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
                       />
-                      <button
-                        type="button"
+                      <Button
+                        variant="neutral"
+                        size="xs"
                         onClick={() => copyToClipboard(shareDetails.deployedUrl!)}
-                        className="rounded-md border bg-bolt-elements-item-backgroundDefault p-1.5 text-content-primary hover:bg-bolt-elements-item-backgroundActive"
-                      >
-                        <ClipboardIcon />
-                      </button>
-                      <a
-                        href={shareDetails.deployedUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-md border bg-bolt-elements-item-backgroundDefault p-1.5 text-content-primary hover:bg-bolt-elements-item-backgroundActive"
-                      >
-                        <ExternalLinkIcon />
-                      </a>
+                        tip="Copy link"
+                        icon={<ClipboardIcon />}
+                      />
+                      <Button
+                        variant="neutral"
+                        size="xs"
+                        onClick={() => {
+                          const url = shareDetails.deployedUrl;
+                          if (typeof url === 'string') {
+                            window.open(url, '_blank', 'noopener,noreferrer');
+                          }
+                        }}
+                        tip="Open in new tab"
+                        icon={<ExternalLinkIcon />}
+                      />
                     </div>
                   </div>
                 )}
@@ -333,20 +336,20 @@ export function ShareButton() {
                             value={snapshotUrl}
                             className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
                           />
-                          <button
+                          <Button
+                            variant="neutral"
+                            size="xs"
                             onClick={() => copyToClipboard(snapshotUrl)}
-                            className="rounded-md border bg-bolt-elements-item-backgroundDefault p-1.5 text-content-primary hover:bg-bolt-elements-item-backgroundActive"
-                          >
-                            <ClipboardIcon />
-                          </button>
-                          <a
-                            href={snapshotUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="rounded-md border bg-bolt-elements-item-backgroundDefault p-1.5 text-content-primary hover:bg-bolt-elements-item-backgroundActive"
-                          >
-                            <ExternalLinkIcon />
-                          </a>
+                            tip="Copy link"
+                            icon={<ClipboardIcon />}
+                          />
+                          <Button
+                            variant="neutral"
+                            size="xs"
+                            onClick={() => window.open(snapshotUrl, '_blank', 'noopener,noreferrer')}
+                            tip="Open in new tab"
+                            icon={<ExternalLinkIcon />}
+                          />
                         </div>
                       </div>
                     )}
