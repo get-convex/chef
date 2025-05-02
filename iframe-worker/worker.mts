@@ -1,4 +1,5 @@
-// All Chef projects created after May 1 2025 dynamically link this script, so be careful when modifying it.
+// All Chef projects created after May 1 2025 dynamically import this script when they
+// receive a postMessage of type 'chefPreviewRequest' in development.
 import { toPng } from 'html-to-image';
 
 export async function respondToMessage(message: MessageEvent) {
@@ -9,6 +10,9 @@ export async function respondToMessage(message: MessageEvent) {
   }
   if (message.data.type !== 'chefPreviewRequest') {
     return;
+  }
+  if (message.data.request === 'ping') {
+    message.source.postMessage({ type: 'pong' }, message.origin);
   }
   if (message.data.request === 'screenshot') {
     const imageData = await toPng(document.body);

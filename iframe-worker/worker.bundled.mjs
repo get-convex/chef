@@ -801,6 +801,9 @@ async function respondToMessage(message) {
   if (message.data.type !== "chefPreviewRequest") {
     return;
   }
+  if (message.data.request === "ping") {
+    message.source.postMessage({ type: "pong" }, message.origin);
+  }
   if (message.data.request === "screenshot") {
     const imageData = await toPng(document.body);
     message.source.postMessage({ type: "screenshot", data: imageData }, message.origin);
