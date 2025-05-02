@@ -274,6 +274,15 @@ httpWithCors.route({
 
     const imageBlob = await request.blob();
 
+    // Validate content type
+    const contentType = imageBlob.type;
+    if (!contentType.startsWith("image/")) {
+      return new Response(JSON.stringify({ error: "Invalid file type. Only images are allowed." }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024;
     if (imageBlob.size > MAX_THUMBNAIL_SIZE) {
       return new Response(JSON.stringify({ error: "Thumbnail image exceeds maximum size of 5MB" }), {
