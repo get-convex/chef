@@ -166,13 +166,7 @@ const ShowInner: FC<ShowInnerProps> = ({ share, className }) => {
         </div>
         <div className="flex justify-end md:justify-end">
           {share.hasBeenDeployed && share.deployedUrl ? (
-            <Button
-              href={share.deployedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="primary"
-              className="ml-2"
-            >
+            <Button href={share.deployedUrl} target="_blank" variant="primary" className="ml-2">
               Try app
             </Button>
           ) : (
@@ -241,7 +235,6 @@ const ShowInner: FC<ShowInnerProps> = ({ share, className }) => {
             <Button
               href={`https://convex.dev/referral/${share.referralCode}`}
               target="_blank"
-              rel="noopener noreferrer"
               variant="primary"
               className="mt-2"
             >
