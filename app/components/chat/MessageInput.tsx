@@ -18,6 +18,8 @@ import { ConvexConnection } from '~/components/convex/ConvexConnection';
 import { PROMPT_COOKIE_KEY, type ModelSelection } from '~/utils/constants';
 import { ModelSelector } from './ModelSelector';
 import { TeamSelector } from '~/components/convex/TeamSelector';
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { Tooltip } from '@ui/Tooltip';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useChefAuth } from './ChefAuthWrapper';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
@@ -174,6 +176,7 @@ export const MessageInput = memo(function MessageInput({
           <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
           <div className="grow" />
           {input.length > 3 && <NewLineShortcut />}
+          {input.length > 2000 && <CharacterWarning />}
           {chatStarted && <ConvexConnection />}
           {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
           {!chatStarted && sessionId && (
@@ -194,6 +197,20 @@ const NewLineShortcut = memo(function NewLineShortcut() {
     <div className="text-xs text-content-tertiary">
       <KeyboardShortcut value={['Shift', 'Return']} className="mr-0.5 font-semibold" /> for new line
     </div>
+  );
+});
+
+const CharacterWarning = memo(function CharacterWarning() {
+  return (
+    <Tooltip
+      tip="Chef performs better with shorter prompts. Consider making your prompt more concise or breaking it into smaller chunks."
+      side="bottom"
+    >
+      <div className="flex items-center text-xs text-content-warning cursor-help">
+        <ExclamationTriangleIcon className="mr-1 h-5 w-5" />
+        Prompt exceeds 2000 characters
+      </div>
+    </Tooltip>
   );
 });
 
