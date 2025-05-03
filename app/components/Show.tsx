@@ -144,7 +144,11 @@ const ShowInner: FC<ShowInnerProps> = ({ share, className }) => {
         {/* Desktop: Clone app in Chef with Chef icon, mobile: What's Chef? */}
         <div className="flex justify-end md:justify-end">
           <Button
-            href={typeof window !== 'undefined' && window.innerWidth < 768 ? '/' : `/create/${share.code}`}
+            href={
+              typeof window !== 'undefined' && window.innerWidth < 768
+                ? '/'
+                : `/create/${share.code}` /* TODO this is buggy */
+            }
             variant="neutral"
             className="flex items-center gap-2"
             icon={<ChefIcon />}
