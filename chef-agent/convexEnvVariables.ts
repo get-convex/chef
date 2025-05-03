@@ -24,7 +24,23 @@ export async function queryEnvVariable(project: ConvexProject, name: string): Pr
   return udfResult && udfResult.value;
 }
 
-export async function setEnvVariables(project: ConvexProject, values: Record<string, string>) {
+export async function setEnvVariablesWithRetries(project: ConvexProject, values: Record<string, string>) {
+  const maxRetries = 3;
+  const retryDelay = 500;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await setEnvVariables(project, values);
+      return;
+    } catch (error) {
+      if (i === maxRetries - 1) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
+  }
+}
+
+async function setEnvVariables(project: ConvexProject, values: Record<string, string>) {
   const response = await fetch(`${project.deploymentUrl}/api/update_environment_variables`, {
     method: 'POST',
     body: JSON.stringify({
