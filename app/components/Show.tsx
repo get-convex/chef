@@ -152,6 +152,12 @@ const ShowInner: FC<ShowInnerProps> = ({ share, className }) => {
             variant="neutral"
             className="flex items-center gap-2"
             icon={<ChefIcon />}
+            tip={
+              typeof window !== 'undefined' && window.innerWidth < 768
+                ? undefined
+                : `New users: clone this app and get 85,000 bonus Chef tokens, plus some for the author of this app!
+` /* TODO this is buggy */
+            }
           >
             <span className="hidden md:inline">Clone app in Chef</span>
             <span className="inline md:hidden">What&apos;s Chef?</span>
@@ -176,13 +182,6 @@ const ShowInner: FC<ShowInnerProps> = ({ share, className }) => {
           )}
         </div>
       </div>
-      {/* Referral notice, only on desktop */}
-      {share.referralCode && (
-        <div className="hidden rounded border border-bolt-elements-background-depth-3 bg-bolt-elements-background-depth-2 p-2 text-center text-xs text-content-secondary md:block">
-          New users: clone this app and get 85,000 bonus Chef tokens, plus some for the author of this app!
-        </div>
-      )}
-
       <div
         className={classNames(
           'relative overflow-hidden rounded-lg border border-bolt-elements-background-depth-3',
