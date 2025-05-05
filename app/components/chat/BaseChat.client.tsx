@@ -195,8 +195,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         />
                       ) : (
                         <div className="my-2 max-w-prose text-balance rounded border border-neutral-1 bg-[#F7F3F1] p-4 text-center dark:border-neutral-10 dark:bg-neutral-11">
-                          Sorry, Chef is not available on your browser. Please try again from Firefox, Chrome, or any
-                          other Chromium-based browser.
+                          Chef is not available on your browser. Please try again from Firefox, Chrome, or any other
+                          Chromium-based browser.
                         </div>
                       )}
                     </>
