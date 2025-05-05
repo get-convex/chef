@@ -13,12 +13,19 @@
     // for occasional debugging
     "app/lib/hooks/useWhatChanged.ts",
     "load-context.ts",
+    // manual build processes
+    "proxy/build.cjs",
+    "proxy/proxy.cjs",
+    "iframe-worker/build.cjs",
+    "iframe-worker/worker.mts"
   ],
   "project": ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}!"],
   "ignore": ["template/**"],
 
-  "ignoreDependencies": [],
-  "ignoreBinaries": [
-    "open", // yeah this only works on macs, sorry
+  "ignoreDependencies": [
+    "@ui/*" // doesn't seem to follow the TypeScript paths (or doesn't understand which dep)
   ],
+  "ignoreBinaries": [
+    "open" // yeah this only works on macs, sorry
+  ]
 }
