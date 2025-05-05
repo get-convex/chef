@@ -20,6 +20,7 @@ import { Messages } from './Messages.client';
 import StreamingIndicator from './StreamingIndicator';
 import { SuggestionButtons } from './SuggestionButtons';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
+import { isCompatible } from '~/utils/isCompatible';
 
 interface BaseChatProps {
   // Refs
@@ -85,6 +86,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const { maintenanceMode } = useLaunchDarkly();
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
+
+    const compatible = isCompatible();
 
     const chatId = useChatId();
     const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -178,16 +181,25 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       {disableChatMessage}
                     </Sheet>
                   ) : (
-                    <MessageInput
-                      chatStarted={chatStarted}
-                      isStreaming={isStreaming}
-                      sendMessageInProgress={sendMessageInProgress}
-                      disabled={disableChatMessage !== null || maintenanceMode}
-                      modelSelection={modelSelection}
-                      setModelSelection={setModelSelection}
-                      onStop={onStop}
-                      onSend={onSend}
-                    />
+                    <>
+                      {compatible ? (
+                        <MessageInput
+                          chatStarted={chatStarted}
+                          isStreaming={isStreaming}
+                          sendMessageInProgress={sendMessageInProgress}
+                          disabled={disableChatMessage !== null || maintenanceMode}
+                          modelSelection={modelSelection}
+                          setModelSelection={setModelSelection}
+                          onStop={onStop}
+                          onSend={onSend}
+                        />
+                      ) : (
+                        <div className="my-2 max-w-prose text-balance rounded border border-neutral-1 bg-[#F7F3F1] p-4 text-center dark:border-neutral-10 dark:bg-neutral-11">
+                          Sorry, Chef is not available on your browser. Please try again from Firefox, Chrome, or any
+                          other Chromium-based browser.
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -201,13 +213,15 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   </div>
                 </div>
               )}
-              <SuggestionButtons
-                disabled={disableChatMessage !== null}
-                chatStarted={chatStarted}
-                onSuggestionClick={(suggestion) => {
-                  messageInputStore.set(suggestion);
-                }}
-              />
+              {compatible && (
+                <SuggestionButtons
+                  disabled={disableChatMessage !== null}
+                  chatStarted={chatStarted}
+                  onSuggestionClick={(suggestion) => {
+                    messageInputStore.set(suggestion);
+                  }}
+                />
+              )}
               {!chatStarted && <Landing />}
             </div>
             <Workbench
