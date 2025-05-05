@@ -1,6 +1,6 @@
 import { captureRemixErrorBoundaryError } from '@sentry/remix';
 import { useStore } from '@nanostores/react';
-import type { LinksFunction, LoaderFunctionArgs } from '@vercel/remix';
+import type { LinksFunction } from '@vercel/remix';
 import { json } from '@vercel/remix';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, useRouteError } from '@remix-run/react';
 import { themeStore } from './lib/stores/theme';
@@ -21,19 +21,13 @@ import posthog from 'posthog-js';
 import 'allotment/dist/style.css';
 
 import { ErrorDisplay } from './components/ErrorComponent';
-import { chooseExperience } from './utils/experienceChooser';
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const experience = chooseExperience(
-    request.headers.get('User-Agent') || '',
-    new URLSearchParams(new URL(request.url).searchParams),
-  );
-
+export async function loader() {
   // These environment variables are available in the client (they aren't secret).
   const CONVEX_URL = process.env.VITE_CONVEX_URL || globalThis.process.env.CONVEX_URL!;
   const CONVEX_OAUTH_CLIENT_ID = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID!;
   return json({
-    ENV: { CONVEX_URL, CONVEX_OAUTH_CLIENT_ID, experience },
+    ENV: { CONVEX_URL, CONVEX_OAUTH_CLIENT_ID },
   });
 }
 

@@ -31,14 +31,7 @@ export default function ChatRoute() {
   return (
     <div className="flex size-full flex-col bg-bolt-elements-background-depth-1">
       <Header />
-      <ClientOnly>
-        {() => (
-          <>
-            <ExistingChat chatId={loaderData.id} />
-            <CompatibilityWarnings />
-          </>
-        )}
-      </ClientOnly>
+      <ClientOnly>{() => <ExistingChat chatId={loaderData.id} />}</ClientOnly>
     </div>
   );
 }

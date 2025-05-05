@@ -46,14 +46,7 @@ export default function Index() {
   return (
     <div className="flex size-full flex-col bg-bolt-elements-background-depth-1">
       <Header />
-      <ClientOnly>
-        {() => (
-          <>
-            {<Homepage />}
-            <CompatibilityWarnings />
-          </>
-        )}
-      </ClientOnly>
+      <ClientOnly>{() => <Homepage />}</ClientOnly>
     </div>
   );
 }
