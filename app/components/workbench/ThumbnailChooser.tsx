@@ -9,6 +9,7 @@ import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
+import { useWhatChanged } from '~/lib/hooks/useWhatChanged';
 
 export async function uploadThumbnail(imageData: string, sessionId: string, chatId: string): Promise<void> {
   // Convert base64 to blob
@@ -86,10 +87,11 @@ export function ThumbnailChooser({ isOpen, onOpenChange, onRequestCapture }: Thu
 
   // Auto-capture when modal opens with no image
   useEffect(() => {
-    if (isOpen && !currentThumbnail && !localPreview && !isCapturing && onRequestCapture) {
+    if (isOpen && !currentThumbnail && !localPreview && onRequestCapture) {
       captureNewImage();
     }
-  }, [isOpen, currentThumbnail, localPreview, isCapturing, captureNewImage, onRequestCapture]);
+  }, [isOpen, currentThumbnail, localPreview, captureNewImage, onRequestCapture]);
+  useWhatChanged({ isOpen, currentThumbnail, localPreview, isCapturing, captureNewImage, onRequestCapture });
 
   const uploadImage = useCallback(
     async (imageData: string) => {
@@ -257,20 +259,19 @@ export function ThumbnailChooser({ isOpen, onOpenChange, onRequestCapture }: Thu
             ) : isCapturing ? (
               <div className="flex flex-col items-center gap-2">
                 <Spinner />
-                <span className="text-sm text-content-secondary">Capturing preview...</span>
               </div>
             ) : (
               <div className="text-center text-content-secondary">
                 <p>
                   {captureError
-                    ? 'Failed to capture preview'
+                    ? 'Upload an image to use as a thumbnail'
                     : isDraggingImage
                       ? 'Drop image here'
                       : 'No preview image available'}
                 </p>
                 <p className="mt-2 text-sm">
                   {captureError
-                    ? 'Try uploading an image or taking a new screenshot'
+                    ? ''
                     : isDraggingImage
                       ? 'Release to add your image'
                       : 'Drop an image here, paste from clipboard, or use the buttons below'}
@@ -282,7 +283,7 @@ export function ThumbnailChooser({ isOpen, onOpenChange, onRequestCapture }: Thu
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {onRequestCapture && (
+            {onRequestCapture && !captureError && (
               <Button
                 variant="neutral"
                 onClick={captureNewImage}

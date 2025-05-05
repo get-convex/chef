@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import * as Popover from '@radix-ui/react-popover';
 import { useMutation, useQuery } from 'convex/react';
@@ -168,6 +168,10 @@ export function ShareButton() {
   }, [snapshotCode, snapshotStatus, isSnapshotReady]);
 
   const hasChanges = currentShare && (currentShare.shared === 'shared') !== isSharedDraft;
+
+  const handleRequestCapture = useCallback(() => {
+    return workbenchStore.requestAnyScreenshot();
+  }, []);
 
   return (
     <>
@@ -412,7 +416,7 @@ export function ShareButton() {
         <ThumbnailChooser
           isOpen={isThumbnailModalOpen}
           onOpenChange={setIsThumbnailModalOpen}
-          onRequestCapture={() => workbenchStore.requestAnyScreenshot()}
+          onRequestCapture={handleRequestCapture}
         />
       </Dialog.Root>
     </>
