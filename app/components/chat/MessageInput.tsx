@@ -1,6 +1,7 @@
 import Cookies from 'js-cookie';
 import { useStore } from '@nanostores/react';
 import { SendButton } from './SendButton.client';
+import { EnhancePromptButton } from './EnhancePromptButton.client';
 import { messageInputStore } from '~/lib/stores/messageInput';
 import {
   memo,
@@ -50,6 +51,7 @@ export const MessageInput = memo(function MessageInput({
   modelSelection: ModelSelection;
   setModelSelection: (modelSelection: ModelSelection) => void;
 }) {
+  const [isEnhancing, setIsEnhancing] = useState(false);
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chefAuthState = useChefAuth();
   const selectedTeamSlug = useSelectedTeamSlug();
@@ -140,6 +142,37 @@ export const MessageInput = memo(function MessageInput({
     messageInputStore.set(value);
     cachePrompt(value);
   }, []);
+  
+  const enhancePrompt = useCallback(async () => {
+    if (!input.trim() || isEnhancing) return;
+    
+    try {
+      setIsEnhancing(true);
+      
+      const response = await fetch('/api/enhance-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          prompt: input.trim()
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to enhance prompt');
+      }
+      
+      const data = await response.json();
+      if (data.enhancedPrompt) {
+        messageInputStore.set(data.enhancedPrompt);
+      }
+    } catch (error) {
+      console.error('Error enhancing prompt:', error);
+    } finally {
+      setIsEnhancing(false);
+    }
+  }, [input, isEnhancing]);
 
   return (
     <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border bg-background-primary/75 backdrop-blur-md transition-all duration-200 has-[textarea:focus]:border-border-selected">
@@ -161,6 +194,14 @@ export const MessageInput = memo(function MessageInput({
           // Disable Grammarly
           data-gramm="false"
         />
+        {input.trim().length > 0 && (
+          <EnhancePromptButton
+            show={!isStreaming && !sendMessageInProgress}
+            isEnhancing={isEnhancing}
+            disabled={!selectedTeamSlug || chefAuthState.kind === 'loading' || disabled}
+            onClick={enhancePrompt}
+          />
+        )}
         <SendButton
           show={input.length > 0 || isStreaming || sendMessageInProgress}
           isStreaming={isStreaming}
