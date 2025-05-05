@@ -208,8 +208,8 @@ const CharacterWarning = memo(function CharacterWarning() {
       tip="Chef performs better with shorter prompts. Consider making your prompt more concise or breaking it into smaller chunks."
       side="bottom"
     >
-      <div className="flex items-center text-xs text-content-warning cursor-help">
-        <ExclamationTriangleIcon className="mr-1 h-4 w-4" />
+      <div className="flex cursor-help items-center text-xs text-content-warning">
+        <ExclamationTriangleIcon className="mr-1 size-4" />
         Prompt exceeds {PROMPT_LENGTH_WARNING_THRESHOLD.toLocaleString()} characters
       </div>
     </Tooltip>
