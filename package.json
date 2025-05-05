@@ -93,6 +93,7 @@
     "chart.js": "^4.4.9",
     "chef-agent": "workspace:*",
     "chefshot": "workspace:*",
+    "classnames": "^2.5.1",
     "cloudflare": "^4.2.0",
     "convex": "^1.21.0",
     "convex-helpers": "^0.1.79",
