@@ -29,6 +29,8 @@ import { Button } from '@ui/Button';
 import { Spinner } from '@ui/Spinner';
 import { debounce } from '~/utils/debounce';
 
+const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
+
 export const MessageInput = memo(function MessageInput({
   chatStarted,
   isStreaming,
@@ -175,8 +177,8 @@ export const MessageInput = memo(function MessageInput({
         <div className="flex items-center justify-end gap-4 px-4 pb-3 text-sm">
           <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
           <div className="grow" />
-          {input.length > 3 && <NewLineShortcut />}
-          {input.length > 2000 && <CharacterWarning />}
+          {input.length > 3 && input.length <= PROMPT_LENGTH_WARNING_THRESHOLD && <NewLineShortcut />}
+          {input.length > PROMPT_LENGTH_WARNING_THRESHOLD && <CharacterWarning />}
           {chatStarted && <ConvexConnection />}
           {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
           {!chatStarted && sessionId && (
@@ -207,8 +209,8 @@ const CharacterWarning = memo(function CharacterWarning() {
       side="bottom"
     >
       <div className="flex items-center text-xs text-content-warning cursor-help">
-        <ExclamationTriangleIcon className="mr-1 h-5 w-5" />
-        Prompt exceeds 2000 characters
+        <ExclamationTriangleIcon className="mr-1 h-4 w-4" />
+        Prompt exceeds {PROMPT_LENGTH_WARNING_THRESHOLD.toLocaleString()} characters
       </div>
     </Tooltip>
   );
