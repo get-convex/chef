@@ -365,7 +365,7 @@ export const Chat = memo(
         });
 
         workbenchStore.abortAllActions();
-        if (isFirstFailure && messages[messages.length - 1].role === 'user') {
+        if (isFirstFailure && (messages.length === 0 || messages[messages.length - 1].role === 'user')) {
           reload();
         }
         await checkTokenUsage();
