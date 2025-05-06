@@ -4,7 +4,7 @@ import { components, internal } from "./_generated/api.js";
 export const migrations = new Migrations(components.migrations);
 export const run = migrations.runner();
 
-export const setDefaultValue = migrations.define({
+export const setDefaultDeletedFalse = migrations.define({
   table: "chats",
   migrateOne: async (ctx, doc) => {
     if (doc.isDeleted === undefined) {
@@ -13,4 +13,4 @@ export const setDefaultValue = migrations.define({
   },
 });
 
-export const runIt = migrations.runner(internal.migrations.setDefaultValue);
+export const runIt = migrations.runner(internal.migrations.setDefaultDeletedFalse);
