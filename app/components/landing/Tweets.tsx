@@ -1,3 +1,6 @@
+import useEmblaCarousel from 'embla-carousel-react';
+import { classNames } from '~/utils/classNames';
+
 const tweets = [
   {
     author: 'Pritam Ghosh',
@@ -67,35 +70,60 @@ const tweets = [
   },
 ];
 
-export default function Tweets() {
+function TweetCard({ tweet, className }: { tweet: (typeof tweets)[number]; className?: string }) {
   return (
-    <div className="mt-0 columns-1 gap-6 md:columns-2 xl:columns-3">
-      {tweets.map((tweet) => (
-        <div
-          key={tweet.link}
-          className="mb-6 flex break-inside-avoid flex-col gap-4 rounded-xl border border-neutral-1 bg-neutral-1/25 p-3 dark:border-neutral-9 dark:bg-neutral-9/25"
-        >
-          <div className="whitespace-pre-line leading-snug">{tweet.text}</div>
-          <div className="flex items-center gap-3">
-            <img
-              src={`/landing/avatars/${tweet.handle}.jpg`}
-              alt={`${tweet.author}'s avatar`}
-              className="size-12 rounded-full object-cover"
-            />
-            <div className="flex flex-col gap-1">
-              <span className="text-lg leading-tight">{tweet.author}</span>
-              <a
-                href={tweet.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm leading-none text-blue-800 hover:underline dark:text-blue-300"
-              >
-                @{tweet.handle}
-              </a>
-            </div>
+    <div
+      className={classNames(
+        'flex flex-col gap-4 rounded-xl border border-neutral-1 bg-neutral-1/25 p-3 dark:border-neutral-9 dark:bg-neutral-9/25',
+        className,
+      )}
+    >
+      <div className="grow whitespace-pre-line leading-snug text-neutral-11 dark:text-neutral-1">{tweet.text}</div>
+      <div className="flex items-center gap-3">
+        <img
+          src={`/landing/avatars/${tweet.handle}.jpg`}
+          alt={`${tweet.author}'s avatar`}
+          className="size-10 rounded-full object-cover"
+        />
+        <div className="flex flex-col gap-1">
+          <span className="text-lg leading-tight">{tweet.author}</span>
+          <a
+            href={tweet.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm leading-none text-blue-800 hover:underline dark:text-blue-300"
+          >
+            @{tweet.handle}
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Tweets() {
+  const [emblaRef] = useEmblaCarousel({ align: 'center', loop: true });
+
+  return (
+    <div className="relative flex w-full flex-col gap-6">
+      {/* Carousel */}
+      <div className="relative -mx-8 overflow-hidden lg:hidden">
+        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r to-transparent dark:from-[var(--bolt-elements-bg-depth-1)]" />
+        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l to-transparent dark:from-[var(--bolt-elements-bg-depth-1)]" />
+        <div ref={emblaRef} style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex cursor-grab gap-4 px-8">
+            {tweets.map((tweet) => (
+              <TweetCard tweet={tweet} key={tweet.link} className="min-w-72 select-none" />
+            ))}
           </div>
         </div>
-      ))}
+      </div>
+      {/* Grid */}
+      <div className="mt-0 hidden columns-1 gap-6 lg:block lg:columns-3">
+        {tweets.map((tweet) => (
+          <TweetCard tweet={tweet} key={tweet.link} className="mb-6 break-inside-avoid" />
+        ))}
+      </div>
     </div>
   );
 }
