@@ -78,7 +78,7 @@ function TweetCard({ tweet, className }: { tweet: (typeof tweets)[number]; class
         className,
       )}
     >
-      <div className="grow whitespace-pre-line leading-snug text-neutral-11 dark:text-neutral-1">{tweet.text}</div>
+      <div className="grow whitespace-pre-line leading-snug text-neutral-9 dark:text-neutral-2">{tweet.text}</div>
       <div className="flex items-center gap-3">
         <img
           src={`/landing/avatars/${tweet.handle}.jpg`}
@@ -86,7 +86,7 @@ function TweetCard({ tweet, className }: { tweet: (typeof tweets)[number]; class
           className="size-10 rounded-full object-cover"
         />
         <div className="flex flex-col gap-1">
-          <span className="text-lg leading-tight">{tweet.author}</span>
+          <span className="leading-tight">{tweet.author}</span>
           <a
             href={tweet.link}
             target="_blank"
