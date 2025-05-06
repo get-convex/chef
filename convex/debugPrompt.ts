@@ -8,7 +8,7 @@ import { usageRecordValidator } from "./schema";
 async function getChatByInitialId(ctx: QueryCtx, initialId: string) {
   const chatByInitialId = await ctx.db
     .query("chats")
-    .withIndex("byInitialId", (q: any) => q.eq("initialId", initialId))
+    .withIndex("byInitialId", (q: any) => q.eq("initialId", initialId).lt("isDeleted", true))
     .unique();
   if (!chatByInitialId) {
     throw new Error(`No corresponding chat found for initial ID ${initialId}`);
