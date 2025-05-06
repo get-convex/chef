@@ -1,6 +1,22 @@
 import type { ConvexProject } from './types.js';
 
-export async function queryEnvVariable(project: ConvexProject, name: string): Promise<string | null> {
+export async function queryEnvVariableWithRetries(project: ConvexProject, name: string): Promise<string | null> {
+  const maxRetries = 3;
+  const retryDelay = 500;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await queryEnvVariable(project, name);
+    } catch (error) {
+      if (i === maxRetries - 1) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
+  }
+  return null; // This line is technically unreachable but TypeScript needs it
+}
+
+async function queryEnvVariable(project: ConvexProject, name: string): Promise<string | null> {
   const response = await fetch(`${project.deploymentUrl}/api/query`, {
     method: 'POST',
     body: JSON.stringify({

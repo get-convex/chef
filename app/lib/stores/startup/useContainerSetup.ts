@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { waitForConvexProjectConnection } from '~/lib/stores/convexProject';
 import type { ConvexProject } from 'chef-agent/types';
 import type { WebContainer } from '@webcontainer/api';
-import { queryEnvVariable, setEnvVariablesWithRetries } from 'chef-agent/convexEnvVariables';
+import { queryEnvVariableWithRetries, setEnvVariablesWithRetries } from 'chef-agent/convexEnvVariables';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { initializeConvexAuth } from 'chef-agent/convexAuth';
@@ -148,7 +148,7 @@ async function setupConvexEnvVars(webcontainer: WebContainer, convexProject: Con
 }
 
 async function setupOpenAIToken(convex: ConvexReactClient, project: ConvexProject) {
-  const existing = await queryEnvVariable(project, 'CONVEX_OPENAI_API_KEY');
+  const existing = await queryEnvVariableWithRetries(project, 'CONVEX_OPENAI_API_KEY');
   if (existing) {
     return;
   }
@@ -162,7 +162,7 @@ async function setupOpenAIToken(convex: ConvexReactClient, project: ConvexProjec
 }
 
 async function setupResendToken(convex: ConvexReactClient, project: ConvexProject) {
-  const existing = await queryEnvVariable(project, 'CONVEX_RESEND_API_KEY');
+  const existing = await queryEnvVariableWithRetries(project, 'CONVEX_RESEND_API_KEY');
   if (existing) {
     return;
   }

@@ -1,12 +1,12 @@
 import { generateKeyPair, exportPKCS8, exportJWK } from 'jose';
 import type { ConvexProject } from './types.js';
-import { queryEnvVariable, setEnvVariablesWithRetries } from './convexEnvVariables.js';
+import { queryEnvVariableWithRetries, setEnvVariablesWithRetries } from './convexEnvVariables.js';
 import { logger } from './utils/logger.js';
 
 export async function initializeConvexAuth(project: ConvexProject) {
-  const SITE_URL = await queryEnvVariable(project, 'SITE_URL');
-  const JWKS = await queryEnvVariable(project, 'JWKS');
-  const JWT_PRIVATE_KEY = await queryEnvVariable(project, 'JWT_PRIVATE_KEY');
+  const SITE_URL = await queryEnvVariableWithRetries(project, 'SITE_URL');
+  const JWKS = await queryEnvVariableWithRetries(project, 'JWKS');
+  const JWT_PRIVATE_KEY = await queryEnvVariableWithRetries(project, 'JWT_PRIVATE_KEY');
 
   const newEnv: Record<string, string> = {};
 
