@@ -22,19 +22,11 @@ export type Experience =
 
 // This code works client and server side but we can't get crossOriginIsolated on the server.
 // It's currently only used on the client.
-export function chooseExperience(
-  userAgent: string,
-  searchParams: URLSearchParams,
-  crossOriginIsolated: boolean | 'dunno' = 'dunno',
-): Experience {
+export function chooseExperience(userAgent: string, crossOriginIsolated: boolean | 'dunno' = 'dunno'): Experience {
   const parser = new UAParser(userAgent);
   const browser = parser.getBrowser();
   const device = parser.getDevice();
   const os = parser.getOS();
-
-  if (searchParams.get('no-compat-check') === 'true') {
-    return 'the-real-thing';
-  }
 
   // iOS devices get marketing page regardless: all iOS browsers use WebKit
   // so they're going to give us

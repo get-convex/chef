@@ -1,6 +1,6 @@
 import { Sheet } from '@ui/Sheet';
 import type { Message } from 'ai';
-import React, { type ReactNode, type RefCallback, useCallback, useMemo } from 'react';
+import React, { type ReactNode, type RefCallback, useCallback, useMemo, useState } from 'react';
 import Landing from '~/components/landing/Landing';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
@@ -20,7 +20,8 @@ import { Messages } from './Messages.client';
 import StreamingIndicator from './StreamingIndicator';
 import { SuggestionButtons } from './SuggestionButtons';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
-import { isCompatible } from '~/utils/isCompatible';
+import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
+import { chooseExperience } from '~/utils/experienceChooser';
 
 interface BaseChatProps {
   // Refs
@@ -86,8 +87,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const { maintenanceMode } = useLaunchDarkly();
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
-
-    const compatible = isCompatible();
+    const recommendedExperience = chooseExperience(navigator.userAgent, window.crossOriginIsolated);
+    const [chatEnabled, setChatEnabled] = useState(recommendedExperience === 'the-real-thing');
 
     const chatId = useChatId();
     const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -134,6 +135,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               <div
                 className={classNames('w-full', {
                   'h-full flex flex-col': chatStarted,
+                  'max-w-7xl': !chatEnabled,
                 })}
                 ref={scrollRef}
               >
@@ -181,27 +183,21 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       {disableChatMessage}
                     </Sheet>
                   ) : (
-                    <>
-                      {compatible ? (
-                        <MessageInput
-                          chatStarted={chatStarted}
-                          isStreaming={isStreaming}
-                          sendMessageInProgress={sendMessageInProgress}
-                          disabled={disableChatMessage !== null || maintenanceMode}
-                          modelSelection={modelSelection}
-                          setModelSelection={setModelSelection}
-                          onStop={onStop}
-                          onSend={onSend}
-                        />
-                      ) : (
-                        <div className="my-2 max-w-prose text-balance rounded border border-neutral-1 bg-[#F7F3F1] p-4 text-center dark:border-neutral-10 dark:bg-neutral-11">
-                          Chef is not available on your browser. Please try again from Firefox, Chrome, or any other
-                          Chromium-based browser.
-                        </div>
-                      )}
-                    </>
+                    chatEnabled && (
+                      <MessageInput
+                        chatStarted={chatStarted}
+                        isStreaming={isStreaming}
+                        sendMessageInProgress={sendMessageInProgress}
+                        disabled={disableChatMessage !== null || maintenanceMode}
+                        modelSelection={modelSelection}
+                        setModelSelection={setModelSelection}
+                        onStop={onStop}
+                        onSend={onSend}
+                      />
+                    )
                   )}
                 </div>
+                <CompatibilityWarnings setEnabled={setChatEnabled} />
               </div>
               {maintenanceMode && (
                 <div className="mx-auto my-4 max-w-chat">
@@ -213,7 +209,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   </div>
                 </div>
               )}
-              {compatible && (
+              {chatEnabled && (
                 <SuggestionButtons
                   disabled={disableChatMessage !== null}
                   chatStarted={chatStarted}
