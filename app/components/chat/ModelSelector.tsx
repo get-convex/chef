@@ -90,11 +90,6 @@ const models: Partial<
     name: 'Grok 3 Mini',
     provider: 'xai',
   },
-  'claude-3-7-sonnet': {
-    name: 'Claude 3.7 Sonnet',
-    provider: 'anthropic',
-    requireKey: true,
-  },
   'claude-3-5-haiku': {
     name: 'Claude 3.5 Haiku',
     provider: 'anthropic',
