@@ -74,7 +74,7 @@ function TweetCard({ tweet, className }: { tweet: (typeof tweets)[number]; class
   return (
     <div
       className={classNames(
-        'flex flex-col gap-4 rounded-xl border border-neutral-1 bg-neutral-1/25 p-3 dark:border-neutral-9 dark:bg-neutral-9/25',
+        'flex flex-col gap-4 rounded-xl border border-neutral-1 bg-[#F7F3F1] p-3 dark:border-neutral-9 dark:bg-neutral-9/25',
         className,
       )}
     >
