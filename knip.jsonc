@@ -18,14 +18,22 @@
     "proxy/proxy.cjs",
     "iframe-worker/build.cjs",
     "iframe-worker/worker.mts",
+    "iframe-worker/worker-bundled.mts",
   ],
   "project": ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}!"],
   "ignore": ["template/**"],
 
   "ignoreDependencies": [
     "@ui/*", // doesn't seem to follow the TypeScript paths (or doesn't understand which dep)
-  ],
-  "ignoreBinaries": [
-    "open", // yeah this only works on macs, sorry
+
+    // these are all used by @convex-dev/design-system/Combobox (also see vite.config.ts)
+    "react-fast-compare",
+    "warning",
+    "fuzzy",
+
+    // these get shimmed in in vite.config.ts
+    // not sure we actually need these or not, TODO
+    "buffer",
+    "events",
   ],
 }
