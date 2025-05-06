@@ -33,7 +33,7 @@ export default function VerticalCarousel({ tweets, direction = 'forward', classN
   const repeatedTweets = [...tweets, ...tweets];
 
   return (
-    <div className={classNames('relative h-2/3 min-h-96 overflow-hidden', className)}>
+    <div className={classNames('relative h-[60vh] min-h-96 overflow-hidden', className)}>
       <div ref={emblaRef} style={{ WebkitOverflowScrolling: 'touch', height: '100%' }}>
         <div className="flex h-full flex-col">
           {repeatedTweets.map((tweet, idx) => (
