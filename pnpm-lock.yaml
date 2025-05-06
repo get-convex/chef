@@ -93,6 +93,9 @@ importers:
       '@convex-dev/eslint-plugin':
         specifier: 0.0.1-alpha.4
         version: 0.0.1-alpha.4(eslint@9.20.1(jiti@2.4.2))(typescript@5.7.3)
+      '@convex-dev/migrations':
+        specifier: ^0.2.7
+        version: 0.2.7(convex@1.21.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       '@convex-dev/rate-limiter':
         specifier: ^0.2.6
         version: 0.2.6(convex@1.21.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
@@ -1132,6 +1135,11 @@ packages:
 
   '@convex-dev/eslint-plugin@0.0.1-alpha.4':
     resolution: {integrity: sha512-no/F96kJOgqK3g5zVkJrXYhw+QhiqVv+l7u/ID17AisI+I/Dr43MLij780tE0UbXUIwTAe5cRa9VQ0AEZQiDYQ==}
+
+  '@convex-dev/migrations@0.2.7':
+    resolution: {integrity: sha512-tV/4fs8AbF9HK+2JY19YOAQn2wmNpRAXW6n0SvUEbw6YxUReAPg+RaG/D++dT8/cCihRfcWDHjdhJzQ6rSx/0A==}
+    peerDependencies:
+      convex: ~1.16.5 || >=1.17.0 <1.25.0
 
   '@convex-dev/rate-limiter@0.2.6':
     resolution: {integrity: sha512-QcuLpUBHL8S34BgU4Xvbjzkqf4sw5KWNlnvIR0qZ8qhDxbxrjJBRnbiSJDYqUYccyCXpRJe4YnzmPnDefoPYHg==}
@@ -9283,7 +9291,7 @@ packages:
     resolution: {integrity: sha512-rpJyN222KWIvHJ/F53XSZv0Zl/accqHR8et1kpaMTD/fLCRxtV8iX8czMzY7sVZupTI3zcUTg8eycS2kNF9l6w==}
 
   wcwidth@1.0.1:
-    resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
+    resolution: {integrity: sha1-8LDc+RW8X/FSivrbLA4XtTLaL+g=}
 
   web-encoding@1.1.5:
     resolution: {integrity: sha512-HYLeVCdJ0+lBYV2FvNZmv3HJ2Nt0QYXqZojk3d9FJOLkwnuhzM9tmamh8d7HPM8QqjKH8DeHkFTx+CFlWpZZDA==}
@@ -10524,6 +10532,10 @@ snapshots:
       - eslint
       - supports-color
       - typescript
+
+  '@convex-dev/migrations@0.2.7(convex@1.21.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))':
+    dependencies:
+      convex: 1.21.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
   '@convex-dev/rate-limiter@0.2.6(convex@1.21.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))':
     dependencies:

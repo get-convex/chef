@@ -58,6 +58,7 @@
     "@codemirror/view": "^6.35.0",
     "@convex-dev/design-system": "0.1.9",
     "@convex-dev/eslint-plugin": "0.0.1-alpha.4",
+    "@convex-dev/migrations": "^0.2.7",
     "@convex-dev/rate-limiter": "^0.2.6",
     "@fast-check/vitest": "^0.2.1",
     "@heroicons/react": "^2.2.0",
