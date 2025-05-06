@@ -37,7 +37,7 @@ export class ChatContextManager {
     initialMessages: UIMessage[],
     maxRelevantFilesSize: number,
   ) {
-    this.initialRelevantFiles = this.relevantFiles(initialMessages, maxRelevantFilesSize);
+    // this.initialRelevantFiles = this.relevantFiles(initialMessages, generateId(), maxRelevantFilesSize);
   }
 
   /**
@@ -54,25 +54,22 @@ export class ChatContextManager {
     // If the last message is a user message this is the first LLM call that includes that user message.
     // Only update the relevant files and the message cutoff indices if the last message is a user message to avoid clearing the cache as the agent makes changes.
     if (messages[messages.length - 1].role === 'user') {
-      this.initialRelevantFiles = this.relevantFiles(messages, maxRelevantFilesSize);
+      // this.initialRelevantFiles = this.relevantFiles(messages, generateId(), maxRelevantFilesSize);
       const [iCutoff, jCutoff] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
       this.messageICutoff = iCutoff;
       this.messageJCutoff = jCutoff;
     }
     const collapsedMessages = this.collapseMessages(messages);
-    return [...this.initialRelevantFiles, ...collapsedMessages];
+    return [...collapsedMessages];
   }
 
-  private relevantFiles(messages: UIMessage[], maxRelevantFilesSize: number): UIMessage[] {
+  relevantFiles(messages: UIMessage[], id: string, maxRelevantFilesSize: number): UIMessage[] {
     const currentDocument = this.getCurrentDocument();
-
-    // Seed the set with the PREWARM_PATHS.
     const cache = this.getFiles();
     const allPaths = Object.keys(cache).sort();
 
     const lastUsed: Map<AbsolutePath, number> = new Map();
     for (const path of PREWARM_PATHS) {
-      // These constants are absolute paths, so we can cast them to AbsolutePath.
       const absPath = path as AbsolutePath;
       const entry = cache[absPath];
       if (!entry) {
@@ -81,7 +78,6 @@ export class ChatContextManager {
       lastUsed.set(absPath, 0);
     }
 
-    // Iterate over the messages and update the last used time for each path.
     let partCounter = 0;
     for (const message of messages) {
       const createdAt = message.createdAt?.getTime();
@@ -105,52 +101,54 @@ export class ChatContextManager {
       lastUsed.set(path, Math.max(existing, lastUsedTime));
     }
 
-    // If there's a currently open document, remove it from the relevance list
-    // since we'll unconditionally include it later.
     if (currentDocument) {
       lastUsed.delete(currentDocument.filePath);
     }
 
     const sortedByLastUsed = Array.from(lastUsed.entries()).sort((a, b) => b[1] - a[1]);
     let sizeEstimate = 0;
-    const relevantFiles: UIMessage[] = [];
+    let fileActions = '';
+    let numFiles = 0;
 
-    if (sortedByLastUsed.length > 0) {
-      relevantFiles.push(
-        makeSystemMessage(`Here are all the paths in the project:\n${allPaths.map((p) => ` - ${p}`).join('\n')}`),
-      );
-    }
-    const debugInfo: string[] = [];
-    if (sortedByLastUsed.length > 0) {
-      relevantFiles.push(makeSystemMessage('Here are some relevant files in the project (with line numbers).'));
-      for (const [path] of sortedByLastUsed) {
-        if (sizeEstimate > maxRelevantFilesSize) {
-          break;
-        }
-        if (relevantFiles.length >= MAX_RELEVANT_FILES) {
-          break;
-        }
-        const entry = cache[path];
-        if (!entry) {
-          continue;
-        }
-        if (entry.type === 'file') {
-          const content = renderFile(entry.content);
-          relevantFiles.push(makeSystemMessage(`"${path}":\n${content}`));
-          const size = estimateSize(entry);
-          sizeEstimate += size;
-          debugInfo.push(`  "${path}": ${size}`);
-        }
+    for (const [path] of sortedByLastUsed) {
+      if (sizeEstimate > maxRelevantFilesSize) {
+        break;
+      }
+      if (numFiles >= MAX_RELEVANT_FILES) {
+        break;
+      }
+      const entry = cache[path];
+      if (!entry) {
+        continue;
+      }
+      if (entry.type === 'file') {
+        const content = renderFile(entry.content);
+        fileActions += `<boltAction type="file" filePath="${path}">${content}</boltAction>\n`;
+        const size = estimateSize(entry);
+        sizeEstimate += size;
+        numFiles++;
       }
     }
 
     if (currentDocument) {
-      let message = `The user currently has an editor open at ${currentDocument.filePath}. Here are its contents (with line numbers):\n`;
-      message += renderFile(currentDocument.value);
-      relevantFiles.push(makeSystemMessage(message));
+      const content = renderFile(currentDocument.value);
+      fileActions += `<boltAction type="file" filePath="${currentDocument.filePath}">${content}</boltAction>\n`;
     }
 
-    return relevantFiles;
+    // Compose a single message with all relevant files
+    let combinedContent = '';
+    if (allPaths.length > 0) {
+      combinedContent += `Here are all the paths in the project:\n${allPaths.map((p) => ` - ${p}`).join('\n')}\n\n`;
+    }
+    if (numFiles > 0 || currentDocument) {
+      combinedContent += 'Here are some relevant files in the project (with line numbers).\n';
+      combinedContent += fileActions;
+    }
+
+    if (!combinedContent) {
+      return [];
+    }
+    return [makeSystemMessage(combinedContent, id, undefined)];
   }
 
   private collapseMessages(messages: UIMessage[]): UIMessage[] {
@@ -296,15 +294,19 @@ function summarizePart(message: UIMessage, part: UIMessagePart): string | null {
   return null;
 }
 
-function makeSystemMessage(content: string): UIMessage {
+function makeSystemMessage(content: string, id: string, filePath: string | undefined): UIMessage {
   return {
-    id: generateId(),
-    content,
-    role: 'system',
+    id,
+    content: '',
+    role: 'user',
     parts: [
       {
         type: 'text',
-        text: content,
+        text: `
+<boltArtifact id="${id}" title="Relevant Files">
+${filePath ? `<boltAction type="file" filePath="${filePath}">${content}</boltAction>` : content}
+</boltArtifact>
+  `,
       },
     ],
   };

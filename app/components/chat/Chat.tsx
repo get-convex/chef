@@ -504,6 +504,12 @@ export const Chat = memo(
 
         shouldDisableToolsStore.set(false);
         skipSystemPromptStore.set(false);
+        const relevantFiles = chatContextManager.current.relevantFiles(messages, `${Date.now()}`, maxRelevantFilesSize);
+        console.log('relevantFiles', relevantFiles);
+        for (const msg of relevantFiles) {
+          console.log('appending relevant file', msg);
+          append(msg);
+        }
         if (modifiedFiles !== undefined) {
           const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
           append({
