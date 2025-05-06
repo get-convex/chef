@@ -39,7 +39,7 @@ export function MissingApiKey({
       const apiKey = await convex.query(api.apiKeys.apiKeyForCurrentMember);
 
       const apiKeyMutation: Doc<'convexMembers'>['apiKey'] = {
-        preference: apiKey?.preference || 'always' as 'always' | 'quotaExhausted',
+        preference: apiKey?.preference || ('always' as 'always' | 'quotaExhausted'),
         value: apiKey?.value || undefined,
         openai: apiKey?.openai || undefined,
         xai: apiKey?.xai || undefined,
