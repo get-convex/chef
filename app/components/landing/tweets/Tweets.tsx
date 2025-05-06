@@ -1,6 +1,6 @@
 import type { Tweet } from './TweetCard';
-import TweetCard from './TweetCard';
 import HorizontalCarousel from './HorizontalCarousel';
+import VerticalCarousel from './VerticalCarousel';
 
 const tweets: Tweet[] = [
   {
@@ -71,15 +71,30 @@ const tweets: Tweet[] = [
   },
 ];
 
+// Splits the tweets into columns, attempting to balance the text length.
+function splitTweetsIntoColumns(tweets: Tweet[], numColumns: number): Tweet[][] {
+  const sorted = [...tweets].sort((a, b) => b.text.length - a.text.length);
+  const columns: Tweet[][] = Array.from({ length: numColumns }, () => []);
+  const lengths = Array(numColumns).fill(0);
+
+  for (const tweet of sorted) {
+    const minIdx = lengths.indexOf(Math.min(...lengths));
+    columns[minIdx].push(tweet);
+    lengths[minIdx] += tweet.text.length;
+  }
+
+  return columns;
+}
+
 export default function Tweets() {
+  const columns = splitTweetsIntoColumns(tweets, 3);
+
   return (
     <div className="relative flex w-full flex-col gap-6">
-      {/* Carousel */}
-      <HorizontalCarousel tweets={tweets} />
-      {/* Grid */}
-      <div className="mt-0 hidden columns-3 gap-6 lg:block">
-        {tweets.map((tweet) => (
-          <TweetCard tweet={tweet} key={tweet.link} className="mb-6 break-inside-avoid" />
+      <HorizontalCarousel tweets={tweets} className="lg:hidden" />
+      <div className="hidden gap-6 lg:flex">
+        {columns.map((col, i) => (
+          <VerticalCarousel tweets={col} key={i} direction={i % 2 === 0 ? 'forward' : 'backward'} className="flex-1" />
         ))}
       </div>
     </div>

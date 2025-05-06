@@ -1,6 +1,7 @@
 import useEmblaCarousel from 'embla-carousel-react';
 import type { Tweet } from './TweetCard';
 import TweetCard from './TweetCard';
+import { classNames } from '~/utils/classNames';
 
 interface HorizontalCarouselProps {
   tweets: Tweet[];
@@ -11,7 +12,7 @@ export default function HorizontalCarousel({ tweets, className = '' }: Horizonta
   const [emblaRef] = useEmblaCarousel({ align: 'center', loop: true });
 
   return (
-    <div className={`relative -mx-8 overflow-hidden lg:hidden ${className}`}>
+    <div className={classNames('relative -mx-8 overflow-hidden', className)}>
       <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r to-transparent dark:from-[var(--bolt-elements-bg-depth-1)]" />
       <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l to-transparent dark:from-[var(--bolt-elements-bg-depth-1)]" />
       <div ref={emblaRef} style={{ WebkitOverflowScrolling: 'touch' }}>
