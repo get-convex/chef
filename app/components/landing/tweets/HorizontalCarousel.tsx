@@ -16,9 +16,9 @@ export default function HorizontalCarousel({ tweets, className = '' }: Horizonta
       <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r to-transparent dark:from-[var(--bolt-elements-bg-depth-1)]" />
       <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l to-transparent dark:from-[var(--bolt-elements-bg-depth-1)]" />
       <div ref={emblaRef} style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="flex cursor-grab gap-4 px-8">
+        <div className="flex cursor-grab">
           {tweets.map((tweet) => (
-            <TweetCard tweet={tweet} key={tweet.link} className="min-w-72 select-none" />
+            <TweetCard tweet={tweet} key={tweet.link} className="mx-2 min-w-72 select-none" />
           ))}
         </div>
       </div>
