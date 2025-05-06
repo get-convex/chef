@@ -1,6 +1,7 @@
 import { Button } from '@ui/Button';
-import { ArrowUpIcon, StarIcon } from '@radix-ui/react-icons';
+import { ArrowUpIcon } from '@radix-ui/react-icons';
 import { SUGGESTIONS } from 'chef-agent/constants';
+import { AcademicCapIcon } from '@heroicons/react/24/outline';
 
 interface SuggestionButtonsProps {
   chatStarted: boolean;
@@ -34,11 +35,10 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
         <Button
           href="https://stack.convex.dev/chef-cookbook-tips-working-with-ai-app-builders"
           target="_blank"
-          rel="noopener noreferrer"
           variant="neutral"
-          className="items-center px-3 rounded-full bg-[#F5F5D3] text-[#EE352F] border-[#EE352F] hover:bg-[#FDEFD2]"
+          className="items-center rounded-full border-[#EE352F] bg-[#FEF4E2] fill-[#EE342F] px-3 text-[#EE352F] hover:bg-[#FDEFD2] dark:border-[#FFD700] dark:bg-[#2F2917] dark:fill-[#FFD700] dark:text-[#FFD700] dark:hover:bg-[#3F3920]"
         >
-          <img src="/tips_chef_hat.svg" className="size-5"/>
+          <AcademicCapIcon className="size-5" />
           <span>Tips for building with Chef</span>
         </Button>
       </div>
