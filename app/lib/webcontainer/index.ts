@@ -26,11 +26,7 @@ const logger = createScopedLogger('webcontainer');
 
 let shouldBootWebcontainer = false;
 if (!import.meta.env.SSR) {
-  const experience = chooseExperience(
-    navigator.userAgent,
-    new URLSearchParams(window.location.search),
-    window.crossOriginIsolated,
-  );
+  const experience = chooseExperience(navigator.userAgent, window.crossOriginIsolated);
 
   shouldBootWebcontainer = experience === 'the-real-thing' || experience === 'mobile-warning';
   if (!shouldBootWebcontainer) {
