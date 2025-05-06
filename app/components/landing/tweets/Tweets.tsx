@@ -1,6 +1,6 @@
-import useEmblaCarousel from 'embla-carousel-react';
 import type { Tweet } from './TweetCard';
 import TweetCard from './TweetCard';
+import HorizontalCarousel from './HorizontalCarousel';
 
 const tweets: Tweet[] = [
   {
@@ -72,22 +72,10 @@ const tweets: Tweet[] = [
 ];
 
 export default function Tweets() {
-  const [emblaRef] = useEmblaCarousel({ align: 'center', loop: true });
-
   return (
     <div className="relative flex w-full flex-col gap-6">
       {/* Carousel */}
-      <div className="relative -mx-8 overflow-hidden lg:hidden">
-        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r to-transparent dark:from-[var(--bolt-elements-bg-depth-1)]" />
-        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l to-transparent dark:from-[var(--bolt-elements-bg-depth-1)]" />
-        <div ref={emblaRef} style={{ WebkitOverflowScrolling: 'touch' }}>
-          <div className="flex cursor-grab gap-4 px-8">
-            {tweets.map((tweet) => (
-              <TweetCard tweet={tweet} key={tweet.link} className="min-w-72 select-none" />
-            ))}
-          </div>
-        </div>
-      </div>
+      <HorizontalCarousel tweets={tweets} />
       {/* Grid */}
       <div className="mt-0 hidden columns-3 gap-6 lg:block">
         {tweets.map((tweet) => (
