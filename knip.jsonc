@@ -13,12 +13,13 @@
     // for occasional debugging
     "app/lib/hooks/useWhatChanged.ts",
     "load-context.ts",
+    "parse-compressed-messages.mjs",
     // manual build processes
     "proxy/build.cjs",
     "proxy/proxy.cjs",
     "iframe-worker/build.cjs",
     "iframe-worker/worker.mts",
-    "iframe-worker/worker-bundled.mts",
+    "iframe-worker/worker.bundled.mjs",
   ],
   "project": ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}!"],
   "ignore": ["template/**"],
@@ -27,6 +28,7 @@
     "@ui/*", // doesn't seem to follow the TypeScript paths (or doesn't understand which dep)
 
     // these are all used by @convex-dev/design-system/Combobox (also see vite.config.ts)
+    "classnames",
     "react-fast-compare",
     "warning",
     "fuzzy",
