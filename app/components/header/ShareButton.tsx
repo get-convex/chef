@@ -38,6 +38,10 @@ export function ShareButton() {
   const [snapshotUrl, setSnapshotUrl] = useState('');
   const [shareUrl, setShareUrl] = useState('');
 
+  // Don't allow sharing until a preview is ready so we can get a decent screenshot.
+  const previews = useStore(workbenchStore.previews);
+  const anyPreviewReady = previews.some((preview) => preview.ready);
+
   // Form state
   const [isSharedDraft, setIsSharedDraft] = useState(false);
 
@@ -177,7 +181,7 @@ export function ShareButton() {
     <>
       <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>
         <Popover.Trigger asChild>
-          <Button focused={isOpen} variant="neutral" size="xs">
+          <Button disabled={!anyPreviewReady} focused={isOpen} variant="neutral" size="xs">
             <Share2Icon />
             <span>Share</span>
           </Button>
