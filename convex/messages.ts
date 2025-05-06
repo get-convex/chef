@@ -622,6 +622,7 @@ export async function createNewChat(
     creatorId: sessionId,
     initialId: id,
     timestamp: new Date().toISOString(),
+    isDeleted: false,
   });
   await ctx.db.insert("chatMessagesStorageState", {
     chatId,
