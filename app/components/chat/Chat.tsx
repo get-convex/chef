@@ -438,7 +438,7 @@ export const Chat = memo(
       setChatStarted(true);
     };
 
-    const sendMessage = async (messageInput: string, isResend: boolean) => {
+    const sendMessage = async (messageInput: string) => {
       const now = Date.now();
       const retries = retryState.get();
       if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet(modelSelection, apiKey)) {
@@ -492,14 +492,10 @@ export const Chat = memo(
 
         const shouldSendRelevantFiles = chatContextManager.current.shouldSendRelevantFiles(
           messages,
-          maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
+          maxSizeForModel(modelSelection, maxRelevantFilesSize),
         );
         const maybeRelevantFilesMessage: UIMessage = shouldSendRelevantFiles
-          ? chatContextManager.current.relevantFiles(
-              messages,
-              `${Date.now()}`,
-              maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
-            )
+          ? chatContextManager.current.relevantFiles(messages, `${Date.now()}`, maxRelevantFilesSize)
           : {
               id: `${Date.now()}`,
               content: '',
