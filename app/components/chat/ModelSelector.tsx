@@ -31,27 +31,6 @@ export function displayModelProviderName(provider: ModelProvider) {
   }
 }
 
-export type ModelProvider = 'openai' | 'google' | 'xai' | 'anthropic' | 'auto';
-
-export function displayModelProviderName(provider: ModelProvider) {
-  switch (provider) {
-    case 'openai':
-      return 'OpenAI';
-    case 'google':
-      return 'Google';
-    case 'xai':
-      return 'xAI';
-    case 'anthropic':
-      return 'Anthropic';
-    case 'auto':
-      return 'Anthropic';
-    default: {
-      const exhaustiveCheck: never = provider;
-      throw new Error(`Unknown model provider: ${exhaustiveCheck}`);
-    }
-  }
-}
-
 function svgIcon(url: string) {
   return <img className="size-4" height="16" width="16" src={url} alt="" />;
 }
