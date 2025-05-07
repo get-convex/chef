@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import type { Message, UIMessage } from 'ai';
+import type { Message } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -171,8 +171,6 @@ export const Chat = memo(
         () => workbenchStore.currentDocument.get(),
         () => workbenchStore.files.get(),
         () => workbenchStore.userWrites,
-        initialMessages.filter((message) => message.parts !== undefined) as UIMessage[],
-        maxSizeForModel(modelSelection, maxRelevantFilesSize),
       ),
     );
     const [disableChatMessage, setDisableChatMessage] = useState<
@@ -198,6 +196,8 @@ export const Chat = memo(
           'gpt-4.1': { providerName: 'openai', apiKeyField: 'openai' },
           'grok-3-mini': { providerName: 'xai', apiKeyField: 'xai' },
           'gemini-2.5-pro': { providerName: 'google', apiKeyField: 'google' },
+          'claude-3-5-haiku': { providerName: 'anthropic', apiKeyField: 'value' },
+          'gpt-4.1-mini': { providerName: 'openai', apiKeyField: 'openai' },
         };
 
         // Get provider info for the current model
@@ -277,14 +277,21 @@ export const Chat = memo(
         }
         let modelProvider: ProviderType;
         const retries = retryState.get();
+        let modelChoice: string | undefined = undefined;
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
           // Send all traffic to Anthropic first before failing over to Bedrock.
           const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
           modelProvider = providers[retries.numFailures % providers.length];
+        } else if (modelSelection === 'claude-3-5-haiku') {
+          modelProvider = 'Anthropic';
+          modelChoice = 'claude-3-5-haiku-latest';
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
         } else if (modelSelection === 'gemini-2.5-pro') {
           modelProvider = 'Google';
+        } else if (modelSelection === 'gpt-4.1-mini') {
+          modelProvider = 'OpenAI';
+          modelChoice = 'gpt-4.1-mini';
         } else {
           modelProvider = 'OpenAI';
         }
@@ -292,7 +299,6 @@ export const Chat = memo(
           messages: chatContextManager.current.prepareContext(
             messages,
             maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
-            maxSizeForModel(modelSelection, maxRelevantFilesSize),
           ),
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
           chatInitialId,
@@ -306,7 +312,7 @@ export const Chat = memo(
           skipSystemPrompt: skipSystemPromptStore.get(),
           smallFiles,
           recordRawPromptsForDebugging,
-          modelChoice: undefined,
+          modelChoice,
         };
       },
       maxSteps: 64,
@@ -365,7 +371,7 @@ export const Chat = memo(
         });
 
         workbenchStore.abortAllActions();
-        if (isFirstFailure && messages[messages.length - 1].role === 'user') {
+        if (isFirstFailure && (messages.length === 0 || messages[messages.length - 1].role === 'user')) {
           reload();
         }
         await checkTokenUsage();
@@ -481,55 +487,43 @@ export const Chat = memo(
         await initializeChat();
         runAnimation();
 
+        const relevantFilesMessage = chatContextManager.current.relevantFiles(
+          messages,
+          `${Date.now()}`,
+          maxRelevantFilesSize,
+        );
+        // Make a clone of the relevantFilesMessage so we can inject the modified message after relevant files before the messageInput later
+        const newMessage = structuredClone(relevantFilesMessage);
+        newMessage.parts.push({
+          type: 'text',
+          text: messageInput,
+        });
+        newMessage.content = messageInput;
         if (!chatStarted) {
-          setMessages([
-            {
-              id: `${new Date().getTime()}`,
-              role: 'user',
-              content: messageInput,
-              parts: [
-                {
-                  type: 'text',
-                  text: messageInput,
-                },
-              ],
-            },
-          ]);
+          setMessages([newMessage]);
           reload();
           return;
         }
 
         const modifiedFiles = workbenchStore.getModifiedFiles();
         chatStore.setKey('aborted', false);
-
         shouldDisableToolsStore.set(false);
         skipSystemPromptStore.set(false);
         if (modifiedFiles !== undefined) {
           const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
-          append({
-            role: 'user',
-            content: messageInput,
-            parts: [
-              {
-                type: 'text',
-                text: `${userUpdateArtifact}${messageInput}`,
-              },
-            ],
+          relevantFilesMessage.parts.push({
+            type: 'text',
+            text: userUpdateArtifact,
           });
-
           workbenchStore.resetAllFileModifications();
-        } else {
-          append({
-            role: 'user',
-            content: messageInput,
-            parts: [
-              {
-                type: 'text',
-                text: messageInput,
-              },
-            ],
-          });
         }
+        relevantFilesMessage.content = messageInput;
+        relevantFilesMessage.parts.push({
+          type: 'text',
+          text: messageInput,
+        });
+        append(relevantFilesMessage);
+        // }
       } finally {
         setSendMessageInProgress(false);
       }

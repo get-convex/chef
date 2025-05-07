@@ -448,6 +448,7 @@ export const getAll = query({
     const results = await ctx.db
       .query("chats")
       .withIndex("byCreatorAndUrlId", (q) => q.eq("creatorId", sessionId))
+      .filter((q) => q.neq(q.field("isDeleted"), true))
       .collect();
 
     return results.map((result) => ({
@@ -476,7 +477,7 @@ export const remove = action({
       projectDeletionResult = await tryDeleteProject({ teamSlug, projectSlug, accessToken });
     }
 
-    await ctx.runMutation(internal.messages.removeChatInner, {
+    await ctx.runMutation(internal.messages.removeChat, {
       id,
       sessionId,
     });
@@ -542,7 +543,7 @@ async function tryDeleteProject(args: {
   return { kind: "success" };
 }
 
-export const removeChatInner = internalMutation({
+export const removeChat = internalMutation({
   args: {
     id: v.string(),
     sessionId: v.id("sessions"),
@@ -554,11 +555,6 @@ export const removeChatInner = internalMutation({
       return;
     }
 
-    // This doesn't delete the snapshot, and it also will break if the chat was ever shared.
-    // We might want soft deletion instead, but for now, let's just delete more stuff.
-
-    // TODO(sarah) -- test that this works and is the desired behavior on deletion
-    // await deletePreviousStorageStates(ctx, { chat: existing });
     const convexProject = existing.convexProject;
     if (convexProject !== undefined && convexProject.kind === "connected") {
       const credentials = await ctx.db
@@ -571,7 +567,9 @@ export const removeChatInner = internalMutation({
         await ctx.db.delete(credentials._id);
       }
     }
-    await ctx.db.delete(existing._id);
+    await ctx.db.patch(existing._id, {
+      isDeleted: true,
+    });
   },
 });
 
@@ -624,6 +622,7 @@ export async function createNewChat(
     creatorId: sessionId,
     initialId: id,
     timestamp: new Date().toISOString(),
+    isDeleted: false,
   });
   await ctx.db.insert("chatMessagesStorageState", {
     chatId,
@@ -644,14 +643,14 @@ export async function createNewChat(
 function getChatByInitialId(ctx: QueryCtx, { id, sessionId }: { id: string; sessionId: Id<"sessions"> }) {
   return ctx.db
     .query("chats")
-    .withIndex("byCreatorAndId", (q) => q.eq("creatorId", sessionId).eq("initialId", id))
+    .withIndex("byCreatorAndId", (q) => q.eq("creatorId", sessionId).eq("initialId", id).lt("isDeleted", true))
     .unique();
 }
 
 function getChatByUrlId(ctx: QueryCtx, { id, sessionId }: { id: string; sessionId: Id<"sessions"> }) {
   return ctx.db
     .query("chats")
-    .withIndex("byCreatorAndUrlId", (q) => q.eq("creatorId", sessionId).eq("urlId", id))
+    .withIndex("byCreatorAndUrlId", (q) => q.eq("creatorId", sessionId).eq("urlId", id).lt("isDeleted", true))
     .unique();
 }
 

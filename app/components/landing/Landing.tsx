@@ -1,6 +1,6 @@
 import Dashboard from './Dashboard';
 import FeatureGrid from './FeatureGrid';
-import Tweets from './Tweets';
+import Tweets from './tweets/Tweets';
 
 export default function Landing() {
   return (

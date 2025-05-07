@@ -77,6 +77,7 @@ export default defineSchema({
     snapshotId: v.optional(v.id("_storage")),
     lastMessageRank: v.optional(v.number()),
     hasBeenDeployed: v.optional(v.boolean()),
+    isDeleted: v.optional(v.boolean()),
     convexProject: v.optional(
       v.union(
         v.object({
@@ -99,10 +100,10 @@ export default defineSchema({
       ),
     ),
   })
-    .index("byCreatorAndId", ["creatorId", "initialId"])
-    .index("byCreatorAndUrlId", ["creatorId", "urlId"])
+    .index("byCreatorAndId", ["creatorId", "initialId", "isDeleted"])
+    .index("byCreatorAndUrlId", ["creatorId", "urlId", "isDeleted"])
     .index("bySnapshotId", ["snapshotId"])
-    .index("byInitialId", ["initialId"]),
+    .index("byInitialId", ["initialId", "isDeleted"]),
 
   convexProjectCredentials: defineTable({
     projectSlug: v.string(),

@@ -1,6 +1,6 @@
 import { Sheet } from '@ui/Sheet';
 import type { Message } from 'ai';
-import React, { type ReactNode, type RefCallback, useCallback, useMemo } from 'react';
+import React, { type ReactNode, type RefCallback, useCallback, useMemo, useState } from 'react';
 import Landing from '~/components/landing/Landing';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
@@ -20,6 +20,8 @@ import { Messages } from './Messages.client';
 import StreamingIndicator from './StreamingIndicator';
 import { SuggestionButtons } from './SuggestionButtons';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
+import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
+import { chooseExperience } from '~/utils/experienceChooser';
 
 interface BaseChatProps {
   // Refs
@@ -85,6 +87,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const { maintenanceMode } = useLaunchDarkly();
 
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
+    const recommendedExperience = chooseExperience(navigator.userAgent, window.crossOriginIsolated);
+    const [chatEnabled, setChatEnabled] = useState(recommendedExperience === 'the-real-thing');
 
     const chatId = useChatId();
     const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -131,6 +135,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               <div
                 className={classNames('w-full', {
                   'h-full flex flex-col': chatStarted,
+                  'max-w-7xl': !chatEnabled,
                 })}
                 ref={scrollRef}
               >
@@ -145,14 +150,22 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   />
                 ) : null}
                 <div
-                  className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt relative', {
+                  className={classNames('flex flex-col w-full max-w-chat mx-auto z-prompt relative', {
                     'sticky bottom-four': chatStarted,
                   })}
                 >
                   {actionAlert && (
-                    <div className="bg-bolt-elements-background-depth-2">
+                    <div className="mb-4 bg-background-secondary">
                       <ChatAlert
-                        alert={actionAlert}
+                        alert={
+                          actionAlert ?? {
+                            type: 'ExceededQuota',
+                            title: 'Error',
+                            description: 'Error',
+                            content: 'Error',
+                            source: 'terminal',
+                          }
+                        }
                         clearAlert={() => clearAlert?.()}
                         postMessage={(message) => {
                           onSend?.(message);
@@ -161,6 +174,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       />
                     </div>
                   )}
+                  {/* StreamingIndicator is ow a normal block above the input */}
                   {!disableChatMessage && (
                     <StreamingIndicator
                       streamStatus={streamStatus}
@@ -178,18 +192,21 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       {disableChatMessage}
                     </Sheet>
                   ) : (
-                    <MessageInput
-                      chatStarted={chatStarted}
-                      isStreaming={isStreaming}
-                      sendMessageInProgress={sendMessageInProgress}
-                      disabled={disableChatMessage !== null || maintenanceMode}
-                      modelSelection={modelSelection}
-                      setModelSelection={setModelSelection}
-                      onStop={onStop}
-                      onSend={onSend}
-                    />
+                    chatEnabled && (
+                      <MessageInput
+                        chatStarted={chatStarted}
+                        isStreaming={isStreaming}
+                        sendMessageInProgress={sendMessageInProgress}
+                        disabled={disableChatMessage !== null || maintenanceMode}
+                        modelSelection={modelSelection}
+                        setModelSelection={setModelSelection}
+                        onStop={onStop}
+                        onSend={onSend}
+                      />
+                    )
                   )}
                 </div>
+                <CompatibilityWarnings setEnabled={setChatEnabled} />
               </div>
               {maintenanceMode && (
                 <div className="mx-auto my-4 max-w-chat">
@@ -201,13 +218,15 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   </div>
                 </div>
               )}
-              <SuggestionButtons
-                disabled={disableChatMessage !== null}
-                chatStarted={chatStarted}
-                onSuggestionClick={(suggestion) => {
-                  messageInputStore.set(suggestion);
-                }}
-              />
+              {chatEnabled && (
+                <SuggestionButtons
+                  disabled={disableChatMessage !== null}
+                  chatStarted={chatStarted}
+                  onSuggestionClick={(suggestion) => {
+                    messageInputStore.set(suggestion);
+                  }}
+                />
+              )}
               {!chatStarted && <Landing />}
             </div>
             <Workbench

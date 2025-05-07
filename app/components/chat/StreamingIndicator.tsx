@@ -143,49 +143,41 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
 
   return (
     <AnimatePresence>
-      <div
-        data-streaming-indicator-stream-status={streamStatus}
-        className={classNames('border', 'rounded-lg relative w-full max-w-chat mx-auto z-prompt')}
+      <motion.div
+        className="-mb-2 mt-2 w-full max-w-chat rounded-t-xl border bg-background-secondary pb-2 shadow"
+        initial={{ translateY: '100%' }}
+        animate={{ translateY: '0%' }}
+        exit={{ translateY: '100%' }}
+        transition={{ duration: 0.15 }}
       >
         <div
-          className={classNames(
-            'bg-background-primary/75 backdrop-blur-md',
-            'p-2 rounded-lg text-content-primary',
-            'flex',
-          )}
+          data-streaming-indicator-stream-status={streamStatus}
+          className={classNames('border-none shadow-none rounded-t-xl relative w-full max-w-chat mx-auto z-prompt')}
         >
-          <div className="flex-1">
-            <AnimatePresence>
-              <motion.div
-                className="actions"
-                initial={{ height: 0 }}
-                animate={{ height: 'auto' }}
-                exit={{ height: '0px' }}
-                transition={{ duration: 0.15 }}
-              >
-                <motion.div
-                  className={classNames('flex text-sm gap-3')}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <div className="flex w-full items-center gap-1.5">
-                    <div>{icon}</div>
-                    {message}
-                    <div className="grow" />
-                    {streamStatus === 'error' && (
-                      <Button type="button" onClick={props.resendMessage} icon={<ResetIcon />}>
-                        Resend
-                      </Button>
-                    )}
+          <div
+            className={classNames('bg-background-secondary/75', 'p-1.5 text-content-primary rounded-t-xl', '', 'flex')}
+          >
+            <div className="flex-1">
+              <AnimatePresence>
+                <div className="actions">
+                  <div className={classNames('flex text-sm gap-3')}>
+                    <div className="flex w-full items-center gap-1.5">
+                      <div>{icon}</div>
+                      {message}
+                      <div className="grow" />
+                      {streamStatus === 'error' && (
+                        <Button type="button" onClick={props.resendMessage} icon={<ResetIcon />}>
+                          Resend
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </motion.div>
-              </motion.div>
-            </AnimatePresence>
+                </div>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </AnimatePresence>
   );
 }

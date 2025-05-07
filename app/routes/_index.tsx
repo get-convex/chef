@@ -4,7 +4,6 @@ import type { MetaFunction } from '@vercel/remix';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Header } from '~/components/header/Header';
 import { Homepage } from '~/components/Homepage.client';
-import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 
 export const meta: MetaFunction = () => {
   return [
@@ -46,14 +45,7 @@ export default function Index() {
   return (
     <div className="flex size-full flex-col bg-bolt-elements-background-depth-1">
       <Header />
-      <ClientOnly>
-        {() => (
-          <>
-            {<Homepage />}
-            <CompatibilityWarnings />
-          </>
-        )}
-      </ClientOnly>
+      <ClientOnly>{() => <Homepage />}</ClientOnly>
     </div>
   );
 }

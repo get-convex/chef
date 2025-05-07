@@ -7,6 +7,8 @@ import { HandThumbUpIcon, KeyIcon } from '@heroicons/react/24/outline';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import type { Doc } from '@convex/_generated/dataModel';
+import { useStore } from '@nanostores/react';
+import { convexTeamsStore } from '~/lib/stores/convexTeams';
 
 export type ModelProvider = 'openai' | 'google' | 'xai' | 'anthropic' | 'auto';
 
@@ -36,6 +38,7 @@ function svgIcon(url: string) {
 export interface ModelSelectorProps {
   modelSelection: ModelSelection;
   setModelSelection: (modelSelection: ModelSelection) => void;
+  size?: 'sm' | 'md';
 }
 
 const providerToIcon: Record<string, React.ReactNode> = {
@@ -90,13 +93,28 @@ const models: Partial<
     name: 'Grok 3 Mini',
     provider: 'xai',
   },
+  'claude-3-5-haiku': {
+    name: 'Claude 3.5 Haiku',
+    provider: 'anthropic',
+    requireKey: true,
+  },
+  'gpt-4.1-mini': {
+    name: 'GPT-4.1 Mini',
+    provider: 'openai',
+    requireKey: true,
+  },
 } as const;
 
 export const ModelSelector = React.memo(function ModelSelector({
   modelSelection,
   setModelSelection,
+  size = 'md',
 }: ModelSelectorProps) {
+  const teams = useStore(convexTeamsStore);
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
+  if (!teams) {
+    return null;
+  }
   const selectedModel = models[modelSelection];
   if (!selectedModel) {
     throw new Error(`Model ${modelSelection} not found`);
@@ -109,9 +127,10 @@ export const ModelSelector = React.memo(function ModelSelector({
       options={Object.entries(models).map(([value, model]) => ({
         label: model.provider + ' ' + model.name,
         value: value as ModelSelection,
-        disabled: model.requireKey,
+        disabled: model.requireKey && (!apiKey || !keyForProvider(apiKey, model.provider)),
       }))}
       buttonClasses="w-fit"
+      size={size}
       selectedOption={modelSelection}
       setSelectedOption={(option) => {
         if (!option) {

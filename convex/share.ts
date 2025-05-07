@@ -161,6 +161,7 @@ async function cloneShow(
     description: parentChat.description,
     timestamp: new Date().toISOString(),
     snapshotId,
+    isDeleted: false,
   };
   const clonedChatId = await ctx.db.insert("chats", clonedChat);
 
@@ -219,6 +220,7 @@ export const clone = mutation({
       description: parentChat.description,
       timestamp: new Date().toISOString(),
       snapshotId: getShare.snapshotId,
+      isDeleted: false,
     };
     const clonedChatId = await ctx.db.insert("chats", clonedChat);
 

@@ -8,13 +8,12 @@ import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { captureException } from '@sentry/remix';
 import { logger } from 'chef-agent/utils/logger';
 import type { ProviderType } from '~/lib/common/annotations';
+import { getEnv } from '~/lib/.server/env';
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
-import { fetch as undiciFetch } from 'undici';
-import { getEnv } from '~/lib/.server/env';
+import { fetch } from '~/lib/.server/fetch';
 import { GENERAL_SYSTEM_PROMPT_PRELUDE, ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
 
-type Fetch = typeof fetch;
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
 
 export type ModelProvider = Exclude<ProviderType, 'Unknown'>;
@@ -57,9 +56,6 @@ export function getProvider(
 ): Provider {
   let model: string;
   let provider: Provider;
-
-  // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
-  const fetch = undiciFetch as unknown as Fetch;
 
   switch (modelProvider) {
     case 'Google': {
@@ -196,9 +192,6 @@ export function getProvider(
 }
 
 const userKeyApiFetch = (provider: ModelProvider) => {
-  // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
-  const fetch = undiciFetch as unknown as Fetch;
-
   return async (input: RequestInfo | URL, init?: RequestInit) => {
     const requestInit = provider === 'Anthropic' ? anthropicInjectCacheControl(init) : init;
     const result = await fetch(input, requestInit);

@@ -126,6 +126,20 @@ describe("messages", () => {
     });
   });
 
+  test("remove chat", async () => {
+    const { sessionId, chatId } = await createChat(t);
+    await t.mutation(internal.messages.removeChat, { sessionId, id: chatId });
+    const chats = await t.query(api.messages.getAll, {
+      sessionId,
+    });
+    expect(chats.length).toBe(0);
+
+    // Set description fails - uses getChatByIdOrUrlIdEnsuringAccess helper that should not include deleted chats
+    await expect(
+      t.mutation(api.messages.setDescription, { sessionId, id: chatId, description: "test" }),
+    ).rejects.toThrow();
+  });
+
   test("store chat without snapshot", async () => {
     // Note: this should be impossible from the UI since we will need to store
     // the initial snapshot, but we'll test it fore completeness

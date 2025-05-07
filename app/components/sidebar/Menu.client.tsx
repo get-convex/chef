@@ -205,6 +205,7 @@ export const Menu = memo(() => {
                   return Promise.resolve();
                 }}
                 dialogTitle="Delete Chat"
+                validationText={dialogContent?.item.description || 'New chat...'}
                 dialogBody={
                   <>
                     <p>
