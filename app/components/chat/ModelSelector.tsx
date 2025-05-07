@@ -59,7 +59,7 @@ const providerToIcon: Record<string, React.ReactNode> = {
   ),
 };
 
-const models: Partial<
+export const models: Partial<
   Record<
     ModelSelection,
     {

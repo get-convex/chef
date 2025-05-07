@@ -38,7 +38,7 @@ import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import type { ProviderType } from '~/lib/common/annotations';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 import { MissingApiKey } from './MissingApiKey';
-import type { ModelProvider } from '~/components/chat/ModelSelector';
+import { models, type ModelProvider } from '~/components/chat/ModelSelector';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { useLocalStorage } from '@uidotdev/usehooks';
 import { KeyIcon } from '@heroicons/react/24/outline';
@@ -180,20 +180,21 @@ export const Chat = memo(
     const [disableChatMessage, setDisableChatMessage] = useState<
       | { type: 'ExceededQuota' }
       | { type: 'TeamDisabled'; isPaidPlan: boolean }
-      | { type: 'MissingApiKey'; provider: ModelProvider }
+      | { type: 'MissingApiKey'; provider: ModelProvider; requireKey: boolean }
       | null
     >(null);
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     const checkApiKeyForCurrentModel = useCallback(
-      (model: ModelSelection): { hasMissingKey: boolean; provider?: ModelProvider } => {
-        if (apiKey?.preference !== 'always') {
-          return { hasMissingKey: false };
+      (model: ModelSelection): { hasMissingKey: boolean; provider?: ModelProvider; requireKey: boolean } => {
+        const requireKey = models[model]?.requireKey || false;
+        if (apiKey?.preference !== 'always' && !requireKey) {
+          return { hasMissingKey: false, requireKey: false };
         }
 
         // Map models to their respective providers
         const MODEL_TO_PROVIDER_MAP: {
-          [K in ModelSelection]: { providerName: ModelProvider; apiKeyField: keyof typeof apiKey };
+          [K in ModelSelection]: { providerName: ModelProvider; apiKeyField: 'value' | 'openai' | 'xai' | 'google' };
         } = {
           auto: { providerName: 'anthropic', apiKeyField: 'value' },
           'claude-3.5-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
@@ -208,21 +209,21 @@ export const Chat = memo(
         const providerInfo = MODEL_TO_PROVIDER_MAP[model];
 
         // Check if the API key for this provider is missing
-        const keyValue = apiKey[providerInfo.apiKeyField];
+        const keyValue = apiKey?.[providerInfo.apiKeyField];
         if (!keyValue || keyValue.trim() === '') {
-          return { hasMissingKey: true, provider: providerInfo.providerName };
+          return { hasMissingKey: true, provider: providerInfo.providerName, requireKey };
         }
 
-        return { hasMissingKey: false };
+        return { hasMissingKey: false, requireKey };
       },
       [apiKey],
     );
 
     const checkTokenUsage = useCallback(async () => {
       // First, check if preference is 'always' but key for model is missing
-      const { hasMissingKey, provider } = checkApiKeyForCurrentModel(modelSelection);
+      const { hasMissingKey, provider, requireKey } = checkApiKeyForCurrentModel(modelSelection);
       if (hasMissingKey && provider) {
-        setDisableChatMessage({ type: 'MissingApiKey', provider });
+        setDisableChatMessage({ type: 'MissingApiKey', provider, requireKey });
         return;
       }
 
@@ -559,11 +560,11 @@ export const Chat = memo(
           return;
         }
 
-        const { hasMissingKey, provider } = checkApiKeyForCurrentModel(newModel);
+        const { hasMissingKey, provider, requireKey } = checkApiKeyForCurrentModel(newModel);
 
         if (hasMissingKey && provider) {
           // If the model requires a key that's not set, show the message
-          setDisableChatMessage({ type: 'MissingApiKey', provider });
+          setDisableChatMessage({ type: 'MissingApiKey', provider, requireKey });
         } else {
           // For other cases (like free tier or no key required), check full token usage
           await checkTokenUsage().catch((error) => {
@@ -602,6 +603,7 @@ export const Chat = memo(
           ) : disableChatMessage?.type === 'MissingApiKey' ? (
             <MissingApiKey
               provider={disableChatMessage.provider}
+              requireKey={disableChatMessage.requireKey}
               resetDisableChatMessage={() => setDisableChatMessage(null)}
             />
           ) : null

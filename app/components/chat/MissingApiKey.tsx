@@ -13,11 +13,12 @@ import { ConfirmationDialog } from '@ui/ConfirmationDialog';
 
 export interface MissingApiKeyProps {
   provider: ModelProvider;
+  requireKey: boolean;
   resetDisableChatMessage: () => void;
 }
 
-export function MissingApiKey({ provider, resetDisableChatMessage }: MissingApiKeyProps) {
-  const [isAdding, setIsAdding] = useState(false);
+export function MissingApiKey({ provider, requireKey, resetDisableChatMessage }: MissingApiKeyProps) {
+  const [isAdding, setIsAdding] = useState(requireKey);
   const [isSaving, setIsSaving] = useState(false);
   const [newKeyValue, setNewKeyValue] = useState('');
   const [showKey, setShowKey] = useState(false);
@@ -114,12 +115,21 @@ export function MissingApiKey({ provider, resetDisableChatMessage }: MissingApiK
   return (
     <>
       <div className="flex flex-col gap-1">
-        <h4>Choose an option to continue</h4>
+        <h4>{requireKey ? 'Add an API key to use this model' : 'Choose an option to continue'}</h4>
         <p className="max-w-prose text-pretty">
-          You&apos;ve chosen to always use your own API keys, but haven&apos;t set a{' '}
-          <span className="font-semibold">{displayModelProviderName(provider)}</span> API key yet. You may choose to use
-          a different model provider, use Chef tokens instead of your own API keys, or add an API key for{' '}
-          <span className="font-semibold">{displayModelProviderName(provider)}</span>.
+          {requireKey ? (
+            <>
+              This model can only be used with your own API key. Please add an API key for{' '}
+              <span className="font-semibold">{displayModelProviderName(provider)}</span> to continue.
+            </>
+          ) : (
+            <>
+              You&apos;ve chosen to always use your own API keys, but haven&apos;t set a{' '}
+              <span className="font-semibold">{displayModelProviderName(provider)}</span> API key yet. You may choose to
+              use a different model provider, use Chef tokens instead of your own API keys, or add an API key for{' '}
+              <span className="font-semibold">{displayModelProviderName(provider)}</span>.
+            </>
+          )}
         </p>
       </div>
 
@@ -186,9 +196,11 @@ export function MissingApiKey({ provider, resetDisableChatMessage }: MissingApiK
           <Button onClick={handleSaveKey} disabled={isSaving || !newKeyValue.trim()} loading={isSaving}>
             {isSaving ? 'Saving...' : 'Save'}
           </Button>
-          <Button variant="neutral" onClick={handleCancel} disabled={isSaving}>
-            Cancel
-          </Button>
+          {!requireKey && (
+            <Button variant="neutral" onClick={handleCancel} disabled={isSaving}>
+              Cancel
+            </Button>
+          )}
         </div>
       )}
     </>
