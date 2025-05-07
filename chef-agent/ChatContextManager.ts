@@ -23,8 +23,8 @@ export class ChatContextManager {
   assistantMessageCache: WeakMap<UIMessage, ParsedAssistantMessage> = new WeakMap();
   messageSizeCache: WeakMap<UIMessage, number> = new WeakMap();
   partSizeCache: WeakMap<UIMessagePart, number> = new WeakMap();
-  messageICutoff: number = -1;
-  messageJCutoff: number = -1;
+  messageIndex: number = -1;
+  partIndex: number = -1;
 
   constructor(
     private getCurrentDocument: () => EditorDocument | undefined,
@@ -46,9 +46,9 @@ export class ChatContextManager {
     // If the last message is a user message this is the first LLM call that includes that user message.
     // Only update the relevant files and the message cutoff indices if the last message is a user message to avoid clearing the cache as the agent makes changes.
     if (messages[messages.length - 1].role === 'user') {
-      const [iCutoff, jCutoff] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
-      this.messageICutoff = iCutoff;
-      this.messageJCutoff = jCutoff;
+      const [messageIndex, partIndex] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
+      this.messageIndex = messageIndex;
+      this.partIndex = partIndex;
     }
     const collapsedMessages = this.collapseMessages(messages);
     return [...collapsedMessages];
@@ -145,14 +145,14 @@ export class ChatContextManager {
     const fullMessages = [];
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i];
-      if (i < this.messageICutoff) {
+      if (i < this.messageIndex) {
         continue;
-      } else if (i === this.messageICutoff) {
+      } else if (i === this.messageIndex) {
         const filteredParts = message.parts.filter((p, j) => {
           if (p.type !== 'tool-invocation' || p.toolInvocation.state !== 'result') {
             return true;
           }
-          return j > this.messageJCutoff;
+          return j > this.partIndex;
         });
         const remainingMessage = {
           ...message,
@@ -171,16 +171,16 @@ export class ChatContextManager {
 
   private messagePartCutoff(messages: UIMessage[], maxCollapsedMessagesSize: number): [number, number] {
     let remaining = maxCollapsedMessagesSize;
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const message = messages[i];
-      for (let j = message.parts.length - 1; j >= 0; j--) {
-        const part = message.parts[j];
+    for (let messageIndex = messages.length - 1; messageIndex >= 0; messageIndex--) {
+      const message = messages[messageIndex];
+      for (let partIndex = message.parts.length - 1; partIndex >= 0; partIndex--) {
+        const part = message.parts[partIndex];
         if (part.type === 'tool-invocation' && part.toolInvocation.state !== 'result') {
           continue;
         }
         const size = this.partSize(part);
         if (size > remaining) {
-          return [i, j];
+          return [messageIndex, partIndex];
         }
         remaining -= size;
       }
