@@ -55,7 +55,6 @@ export class ChatContextManager {
   }
 
   relevantFiles(messages: UIMessage[], id: string, maxRelevantFilesSize: number): UIMessage {
-    console.log('Finding relevant files');
     const currentDocument = this.getCurrentDocument();
     const cache = this.getFiles();
     const allPaths = Object.keys(cache).sort();

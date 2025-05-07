@@ -492,7 +492,7 @@ export const Chat = memo(
 
         const shouldSendRelevantFiles = chatContextManager.current.shouldSendRelevantFiles(
           messages,
-          maxSizeForModel(modelSelection, maxRelevantFilesSize),
+          maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
         );
         const maybeRelevantFilesMessage: UIMessage = shouldSendRelevantFiles
           ? chatContextManager.current.relevantFiles(messages, `${Date.now()}`, maxRelevantFilesSize)
