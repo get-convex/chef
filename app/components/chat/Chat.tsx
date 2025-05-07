@@ -490,9 +490,12 @@ export const Chat = memo(
         await initializeChat();
         runAnimation();
 
-        const shouldSendRelevantFiles = chatContextManager.current.shouldSendRelevantFiles(messages);
+        const shouldSendRelevantFiles = chatContextManager.current.shouldSendRelevantFiles(
+          messages,
+          maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
+        );
         const maybeRelevantFilesMessage: UIMessage = shouldSendRelevantFiles
-          ? chatContextManager.current.relevantFiles(messages, `${Date.now()}`, maxRelevantFilesSize)
+          ? chatContextManager.current.relevantFiles(messages, `${Date.now()}`, 1000)
           : {
               id: `${Date.now()}`,
               content: '',

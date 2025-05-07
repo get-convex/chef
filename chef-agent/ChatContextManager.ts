@@ -170,9 +170,16 @@ export class ChatContextManager {
     return result;
   }
 
-  shouldSendRelevantFiles(messages: UIMessage[]): boolean {
+  shouldSendRelevantFiles(messages: UIMessage[], maxCollapsedMessagesSize: number): boolean {
     // Always send files on the first message
     if (messages.length === 0) {
+      return true;
+    }
+
+    // Check if we are going to collapse messages, if so, send new files
+    const [messageIndex, partIndex] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
+    if (messageIndex != this.messageIndex || partIndex != this.partIndex) {
+      console.log('Sending new relevant files because we are going to collapse messages');
       return true;
     }
 
@@ -181,14 +188,13 @@ export class ChatContextManager {
       if (message.role === 'user') {
         for (const part of message.parts) {
           if (part.type === 'text' && part.text.includes('title="Relevant Files"')) {
+            console.log("Relevant files have been sent before, don't send them again");
             // Relevant files have been sent before, don't send them again
             return false;
           }
         }
       }
     }
-
-    // No files have been sent before, send them now
     return true;
   }
 
