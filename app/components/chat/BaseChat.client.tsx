@@ -150,22 +150,11 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   />
                 ) : null}
                 <div
-                  className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt relative', {
+                  className={classNames('flex flex-col w-full max-w-chat mx-auto z-prompt relative', {
                     'sticky bottom-four': chatStarted,
                   })}
                 >
-                  {actionAlert && (
-                    <div className="bg-bolt-elements-background-depth-2">
-                      <ChatAlert
-                        alert={actionAlert}
-                        clearAlert={() => clearAlert?.()}
-                        postMessage={(message) => {
-                          onSend?.(message);
-                          clearAlert?.();
-                        }}
-                      />
-                    </div>
-                  )}
+                  {/* StreamingIndicator is now a normal block above the input */}
                   {!disableChatMessage && (
                     <StreamingIndicator
                       streamStatus={streamStatus}
@@ -195,6 +184,18 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         onSend={onSend}
                       />
                     )
+                  )}
+                  {actionAlert && (
+                    <div className="bg-bolt-elements-background-depth-2">
+                      <ChatAlert
+                        alert={actionAlert}
+                        clearAlert={() => clearAlert?.()}
+                        postMessage={(message) => {
+                          onSend?.(message);
+                          clearAlert?.();
+                        }}
+                      />
+                    </div>
                   )}
                 </div>
                 <CompatibilityWarnings setEnabled={setChatEnabled} />

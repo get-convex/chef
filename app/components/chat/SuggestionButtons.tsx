@@ -21,7 +21,7 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
           <Button
             key={suggestion.title}
             onClick={() => onSuggestionClick?.(suggestion.prompt)}
-            className="rounded-full px-3"
+            className="rounded-full px-3 shadow-sm"
             variant="neutral"
             disabled={disabled}
             icon={<ArrowUpIcon className="size-4" />}
@@ -36,7 +36,7 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
           href="https://stack.convex.dev/chef-cookbook-tips-working-with-ai-app-builders"
           target="_blank"
           variant="neutral"
-          className="items-center rounded-full border-[#EE352F] bg-[#FEF4E2] fill-[#EE342F] px-3 text-[#EE352F] hover:bg-[#FDEFD2] dark:border-[#FFD700] dark:bg-[#2F2917] dark:fill-[#FFD700] dark:text-[#FFD700] dark:hover:bg-[#3F3920]"
+          className="items-center rounded-full border-[#EE352F] bg-[#FEF4E2] fill-[#EE342F] px-3 text-[#EE352F] shadow-sm hover:bg-[#FDEFD2] dark:border-[#FFD700] dark:bg-[#2F2917] dark:fill-[#FFD700] dark:text-[#FFD700] dark:hover:bg-[#3F3920]"
         >
           <AcademicCapIcon className="size-5" />
           <span>Tips for building with Chef</span>

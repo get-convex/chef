@@ -38,6 +38,7 @@ function svgIcon(url: string) {
 export interface ModelSelectorProps {
   modelSelection: ModelSelection;
   setModelSelection: (modelSelection: ModelSelection) => void;
+  size?: 'sm' | 'md';
 }
 
 const providerToIcon: Record<string, React.ReactNode> = {
@@ -107,6 +108,7 @@ const models: Partial<
 export const ModelSelector = React.memo(function ModelSelector({
   modelSelection,
   setModelSelection,
+  size = 'md',
 }: ModelSelectorProps) {
   const teams = useStore(convexTeamsStore);
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
@@ -128,6 +130,7 @@ export const ModelSelector = React.memo(function ModelSelector({
         disabled: model.requireKey && (!apiKey || !keyForProvider(apiKey, model.provider)),
       }))}
       buttonClasses="w-fit"
+      size={size}
       selectedOption={modelSelection}
       setSelectedOption={(option) => {
         if (!option) {
