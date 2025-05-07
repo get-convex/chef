@@ -11,7 +11,7 @@ Download filesystem to my-app and print all messages
 ```
 npx convex dev --once; pnpm run build; pnpm run start;
 # and then in another terminal
-npx chefshot "Let's make a chat app!" --output-dir my-app --messages | jq
+npx chefshot generate "Let's make a chat app" --messages-file foo.json --prod | jq
 ```
 
 Just save the messages you get from a prompt in prod
@@ -25,7 +25,7 @@ Debug
 ```
 npx convex dev --once; pnpm run dev
 # and then in another terminal
-npx chefshot "Let's make a chat app!" --dev --no-headless
+npx chefshot generate "Let's make a chat app" --dev --no-headless
 ```
 
 # Credentials
