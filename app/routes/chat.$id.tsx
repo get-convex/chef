@@ -4,7 +4,6 @@ import { ClientOnly } from 'remix-utils/client-only';
 import { Header } from '~/components/header/Header';
 import { ExistingChat } from '~/components/ExistingChat.client';
 import { redirect, useLoaderData } from '@remix-run/react';
-import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Chef' }];
@@ -31,14 +30,7 @@ export default function ChatRoute() {
   return (
     <div className="flex size-full flex-col bg-bolt-elements-background-depth-1">
       <Header />
-      <ClientOnly>
-        {() => (
-          <>
-            <ExistingChat chatId={loaderData.id} />
-            <CompatibilityWarnings />
-          </>
-        )}
-      </ClientOnly>
+      <ClientOnly>{() => <ExistingChat chatId={loaderData.id} />}</ClientOnly>
     </div>
   );
 }

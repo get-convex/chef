@@ -9,7 +9,6 @@ import { getConvexAuthToken } from '~/lib/stores/sessionId';
 import { useConvex, useConvexAuth } from 'convex/react';
 import { fetchOptIns } from '~/lib/convexOptins';
 import { Button } from '@ui/Button';
-import { Spinner } from '@ui/Spinner';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 export const ChefSignInPage = () => {
   const chefAuth = useChefAuthContext();
@@ -46,10 +45,8 @@ function ConvexSignInForm() {
             });
           }
         }}
-        disabled={started}
-        icon={
-          started ? <Spinner /> : <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
-        }
+        loading={started}
+        icon={<img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />}
       >
         Log in with your Convex account
       </Button>

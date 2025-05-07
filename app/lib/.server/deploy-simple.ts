@@ -14,7 +14,6 @@ export async function deploy({ request }: ActionFunctionArgs) {
       // if not then use our hardcoded project token
       token = globalThis.process.env.BIG_BRAIN_API_KEY!;
     }
-    console.log(deploymentName);
 
     if (!file) {
       return json({ error: 'No file provided' }, { status: 400 });
@@ -34,7 +33,6 @@ export async function deploy({ request }: ActionFunctionArgs) {
       },
       body: file,
     });
-    console.log(response);
 
     if (!response.ok) {
       const error = await response.json();
@@ -60,6 +58,11 @@ export async function deploy({ request }: ActionFunctionArgs) {
         // Log failure but continue with deployment response
         console.error('Failed to purge cache:', err instanceof Error ? err.message : 'Unknown error');
       }
+    } else if (new URL(request.url).hostname === 'localhost') {
+      const localDevWarning =
+        'Warning: deploy succeeded, but not purging Cloudflare cache because Cloudflare credentials missing in local environment';
+      console.error(localDevWarning);
+      return json({ ...result, localDevWarning });
     }
 
     return json(result);

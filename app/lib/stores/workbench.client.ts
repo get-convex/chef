@@ -112,6 +112,22 @@ export class WorkbenchStore {
     return this.#previewsStore.previews;
   }
 
+  setPreviewIframe(previewIndex: number, element: HTMLIFrameElement | null) {
+    this.#previewsStore.previews.set(
+      this.#previewsStore.previews
+        .get()
+        .map((preview, i) => (i === previewIndex ? { ...preview, iframe: element } : preview)),
+    );
+  }
+
+  async requestAnyScreenshot(timeout = 30000): Promise<string> {
+    return this.#previewsStore.requestAnyScreenshot(timeout);
+  }
+
+  async requestScreenshot(previewIndex: number): Promise<string> {
+    return this.#previewsStore.requestScreenshot(previewIndex);
+  }
+
   async startProxy(sourcePort: number) {
     return this.#previewsStore.startProxy(sourcePort);
   }

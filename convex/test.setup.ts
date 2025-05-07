@@ -48,7 +48,8 @@ export async function storeChat(
     snapshot?: Blob;
     doNotUpdateMessages?: boolean;
   },
-) {
+  expectedError = false,
+): Promise<Response> {
   const formData = new FormData();
   if (args.messages && !args.doNotUpdateMessages) {
     // NB: normally, we'd lz4 compress the string, but for testing, we'll skip that
@@ -66,10 +67,20 @@ export async function storeChat(
     url.searchParams.set("partIndex", ((args.messages.at(-1)?.parts?.length ?? 0) - 1).toString());
   }
 
-  await t.fetch(url.pathname + url.search, {
+  const response = await t.fetch(url.pathname + url.search, {
     method: "POST",
     body: formData,
   });
+  if (expectedError) {
+    if (response.ok) {
+      throw new Error("Expected failure, but got success");
+    }
+  } else {
+    if (!response.ok) {
+      throw new Error(`Failed to store chat: ${response.statusText}`);
+    }
+  }
+  return response;
 }
 
 export async function verifyStoredContent(t: TestConvex, storageId: Id<"_storage">, expectedContent: string) {

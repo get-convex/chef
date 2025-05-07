@@ -59,6 +59,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     teamSlug: string;
     deploymentName: string | undefined;
     modelProvider: ModelProvider;
+    modelChoice: string | undefined;
     userApiKey:
       | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
       | undefined;
@@ -72,8 +73,8 @@ export async function chatAction({ request }: ActionFunctionArgs) {
 
   let useUserApiKey = false;
 
-  // Always use the user's API key if they're set to always mode.
-  if (body.userApiKey?.preference === 'always') {
+  // Use the user's API key if they're set to always mode or if they manually set a model.
+  if (body.userApiKey?.preference === 'always' || body.modelChoice) {
     useUserApiKey = true;
   }
 
@@ -118,6 +119,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     } else {
       userApiKey = body.userApiKey?.google;
     }
+
     if (!userApiKey) {
       return new Response(
         JSON.stringify({ code: 'missing-api-key', error: `Tried to use missing ${body.modelProvider} API key.` }),
@@ -134,7 +136,15 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => {
     if (!userApiKey) {
-      await recordUsage(PROVISION_HOST, token, teamSlug, deploymentName, lastMessage, finalGeneration);
+      await recordUsage(
+        PROVISION_HOST,
+        token,
+        body.modelProvider,
+        teamSlug,
+        deploymentName,
+        lastMessage,
+        finalGeneration,
+      );
     }
   };
 
@@ -147,6 +157,8 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       messages,
       tracer,
       modelProvider: body.modelProvider,
+      // Only set the requested model choice if we're using a user API key.
+      modelChoice: userApiKey ? body.modelChoice : undefined,
       userApiKey,
       shouldDisableTools: body.shouldDisableTools,
       skipSystemPrompt: body.skipSystemPrompt,

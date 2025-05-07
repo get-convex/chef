@@ -111,10 +111,13 @@ export const Menu = memo(() => {
 
   useEffect(() => {
     const enterThreshold = 40;
+    const enterTopThreshold = 200;
     const exitThreshold = 40;
 
     function onMouseMove(event: MouseEvent) {
-      if (event.pageX < enterThreshold) {
+      if (event.pageX < enterThreshold && event.pageY < enterTopThreshold) {
+        setOpen(true);
+      } else if (event.pageX < 2) {
         setOpen(true);
       }
 
@@ -202,6 +205,7 @@ export const Menu = memo(() => {
                   return Promise.resolve();
                 }}
                 dialogTitle="Delete Chat"
+                validationText={dialogContent?.item.description || 'New chat...'}
                 dialogBody={
                   <>
                     <p>

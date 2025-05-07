@@ -5,7 +5,7 @@ import { api } from '@convex/_generated/api';
 import { initialIdStore } from '~/lib/stores/chatId';
 import { lazy, Suspense, useState } from 'react';
 import { useStore } from '@nanostores/react';
-import { useIsAdmin } from '~/hooks/useDebugPrompt';
+import { useIsAdmin } from '~/lib/hooks/useDebugPrompt';
 
 // Import eagerly in dev to avoid a reload, lazily in prod for bundle size.
 const DebugAllPromptsForChat = import.meta.env.DEV

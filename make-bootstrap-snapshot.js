@@ -29,8 +29,18 @@ async function main() {
   const filename = `template-snapshot-${sha256}.bin`;
   console.log(`Writing snapshot (${compressed.length} bytes) to ${filename}...`);
   await fs.writeFile(`public/${filename}`, compressed);
+
+  // Update TEMPLATE_URL in useContainerSetup.ts
+  console.log('Updating TEMPLATE_URL in useContainerSetup.ts...');
+  const setupFilePath = 'app/lib/stores/startup/useContainerSetup.ts';
+  let setupFileContent = await fs.readFile(setupFilePath, 'utf8');
+  setupFileContent = setupFileContent.replace(
+    /const TEMPLATE_URL = ['"]\/template-snapshot-[a-f0-9]+\.bin['"];/,
+    `const TEMPLATE_URL = '/${filename}';`,
+  );
+  await fs.writeFile(setupFilePath, setupFileContent);
+
   console.log('Done!');
-  console.log('Next update TEMPLATE_URL in app/lib/stores/startup/useContainerSetup.ts to see your change.');
 }
 
 async function getSnapshotFiles(dir) {

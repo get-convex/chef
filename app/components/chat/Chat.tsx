@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import type { Message } from 'ai';
+import type { Message, UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -34,12 +34,12 @@ import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import type { Doc, Id } from 'convex/_generated/dataModel';
-import { useFlags } from 'launchdarkly-react-client-sdk';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import type { ProviderType } from '~/lib/common/annotations';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 import { MissingApiKey } from './MissingApiKey';
 import type { ModelProvider } from '~/components/chat/ModelSelector';
+import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 
 const logger = createScopedLogger('Chat');
 
@@ -126,7 +126,13 @@ export const Chat = memo(
         }
       }
     };
-    const { recordRawPromptsForDebugging } = useFlags();
+    const {
+      recordRawPromptsForDebugging,
+      enableSkipSystemPrompt,
+      smallFiles,
+      maxCollapsedMessagesSize,
+      maxRelevantFilesSize,
+    } = useLaunchDarkly();
 
     const title = useStore(description);
 
@@ -165,6 +171,8 @@ export const Chat = memo(
         () => workbenchStore.currentDocument.get(),
         () => workbenchStore.files.get(),
         () => workbenchStore.userWrites,
+        initialMessages.filter((message) => message.parts !== undefined) as UIMessage[],
+        maxSizeForModel(modelSelection, maxRelevantFilesSize),
       ),
     );
     const [disableChatMessage, setDisableChatMessage] = useState<
@@ -190,6 +198,8 @@ export const Chat = memo(
           'gpt-4.1': { providerName: 'openai', apiKeyField: 'openai' },
           'grok-3-mini': { providerName: 'xai', apiKeyField: 'xai' },
           'gemini-2.5-pro': { providerName: 'google', apiKeyField: 'google' },
+          'claude-3-5-haiku': { providerName: 'anthropic', apiKeyField: 'value' },
+          'gpt-4.1-mini': { providerName: 'openai', apiKeyField: 'openai' },
         };
 
         // Get provider info for the current model
@@ -252,7 +262,6 @@ export const Chat = memo(
       }
     }, [apiKey, checkApiKeyForCurrentModel, convex, modelSelection, setDisableChatMessage]);
 
-    const { enableSkipSystemPrompt, smallFiles } = useFlags();
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
       api: '/api/chat',
@@ -270,19 +279,30 @@ export const Chat = memo(
         }
         let modelProvider: ProviderType;
         const retries = retryState.get();
+        let modelChoice: string | undefined = undefined;
         if (modelSelection === 'auto' || modelSelection === 'claude-3.5-sonnet') {
           // Send all traffic to Anthropic first before failing over to Bedrock.
           const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
           modelProvider = providers[retries.numFailures % providers.length];
+        } else if (modelSelection === 'claude-3-5-haiku') {
+          modelProvider = 'Anthropic';
+          modelChoice = 'claude-3-5-haiku-latest';
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
         } else if (modelSelection === 'gemini-2.5-pro') {
           modelProvider = 'Google';
+        } else if (modelSelection === 'gpt-4.1-mini') {
+          modelProvider = 'OpenAI';
+          modelChoice = 'gpt-4.1-mini';
         } else {
           modelProvider = 'OpenAI';
         }
         return {
-          messages: chatContextManager.current.prepareContext(messages),
+          messages: chatContextManager.current.prepareContext(
+            messages,
+            maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
+            maxSizeForModel(modelSelection, maxRelevantFilesSize),
+          ),
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
           chatInitialId,
           token,
@@ -295,6 +315,7 @@ export const Chat = memo(
           skipSystemPrompt: skipSystemPromptStore.get(),
           smallFiles,
           recordRawPromptsForDebugging,
+          modelChoice,
         };
       },
       maxSteps: 64,
@@ -352,7 +373,8 @@ export const Chat = memo(
           nextRetry: Date.now() + backoff,
         });
 
-        if (isFirstFailure) {
+        workbenchStore.abortAllActions();
+        if (isFirstFailure && (messages.length === 0 || messages[messages.length - 1].role === 'user')) {
           reload();
         }
         await checkTokenUsage();
@@ -672,7 +694,6 @@ export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMess
               : 'https://dashboard.convex.dev/team/settings/billing'
           }
           className="w-fit"
-          rel="noopener noreferrer"
           icon={<ExternalLinkIcon />}
         >
           Upgrade to a paid plan
@@ -723,7 +744,6 @@ export function DisabledText({
           }
           className="w-fit"
           icon={<ExternalLinkIcon />}
-          rel="noopener noreferrer"
         >
           {isPaidPlan ? 'Increase spending limit' : 'Upgrade to Pro'}
         </Button>
@@ -776,4 +796,16 @@ function hasApiKeySet(modelSelection: ModelSelection, apiKey?: Doc<'convexMember
     return true;
   }
   return false;
+}
+
+function maxSizeForModel(modelSelection: ModelSelection, maxSize: number) {
+  switch (modelSelection) {
+    case 'auto':
+      return maxSize;
+    case 'claude-3.5-sonnet':
+      return maxSize;
+    default:
+      // For non-anthropic models not yet using caching, use a lower message size limit.
+      return 8192;
+  }
 }

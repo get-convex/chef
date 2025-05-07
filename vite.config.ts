@@ -70,7 +70,7 @@ export default defineConfig((config) => {
         'jose', // discovered late during dev so causes a reload when optimizing
         'classnames', // fix for @convex-dev/design-system to work
 
-        // these are all used by @convex-dev/design-system/Combobox
+        // these are all used by @convex-dev/design-system/Combobox (also see knip.jsonc)
         'react-dom',
         'react-fast-compare',
         'warning',

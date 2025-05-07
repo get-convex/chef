@@ -4,10 +4,19 @@ import { getNamingConventionRule, tsFileExtensions } from '@blitz/eslint-plugin/
 import tailwindcss from 'eslint-plugin-tailwindcss';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import noGlobalFetchRule from './eslint-rules/no-global-fetch.js';
 
 export default [
   {
-    ignores: ['**/dist', '**/node_modules', '**/.wrangler', '**/bolt/build', '**/.history', 'template/**'],
+    ignores: [
+      '**/dist',
+      '**/node_modules',
+      '**/.wrangler',
+      '**/bolt/build',
+      '**/.history',
+      'template/**',
+      '**/*.bundled.*',
+    ],
   },
   ...blitzPlugin.configs.recommended(),
   {
@@ -131,6 +140,19 @@ export default [
           whitelist: ['sentry-mask'],
         },
       ],
+    },
+  },
+  {
+    files: ['app/lib/.server/llm/provider.ts', 'app/lib/.server/chat.ts'],
+    plugins: {
+      custom: {
+        rules: {
+          'no-global-fetch': noGlobalFetchRule,
+        },
+      },
+    },
+    rules: {
+      'custom/no-global-fetch': 'error',
     },
   },
 ];

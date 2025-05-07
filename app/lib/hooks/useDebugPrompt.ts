@@ -20,7 +20,7 @@ async function fetchPromptData(url: string): Promise<CoreMessage[]> {
   return JSON.parse(jsonString) as CoreMessage[];
 }
 
-function useAuthToken() {
+export function useAuthToken() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const convex = useConvex();
   useEffect(() => {

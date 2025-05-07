@@ -10,6 +10,10 @@ import { streamOutput } from '~/utils/process';
 import { Spinner } from '@ui/Spinner';
 import { CheckIcon, ExternalLinkIcon, RocketIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
+import { useMutation } from 'convex/react';
+import { api } from '@convex/_generated/api';
+import { useChatId } from '~/lib/stores/chatId';
+import { useConvexSessionId } from '~/lib/stores/sessionId';
 
 interface ErrorResponse {
   error: string;
@@ -28,6 +32,9 @@ export function DeployButton() {
 
   const convex = useStore(convexProjectStore);
   const currentCounter = useFileUpdateCounter();
+  const chatId = useChatId();
+  const sessionId = useConvexSessionId();
+  const recordDeploy = useMutation(api.deploy.recordDeploy);
 
   const addFilesToZip = async (container: WebContainer, zip: JSZip, basePath: string, currentPath: string = '') => {
     const fullPath = currentPath ? `${basePath}/${currentPath}` : basePath;
@@ -78,8 +85,14 @@ export function DeployButton() {
         throw new Error(errorData?.error ?? 'Deployment failed');
       }
 
+      const resp = await response.json();
+      if (resp.localDevWarning) {
+        toast.error(`${resp.localDevWarning}`);
+      }
+
       const updateCounter = getFileUpdateCounter();
       setStatus({ type: 'success', updateCounter });
+      await recordDeploy({ id: chatId, sessionId });
     } catch (error) {
       toast.error('Failed to deploy. Please try again.');
       console.error('Deployment error:', error);
@@ -151,7 +164,6 @@ export function DeployButton() {
         <Button
           href={`https://${convex.deploymentName}.convex.app`}
           target="_blank"
-          rel="noopener noreferrer"
           size="xs"
           icon={<ExternalLinkIcon />}
         >

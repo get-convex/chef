@@ -1,6 +1,5 @@
 import Cookies from 'js-cookie';
 import { useStore } from '@nanostores/react';
-import { SendButton } from './SendButton.client';
 import { messageInputStore } from '~/lib/stores/messageInput';
 import {
   memo,
@@ -18,6 +17,8 @@ import { ConvexConnection } from '~/components/convex/ConvexConnection';
 import { PROMPT_COOKIE_KEY, type ModelSelection } from '~/utils/constants';
 import { ModelSelector } from './ModelSelector';
 import { TeamSelector } from '~/components/convex/TeamSelector';
+import { ArrowRightIcon, ExclamationTriangleIcon, StopIcon } from '@radix-ui/react-icons';
+import { Tooltip } from '@ui/Tooltip';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useChefAuth } from './ChefAuthWrapper';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
@@ -26,6 +27,8 @@ import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Button } from '@ui/Button';
 import { Spinner } from '@ui/Spinner';
 import { debounce } from '~/utils/debounce';
+
+const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
 export const MessageInput = memo(function MessageInput({
   chatStarted,
@@ -61,7 +64,7 @@ export const MessageInput = memo(function MessageInput({
   }, [searchParams]);
 
   // Textarea auto-sizing
-  const TEXTAREA_MIN_HEIGHT = 76;
+  const TEXTAREA_MIN_HEIGHT = 100;
   const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -138,49 +141,74 @@ export const MessageInput = memo(function MessageInput({
   }, []);
 
   return (
-    <div className="z-prompt relative mx-auto w-full max-w-chat rounded-lg border bg-background-primary/75 backdrop-blur-md transition-all duration-200 has-[textarea:focus]:border-border-selected">
-      <div>
-        <textarea
-          ref={textareaRef}
+    <div className="relative z-20 mx-auto w-full max-w-chat rounded-xl shadow transition-all duration-200">
+      <div className="rounded-xl bg-background-primary/75 backdrop-blur-md">
+        <div
           className={classNames(
-            'w-full pl-4 pt-4 pr-16 pb-2 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
-            'focus:outline-none',
-            'disabled:opacity-50 disabled:cursor-not-allowed',
+            'pt-2 pr-1 rounded-t-xl transition-all',
+            'border has-[textarea:focus]:border-border-selected',
           )}
-          disabled={disabled}
-          onKeyDown={handleKeyDown}
-          value={input}
-          onChange={handleChange}
-          style={textareaStyle}
-          placeholder={chatStarted ? 'Request changes by sending another message…' : 'What app do you want to serve?'}
-          translate="no"
-        />
-        <SendButton
-          show={input.length > 0 || isStreaming || sendMessageInProgress}
-          isStreaming={isStreaming}
-          disabled={!selectedTeamSlug || chefAuthState.kind === 'loading' || sendMessageInProgress || disabled}
-          onClick={handleClickButton}
-          tip={
-            chefAuthState.kind === 'unauthenticated'
-              ? 'Please sign in to continue'
-              : !selectedTeamSlug
-                ? 'Please select a team to continue'
-                : undefined
-          }
-        />
-        <div className="flex items-center justify-end gap-4 px-4 pb-3 text-sm">
-          <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} />
-          <div className="grow" />
-          {input.length > 3 && <NewLineShortcut />}
-          {chatStarted && <ConvexConnection />}
-          {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
+        >
+          <textarea
+            ref={textareaRef}
+            className={classNames(
+              'w-full px-3 pt-1 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
+              'transition-all',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+              'scrollbar-thin scrollbar-thumb-macosScrollbar-thumb scrollbar-track-transparent',
+            )}
+            disabled={disabled}
+            onKeyDown={handleKeyDown}
+            value={input}
+            onChange={handleChange}
+            style={textareaStyle}
+            placeholder={chatStarted ? 'Request changes by sending another message…' : 'What app do you want to serve?'}
+            translate="no"
+            // Disable Grammarly
+            data-gramm="false"
+          />
+        </div>
+        <div
+          className={classNames(
+            'flex items-center gap-2 border rounded-b-xl border-t-0 bg-background-secondary/80 p-1.5 text-sm flex-wrap',
+          )}
+        >
+          <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} size="sm" />
           {!chatStarted && sessionId && (
             <TeamSelector
               description="Your project will be created in this Convex team"
               selectedTeamSlug={selectedTeamSlug}
               setSelectedTeamSlug={setSelectedTeamSlug}
+              size="sm"
             />
           )}
+          {chatStarted && <ConvexConnection />}
+          {input.length > 3 && input.length <= PROMPT_LENGTH_WARNING_THRESHOLD && <NewLineShortcut />}
+          {input.length > PROMPT_LENGTH_WARNING_THRESHOLD && <CharacterWarning />}
+          <div className="ml-auto flex items-center gap-2">
+            {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
+            <Button
+              disabled={
+                (!isStreaming && input.length === 0) ||
+                !selectedTeamSlug ||
+                chefAuthState.kind === 'loading' ||
+                sendMessageInProgress ||
+                disabled
+              }
+              tip={
+                chefAuthState.kind === 'unauthenticated'
+                  ? 'Please sign in to continue'
+                  : !selectedTeamSlug
+                    ? 'Please select a team to continue'
+                    : undefined
+              }
+              onClick={handleClickButton}
+              size="xs"
+              className="h-[1.625rem]"
+              aria-label={isStreaming ? 'Stop' : 'Send'}
+              icon={!isStreaming ? <ArrowRightIcon /> : <StopIcon />}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -195,6 +223,20 @@ const NewLineShortcut = memo(function NewLineShortcut() {
   );
 });
 
+const CharacterWarning = memo(function CharacterWarning() {
+  return (
+    <Tooltip
+      tip="Chef performs better with shorter prompts. Consider making your prompt more concise or breaking it into smaller chunks."
+      side="bottom"
+    >
+      <div className="flex cursor-help items-center text-xs text-content-warning">
+        <ExclamationTriangleIcon className="mr-1 size-4" />
+        Prompt exceeds {PROMPT_LENGTH_WARNING_THRESHOLD.toLocaleString()} characters
+      </div>
+    </Tooltip>
+  );
+});
+
 const SignInButton = memo(function SignInButton() {
   const [started, setStarted] = useState(false);
   const signIn = useCallback(() => {
@@ -202,10 +244,15 @@ const SignInButton = memo(function SignInButton() {
     openSignInWindow();
   }, [setStarted]);
   return (
-    <Button variant="neutral" onClick={signIn}>
+    <Button
+      variant="neutral"
+      onClick={signIn}
+      size="xs"
+      className="text-xs font-normal"
+      icon={!started ? <img className="size-4" src="/icons/Convex.svg" alt="Convex" /> : undefined}
+    >
       {!started && (
         <>
-          <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
           <span>Sign in</span>
         </>
       )}

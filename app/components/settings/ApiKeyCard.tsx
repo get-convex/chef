@@ -1,5 +1,5 @@
 import { useConvex } from 'convex/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
@@ -9,6 +9,8 @@ import { TextInput } from '@ui/TextInput';
 import { Checkbox } from '@ui/Checkbox';
 import { Tooltip } from '@ui/Tooltip';
 import { captureException } from '@sentry/remix';
+import { Spinner } from '@ui/Spinner';
+import { useDebounce } from '@uidotdev/usehooks';
 
 export function ApiKeyCard() {
   const convex = useConvex();
@@ -34,6 +36,30 @@ export function ApiKeyCard() {
   };
 
   const hasAnyKey = apiKey && (apiKey.value || apiKey.openai || apiKey.xai || apiKey.google);
+
+  const validateAnthropicApiKey = async (apiKey: string) => {
+    return await convex.action(api.apiKeys.validateAnthropicApiKey, {
+      apiKey,
+    });
+  };
+
+  const validateOpenaiApiKey = async (apiKey: string) => {
+    return await convex.action(api.apiKeys.validateOpenaiApiKey, {
+      apiKey,
+    });
+  };
+
+  const validateGoogleApiKey = async (apiKey: string) => {
+    return await convex.action(api.apiKeys.validateGoogleApiKey, {
+      apiKey,
+    });
+  };
+
+  const validateXaiApiKey = async (apiKey: string) => {
+    return await convex.action(api.apiKeys.validateXaiApiKey, {
+      apiKey,
+    });
+  };
 
   return (
     <div className="rounded-lg border bg-bolt-elements-background-depth-1 shadow-sm">
@@ -68,6 +94,7 @@ export function ApiKeyCard() {
             isLoading={apiKey === undefined}
             keyType="anthropic"
             value={apiKey?.value || ''}
+            onValidate={validateAnthropicApiKey}
           />
 
           <ApiKeyItem
@@ -85,6 +112,7 @@ export function ApiKeyCard() {
             isLoading={apiKey === undefined}
             keyType="google"
             value={apiKey?.google || ''}
+            onValidate={validateGoogleApiKey}
           />
 
           <ApiKeyItem
@@ -102,6 +130,7 @@ export function ApiKeyCard() {
             isLoading={apiKey === undefined}
             keyType="openai"
             value={apiKey?.openai || ''}
+            onValidate={validateOpenaiApiKey}
           />
 
           <ApiKeyItem
@@ -119,6 +148,7 @@ export function ApiKeyCard() {
             isLoading={apiKey === undefined}
             keyType="xai"
             value={apiKey?.xai || ''}
+            onValidate={validateXaiApiKey}
           />
         </div>
       </div>
@@ -128,30 +158,73 @@ export function ApiKeyCard() {
 
 type KeyType = 'anthropic' | 'google' | 'openai' | 'xai';
 
-function ApiKeyItem(props: {
+function ApiKeyItem({
+  label,
+  description,
+  isLoading,
+  keyType,
+  value,
+  onValidate,
+}: {
   label: string;
   description: React.ReactNode;
   isLoading: boolean;
   keyType: KeyType;
   value: string;
+  onValidate: (key: string) => Promise<boolean>;
 }) {
   const convex = useConvex();
   const [showKey, setShowKey] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newKeyValue, setNewKeyValue] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  if (props.isLoading) {
+  // Debounce key input for validation (300ms delay)
+  const debouncedKeyValue = useDebounce(newKeyValue, 300);
+
+  // Validation function that runs when the debounced value changes
+  useEffect(() => {
+    const validateKey = async () => {
+      // Skip validation for empty values
+      if (!debouncedKeyValue.trim()) {
+        setValidationError(null);
+        return;
+      }
+
+      setValidationError(null);
+
+      try {
+        const isValidResult = await onValidate(debouncedKeyValue);
+
+        if (!isValidResult) {
+          setValidationError(
+            `This API key appears to be invalid. Please check the instructions for generating an API key.`,
+          );
+        }
+      } catch (error) {
+        captureException(error);
+        setValidationError(`Error validating API key.`);
+      }
+    };
+
+    // Only run validation if there's actually something to validate
+    if (debouncedKeyValue.trim()) {
+      validateKey();
+    }
+  }, [debouncedKeyValue, convex, onValidate]);
+
+  if (isLoading) {
     return <div className="h-[78px] w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />;
   }
 
-  const hasKey = !!props.value;
+  const hasKey = !!value;
 
   const handleRemoveKey = async () => {
     try {
       setIsSaving(true);
 
-      switch (props.keyType) {
+      switch (keyType) {
         case 'anthropic':
           await convex.mutation(api.apiKeys.deleteAnthropicApiKeyForCurrentMember);
           toast.success('Anthropic API key removed', { id: 'anthropic-removed' });
@@ -171,25 +244,30 @@ function ApiKeyItem(props: {
       }
     } catch (error) {
       captureException(error);
-      toast.error(`Failed to remove ${props.keyType} API key`);
+      toast.error(`Failed to remove ${keyType} API key`);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleSaveKey = async () => {
+  const handleSaveKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     try {
       setIsSaving(true);
 
+      // Get the current API key data
+      const apiKey = await convex.query(api.apiKeys.apiKeyForCurrentMember);
+
       const apiKeyMutation = {
         preference: 'quotaExhausted' as 'always' | 'quotaExhausted',
-        value: undefined as string | undefined,
-        openai: undefined as string | undefined,
-        xai: undefined as string | undefined,
-        google: undefined as string | undefined,
+        value: apiKey?.value || undefined,
+        openai: apiKey?.openai || undefined,
+        xai: apiKey?.xai || undefined,
+        google: apiKey?.google || undefined,
       };
 
-      switch (props.keyType) {
+      switch (keyType) {
         case 'anthropic':
           apiKeyMutation.value = cleanApiKey(newKeyValue);
           break;
@@ -208,12 +286,13 @@ function ApiKeyItem(props: {
         apiKey: apiKeyMutation,
       });
 
-      toast.success(`${props.label} saved`, { id: props.keyType });
+      toast.success(`${label} saved`, { id: keyType });
       setIsAdding(false);
       setNewKeyValue('');
+      setValidationError(null);
     } catch (error) {
       captureException(error);
-      toast.error(`Failed to save ${props.keyType} API key`);
+      toast.error(`Failed to save ${keyType} API key`);
     } finally {
       setIsSaving(false);
     }
@@ -222,54 +301,73 @@ function ApiKeyItem(props: {
   const handleCancel = () => {
     setIsAdding(false);
     setNewKeyValue('');
+    setValidationError(null);
+  };
+
+  // Update setNewKeyValue to also clear validation errors when empty
+  const handleKeyValueChange = (e: any) => {
+    const value = e.target.value;
+    setNewKeyValue(value);
+    if (!value.trim()) {
+      setValidationError(null);
+    }
   };
 
   return (
     <div>
       <div className="mb-1.5">
-        <span className="font-medium text-content-primary">{props.label}</span>
+        <span className="font-medium text-content-primary">{label}</span>
       </div>
-      <div className="mb-2 text-xs text-content-secondary">{props.description}</div>
+      <div className="mb-2 text-xs text-content-secondary">{description}</div>
 
       {hasKey ? (
         <div className="flex items-center gap-2 py-1.5">
-          <span className="max-w-80 truncate font-mono" aria-label="API key value">
-            {showKey ? props.value : '•'.repeat(props.value.length)}
+          <span className="max-w-80 truncate font-mono text-sm" aria-label="API key value">
+            {showKey ? value : '•'.repeat(value.length)}
           </span>
           <Button
             onClick={() => setShowKey(!showKey)}
             icon={showKey ? <EyeNoneIcon /> : <EyeOpenIcon />}
+            aria-label={showKey ? 'Hide API Key' : 'Show API Key'}
             variant="neutral"
             inline
           />
           <Button variant="danger" onClick={handleRemoveKey} disabled={isSaving} icon={<TrashIcon />} inline />
         </div>
       ) : isAdding ? (
-        <div className="flex items-end gap-2">
-          <div className="w-80">
-            <TextInput
-              type={showKey ? 'text' : 'password'}
-              value={newKeyValue}
-              onChange={(e) => setNewKeyValue(e.target.value)}
-              placeholder={`Enter your ${props.label}`}
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-expect-error Unclear issue with typing of design system
-              action={(): void => {
-                setShowKey(!showKey);
-              }}
-              icon={showKey ? <EyeNoneIcon /> : <EyeOpenIcon />}
-            />
+        <form onSubmit={handleSaveKey} className="flex flex-col gap-1">
+          <div className="flex flex-col items-start gap-2">
+            <div className="-mt-1 w-80">
+              <TextInput
+                autoFocus
+                type={showKey ? 'text' : 'password'}
+                value={newKeyValue}
+                onChange={handleKeyValueChange}
+                placeholder={`Enter your ${label}`}
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error Unclear issue with typing of design system
+                action={(): void => {
+                  setShowKey(!showKey);
+                }}
+                Icon={() => {
+                  return showKey ? <EyeNoneIcon /> : <EyeOpenIcon />;
+                }}
+                error={newKeyValue.trim() && validationError ? validationError : undefined}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={isSaving || !newKeyValue.trim()} icon={isSaving && <Spinner />}>
+                Save
+              </Button>
+              <Button type="button" variant="neutral" onClick={handleCancel} disabled={isSaving}>
+                Cancel
+              </Button>
+            </div>
           </div>
-          <Button onClick={handleSaveKey} disabled={isSaving || !newKeyValue.trim()}>
-            {isSaving ? 'Saving...' : 'Save'}
-          </Button>
-          <Button variant="neutral" onClick={handleCancel} disabled={isSaving}>
-            Cancel
-          </Button>
-        </div>
+        </form>
       ) : (
         <Button variant="neutral" onClick={() => setIsAdding(true)} icon={<PlusIcon />}>
-          Add {props.label}
+          Add {label}
         </Button>
       )}
     </div>

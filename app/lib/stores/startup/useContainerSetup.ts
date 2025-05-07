@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { waitForConvexProjectConnection } from '~/lib/stores/convexProject';
 import type { ConvexProject } from 'chef-agent/types';
 import type { WebContainer } from '@webcontainer/api';
-import { queryEnvVariable, setEnvVariables } from 'chef-agent/convexEnvVariables';
+import { queryEnvVariable, setEnvVariablesWithRetries } from 'chef-agent/convexEnvVariables';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { initializeConvexAuth } from 'chef-agent/convexAuth';
@@ -23,7 +23,7 @@ import { chatSyncState } from '~/lib/stores/startup/history';
 import { FILE_EVENTS_DEBOUNCE_MS } from '~/lib/stores/files';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 
-const TEMPLATE_URL = 'template-snapshot-fd51424c.bin';
+const TEMPLATE_URL = '/template-snapshot-99a242ca.bin';
 
 export function useNewChatContainerSetup() {
   const convex = useConvex();
@@ -154,7 +154,7 @@ async function setupOpenAIToken(convex: ConvexReactClient, project: ConvexProjec
   }
   const token = await convex.mutation(api.openaiProxy.issueOpenAIToken);
   if (token) {
-    await setEnvVariables(project, {
+    await setEnvVariablesWithRetries(project, {
       CONVEX_OPENAI_API_KEY: token,
       CONVEX_OPENAI_BASE_URL: getConvexSiteUrl() + '/openai-proxy',
     });
@@ -168,7 +168,7 @@ async function setupResendToken(convex: ConvexReactClient, project: ConvexProjec
   }
   const token = await convex.mutation(api.resendProxy.issueResendToken);
   if (token) {
-    await setEnvVariables(project, {
+    await setEnvVariablesWithRetries(project, {
       CONVEX_RESEND_API_KEY: token,
       RESEND_BASE_URL: getConvexSiteUrl() + '/resend-proxy',
     });

@@ -6,6 +6,7 @@ export type ConvexTeam = {
   id: string;
   name: string;
   slug: string;
+  referralCode: string;
 };
 
 export const convexTeamsStore = atom<ConvexTeam[] | null>(null);
@@ -25,6 +26,15 @@ export function setSelectedTeamSlug(teamSlug: string | null) {
 export function useSelectedTeamSlug(): string | null {
   const selectedTeamSlug = useStore(selectedTeamSlugStore);
   return selectedTeamSlug;
+}
+
+export function useSelectedTeam(): ConvexTeam | null {
+  const teams = useStore(convexTeamsStore);
+  const slug = useSelectedTeamSlug();
+  if (teams === null || slug === null) {
+    return null;
+  }
+  return teams.find((t) => t.slug === slug) || null;
 }
 
 export async function waitForSelectedTeamSlug(caller?: string): Promise<string> {

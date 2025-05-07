@@ -45,7 +45,7 @@ export function HistoryItem({ item, handleDeleteClick }: HistoryItemProps) {
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
           />
-          <Button type="submit" variant="neutral" icon={<CheckIcon />} size="xs" inline onMouseDown={handleSubmit} />
+          <Button type="submit" variant="neutral" icon={<CheckIcon />} size="xs" inline onClick={handleSubmit} />
         </form>
       ) : (
         <a href={`/chat/${item.urlId ?? item.initialId}`} className="relative flex w-full truncate">

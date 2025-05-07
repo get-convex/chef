@@ -1,5 +1,6 @@
 import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
 import { type ProviderType, type Usage, type UsageAnnotation, parseAnnotations } from '~/lib/common/annotations';
+import { captureMessage } from '@sentry/remix';
 
 export function usageFromGeneration(generation: {
   usage: LanguageModelUsage;
@@ -94,6 +95,23 @@ function addUsage(totalUsage: Usage, payload: UsageAnnotation) {
   totalUsage.xaiCachedPromptTokens += payload.providerMetadata?.xai?.cachedPromptTokens ?? 0;
 }
 
+export type ChefTokenBreakdown = {
+  completionTokens: {
+    anthropic: number;
+    openai: number;
+    xai: number;
+    google: number;
+    bedrock: number;
+  };
+  promptTokens: {
+    anthropic: { uncached: number; cached: number };
+    openai: { uncached: number; cached: number };
+    xai: { uncached: number; cached: number };
+    google: { uncached: number; cached: number };
+    bedrock: { uncached: number; cached: number };
+  };
+};
+
 // TODO this these wrong
 // Based on how the final generation came from (which may not be the provided used for the other generations came from)
 // https://www.notion.so/convex-dev/Chef-Pricing-1cfb57ff32ab80f5aa2ecf3420523e2f
@@ -105,6 +123,7 @@ export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) 
       openai: 0,
       xai: 0,
       google: 0,
+      bedrock: 0,
     },
     promptTokens: {
       anthropic: {
@@ -123,13 +142,16 @@ export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) 
         uncached: 0,
         cached: 0,
       },
+      bedrock: {
+        uncached: 0,
+        cached: 0,
+      },
     },
   };
   if (provider === 'Anthropic') {
     const anthropicCompletionTokens = totalUsage.completionTokens * 200;
     chefTokens += anthropicCompletionTokens;
     breakdown.completionTokens.anthropic = anthropicCompletionTokens;
-
     const anthropicPromptTokens = totalUsage.promptTokens * 40;
     chefTokens += anthropicPromptTokens;
     breakdown.promptTokens.anthropic.uncached = anthropicPromptTokens;
@@ -139,6 +161,13 @@ export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) 
     const cacheReadInputTokens = totalUsage.anthropicCacheReadInputTokens * 3;
     chefTokens += cacheReadInputTokens;
     breakdown.promptTokens.anthropic.cached += cacheReadInputTokens;
+  } else if (provider === 'Bedrock') {
+    const bedrockCompletionTokens = totalUsage.completionTokens * 200;
+    chefTokens += bedrockCompletionTokens;
+    breakdown.completionTokens.bedrock = bedrockCompletionTokens;
+    const bedrockPromptTokens = totalUsage.promptTokens * 40;
+    chefTokens += bedrockPromptTokens;
+    breakdown.promptTokens.bedrock.uncached = bedrockPromptTokens;
   } else if (provider === 'OpenAI') {
     const openaiCompletionTokens = totalUsage.completionTokens * 100;
     chefTokens += openaiCompletionTokens;
@@ -150,7 +179,7 @@ export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) 
     chefTokens += openaiUncachedPromptTokens;
     breakdown.promptTokens.openai.uncached = openaiUncachedPromptTokens;
   } else if (provider === 'XAI') {
-    // TODO: This is a guess. Billing like openai
+    // TODO: This is a guess. Billing like anthropic
     const xaiCompletionTokens = totalUsage.completionTokens * 200;
     chefTokens += xaiCompletionTokens;
     breakdown.completionTokens.xai = xaiCompletionTokens;
@@ -168,7 +197,12 @@ export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) 
     breakdown.promptTokens.google.uncached = googlePromptTokens;
     // TODO: Implement Google billing for the prompt tokens that are cached. Google doesn't offer caching yet.
   } else {
-    console.error('WARNING: Unknown provider. Not recording usage. Giving away for free.');
+    captureMessage('WARNING: Unknown provider. Not recording usage. Giving away for free.', {
+      level: 'error',
+      tags: {
+        provider,
+      },
+    });
   }
 
   return {

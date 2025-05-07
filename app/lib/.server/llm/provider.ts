@@ -1,4 +1,4 @@
-import type { LanguageModelV1, ProviderMetadata } from 'ai';
+import type { LanguageModelV1 } from 'ai';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
@@ -7,14 +7,13 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { captureException } from '@sentry/remix';
 import { logger } from 'chef-agent/utils/logger';
-import { GENERAL_SYSTEM_PROMPT_PRELUDE, ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
 import type { ProviderType } from '~/lib/common/annotations';
+import { getEnv } from '~/lib/.server/env';
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
-import { fetch as undiciFetch } from 'undici';
-import { getEnv } from '~/lib/.server/env';
+import { fetch } from '~/lib/.server/fetch';
+import { GENERAL_SYSTEM_PROMPT_PRELUDE, ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
 
-type Fetch = typeof fetch;
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
 
 export type ModelProvider = Exclude<ProviderType, 'Unknown'>;
@@ -28,7 +27,10 @@ type Provider = {
   };
 };
 
-export function modelForProvider(provider: ModelProvider) {
+export function modelForProvider(provider: ModelProvider, modelChoice: string | undefined) {
+  if (modelChoice) {
+    return modelChoice;
+  }
   switch (provider) {
     case 'Anthropic':
       return getEnv('ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
@@ -47,16 +49,17 @@ export function modelForProvider(provider: ModelProvider) {
   }
 }
 
-export function getProvider(userApiKey: string | undefined, modelProvider: ModelProvider): Provider {
+export function getProvider(
+  userApiKey: string | undefined,
+  modelProvider: ModelProvider,
+  modelChoice: string | undefined,
+): Provider {
   let model: string;
   let provider: Provider;
 
-  // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
-  const fetch = undiciFetch as unknown as Fetch;
-
   switch (modelProvider) {
     case 'Google': {
-      model = modelForProvider(modelProvider);
+      model = modelForProvider(modelProvider, modelChoice);
       const google = createGoogleGenerativeAI({
         apiKey: userApiKey || getEnv('GOOGLE_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
@@ -68,7 +71,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'XAI': {
-      model = getEnv('XAI_MODEL') || 'grok-3-mini';
+      model = modelForProvider(modelProvider, modelChoice);
       const xai = createXai({
         apiKey: userApiKey || getEnv('XAI_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('XAI') : fetch,
@@ -85,7 +88,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'OpenAI': {
-      model = modelForProvider(modelProvider);
+      model = modelForProvider(modelProvider, modelChoice);
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv('OPENAI_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
@@ -99,7 +102,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'Bedrock': {
-      model = modelForProvider(modelProvider);
+      model = modelForProvider(modelProvider, modelChoice);
       let region = getEnv('AWS_REGION');
       if (!region || !ALLOWED_AWS_REGIONS.includes(region)) {
         region = 'us-west-2';
@@ -119,7 +122,7 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
       break;
     }
     case 'Anthropic': {
-      model = modelForProvider(modelProvider);
+      model = modelForProvider(modelProvider, modelChoice);
       // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
       const rateLimitAwareFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -189,11 +192,9 @@ export function getProvider(userApiKey: string | undefined, modelProvider: Model
 }
 
 const userKeyApiFetch = (provider: ModelProvider) => {
-  // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
-  const fetch = undiciFetch as unknown as Fetch;
-
   return async (input: RequestInfo | URL, init?: RequestInit) => {
-    const result = await fetch(input, init);
+    const requestInit = provider === 'Anthropic' ? anthropicInjectCacheControl(init) : init;
+    const result = await fetch(input, requestInit);
     if (result.status === 401) {
       const text = await result.text();
       throw new Error(JSON.stringify({ error: 'Invalid API key', details: text }));
@@ -247,8 +248,6 @@ const userKeyApiFetch = (provider: ModelProvider) => {
 //
 // tom, 2025-04-25: This is still an outstanding bug
 // https://github.com/vercel/ai/issues/5942
-// I've made this a little more general: only cache if the first
-// or second element starts with GENERAL_SYSTEM_PROMPT_PRELUDE.
 function anthropicInjectCacheControl(options?: RequestInit) {
   const start = Date.now();
   if (!options) {
@@ -271,39 +270,24 @@ function anthropicInjectCacheControl(options?: RequestInit) {
 
   const body = JSON.parse(options.body);
 
-  for (let i = 0; i < body.system.length; i++) {
-    if (body.system[i].text === ROLE_SYSTEM_PROMPT) {
-      continue;
-    }
-    if (body.system[i].text.startsWith(GENERAL_SYSTEM_PROMPT_PRELUDE)) {
-      // Inject the cache control header after the constant prompt, but leave
-      // the dynamic system prompts uncached.
-      body.system[i].cache_control = { type: 'ephemeral' };
-      break;
-    }
-    break;
+  if (body.system[0].text !== ROLE_SYSTEM_PROMPT) {
+    throw new Error('First system message must be the role system prompt');
   }
+  if (!body.system[1].text.startsWith(GENERAL_SYSTEM_PROMPT_PRELUDE)) {
+    throw new Error('Second system message must be the general system prompt prelude');
+  }
+  // Cache system prompt.
+  body.system[1].cache_control = { type: 'ephemeral' };
+  // Cache relevant files in system messages that are the same for all LLM requests after a user message.
+  body.system[body.system.length - 1].cache_control = { type: 'ephemeral' };
+
+  // Cache all messages.
+  const lastMessage = body.messages[body.messages.length - 1];
+  const lastMessagePartIndex = lastMessage.content.length - 1;
+  lastMessage.content[lastMessagePartIndex].cache_control = { type: 'ephemeral' };
+  body.messages[body.messages.length - 1].content[lastMessagePartIndex].cache_control = { type: 'ephemeral' };
 
   const newBody = JSON.stringify(body);
   console.log(`Injected system messages in ${Date.now() - start}ms`);
   return { ...options, body: newBody };
-}
-
-export function getProviderType(providerMetadata?: ProviderMetadata) {
-  if (!providerMetadata) {
-    return 'Unknown';
-  }
-  if (providerMetadata.anthropic) {
-    return 'Anthropic';
-  }
-  if (providerMetadata.openai) {
-    return 'OpenAI';
-  }
-  if (providerMetadata.xai) {
-    return 'XAI';
-  }
-  if (providerMetadata.google) {
-    return 'Google';
-  }
-  return 'Unknown';
 }

@@ -27,8 +27,13 @@ export function ConvexConnection() {
 
   return (
     <div className="relative">
-      <Button variant="neutral" onClick={() => setIsOpen(true)} className="font-normal">
-        <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+      <Button
+        variant="neutral"
+        onClick={() => setIsOpen(true)}
+        size="xs"
+        className="text-xs font-normal"
+        icon={<img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />}
+      >
         <ConnectionStatus projectInfo={projectInfo} />
       </Button>
 
@@ -137,7 +142,7 @@ function ConnectionStatus({ projectInfo }: { projectInfo: ProjectInfo | undefine
     case 'failed':
       return <span>Failed to connect</span>;
     case 'connected':
-      return <span className="max-w-32 truncate">{`${projectInfo.projectSlug}`}</span>;
+      return <span className="max-w-24 truncate">{`${projectInfo.projectSlug}`}</span>;
     case 'connecting':
       return <span>Connecting…</span>;
     default: {

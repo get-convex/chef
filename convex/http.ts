@@ -5,7 +5,6 @@ import type { Id } from "./_generated/dataModel";
 import { ConvexError } from "convex/values";
 import { openaiProxy } from "./openaiProxy";
 import { corsRouter } from "convex-helpers/server/cors";
-import { compressMessages } from "./compressMessages";
 import { resendProxy } from "./resendProxy";
 
 const http = httpRouter();
@@ -94,42 +93,20 @@ httpWithCors.route({
       sessionId,
       chatId,
     });
-    if (storageInfo) {
-      if (!storageInfo.storageId) {
-        return new Response(null, {
-          status: 204,
-        });
-      }
-      const blob = await ctx.storage.get(storageInfo.storageId);
-      return new Response(blob, {
-        status: 200,
-      });
-    } else {
-      const messages = await ctx.runQuery(internal.messages.getInitialMessagesInternal, {
-        sessionId,
-        id: chatId,
-      });
-      if (messages.length === 0) {
-        // No content
-        return new Response(null, {
-          status: 204,
-        });
-      }
-      const compressed = await compressMessages(messages);
-      const blob = new Blob([compressed]);
-      const storageId = await ctx.storage.store(blob);
-      await ctx.runMutation(internal.messages.handleStorageStateMigration, {
-        sessionId,
-        chatId,
-        storageId,
-        lastMessageRank: messages.length - 1,
-        partIndex: (messages.at(-1)?.parts?.length ?? 0) - 1,
-      });
-
-      return new Response(blob, {
-        status: 200,
+    if (!storageInfo) {
+      return new Response(`Chat not found: ${chatId}`, {
+        status: 404,
       });
     }
+    if (!storageInfo.storageId) {
+      return new Response(null, {
+        status: 204,
+      });
+    }
+    const blob = await ctx.storage.get(storageInfo.storageId);
+    return new Response(blob, {
+      status: 200,
+    });
   }),
 });
 
@@ -279,6 +256,51 @@ httpWithCors.route({
       headers: {
         "Content-Type": "application/json",
       },
+    });
+  }),
+});
+
+httpWithCors.route({
+  path: "/upload_thumbnail",
+  method: "POST",
+  handler: httpActionWithErrorHandling(async (ctx, request) => {
+    const url = new URL(request.url);
+    const sessionId = url.searchParams.get("sessionId");
+    const urlId = url.searchParams.get("chatId");
+
+    if (!sessionId || !urlId) {
+      return new Response("Missing sessionId or chatId", { status: 400 });
+    }
+
+    const imageBlob = await request.blob();
+
+    // Validate content type
+    const contentType = imageBlob.type;
+    if (!contentType.startsWith("image/")) {
+      return new Response(JSON.stringify({ error: "Invalid file type. Only images are allowed." }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024;
+    if (imageBlob.size > MAX_THUMBNAIL_SIZE) {
+      return new Response(JSON.stringify({ error: "Thumbnail image exceeds maximum size of 5MB" }), {
+        status: 413, // Payload Too Large
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const storageId = await ctx.storage.store(imageBlob);
+
+    await ctx.runMutation(internal.socialShare.saveThumbnail, {
+      sessionId: sessionId as Id<"sessions">,
+      urlId,
+      storageId,
+    });
+
+    return new Response(JSON.stringify({ storageId }), {
+      headers: { "Content-Type": "application/json" },
     });
   }),
 });
