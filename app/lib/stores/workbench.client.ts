@@ -214,6 +214,17 @@ export class WorkbenchStore {
     this.#editorStore.setDocuments(files);
 
     if (this.#filesStore.filesCount > 0 && this.currentDocument.get() === undefined) {
+      // Prefer selecting _generated/api.d.ts initially because whatever file
+      // we choose will have bad styling forever (because of a bug we ought to fix
+      // but is taking too long to find) since you shouldn't be modifying this file anyway.
+      // It would be beter to fix the bug.
+      const packageJson = Object.entries(files).filter(
+        ([filePath, dirent]) => filePath.includes('_generated/api.d.ts') && dirent?.type === 'file',
+      );
+      if (packageJson.length === 1) {
+        this.setSelectedFile(packageJson[0][0] as AbsolutePath);
+        return;
+      }
       // we find the first file and select it
       for (const [filePath, dirent] of Object.entries(files)) {
         if (dirent?.type === 'file') {
