@@ -7,8 +7,7 @@ import { HandThumbUpIcon, KeyIcon } from '@heroicons/react/24/outline';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import type { Doc } from '@convex/_generated/dataModel';
-import { useStore } from '@nanostores/react';
-import { convexTeamsStore } from '~/lib/stores/convexTeams';
+import { captureMessage } from '@sentry/remix';
 
 export type ModelProvider = 'openai' | 'google' | 'xai' | 'anthropic' | 'auto';
 
@@ -110,14 +109,11 @@ export const ModelSelector = React.memo(function ModelSelector({
   setModelSelection,
   size = 'md',
 }: ModelSelectorProps) {
-  const teams = useStore(convexTeamsStore);
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
-  if (!teams) {
-    return null;
-  }
   const selectedModel = models[modelSelection];
   if (!selectedModel) {
-    throw new Error(`Model ${modelSelection} not found`);
+    captureMessage(`Model ${modelSelection} not found`);
+    setModelSelection('auto');
   }
 
   return (
@@ -127,7 +123,6 @@ export const ModelSelector = React.memo(function ModelSelector({
       options={Object.entries(models).map(([value, model]) => ({
         label: model.provider + ' ' + model.name,
         value: value as ModelSelection,
-        disabled: model.requireKey && (!apiKey || !keyForProvider(apiKey, model.provider)),
       }))}
       buttonClasses="w-fit"
       size={size}
@@ -144,43 +139,39 @@ export const ModelSelector = React.memo(function ModelSelector({
         if (!model) {
           return null;
         }
-        const canUseModel = !(model.requireKey && (!apiKey || !keyForProvider(apiKey, model.provider)));
+        const prefersAlwaysUseApiKey = apiKey?.preference === 'always';
+        const key = apiKey ? keyForProvider(apiKey, model.provider) : undefined;
+        const canUseModel = !(model.requireKey && !key) && !(prefersAlwaysUseApiKey && !key);
         return (
-          <Tooltip
-            className="ml-auto"
-            side="right"
-            wrapsButton
-            tip={
-              canUseModel ? undefined : (
-                <div>
-                  This model is only usable with Chef if you provider your own API key.{' '}
-                  <a href="/settings" className="text-content-link hover:underline" target="_blank" rel="noreferrer">
-                    Set an API key
-                  </a>
-                </div>
-              )
-            }
-          >
-            <div className={'flex items-center gap-2'}>
-              {providerToIcon[model.provider]}
-              <div className="max-w-48 truncate">{model?.name}</div>
+          <div className={'flex items-center gap-2'}>
+            {providerToIcon[model.provider]}
+            <div className="max-w-48 truncate">{model?.name}</div>
 
-              {!inButton && (
-                <div className="ml-auto flex gap-0.5">
-                  {model.recommended && (
-                    <Tooltip
-                      tip="This model is recommended for most use cases. Other models may be more expensive or less accurate."
-                      side="right"
-                    >
-                      <HandThumbUpIcon className="size-4 text-content-secondary" />
-                    </Tooltip>
-                  )}
-
-                  {!canUseModel && <KeyIcon className="size-4 text-content-secondary" />}
-                </div>
-              )}
-            </div>
-          </Tooltip>
+            {!inButton && (
+              <div className="ml-auto flex gap-1">
+                {model.recommended && (
+                  <Tooltip
+                    tip="This model is recommended for most use cases. Other models may be more expensive or less accurate."
+                    side="right"
+                  >
+                    <HandThumbUpIcon className="size-4 text-content-secondary" />
+                  </Tooltip>
+                )}
+                {!canUseModel && (
+                  <Tooltip
+                    tip={
+                      model.requireKey
+                        ? 'You must set an API key for the relevant provider to use this model.'
+                        : 'Your preferences require an API key to be set to use this model. You may change your preferences or set an API key.'
+                    }
+                    side="right"
+                  >
+                    <KeyIcon className="size-4 text-content-secondary" />
+                  </Tooltip>
+                )}
+              </div>
+            )}
+          </div>
         );
       }}
     />

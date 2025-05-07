@@ -43,7 +43,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
 
   return (
     <header className={'flex h-[var(--header-height)] items-center overflow-x-auto overflow-y-hidden border-b p-5'}>
-      <div className="z-logo flex cursor-pointer items-center gap-2 text-content-primary">
+      <div className="z-40 flex cursor-pointer items-center gap-2 text-content-primary">
         {showSidebarIcon && <HamburgerMenuIcon className="shrink-0" />}
         <a href="/">
           {/* The logo is shifted up slightly, to visually align it with the hamburger icon. */}

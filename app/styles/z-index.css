@@ -2,10 +2,6 @@
   --z-index-max: 999;
 }
 
-.z-logo {
-  z-index: calc(var(--z-index-max) - 1);
-}
-
 .z-menu {
   z-index: calc(var(--z-index-max) - 1);
 }

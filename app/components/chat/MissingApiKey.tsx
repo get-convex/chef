@@ -6,29 +6,21 @@ import { toast } from 'sonner';
 import { EyeNoneIcon, EyeOpenIcon } from '@radix-ui/react-icons';
 import { api } from '@convex/_generated/api';
 import { captureException } from '@sentry/remix';
-import type { ModelSelection } from '~/utils/constants';
-import { ModelSelector, type ModelProvider, displayModelProviderName } from './ModelSelector';
+import { type ModelProvider, displayModelProviderName } from './ModelSelector';
 import { KeyIcon } from '@heroicons/react/24/outline';
 import type { Doc } from '@convex/_generated/dataModel';
+import { ConfirmationDialog } from '@ui/ConfirmationDialog';
 
 export interface MissingApiKeyProps {
   provider: ModelProvider;
   resetDisableChatMessage: () => void;
-  modelSelection: ModelSelection;
-  setModelSelection: (model: ModelSelection) => Promise<void>;
 }
 
-export function MissingApiKey({
-  provider,
-  resetDisableChatMessage,
-  modelSelection,
-  setModelSelection,
-}: MissingApiKeyProps) {
+export function MissingApiKey({ provider, resetDisableChatMessage }: MissingApiKeyProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newKeyValue, setNewKeyValue] = useState('');
   const [showKey, setShowKey] = useState(false);
-  const [isChangingModel, setIsChangingModel] = useState(false);
   const convex = useConvex();
 
   const handleSaveKey = async () => {
@@ -84,6 +76,8 @@ export function MissingApiKey({
     }
   };
 
+  const [isChangingPreference, setIsChangingPreference] = useState(false);
+
   const handleUseConvexTokens = async () => {
     try {
       setIsSaving(true);
@@ -117,26 +111,10 @@ export function MissingApiKey({
     setNewKeyValue('');
   };
 
-  const handleModelChange = async (model: ModelSelection) => {
-    try {
-      setIsChangingModel(true);
-      await setModelSelection(model).catch((error) => {
-        console.error('Error changing model selection:', error);
-        // Still continue with setting isChangingModel to false
-      });
-      // The message will be cleared by the `handleModelSelectionChange` if appropriate
-    } catch (error) {
-      captureException(error as Error);
-      toast.error(`Failed to switch model`);
-    } finally {
-      setIsChangingModel(false);
-    }
-  };
-
   return (
     <>
-      <div className="flex flex-col gap-2">
-        <h3>Choose an option to continue</h3>
+      <div className="flex flex-col gap-1">
+        <h4>Choose an option to continue</h4>
         <p className="max-w-prose text-pretty">
           You&apos;ve chosen to always use your own API keys, but haven&apos;t set a{' '}
           <span className="font-semibold">{displayModelProviderName(provider)}</span> API key yet. You may choose to use
@@ -145,17 +123,30 @@ export function MissingApiKey({
         </p>
       </div>
 
+      {isChangingPreference && (
+        <ConfirmationDialog
+          onClose={() => setIsChangingPreference(false)}
+          onConfirm={handleUseConvexTokens}
+          variant="primary"
+          confirmText="Confirm"
+          dialogTitle={'Change Chef token preference'}
+          dialogBody={
+            'Confirming will disable your preference to always use your own API keys. Instead, Chef will prefer using Chef tokens when built-in quota is available.'
+          }
+        />
+      )}
+
       {!isAdding ? (
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2">
-            <ModelSelector modelSelection={modelSelection} setModelSelection={handleModelChange} />
-            {isChangingModel && <span className="text-sm text-content-secondary">Switching...</span>}
-          </div>
+          <Button className="w-fit" onClick={() => setIsAdding(true)} icon={<KeyIcon className="size-4" />}>
+            Add {displayModelProviderName(provider)} API key
+          </Button>
           <Button
             variant="neutral"
             className="w-fit"
-            onClick={handleUseConvexTokens}
+            onClick={() => setIsChangingPreference(true)}
             disabled={isSaving}
+            loading={isSaving}
             icon={
               <svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
@@ -170,10 +161,7 @@ export function MissingApiKey({
               </svg>
             }
           >
-            {isSaving ? 'Updating...' : 'Use Chef tokens'}
-          </Button>
-          <Button className="w-fit" onClick={() => setIsAdding(true)} icon={<KeyIcon className="size-4" />}>
-            Add {displayModelProviderName(provider)} API key
+            Use Chef Tokens instead
           </Button>
         </div>
       ) : (
@@ -182,6 +170,8 @@ export function MissingApiKey({
             <TextInput
               autoFocus
               type={showKey ? 'text' : 'password'}
+              // TODO: Remove when gap in design system is fixed
+              className="h-[34px]"
               value={newKeyValue}
               onChange={(e) => setNewKeyValue(e.target.value)}
               placeholder={`Enter your ${displayModelProviderName(provider)} API key`}
@@ -193,7 +183,7 @@ export function MissingApiKey({
               icon={showKey ? <EyeNoneIcon /> : <EyeOpenIcon />}
             />
           </div>
-          <Button onClick={handleSaveKey} disabled={isSaving || !newKeyValue.trim()}>
+          <Button onClick={handleSaveKey} disabled={isSaving || !newKeyValue.trim()} loading={isSaving}>
             {isSaving ? 'Saving...' : 'Save'}
           </Button>
           <Button variant="neutral" onClick={handleCancel} disabled={isSaving}>

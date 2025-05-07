@@ -161,12 +161,12 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
               <AnimatePresence>
                 <div className="actions">
                   <div className={classNames('flex text-sm gap-3')}>
-                    <div className="flex w-full items-center gap-1.5">
-                      <div>{icon}</div>
+                    <div className="flex w-full items-start gap-1.5">
+                      <div className="mt-1">{icon}</div>
                       {message}
                       <div className="grow" />
                       {streamStatus === 'error' && (
-                        <Button type="button" onClick={props.resendMessage} icon={<ResetIcon />}>
+                        <Button type="button" className="mt-auto" onClick={props.resendMessage} icon={<ResetIcon />}>
                           Resend
                         </Button>
                       )}

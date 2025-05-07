@@ -22,6 +22,7 @@ import { SuggestionButtons } from './SuggestionButtons';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 import { chooseExperience } from '~/utils/experienceChooser';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface BaseChatProps {
   // Refs
@@ -184,27 +185,35 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       resendMessage={resendMessage}
                     />
                   )}
-                  {disableChatMessage ? (
-                    <Sheet
-                      className="flex min-h-full w-full animate-fadeInFromLoading flex-col gap-6 rounded-lg bg-background-secondary p-2 pl-4"
-                      padding={false}
-                    >
-                      {disableChatMessage}
-                    </Sheet>
-                  ) : (
-                    chatEnabled && (
-                      <MessageInput
-                        chatStarted={chatStarted}
-                        isStreaming={isStreaming}
-                        sendMessageInProgress={sendMessageInProgress}
-                        disabled={disableChatMessage !== null || maintenanceMode}
-                        modelSelection={modelSelection}
-                        setModelSelection={setModelSelection}
-                        onStop={onStop}
-                        onSend={onSend}
-                      />
-                    )
+                  {chatEnabled && (
+                    <MessageInput
+                      chatStarted={chatStarted}
+                      isStreaming={isStreaming}
+                      sendMessageInProgress={sendMessageInProgress}
+                      disabled={disableChatMessage !== null || maintenanceMode}
+                      modelSelection={modelSelection}
+                      setModelSelection={setModelSelection}
+                      onStop={onStop}
+                      onSend={onSend}
+                    />
                   )}
+                  <AnimatePresence>
+                    {disableChatMessage && (
+                      <motion.div
+                        initial={{ translateY: '-100%', opacity: 0 }}
+                        animate={{ translateY: '0%', opacity: 1 }}
+                        exit={{ translateY: '-100%', opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        <Sheet
+                          className="-mt-2 flex w-full animate-fadeInFromLoading flex-col gap-3 rounded-xl rounded-t-none bg-util-accent/10 p-2 pl-4 pt-4 shadow backdrop-blur-lg"
+                          padding={false}
+                        >
+                          {disableChatMessage}
+                        </Sheet>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 <CompatibilityWarnings setEnabled={setChatEnabled} />
               </div>

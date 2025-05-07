@@ -40,6 +40,8 @@ import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 import { MissingApiKey } from './MissingApiKey';
 import type { ModelProvider } from '~/components/chat/ModelSelector';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
+import { useLocalStorage } from '@uidotdev/usehooks';
+import { KeyIcon } from '@heroicons/react/24/outline';
 
 const logger = createScopedLogger('Chat');
 
@@ -142,7 +144,7 @@ export const Chat = memo(
 
     const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
 
-    const [modelSelection, setModelSelection] = useState<ModelSelection>('auto');
+    const [modelSelection, setModelSelection] = useLocalStorage<ModelSelection>('modelSelection', 'auto');
     const terminalInitializationOptions = useMemo(
       () => ({
         isReload,
@@ -601,8 +603,6 @@ export const Chat = memo(
             <MissingApiKey
               provider={disableChatMessage.provider}
               resetDisableChatMessage={() => setDisableChatMessage(null)}
-              modelSelection={modelSelection}
-              setModelSelection={handleModelSelectionChange}
             />
           ) : null
         }
@@ -685,8 +685,18 @@ export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMess
   const selectedTeamSlug = useSelectedTeamSlug();
   return (
     <div className="flex w-full flex-col gap-4">
-      <h3>You&apos;ve used all the tokens included with your free plan.</h3>
+      <h4>You&apos;ve used all the tokens included with your free plan.</h4>
       <div className="flex flex-wrap items-center gap-2">
+        <TeamSelector
+          selectedTeamSlug={selectedTeamSlug}
+          setSelectedTeamSlug={(slug) => {
+            setSelectedTeamSlug(slug);
+            resetDisableChatMessage();
+          }}
+        />
+        <Button href="/settings" icon={<KeyIcon className="size-4" />} variant="neutral">
+          Add your own API key
+        </Button>
         <Button
           href={
             selectedTeamSlug
@@ -697,24 +707,7 @@ export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMess
           icon={<ExternalLinkIcon />}
         >
           Upgrade to a paid plan
-        </Button>{' '}
-        <span>
-          or{' '}
-          <a href="/settings" target="_blank" rel="noopener noreferrer" className="text-content-link hover:underline">
-            add your own API key
-          </a>{' '}
-          to continue.
-        </span>
-      </div>
-      <div className="ml-auto">
-        <TeamSelector
-          description="Your project will be created in this Convex team"
-          selectedTeamSlug={selectedTeamSlug}
-          setSelectedTeamSlug={(slug) => {
-            setSelectedTeamSlug(slug);
-            resetDisableChatMessage();
-          }}
-        />
+        </Button>
       </div>
     </div>
   );
@@ -736,6 +729,13 @@ export function DisabledText({
           : "You've exceeded the free plan limits, so your deployments have been disabled."}
       </h3>
       <div className="flex flex-wrap items-center gap-2">
+        <TeamSelector
+          selectedTeamSlug={selectedTeamSlug}
+          setSelectedTeamSlug={(slug) => {
+            setSelectedTeamSlug(slug);
+            resetDisableChatMessage();
+          }}
+        />
         <Button
           href={
             selectedTeamSlug
@@ -748,16 +748,6 @@ export function DisabledText({
           {isPaidPlan ? 'Increase spending limit' : 'Upgrade to Pro'}
         </Button>
         {isPaidPlan && <span>or wait until limits reset</span>}
-      </div>
-      <div className="ml-auto">
-        <TeamSelector
-          description="Your project will be created in this Convex team"
-          selectedTeamSlug={selectedTeamSlug}
-          setSelectedTeamSlug={(slug) => {
-            setSelectedTeamSlug(slug);
-            resetDisableChatMessage();
-          }}
-        />
       </div>
     </div>
   );
