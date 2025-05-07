@@ -143,7 +143,13 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
 
   return (
     <AnimatePresence>
-      <div className="-mb-2 mt-2 w-full max-w-chat rounded-t-xl border bg-background-secondary pb-2 shadow">
+      <motion.div
+        className="-mb-2 mt-2 w-full max-w-chat rounded-t-xl border bg-background-secondary pb-2 shadow"
+        initial={{ translateY: '100%' }}
+        animate={{ translateY: '0%' }}
+        exit={{ translateY: '100%' }}
+        transition={{ duration: 0.15 }}
+      >
         <div
           data-streaming-indicator-stream-status={streamStatus}
           className={classNames('border-none shadow-none rounded-t-xl relative w-full max-w-chat mx-auto z-prompt')}
@@ -153,13 +159,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
           >
             <div className="flex-1">
               <AnimatePresence>
-                <motion.div
-                  className="actions"
-                  initial={{ translateY: '100%' }}
-                  animate={{ translateY: '0%' }}
-                  exit={{ translateY: '100%' }}
-                  transition={{ duration: 0.15 }}
-                >
+                <div className="actions">
                   <div className={classNames('flex text-sm gap-3')}>
                     <div className="flex w-full items-center gap-1.5">
                       <div>{icon}</div>
@@ -172,12 +172,12 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                       )}
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </AnimatePresence>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </AnimatePresence>
   );
 }
