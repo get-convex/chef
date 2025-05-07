@@ -141,11 +141,11 @@ export const MessageInput = memo(function MessageInput({
   }, []);
 
   return (
-    <div className="relative z-20 mx-auto w-full max-w-chat rounded-lg shadow transition-all duration-200">
-      <div className="rounded-lg bg-background-primary/75 backdrop-blur-md">
+    <div className="relative z-20 mx-auto w-full max-w-chat rounded-xl shadow transition-all duration-200">
+      <div className="rounded-xl bg-background-primary/75 backdrop-blur-md">
         <div
           className={classNames(
-            'pt-2 pr-1 rounded-t-lg transition-all',
+            'pt-2 pr-1 rounded-t-xl transition-all',
             'border has-[textarea:focus]:border-border-selected',
           )}
         >
@@ -170,7 +170,7 @@ export const MessageInput = memo(function MessageInput({
         </div>
         <div
           className={classNames(
-            'flex items-center gap-2 border rounded-b-lg border-t-0 bg-background-secondary/80 px-2 py-1.5 text-sm flex-wrap',
+            'flex items-center gap-2 border rounded-b-xl border-t-0 bg-background-secondary/80 p-1.5 text-sm flex-wrap',
           )}
         >
           <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} size="sm" />

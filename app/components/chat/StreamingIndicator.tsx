@@ -155,7 +155,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
           className={classNames('border-none shadow-none rounded-t-xl relative w-full max-w-chat mx-auto z-prompt')}
         >
           <div
-            className={classNames('bg-background-secondary/75', 'p-2 text-content-primary rounded-t-xl', '', 'flex')}
+            className={classNames('bg-background-secondary/75', 'p-1.5 text-content-primary rounded-t-xl', '', 'flex')}
           >
             <div className="flex-1">
               <AnimatePresence>
