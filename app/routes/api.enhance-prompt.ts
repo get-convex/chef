@@ -51,13 +51,19 @@ Your output should ONLY be the enhanced prompt text without any additional expla
 export async function action({ request }: ActionFunctionArgs) {
   try {
     if (request.method !== 'POST') {
-      return Response.json({ error: 'Method not allowed' }, { status: 405 });
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const { prompt } = await request.json();
 
     if (!prompt || typeof prompt !== 'string') {
-      return Response.json({ error: 'Invalid prompt' }, { status: 400 });
+      return new Response(JSON.stringify({ error: 'Invalid prompt' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const openai = new OpenAI({
@@ -82,9 +88,15 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const enhancedPrompt = completion.choices[0]?.message?.content || prompt;
 
-    return Response.json({ enhancedPrompt });
+    return new Response(JSON.stringify({ enhancedPrompt }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error enhancing prompt:', error);
-    return Response.json({ error: 'Error enhancing prompt' }, { status: 500 });
+    return new Response(JSON.stringify({ error: 'Error enhancing prompt' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
