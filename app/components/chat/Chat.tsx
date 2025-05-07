@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import type { Message } from 'ai';
+import type { Message, UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -435,7 +435,7 @@ export const Chat = memo(
       setChatStarted(true);
     };
 
-    const sendMessage = async (messageInput: string) => {
+    const sendMessage = async (messageInput: string, isResend: boolean) => {
       const now = Date.now();
       const retries = retryState.get();
       if ((retries.numFailures >= MAX_RETRIES || now < retries.nextRetry) && !hasApiKeySet(modelSelection, apiKey)) {
@@ -487,13 +487,16 @@ export const Chat = memo(
         await initializeChat();
         runAnimation();
 
-        const relevantFilesMessage = chatContextManager.current.relevantFiles(
-          messages,
-          `${Date.now()}`,
-          maxRelevantFilesSize,
-        );
+        const maybeRelevantFilesMessage: UIMessage = isResend
+          ? {
+              id: `${Date.now()}`,
+              content: '',
+              role: 'user',
+              parts: [],
+            }
+          : chatContextManager.current.relevantFiles(messages, `${Date.now()}`, maxRelevantFilesSize);
         // Make a clone of the relevantFilesMessage so we can inject the modified message after relevant files before the messageInput later
-        const newMessage = structuredClone(relevantFilesMessage);
+        const newMessage = structuredClone(maybeRelevantFilesMessage);
         newMessage.parts.push({
           type: 'text',
           text: messageInput,
@@ -511,18 +514,18 @@ export const Chat = memo(
         skipSystemPromptStore.set(false);
         if (modifiedFiles !== undefined) {
           const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
-          relevantFilesMessage.parts.push({
+          maybeRelevantFilesMessage.parts.push({
             type: 'text',
             text: userUpdateArtifact,
           });
           workbenchStore.resetAllFileModifications();
         }
-        relevantFilesMessage.content = messageInput;
-        relevantFilesMessage.parts.push({
+        maybeRelevantFilesMessage.content = messageInput;
+        maybeRelevantFilesMessage.parts.push({
           type: 'text',
           text: messageInput,
         });
-        append(relevantFilesMessage);
+        append(maybeRelevantFilesMessage);
         // }
       } finally {
         setSendMessageInProgress(false);
