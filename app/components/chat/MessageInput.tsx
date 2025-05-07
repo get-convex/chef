@@ -204,6 +204,8 @@ export const MessageInput = memo(function MessageInput({
               }
               onClick={handleClickButton}
               size="xs"
+              className="h-[1.625rem]"
+              aria-label={isStreaming ? 'Stop' : 'Send'}
               icon={!isStreaming ? <ArrowRightIcon /> : <StopIcon />}
             />
           </div>
@@ -247,9 +249,7 @@ const SignInButton = memo(function SignInButton() {
       onClick={signIn}
       size="xs"
       className="text-xs font-normal"
-      icon={
-        !started ? <img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" /> : undefined
-      }
+      icon={!started ? <img className="size-4" src="/icons/Convex.svg" alt="Convex" /> : undefined}
     >
       {!started && (
         <>
