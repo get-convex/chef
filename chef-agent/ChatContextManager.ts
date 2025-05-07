@@ -179,7 +179,6 @@ export class ChatContextManager {
     // Check if we are going to collapse messages, if so, send new files
     const [messageIndex, partIndex] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
     if (messageIndex != this.messageIndex || partIndex != this.partIndex) {
-      console.log('Sending new relevant files because we are going to collapse messages');
       return true;
     }
 
@@ -188,7 +187,6 @@ export class ChatContextManager {
       if (message.role === 'user') {
         for (const part of message.parts) {
           if (part.type === 'text' && part.text.includes('title="Relevant Files"')) {
-            console.log("Relevant files have been sent before, don't send them again");
             // Relevant files have been sent before, don't send them again
             return false;
           }
