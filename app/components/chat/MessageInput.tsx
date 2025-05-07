@@ -145,8 +145,6 @@ export const MessageInput = memo(function MessageInput({
   }, []);
 
   const enhancePrompt = useCallback(async () => {
-    if (!input.trim() || isEnhancing) return;
-
     try {
       setIsEnhancing(true);
 
@@ -173,7 +171,7 @@ export const MessageInput = memo(function MessageInput({
     } finally {
       setIsEnhancing(false);
     }
-  }, [input, isEnhancing]);
+  }, [input]);
 
   return (
     <div className="relative z-20 mx-auto w-full max-w-chat rounded-xl shadow transition-all duration-200">
@@ -222,7 +220,6 @@ export const MessageInput = memo(function MessageInput({
           {input.length > PROMPT_LENGTH_WARNING_THRESHOLD && <CharacterWarning />}
           <div className="ml-auto flex items-center gap-2">
             {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
-
             {enhancePromptButton && (
               <EnhancePromptButton
                 isEnhancing={isEnhancing}
