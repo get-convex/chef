@@ -771,23 +771,27 @@ function hasAnyApiKeySet(apiKey?: Doc<'convexMembers'>['apiKey'] | null) {
 }
 
 function hasApiKeySet(modelSelection: ModelSelection, apiKey?: Doc<'convexMembers'>['apiKey'] | null) {
-  const useAnthropic = modelSelection === 'claude-3.5-sonnet' || modelSelection === 'auto';
-  const useOpenai = modelSelection === 'gpt-4.1';
-  const useXai = modelSelection === 'grok-3-mini';
-  const useGoogle = modelSelection === 'gemini-2.5-pro';
-  if (useAnthropic && apiKey && apiKey.value && apiKey.value.trim() !== '') {
-    return true;
+  if (!apiKey) {
+    return false;
   }
-  if (useOpenai && apiKey && apiKey.openai && apiKey.openai.trim() !== '') {
-    return true;
+
+  switch (modelSelection) {
+    case 'auto':
+    case 'claude-3.5-sonnet':
+    case 'claude-3-5-haiku':
+      return !!apiKey.value?.trim();
+    case 'gpt-4.1':
+    case 'gpt-4.1-mini':
+      return !!apiKey.openai?.trim();
+    case 'grok-3-mini':
+      return !!apiKey.xai?.trim();
+    case 'gemini-2.5-pro':
+      return !!apiKey.google?.trim();
+    default: {
+      const _exhaustiveCheck: never = modelSelection;
+      return false;
+    }
   }
-  if (useXai && apiKey && apiKey.xai && apiKey.xai.trim() !== '') {
-    return true;
-  }
-  if (useGoogle && apiKey && apiKey.google && apiKey.google.trim() !== '') {
-    return true;
-  }
-  return false;
 }
 
 function maxSizeForModel(modelSelection: ModelSelection, maxSize: number) {
