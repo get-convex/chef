@@ -63,7 +63,7 @@ export class ChatContextManager {
     return [...collapsedMessages];
   }
 
-  relevantFiles(messages: UIMessage[], id: string, maxRelevantFilesSize: number): UIMessage[] {
+  relevantFiles(messages: UIMessage[], id: string, maxRelevantFilesSize: number): UIMessage {
     const currentDocument = this.getCurrentDocument();
     const cache = this.getFiles();
     const allPaths = Object.keys(cache).sort();
@@ -107,7 +107,7 @@ export class ChatContextManager {
 
     const sortedByLastUsed = Array.from(lastUsed.entries()).sort((a, b) => b[1] - a[1]);
     let sizeEstimate = 0;
-    let fileActions = '';
+    const fileActions: string[] = [];
     let numFiles = 0;
 
     for (const [path] of sortedByLastUsed) {
@@ -123,7 +123,7 @@ export class ChatContextManager {
       }
       if (entry.type === 'file') {
         const content = renderFile(entry.content);
-        fileActions += `<boltAction type="file" filePath="${path}">${content}</boltAction>\n`;
+        fileActions.push(`<boltAction type="file" filePath="${path}">${content}</boltAction>`);
         const size = estimateSize(entry);
         sizeEstimate += size;
         numFiles++;
@@ -132,23 +132,22 @@ export class ChatContextManager {
 
     if (currentDocument) {
       const content = renderFile(currentDocument.value);
-      fileActions += `<boltAction type="file" filePath="${currentDocument.filePath}">${content}</boltAction>\n`;
+      fileActions.push(`<boltAction type="file" filePath="${currentDocument.filePath}">${content}</boltAction>`);
     }
 
     // Compose a single message with all relevant files
-    let combinedContent = '';
     if (allPaths.length > 0) {
-      combinedContent += `Here are all the paths in the project:\n${allPaths.map((p) => ` - ${p}`).join('\n')}\n\n`;
+      fileActions.push(`Here are all the paths in the project:\n${allPaths.map((p) => ` - ${p}`).join('\n')}\n\n`);
     }
-    if (numFiles > 0 || currentDocument) {
-      combinedContent += 'Here are some relevant files in the project (with line numbers).\n';
-      combinedContent += fileActions;
+    if (fileActions.length === 0) {
+      return {
+        id,
+        content: '',
+        role: 'user',
+        parts: [],
+      };
     }
-
-    if (!combinedContent) {
-      return [];
-    }
-    return [makeSystemMessage(combinedContent, id, undefined)];
+    return makeUserMessage(fileActions, id);
   }
 
   private collapseMessages(messages: UIMessage[]): UIMessage[] {
@@ -294,21 +293,18 @@ function summarizePart(message: UIMessage, part: UIMessagePart): string | null {
   return null;
 }
 
-function makeSystemMessage(content: string, id: string, filePath: string | undefined): UIMessage {
+function makeUserMessage(content: string[], id: string): UIMessage {
+  const parts: UIMessagePart[] = content.map((c) => ({
+    type: 'text',
+    text: `<boltArtifact id="${id}" title="Relevant Files">
+${c}
+</boltArtifact>`,
+  }));
   return {
     id,
     content: '',
     role: 'user',
-    parts: [
-      {
-        type: 'text',
-        text: `
-<boltArtifact id="${id}" title="Relevant Files">
-${filePath ? `<boltAction type="file" filePath="${filePath}">${content}</boltAction>` : content}
-</boltArtifact>
-  `,
-      },
-    ],
+    parts,
   };
 }
 

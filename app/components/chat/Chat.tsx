@@ -481,61 +481,43 @@ export const Chat = memo(
         await initializeChat();
         runAnimation();
 
+        const relevantFilesMessage = chatContextManager.current.relevantFiles(
+          messages,
+          `${Date.now()}`,
+          maxRelevantFilesSize,
+        );
+        // Make a clone of the relevantFilesMessage so we can inject the modified message after relevant files before the messageInput later
+        const newMessage = structuredClone(relevantFilesMessage);
+        newMessage.parts.push({
+          type: 'text',
+          text: messageInput,
+        });
+        newMessage.content = messageInput;
         if (!chatStarted) {
-          setMessages([
-            {
-              id: `${new Date().getTime()}`,
-              role: 'user',
-              content: messageInput,
-              parts: [
-                {
-                  type: 'text',
-                  text: messageInput,
-                },
-              ],
-            },
-          ]);
+          setMessages([newMessage]);
           reload();
           return;
         }
 
         const modifiedFiles = workbenchStore.getModifiedFiles();
         chatStore.setKey('aborted', false);
-
         shouldDisableToolsStore.set(false);
         skipSystemPromptStore.set(false);
-        const relevantFiles = chatContextManager.current.relevantFiles(messages, `${Date.now()}`, maxRelevantFilesSize);
-        console.log('relevantFiles', relevantFiles);
-        for (const msg of relevantFiles) {
-          console.log('appending relevant file', msg);
-          append(msg);
-        }
         if (modifiedFiles !== undefined) {
           const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
-          append({
-            role: 'user',
-            content: messageInput,
-            parts: [
-              {
-                type: 'text',
-                text: `${userUpdateArtifact}${messageInput}`,
-              },
-            ],
+          relevantFilesMessage.parts.push({
+            type: 'text',
+            text: userUpdateArtifact,
           });
-
           workbenchStore.resetAllFileModifications();
-        } else {
-          append({
-            role: 'user',
-            content: messageInput,
-            parts: [
-              {
-                type: 'text',
-                text: messageInput,
-              },
-            ],
-          });
         }
+        relevantFilesMessage.content = messageInput;
+        relevantFilesMessage.parts.push({
+          type: 'text',
+          text: messageInput,
+        });
+        append(relevantFilesMessage);
+        // }
       } finally {
         setSendMessageInProgress(false);
       }
