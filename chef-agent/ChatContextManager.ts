@@ -11,9 +11,6 @@ import { loggingSafeParse } from './utils/zodUtil.js';
 import { npmInstallToolParameters } from './tools/npmInstall.js';
 import { path } from './utils/path.js';
 
-// It's wasteful to actually tokenize the content, so we'll just use character
-// counts as a heuristic.
-const MAX_RELEVANT_FILES_SIZE = 8192;
 const MAX_RELEVANT_FILES = 16;
 
 type UIMessagePart = UIMessage['parts'][number];
@@ -26,19 +23,14 @@ export class ChatContextManager {
   assistantMessageCache: WeakMap<UIMessage, ParsedAssistantMessage> = new WeakMap();
   messageSizeCache: WeakMap<UIMessage, number> = new WeakMap();
   partSizeCache: WeakMap<UIMessagePart, number> = new WeakMap();
-  initialRelevantFiles: UIMessage[] = [];
-  messageICutoff: number = -1;
-  messageJCutoff: number = -1;
+  messageIndex: number = -1;
+  partIndex: number = -1;
 
   constructor(
     private getCurrentDocument: () => EditorDocument | undefined,
     private getFiles: () => FileMap,
     private getUserWrites: () => Map<AbsolutePath, number>,
-    initialMessages: UIMessage[],
-    maxRelevantFilesSize: number,
-  ) {
-    this.initialRelevantFiles = this.relevantFiles(initialMessages, maxRelevantFilesSize);
-  }
+  ) {}
 
   /**
    * Our request context has a few sections:
@@ -50,29 +42,25 @@ export class ChatContextManager {
    * 3. A potentially collapsed segment of the chat history followed
    *    by the full fidelity recent chat history, up to maxCollapsedMessagesSize.
    */
-  prepareContext(messages: UIMessage[], maxCollapsedMessagesSize: number, maxRelevantFilesSize: number): UIMessage[] {
+  prepareContext(messages: UIMessage[], maxCollapsedMessagesSize: number): UIMessage[] {
     // If the last message is a user message this is the first LLM call that includes that user message.
     // Only update the relevant files and the message cutoff indices if the last message is a user message to avoid clearing the cache as the agent makes changes.
     if (messages[messages.length - 1].role === 'user') {
-      this.initialRelevantFiles = this.relevantFiles(messages, maxRelevantFilesSize);
-      const [iCutoff, jCutoff] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
-      this.messageICutoff = iCutoff;
-      this.messageJCutoff = jCutoff;
+      const [messageIndex, partIndex] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
+      this.messageIndex = messageIndex;
+      this.partIndex = partIndex;
     }
     const collapsedMessages = this.collapseMessages(messages);
-    return [...this.initialRelevantFiles, ...collapsedMessages];
+    return [...collapsedMessages];
   }
 
-  private relevantFiles(messages: UIMessage[], maxRelevantFilesSize: number): UIMessage[] {
+  relevantFiles(messages: UIMessage[], id: string, maxRelevantFilesSize: number): UIMessage {
     const currentDocument = this.getCurrentDocument();
-
-    // Seed the set with the PREWARM_PATHS.
     const cache = this.getFiles();
     const allPaths = Object.keys(cache).sort();
 
     const lastUsed: Map<AbsolutePath, number> = new Map();
     for (const path of PREWARM_PATHS) {
-      // These constants are absolute paths, so we can cast them to AbsolutePath.
       const absPath = path as AbsolutePath;
       const entry = cache[absPath];
       if (!entry) {
@@ -81,7 +69,6 @@ export class ChatContextManager {
       lastUsed.set(absPath, 0);
     }
 
-    // Iterate over the messages and update the last used time for each path.
     let partCounter = 0;
     for (const message of messages) {
       const createdAt = message.createdAt?.getTime();
@@ -105,66 +92,67 @@ export class ChatContextManager {
       lastUsed.set(path, Math.max(existing, lastUsedTime));
     }
 
-    // If there's a currently open document, remove it from the relevance list
-    // since we'll unconditionally include it later.
     if (currentDocument) {
       lastUsed.delete(currentDocument.filePath);
     }
 
     const sortedByLastUsed = Array.from(lastUsed.entries()).sort((a, b) => b[1] - a[1]);
     let sizeEstimate = 0;
-    const relevantFiles: UIMessage[] = [];
+    const fileActions: string[] = [];
+    let numFiles = 0;
 
-    if (sortedByLastUsed.length > 0) {
-      relevantFiles.push(
-        makeSystemMessage(`Here are all the paths in the project:\n${allPaths.map((p) => ` - ${p}`).join('\n')}`),
-      );
-    }
-    const debugInfo: string[] = [];
-    if (sortedByLastUsed.length > 0) {
-      relevantFiles.push(makeSystemMessage('Here are some relevant files in the project (with line numbers).'));
-      for (const [path] of sortedByLastUsed) {
-        if (sizeEstimate > maxRelevantFilesSize) {
-          break;
-        }
-        if (relevantFiles.length >= MAX_RELEVANT_FILES) {
-          break;
-        }
-        const entry = cache[path];
-        if (!entry) {
-          continue;
-        }
-        if (entry.type === 'file') {
-          const content = renderFile(entry.content);
-          relevantFiles.push(makeSystemMessage(`"${path}":\n${content}`));
-          const size = estimateSize(entry);
-          sizeEstimate += size;
-          debugInfo.push(`  "${path}": ${size}`);
-        }
+    for (const [path] of sortedByLastUsed) {
+      if (sizeEstimate > maxRelevantFilesSize) {
+        break;
+      }
+      if (numFiles >= MAX_RELEVANT_FILES) {
+        break;
+      }
+      const entry = cache[path];
+      if (!entry) {
+        continue;
+      }
+      if (entry.type === 'file') {
+        const content = renderFile(entry.content);
+        fileActions.push(`<boltAction type="file" filePath="${path}">${content}</boltAction>`);
+        const size = estimateSize(entry);
+        sizeEstimate += size;
+        numFiles++;
       }
     }
 
     if (currentDocument) {
-      let message = `The user currently has an editor open at ${currentDocument.filePath}. Here are its contents (with line numbers):\n`;
-      message += renderFile(currentDocument.value);
-      relevantFiles.push(makeSystemMessage(message));
+      const content = renderFile(currentDocument.value);
+      fileActions.push(`<boltAction type="file" filePath="${currentDocument.filePath}">${content}</boltAction>`);
     }
 
-    return relevantFiles;
+    // Compose a single message with all relevant files
+    if (allPaths.length > 0) {
+      fileActions.push(`Here are all the paths in the project:\n${allPaths.map((p) => ` - ${p}`).join('\n')}\n\n`);
+    }
+    if (fileActions.length === 0) {
+      return {
+        id,
+        content: '',
+        role: 'user',
+        parts: [],
+      };
+    }
+    return makeUserMessage(fileActions, id);
   }
 
   private collapseMessages(messages: UIMessage[]): UIMessage[] {
     const fullMessages = [];
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i];
-      if (i < this.messageICutoff) {
+      if (i < this.messageIndex) {
         continue;
-      } else if (i === this.messageICutoff) {
+      } else if (i === this.messageIndex) {
         const filteredParts = message.parts.filter((p, j) => {
           if (p.type !== 'tool-invocation' || p.toolInvocation.state !== 'result') {
             return true;
           }
-          return j > this.messageJCutoff;
+          return j > this.partIndex;
         });
         const remainingMessage = {
           ...message,
@@ -183,16 +171,16 @@ export class ChatContextManager {
 
   private messagePartCutoff(messages: UIMessage[], maxCollapsedMessagesSize: number): [number, number] {
     let remaining = maxCollapsedMessagesSize;
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const message = messages[i];
-      for (let j = message.parts.length - 1; j >= 0; j--) {
-        const part = message.parts[j];
+    for (let messageIndex = messages.length - 1; messageIndex >= 0; messageIndex--) {
+      const message = messages[messageIndex];
+      for (let partIndex = message.parts.length - 1; partIndex >= 0; partIndex--) {
+        const part = message.parts[partIndex];
         if (part.type === 'tool-invocation' && part.toolInvocation.state !== 'result') {
           continue;
         }
         const size = this.partSize(part);
         if (size > remaining) {
-          return [i, j];
+          return [messageIndex, partIndex];
         }
         remaining -= size;
       }
@@ -296,17 +284,18 @@ function summarizePart(message: UIMessage, part: UIMessagePart): string | null {
   return null;
 }
 
-function makeSystemMessage(content: string): UIMessage {
+function makeUserMessage(content: string[], id: string): UIMessage {
+  const parts: UIMessagePart[] = content.map((c) => ({
+    type: 'text',
+    text: `<boltArtifact id="${id}" title="Relevant Files">
+${c}
+</boltArtifact>`,
+  }));
   return {
-    id: generateId(),
-    content,
-    role: 'system',
-    parts: [
-      {
-        type: 'text',
-        text: content,
-      },
-    ],
+    id,
+    content: '',
+    role: 'user',
+    parts,
   };
 }
 

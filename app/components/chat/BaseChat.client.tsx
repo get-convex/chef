@@ -36,7 +36,7 @@ interface BaseChatProps {
 
   // Chat user interactions
   onStop: () => void;
-  onSend: (messageInput: string) => Promise<void>;
+  onSend: (messageInput: string, isResend: boolean) => Promise<void>;
   sendMessageInProgress: boolean;
 
   // Current chat history props
@@ -104,7 +104,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const lastUserMessage = messages.findLast((message) => message.role === 'user');
     const resendMessage = useCallback(async () => {
       if (lastUserMessage) {
-        await onSend?.(lastUserMessage.content);
+        await onSend?.(lastUserMessage.content, true);
       }
     }, [lastUserMessage, onSend]);
     const baseChat = (
@@ -169,7 +169,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         }
                         clearAlert={() => clearAlert?.()}
                         postMessage={(message) => {
-                          onSend?.(message);
+                          onSend?.(message, false);
                           clearAlert?.();
                         }}
                       />
@@ -194,7 +194,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       modelSelection={modelSelection}
                       setModelSelection={setModelSelection}
                       onStop={onStop}
-                      onSend={onSend}
+                      onSend={(message) => onSend(message, false)}
                     />
                   )}
                   <AnimatePresence>
