@@ -7,6 +7,8 @@ import { HandThumbUpIcon, KeyIcon } from '@heroicons/react/24/outline';
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import type { Doc } from '@convex/_generated/dataModel';
+import { useStore } from '@nanostores/react';
+import { convexTeamsStore } from '~/lib/stores/convexTeams';
 
 export type ModelProvider = 'openai' | 'google' | 'xai' | 'anthropic' | 'auto';
 
@@ -106,7 +108,11 @@ export const ModelSelector = React.memo(function ModelSelector({
   modelSelection,
   setModelSelection,
 }: ModelSelectorProps) {
+  const teams = useStore(convexTeamsStore);
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
+  if (!teams) {
+    return null;
+  }
   const selectedModel = models[modelSelection];
   if (!selectedModel) {
     throw new Error(`Model ${modelSelection} not found`);
