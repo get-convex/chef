@@ -170,7 +170,7 @@ export const MessageInput = memo(function MessageInput({
         </div>
         <div
           className={classNames(
-            'flex items-center gap-2 border rounded-b-lg border-t-0 bg-background-secondary/80 px-2 py-1.5 text-sm',
+            'flex items-center gap-2 border rounded-b-lg border-t-0 bg-background-secondary/80 px-2 py-1.5 text-sm flex-wrap',
           )}
         >
           <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} size="sm" />
