@@ -490,14 +490,16 @@ export const Chat = memo(
         await initializeChat();
         runAnimation();
 
-        const maybeRelevantFilesMessage: UIMessage = isResend
-          ? {
+        const shouldSendRelevantFiles = chatContextManager.current.shouldSendRelevantFiles(messages);
+        const maybeRelevantFilesMessage: UIMessage = shouldSendRelevantFiles
+          ? chatContextManager.current.relevantFiles(messages, `${Date.now()}`, maxRelevantFilesSize)
+          : {
               id: `${Date.now()}`,
               content: '',
               role: 'user',
               parts: [],
-            }
-          : chatContextManager.current.relevantFiles(messages, `${Date.now()}`, maxRelevantFilesSize);
+            };
+
         // Make a clone of the relevantFilesMessage so we can inject the modified message after relevant files before the messageInput later
         const newMessage = structuredClone(maybeRelevantFilesMessage);
         newMessage.parts.push({
@@ -529,7 +531,6 @@ export const Chat = memo(
           text: messageInput,
         });
         append(maybeRelevantFilesMessage);
-        // }
       } finally {
         setSendMessageInProgress(false);
       }

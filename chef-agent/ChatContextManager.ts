@@ -55,6 +55,7 @@ export class ChatContextManager {
   }
 
   relevantFiles(messages: UIMessage[], id: string, maxRelevantFilesSize: number): UIMessage {
+    console.log('Finding relevant files');
     const currentDocument = this.getCurrentDocument();
     const cache = this.getFiles();
     const allPaths = Object.keys(cache).sort();
@@ -167,6 +168,28 @@ export class ChatContextManager {
     const result: UIMessage[] = [];
     result.push(...fullMessages);
     return result;
+  }
+
+  shouldSendRelevantFiles(messages: UIMessage[]): boolean {
+    // Always send files on the first message
+    if (messages.length === 0) {
+      return true;
+    }
+
+    // Check if any previous messages contain file artifacts
+    for (const message of messages) {
+      if (message.role === 'user') {
+        for (const part of message.parts) {
+          if (part.type === 'text' && part.text.includes('title="Relevant Files"')) {
+            // Relevant files have been sent before, don't send them again
+            return false;
+          }
+        }
+      }
+    }
+
+    // No files have been sent before, send them now
+    return true;
   }
 
   private messagePartCutoff(messages: UIMessage[], maxCollapsedMessagesSize: number): [number, number] {
