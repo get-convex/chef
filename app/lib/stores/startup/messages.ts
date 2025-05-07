@@ -106,7 +106,8 @@ function extractUrlHintAndDescription(messages: Message[]) {
     for (const part of message.parts ?? []) {
       if (part.type === 'text') {
         const content = part.text;
-        const match = content.match(/<boltArtifact id="([^"]+)" title="([^"]+)"/);
+        // Don't match on "Relevant Files" messages
+        const match = content.match(/<boltArtifact id="([^"]+)" title="(?!Relevant Files)([^"]+)"/);
         if (match) {
           return { urlHint: match[1], description: match[2] };
         }

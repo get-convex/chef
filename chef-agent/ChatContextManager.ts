@@ -287,6 +287,7 @@ function summarizePart(message: UIMessage, part: UIMessagePart): string | null {
 function makeUserMessage(content: string[], id: string): UIMessage {
   const parts: UIMessagePart[] = content.map((c) => ({
     type: 'text',
+    // N.B. Do not change this title "Relevant Files" without also updating `extractUrlHintAndDescription`. It's super jank
     text: `<boltArtifact id="${id}" title="Relevant Files">
 ${c}
 </boltArtifact>`,
