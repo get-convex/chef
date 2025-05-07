@@ -154,7 +154,27 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     'sticky bottom-four': chatStarted,
                   })}
                 >
-                  {/* StreamingIndicator is now a normal block above the input */}
+                  {actionAlert && (
+                    <div className="mb-4 bg-background-secondary">
+                      <ChatAlert
+                        alert={
+                          actionAlert ?? {
+                            type: 'ExceededQuota',
+                            title: 'Error',
+                            description: 'Error',
+                            content: 'Error',
+                            source: 'terminal',
+                          }
+                        }
+                        clearAlert={() => clearAlert?.()}
+                        postMessage={(message) => {
+                          onSend?.(message);
+                          clearAlert?.();
+                        }}
+                      />
+                    </div>
+                  )}
+                  {/* StreamingIndicator is ow a normal block above the input */}
                   {!disableChatMessage && (
                     <StreamingIndicator
                       streamStatus={streamStatus}
@@ -184,18 +204,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         onSend={onSend}
                       />
                     )
-                  )}
-                  {actionAlert && (
-                    <div className="bg-bolt-elements-background-depth-2">
-                      <ChatAlert
-                        alert={actionAlert}
-                        clearAlert={() => clearAlert?.()}
-                        postMessage={(message) => {
-                          onSend?.(message);
-                          clearAlert?.();
-                        }}
-                      />
-                    </div>
                   )}
                 </div>
                 <CompatibilityWarnings setEnabled={setChatEnabled} />

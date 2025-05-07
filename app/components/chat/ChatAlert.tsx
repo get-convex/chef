@@ -25,12 +25,17 @@ export default function ChatAlert({ alert, clearAlert, postMessage }: Props) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
-        className={`rounded-lg border bg-bolt-elements-background-depth-2 p-4`}
+        className={`rounded-lg border bg-background-secondary p-4 shadow`}
       >
         <div className="flex items-start">
           {/* Icon */}
-          <motion.div className="shrink-0" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2 }}>
-            <ExclamationTriangleIcon className="text-bolt-elements-button-danger-text" />
+          <motion.div
+            className="flex h-6 shrink-0 items-center"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <ExclamationTriangleIcon className="text-content-error" />
           </motion.div>
           {/* Content */}
           <div className="ml-3 flex-1">
