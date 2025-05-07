@@ -16,7 +16,7 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
 
   return (
     <div id="suggestions">
-      <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-4">
+      <div className="mt-6 flex flex-wrap justify-center gap-4">
         {SUGGESTIONS.map((suggestion) => (
           <Button
             key={suggestion.title}
@@ -31,7 +31,7 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
         ))}
       </div>
 
-      <div className="mt-6 flex justify-center">
+      <div className="mt-4 flex justify-center">
         <Button
           href="https://stack.convex.dev/chef-cookbook-tips-working-with-ai-app-builders"
           target="_blank"
