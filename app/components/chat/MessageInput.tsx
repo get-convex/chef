@@ -28,6 +28,7 @@ import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Button } from '@ui/Button';
 import { Spinner } from '@ui/Spinner';
 import { debounce } from '~/utils/debounce';
+import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
@@ -54,6 +55,7 @@ export const MessageInput = memo(function MessageInput({
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chefAuthState = useChefAuth();
   const selectedTeamSlug = useSelectedTeamSlug();
+  const { enhancePromptButton } = useLaunchDarkly();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -141,27 +143,27 @@ export const MessageInput = memo(function MessageInput({
     messageInputStore.set(value);
     cachePrompt(value);
   }, []);
-  
+
   const enhancePrompt = useCallback(async () => {
     if (!input.trim() || isEnhancing) return;
-    
+
     try {
       setIsEnhancing(true);
-      
+
       const response = await fetch('/api/enhance-prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          prompt: input.trim()
+        body: JSON.stringify({
+          prompt: input.trim(),
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to enhance prompt');
       }
-      
+
       const data = await response.json();
       if (data.enhancedPrompt) {
         messageInputStore.set(data.enhancedPrompt);
@@ -200,14 +202,6 @@ export const MessageInput = memo(function MessageInput({
             // Disable Grammarly
             data-gramm="false"
           />
-        {input.trim().length > 0 && (
-          <EnhancePromptButton
-            show={!isStreaming && !sendMessageInProgress}
-            isEnhancing={isEnhancing}
-            disabled={!selectedTeamSlug || chefAuthState.kind === 'loading' || disabled}
-            onClick={enhancePrompt}
-          />
-        )}
         </div>
         <div
           className={classNames(
@@ -228,6 +222,14 @@ export const MessageInput = memo(function MessageInput({
           {input.length > PROMPT_LENGTH_WARNING_THRESHOLD && <CharacterWarning />}
           <div className="ml-auto flex items-center gap-2">
             {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
+
+            {enhancePromptButton && (
+              <EnhancePromptButton
+                isEnhancing={isEnhancing}
+                disabled={!selectedTeamSlug || chefAuthState.kind === 'loading' || disabled || input.length === 0}
+                onClick={enhancePrompt}
+              />
+            )}
             <Button
               disabled={
                 (!isStreaming && input.length === 0) ||

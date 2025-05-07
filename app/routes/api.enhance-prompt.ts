@@ -1,5 +1,4 @@
-import type { ActionFunctionArgs } from '@vercel/remix';
-import { json } from '@vercel/remix';
+import type { ActionFunctionArgs } from '@remix-run/node';
 import OpenAI from 'openai';
 
 const SYSTEM_PROMPT = `You are an expert prompt engineer. Your task is to enhance and improve user prompts to make them more effective, concise, clear, and focused. 
@@ -52,13 +51,13 @@ Your output should ONLY be the enhanced prompt text without any additional expla
 export async function action({ request }: ActionFunctionArgs) {
   try {
     if (request.method !== 'POST') {
-      return json({ error: 'Method not allowed' }, { status: 405 });
+      return Response.json({ error: 'Method not allowed' }, { status: 405 });
     }
 
     const { prompt } = await request.json();
 
     if (!prompt || typeof prompt !== 'string') {
-      return json({ error: 'Invalid prompt' }, { status: 400 });
+      return Response.json({ error: 'Invalid prompt' }, { status: 400 });
     }
 
     const openai = new OpenAI({
@@ -83,9 +82,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const enhancedPrompt = completion.choices[0]?.message?.content || prompt;
 
-    return json({ enhancedPrompt });
+    return Response.json({ enhancedPrompt });
   } catch (error) {
     console.error('Error enhancing prompt:', error);
-    return json({ error: 'Error enhancing prompt' }, { status: 500 });
+    return Response.json({ error: 'Error enhancing prompt' }, { status: 500 });
   }
 }
