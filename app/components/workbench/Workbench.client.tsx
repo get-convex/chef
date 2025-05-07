@@ -178,7 +178,7 @@ export const Workbench = memo(function Workbench({
         >
           <div
             className={classNames(
-              'fixed top-[calc(var(--header-height)+1rem)] bottom-four w-[var(--workbench-inner-width)] mr-4 z-0 transition-[left,width] duration-200 bolt-ease-cubic-bezier',
+              'fixed top-[calc(var(--header-height)+1rem)] bottom-four w-[var(--workbench-inner-width)] z-0 transition-[left,width] duration-200 bolt-ease-cubic-bezier',
               {
                 'w-full': isSmallViewport,
                 'left-0': showWorkbench && isSmallViewport,
@@ -187,7 +187,7 @@ export const Workbench = memo(function Workbench({
               },
             )}
           >
-            <div className="absolute inset-0 px-2 lg:px-6">
+            <div className="absolute inset-0 px-2">
               <div className="flex h-full flex-col overflow-hidden rounded-lg border bg-bolt-elements-background-depth-2 shadow-sm">
                 <div className="flex items-center border-b px-3 py-2">
                   <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
