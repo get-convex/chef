@@ -44,7 +44,7 @@ export const MessageInput = memo(function MessageInput({
   isStreaming: boolean;
   sendMessageInProgress: boolean;
   onStop: () => void;
-  onSend: (message: string) => Promise<void>;
+  onSend: (message: string, ) => Promise<void>;
   disabled: boolean;
   modelSelection: ModelSelection;
   setModelSelection: (modelSelection: ModelSelection) => void;

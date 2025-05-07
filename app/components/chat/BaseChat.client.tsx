@@ -201,7 +201,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         modelSelection={modelSelection}
                         setModelSelection={setModelSelection}
                         onStop={onStop}
-                        onSend={onSend}
+                        onSend={(message) => onSend(message, false)}
                       />
                     )
                   )}
