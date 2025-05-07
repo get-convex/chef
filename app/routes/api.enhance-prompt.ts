@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs } from '@remix-run/node';
+import type { ActionFunctionArgs } from '@vercel/remix';
 import OpenAI from 'openai';
 
 const SYSTEM_PROMPT = `You are an expert prompt engineer. Your task is to enhance and improve user prompts to make them more effective, concise, clear, and focused. 

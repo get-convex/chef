@@ -29,6 +29,8 @@ import { Button } from '@ui/Button';
 import { Spinner } from '@ui/Spinner';
 import { debounce } from '~/utils/debounce';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
+import { toast } from 'sonner';
+import { captureException } from '@sentry/remix';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
@@ -167,7 +169,13 @@ export const MessageInput = memo(function MessageInput({
         messageInputStore.set(data.enhancedPrompt);
       }
     } catch (error) {
-      console.error('Error enhancing prompt:', error);
+      captureException('Failed to enhance prompt', {
+        level: 'error',
+        extra: {
+          error,
+        },
+      });
+      toast.error('Failed to enhance prompt. Please try again.');
     } finally {
       setIsEnhancing(false);
     }
