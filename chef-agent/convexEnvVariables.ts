@@ -1,11 +1,9 @@
 import type { ConvexProject } from './types.js';
 
-export async function queryEnvVariableWithRetries(project: ConvexProject, name: string): Promise<string | null> {
-  const maxRetries = 3;
-  const retryDelay = 500;
+async function withRetries<T>(operation: () => Promise<T>, maxRetries: number = 3, retryDelay: number = 500) {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      return await queryEnvVariable(project, name);
+      return await operation();
     } catch (error) {
       if (i === maxRetries - 1) {
         throw error;
@@ -13,7 +11,10 @@ export async function queryEnvVariableWithRetries(project: ConvexProject, name: 
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }
   }
-  return null; // This line is technically unreachable but TypeScript needs it
+}
+
+export async function queryEnvVariableWithRetries(project: ConvexProject, name: string) {
+  return withRetries(() => queryEnvVariable(project, name));
 }
 
 async function queryEnvVariable(project: ConvexProject, name: string): Promise<string | null> {
@@ -41,19 +42,7 @@ async function queryEnvVariable(project: ConvexProject, name: string): Promise<s
 }
 
 export async function setEnvVariablesWithRetries(project: ConvexProject, values: Record<string, string>) {
-  const maxRetries = 3;
-  const retryDelay = 500;
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      await setEnvVariables(project, values);
-      return;
-    } catch (error) {
-      if (i === maxRetries - 1) {
-        throw error;
-      }
-      await new Promise((resolve) => setTimeout(resolve, retryDelay));
-    }
-  }
+  return withRetries(() => setEnvVariables(project, values));
 }
 
 async function setEnvVariables(project: ConvexProject, values: Record<string, string>) {
