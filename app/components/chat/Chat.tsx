@@ -291,11 +291,12 @@ export const Chat = memo(
         } else {
           modelProvider = 'OpenAI';
         }
+        const { messages: preparedMessages, collapsedMessages } = chatContextManager.current.prepareContext(
+          messages,
+          maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
+        );
         return {
-          messages: chatContextManager.current.prepareContext(
-            messages,
-            maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
-          ),
+          messages: preparedMessages,
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,
           chatInitialId,
           token,
@@ -309,6 +310,7 @@ export const Chat = memo(
           smallFiles,
           recordRawPromptsForDebugging,
           modelChoice,
+          collapsedMessages,
         };
       },
       maxSteps: 64,

@@ -51,6 +51,7 @@ export async function convexAgent(args: {
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => Promise<void>;
   recordRawPromptsForDebugging: boolean;
+  collapsedMessages: boolean;
 }) {
   const {
     chatInitialId,
@@ -65,6 +66,7 @@ export async function convexAgent(args: {
     smallFiles,
     recordUsageCb,
     recordRawPromptsForDebugging,
+    collapsedMessages,
   } = args;
   console.debug('Starting agent with model provider', modelProvider);
   if (userApiKey) {
@@ -131,6 +133,7 @@ export async function convexAgent(args: {
             smallFiles,
             modelProvider,
             modelChoice,
+            collapsedMessages,
           });
         },
         onError({ error }) {
@@ -168,6 +171,7 @@ async function onFinishHandler({
   smallFiles,
   modelProvider,
   modelChoice,
+  collapsedMessages,
 }: {
   dataStream: DataStreamWriter;
   messages: Messages;
@@ -184,6 +188,7 @@ async function onFinishHandler({
   smallFiles: boolean;
   modelProvider: ModelProvider;
   modelChoice: string | undefined;
+  collapsedMessages: boolean;
 }) {
   const { providerMetadata } = result;
   // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
@@ -206,6 +211,7 @@ async function onFinishHandler({
     span.setAttribute('usage.promptTokens', usage.promptTokens);
     span.setAttribute('usage.totalTokens', usage.totalTokens);
     span.setAttribute('featureFlags.smallFiles', smallFiles);
+    span.setAttribute('collapsedMessages', collapsedMessages);
     if (providerMetadata) {
       const anthropic: any = providerMetadata.anthropic;
       if (anthropic) {

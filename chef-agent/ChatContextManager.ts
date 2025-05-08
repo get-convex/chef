@@ -42,16 +42,23 @@ export class ChatContextManager {
    * 3. A potentially collapsed segment of the chat history followed
    *    by the full fidelity recent chat history, up to maxCollapsedMessagesSize.
    */
-  prepareContext(messages: UIMessage[], maxCollapsedMessagesSize: number): UIMessage[] {
+  prepareContext(
+    messages: UIMessage[],
+    maxCollapsedMessagesSize: number,
+  ): { messages: UIMessage[]; collapsedMessages: boolean } {
     // If the last message is a user message this is the first LLM call that includes that user message.
     // Only update the relevant files and the message cutoff indices if the last message is a user message to avoid clearing the cache as the agent makes changes.
+    let collapsedMessages = false;
     if (messages[messages.length - 1].role === 'user') {
       const [messageIndex, partIndex] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
-      this.messageIndex = messageIndex;
-      this.partIndex = partIndex;
+      if (messageIndex != this.messageIndex || partIndex != this.partIndex) {
+        collapsedMessages = true;
+        this.messageIndex = messageIndex;
+        this.partIndex = partIndex;
+        messages = this.collapseMessages(messages);
+      }
     }
-    const collapsedMessages = this.collapseMessages(messages);
-    return [...collapsedMessages];
+    return { messages, collapsedMessages };
   }
 
   relevantFiles(messages: UIMessage[], id: string, maxRelevantFilesSize: number): UIMessage {
