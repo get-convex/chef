@@ -327,25 +327,6 @@ export const Chat = memo(
         return result;
       },
       onError: async (e: Error) => {
-        // Clean up the last message if it's an assistant message
-        setMessages((prevMessages) => {
-          const updatedMessages = [...prevMessages];
-          const lastMessage = updatedMessages[updatedMessages.length - 1];
-
-          if (lastMessage?.role === 'assistant' && Array.isArray(lastMessage.parts)) {
-            const updatedParts = [...lastMessage.parts.slice(0, -1)];
-            if (updatedParts.length > 0) {
-              updatedMessages[updatedMessages.length - 1] = {
-                ...lastMessage,
-                parts: updatedParts,
-              };
-            } else {
-              updatedMessages.pop();
-            }
-          }
-
-          return updatedMessages;
-        });
         captureMessage('Failed to process chat request: ' + e.message, {
           level: 'error',
           extra: {
@@ -356,7 +337,6 @@ export const Chat = memo(
 
         const retries = retryState.get();
         logger.error(`Request failed (retries: ${JSON.stringify(retries)})`, e, error);
-        const isFirstFailure = retries.numFailures === 0;
 
         const backoff = error?.message.includes(STATUS_MESSAGES.error)
           ? exponentialBackoff(retries.numFailures + 1)
@@ -367,9 +347,6 @@ export const Chat = memo(
         });
 
         workbenchStore.abortAllActions();
-        if (isFirstFailure && (messages.length === 0 || messages[messages.length - 1].role === 'user')) {
-          reload();
-        }
         await checkTokenUsage();
       },
       onFinish: async (message, response) => {
