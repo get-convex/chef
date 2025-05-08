@@ -218,13 +218,6 @@ export const Chat = memo(
     );
 
     const checkTokenUsage = useCallback(async () => {
-      // First, check if preference is 'always' but key for model is missing
-      const { hasMissingKey, provider, requireKey } = checkApiKeyForCurrentModel(modelSelection);
-      if (hasMissingKey && provider) {
-        setDisableChatMessage({ type: 'MissingApiKey', provider, requireKey });
-        return;
-      }
-
       if (hasApiKeySet(modelSelection, apiKey)) {
         setDisableChatMessage(null);
         return;
@@ -560,7 +553,7 @@ export const Chat = memo(
           });
         }
       },
-      [apiKey, checkApiKeyForCurrentModel, checkTokenUsage, setDisableChatMessage, setModelSelection],
+      [apiKey, checkApiKeyForCurrentModel, checkTokenUsage, setModelSelection],
     );
 
     return (

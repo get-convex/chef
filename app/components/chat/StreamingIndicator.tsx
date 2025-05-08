@@ -161,7 +161,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
               <AnimatePresence>
                 <div className="actions">
                   <div className={classNames('flex text-sm gap-3')}>
-                    <div className="flex w-full items-start gap-1.5">
+                    <div className="flex w-full items-center gap-1.5">
                       <div className="mt-1">{icon}</div>
                       {message}
                       <div className="grow" />
