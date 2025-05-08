@@ -254,7 +254,7 @@ export const Chat = memo(
       } catch (error) {
         captureException(error);
       }
-    }, [apiKey, checkApiKeyForCurrentModel, convex, modelSelection, setDisableChatMessage]);
+    }, [apiKey, convex, modelSelection, setDisableChatMessage]);
 
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
