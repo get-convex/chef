@@ -214,7 +214,9 @@ export const MessageInput = memo(function MessageInput({
             'flex items-center gap-2 border rounded-b-xl border-t-0 bg-background-secondary/80 p-1.5 text-sm flex-wrap',
           )}
         >
-          <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} size="sm" />
+          {chefAuthState.kind === 'fullyLoggedIn' && (
+            <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} size="sm" />
+          )}
           {!chatStarted && sessionId && (
             <TeamSelector
               description="Your project will be created in this Convex team"
@@ -228,10 +230,10 @@ export const MessageInput = memo(function MessageInput({
           {input.length > PROMPT_LENGTH_WARNING_THRESHOLD && <CharacterWarning />}
           <div className="ml-auto flex items-center gap-2">
             {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
-            {enhancePromptButton && (
+            {enhancePromptButton && chefAuthState.kind === 'fullyLoggedIn' && (
               <EnhancePromptButton
                 isEnhancing={isEnhancing}
-                disabled={!selectedTeamSlug || chefAuthState.kind === 'loading' || disabled || input.length === 0}
+                disabled={!selectedTeamSlug || disabled || input.length === 0}
                 onClick={enhancePrompt}
               />
             )}

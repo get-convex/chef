@@ -84,7 +84,7 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-        <div className="hidden rounded-xl border bg-white p-0.5 sm:block">
+        <div className="hidden overflow-hidden rounded-xl border bg-white p-2 sm:block  ">
           <img
             src={dashboardFeatures[activeFeature].imageUrl}
             alt={`${dashboardFeatures[activeFeature].title} screenshot`}
