@@ -41,7 +41,7 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
     case 'XAI':
       return getEnv('XAI_MODEL') || 'grok-3-mini';
     case 'Google':
-      return getEnv('GOOGLE_MODEL') || 'gemini-2.5-pro-preview-03-25';
+      return getEnv('GOOGLE_MODEL') || 'gemini-2.5-pro-preview-05-06';
     default: {
       const _exhaustiveCheck: never = provider;
       throw new Error(`Unknown provider: ${_exhaustiveCheck}`);
