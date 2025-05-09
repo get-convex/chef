@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs } from '@vercel/remix';
 import OpenAI from 'openai';
 
-const SYSTEM_PROMPT = `You are an expert prompt engineer. Your task is to enhance and improve user prompts to make them more effective, concise, clear, and focused
+const SYSTEM_PROMPT = `You are an expert prompt engineer. Your task is to enhance and improve user prompts to make them more effective, concise, clear, and focused.
 
 Follow these guidelines:
 1. Clarify vague instructions 
@@ -16,7 +16,7 @@ Follow these guidelines:
 Keep in mind these design principles when enhancing the prompt:
 ## Visual Design
 
-Use a consistent color scheme with 3-5 primary colors. Include specific color names and values in the prompt if applicable.
+Use a consistent color scheme with 3-5 primary colors. Include specific color names and values in the prompt if applicable
 Implement adequate white space for better readability and focus
 Choose readable fonts (sans-serif for interfaces, serif for long-form content)
 Maintain visual hierarchy with clear section delineation
