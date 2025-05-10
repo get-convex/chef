@@ -188,13 +188,19 @@ export class ChatContextManager {
       return true;
     }
 
-    // Check if any previous messages contain file artifacts
+    // Check if any previous messages contain file artifacts with non-empty content
     for (const message of messages) {
       if (message.role === 'user') {
         for (const part of message.parts) {
           if (part.type === 'text' && part.text.includes('title="Relevant Files"')) {
-            // Relevant files have been sent before, don't send them again
-            return false;
+            // Check if there's actual content between the boltAction tags
+            // We used to strip out the file content when serializing messages to store in Convex
+            const hasContent =
+              part.text.includes('<boltAction type="file"') && !part.text.match(/<boltAction[^>]*><\/boltAction>/);
+            if (hasContent) {
+              // Only return false if we found a message with actual file content
+              return false;
+            }
           }
         }
       }
