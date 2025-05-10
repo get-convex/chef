@@ -45,17 +45,16 @@ export class ChatContextManager {
   prepareContext(
     messages: UIMessage[],
     maxCollapsedMessagesSize: number,
+    collapsedMessagesSize: number,
   ): { messages: UIMessage[]; collapsedMessages: boolean } {
     // If the last message is a user message this is the first LLM call that includes that user message.
     // Only update the relevant files and the message cutoff indices if the last message is a user message to avoid clearing the cache as the agent makes changes.
     let collapsedMessages = false;
     if (messages[messages.length - 1].role === 'user') {
       const [messageIndex, partIndex] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
-      if (messageIndex != this.messageIndex || partIndex != this.partIndex) {
+      if (messageIndex >= this.messageIndex && partIndex > this.partIndex) {
         collapsedMessages = true;
-        this.messageIndex = messageIndex;
-        this.partIndex = partIndex;
-        messages = this.collapseMessages(messages);
+        messages = this.collapseMessages(messages, collapsedMessagesSize);
       }
     }
     return { messages, collapsedMessages };
@@ -148,7 +147,10 @@ export class ChatContextManager {
     return makeUserMessage(fileActions, id);
   }
 
-  private collapseMessages(messages: UIMessage[]): UIMessage[] {
+  private collapseMessages(messages: UIMessage[], collapsedMessagesSize: number): UIMessage[] {
+    const [newMessageIndex, newPartIndex] = this.messagePartCutoff(messages, collapsedMessagesSize);
+    this.messageIndex = newMessageIndex;
+    this.partIndex = newPartIndex;
     const fullMessages = [];
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i];
