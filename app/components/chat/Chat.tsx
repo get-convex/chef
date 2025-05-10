@@ -294,10 +294,8 @@ export const Chat = memo(
         }
         const { messages: preparedMessages, collapsedMessages } = chatContextManager.current.prepareContext(
           messages,
-          2000,
-          // maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
-          1000,
-          // collapsedMessagesSize
+          maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
+          collapsedMessagesSize,
         );
         return {
           messages: preparedMessages,

@@ -212,7 +212,6 @@ async function onFinishHandler({
     span.setAttribute('usage.totalTokens', usage.totalTokens);
     span.setAttribute('featureFlags.smallFiles', smallFiles);
     span.setAttribute('collapsedMessages', collapsedMessages);
-    console.log('collapsedMessages', collapsedMessages);
     if (providerMetadata) {
       const anthropic: any = providerMetadata.anthropic;
       if (anthropic) {
