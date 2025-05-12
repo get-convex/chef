@@ -3,7 +3,7 @@ import { useQueries as useReactQueries } from '@tanstack/react-query';
 import { api } from '@convex/_generated/api';
 import type { CoreMessage } from 'ai';
 import { decompressWithLz4 } from '~/lib/compression.client';
-import { queryClient } from '~/lib/stores/reactQueryClient';
+import { queryClientStore } from '~/lib/stores/reactQueryClient';
 import { useEffect, useState } from 'react';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 
@@ -83,7 +83,7 @@ export function useDebugPrompt(chatInitialId: string) {
         gcTime: 10 * 60 * 1000,
       })),
     },
-    queryClient,
+    queryClientStore.get(),
   );
 
   // Any errors return an error.

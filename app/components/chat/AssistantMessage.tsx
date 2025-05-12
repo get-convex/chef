@@ -25,18 +25,17 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
   for (const [index, part] of message.parts.entries()) {
     const partId = makePartId(message.id, index);
     if (part.type === 'tool-invocation') {
-      if (showUsageAnnotations) {
-        const model = parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId];
-        const usage = parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId];
-        const success = part.toolInvocation.state === 'result' && !part.toolInvocation.result.startsWith('Error: ');
-        children.push(
-          displayModelAndUsage({
-            model,
-            usageAnnotation: usage ?? undefined,
-            success,
-          }),
-        );
-      }
+      const model = parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId];
+      const usage = parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId];
+      const success = part.toolInvocation.state === 'result' && !part.toolInvocation.result.startsWith('Error: ');
+      children.push(
+        displayModelAndUsage({
+          model,
+          usageAnnotation: usage ?? undefined,
+          success,
+          showUsageAnnotations,
+        }),
+      );
       children.push(<ToolCall key={children.length} partId={partId} toolCallId={part.toolInvocation.toolCallId} />);
     }
     if (part.type === 'text') {
@@ -47,17 +46,16 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
       );
     }
   }
-  if (showUsageAnnotations) {
-    const finalModel = parsedAnnotations.modelForToolCall.final;
-    const finalUsage = parsedAnnotations.usageForToolCall.final;
-    children.push(
-      displayModelAndUsage({
-        model: finalModel,
-        usageAnnotation: finalUsage ?? undefined,
-        success: true,
-      }),
-    );
-  }
+  const finalModel = parsedAnnotations.modelForToolCall.final;
+  const finalUsage = parsedAnnotations.usageForToolCall.final;
+  children.push(
+    displayModelAndUsage({
+      model: finalModel,
+      usageAnnotation: finalUsage ?? undefined,
+      success: true,
+      showUsageAnnotations,
+    }),
+  );
   return (
     <div className="w-full overflow-hidden text-sm">
       <div className="flex flex-col gap-2">
@@ -80,10 +78,12 @@ function displayModelAndUsage({
   model,
   usageAnnotation,
   success,
+  showUsageAnnotations,
 }: {
   model: { provider: ProviderType; model: string | undefined } | undefined;
   usageAnnotation: UsageAnnotation | undefined;
   success: boolean;
+  showUsageAnnotations: boolean;
 }) {
   const modelDisplay = displayModel(model ?? { provider: 'Unknown', model: undefined });
   // Note: These numbers are the LLM-reported tokens, not Chef tokens (i.e. not
@@ -91,7 +91,9 @@ function displayModelAndUsage({
   // we don't charge for tokens produced from failed tool calls. This should
   // probably be re-worked to use Chef tokens.
 
-  const usageDisplay = usageAnnotation ? displayUsage(usageAnnotation, success, model?.provider ?? 'Unknown') : null;
+  const usageDisplay = usageAnnotation
+    ? displayUsage(usageAnnotation, success, model?.provider ?? 'Unknown', showUsageAnnotations)
+    : null;
   if (modelDisplay && usageDisplay) {
     return (
       <div className="flex items-center gap-1">
@@ -113,22 +115,30 @@ function displayChefTokenNumber(num: number) {
   return num.toString();
 }
 
-function displayUsage(usageAnnotation: UsageAnnotation, success: boolean, provider: ProviderType) {
+function displayUsage(
+  usageAnnotation: UsageAnnotation,
+  success: boolean,
+  provider: ProviderType,
+  showUsageAnnotations: boolean,
+) {
   const usage: Usage = usageFromGeneration({
     usage: usageAnnotation,
     providerMetadata: usageAnnotation.providerMetadata,
   });
+  console.log('displayUsage', usageAnnotation, success, provider, showUsageAnnotations);
   const { chefTokens, breakdown } = calculateChefTokens(usage, provider);
   if (!success) {
     return (
       <div className="text-xs text-content-secondary">
-        Chef Tokens: 0 (failed tool call), {displayBreakdownForSingleAnnotation(breakdown)}
+        Chef Tokens: 0 (failed tool call)
+        {showUsageAnnotations ? `, ${displayBreakdownForSingleAnnotation(breakdown)}` : ''}
       </div>
     );
   }
   return (
     <div className="text-xs text-content-secondary">
-      Chef Tokens: {displayChefTokenNumber(chefTokens)}, {displayBreakdownForSingleAnnotation(breakdown)}
+      Chef Tokens: {displayChefTokenNumber(chefTokens)}
+      {showUsageAnnotations ? `, ${displayBreakdownForSingleAnnotation(breakdown)}` : ''}
     </div>
   );
 }

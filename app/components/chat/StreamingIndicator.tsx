@@ -7,6 +7,12 @@ import { Spinner } from '@ui/Spinner';
 import { ExclamationTriangleIcon, CheckCircledIcon, ResetIcon } from '@radix-ui/react-icons';
 import { useEffect, useState } from 'react';
 import { Button } from '@ui/Button';
+import { useUsage } from '~/lib/stores/usage';
+import { Donut } from '@ui/Donut';
+import { Loading } from '@ui/Loading';
+import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { Tooltip } from '@ui/Tooltip';
+import { useReferralStats } from '~/lib/hooks/useReferralCode';
 
 interface StreamingIndicatorProps {
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
@@ -51,6 +57,7 @@ const COOKING_SPLINES_DURATION = 4000;
 
 export default function StreamingIndicator(props: StreamingIndicatorProps) {
   const { aborted } = useStore(chatStore);
+  const teamSlug = useSelectedTeamSlug();
 
   let streamStatus = props.streamStatus;
   const anyToolRunning =
@@ -164,7 +171,8 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                     <div className="flex w-full items-center gap-1.5">
                       <div className="mt-1">{icon}</div>
                       {message}
-                      <div className="grow" />
+                      <div className="grow min-h-6" />
+                      <LittleUsage teamSlug={teamSlug} />
                       {streamStatus === 'error' && (
                         <Button type="button" className="mt-auto" onClick={props.resendMessage} icon={<ResetIcon />}>
                           Resend
@@ -179,5 +187,50 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
         </div>
       </motion.div>
     </AnimatePresence>
+  );
+}
+
+function LittleUsage({ teamSlug }: { teamSlug: string | null }) {
+  const { isLoadingUsage, usagePercentage, tokenUsage } = useUsage({ teamSlug });
+
+  const referralStats = useReferralStats();
+
+  const loading = isLoadingUsage || !referralStats;
+
+  if (!isLoadingUsage && (tokenUsage?.centitokensQuota == null || tokenUsage?.centitokensQuota == null)) {
+    return null;
+  }
+
+  // donut hover
+  const tip = tokenUsage?.isPaidPlan
+    ? usagePercentage > 100
+      ? `Your team is into usage billing for Chef tokens.`
+      : `Your team has used ${Math.floor(usagePercentage)}% of its monthly included amount (before usage-based billing)`
+    : usagePercentage < 100
+      ? `Your team has used ${Math.floor(usagePercentage)}% of its monthly free tier`
+      : `Your team has exceeded its monthly free tier`;
+
+  // appears to the right of the donut
+  const label = tokenUsage?.isPaidPlan
+    ? usagePercentage > 100
+      ? ``
+      : `${Math.floor(usagePercentage)}% used`
+    : usagePercentage < 100
+      ? `${Math.floor(usagePercentage)}% used`
+      : `out of tokens`;
+
+  return (
+    <div className="flex items-center gap-2 text-sm text-content-secondary">
+      <div className="grow">
+        {!loading && tokenUsage ? (
+          <Tooltip side="top" tip={tip} className="flex animate-fadeInFromLoading items-center">
+            <Donut current={tokenUsage.centitokensUsed} max={tokenUsage?.centitokensQuota} />
+          </Tooltip>
+        ) : (
+          <Loading className="size-4" />
+        )}
+      </div>
+      {label}
+    </div>
   );
 }

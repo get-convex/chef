@@ -175,7 +175,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       />
                     </div>
                   )}
-                  {/* StreamingIndicator is ow a normal block above the input */}
+                  {/* StreamingIndicator is now a normal block above the input */}
                   {!disableChatMessage && (
                     <StreamingIndicator
                       streamStatus={streamStatus}

@@ -37,6 +37,8 @@ export async function waitForConvexSessionId(caller?: string): Promise<Id<'sessi
 
 export const sessionIdStore = atom<Id<'sessions'> | null | undefined>(undefined);
 
+export const convexAuthTokenStore = atom<string | null>(null);
+
 /**
  * We send the auth token in big brain requests. The Convex client already makes
  * sure it has an up-to-date auth token, so we just need to extract it.
@@ -50,5 +52,7 @@ export function getConvexAuthToken(convex: ConvexReactClient): string | null {
   if (!token) {
     return null;
   }
+  // TODO make this automatically harvested on refresh
+  convexAuthTokenStore.set(token);
   return token;
 }

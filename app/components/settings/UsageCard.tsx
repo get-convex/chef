@@ -1,20 +1,16 @@
 import { useStore } from '@nanostores/react';
-import { useConvex } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { getStoredTeamSlug } from '~/lib/stores/convexTeams';
 import { convexTeamsStore } from '~/lib/stores/convexTeams';
-import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
-import { getConvexAuthToken } from '~/lib/stores/sessionId';
-import { getTokenUsage, renderTokenCount } from '~/lib/convexUsage';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { Callout } from '@ui/Callout';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { ProgressBar } from '@ui/ProgressBar';
+import { useUsage } from '~/lib/stores/usage';
+import { renderTokenCount } from '~/lib/convexUsage';
 
 export function UsageCard() {
-  const convex = useConvex();
-
   const teams = useStore(convexTeamsStore);
   const [selectedTeamSlug, setSelectedTeamSlug] = useState(getStoredTeamSlug() ?? teams?.[0]?.slug ?? null);
   useEffect(() => {
@@ -25,43 +21,9 @@ export function UsageCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teams]);
 
-  const [isLoadingUsage, setIsLoadingUsage] = useState(true);
-  const [tokenUsage, setTokenUsage] = useState<{
-    centitokensUsed: number;
-    centitokensQuota: number;
-    isPaidPlan: boolean;
-  } | null>(null);
-  const token = getConvexAuthToken(convex);
-  useEffect(() => {
-    async function fetchTokenUsage() {
-      if (!selectedTeamSlug) {
-        return;
-      }
-
-      setIsLoadingUsage(true);
-      if (!token) {
-        return;
-      }
-      try {
-        if (token) {
-          const usage = await getTokenUsage(VITE_PROVISION_HOST, token, selectedTeamSlug);
-          if (usage.status === 'success') {
-            setTokenUsage(usage);
-          } else {
-            console.error('Failed to fetch token usage:', usage.httpStatus, usage.httpBody);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch token usage:', error);
-      } finally {
-        setIsLoadingUsage(false);
-      }
-    }
-    void fetchTokenUsage();
-  }, [selectedTeamSlug, convex, token]);
-
-  const usagePercentage = tokenUsage ? (tokenUsage.centitokensUsed / tokenUsage.centitokensQuota) * 100 : 0;
-  console.log('usagePercentage', usagePercentage);
+  const { isLoadingUsage, usagePercentage, tokenUsage } = useUsage({
+    teamSlug: selectedTeamSlug,
+  });
 
   return (
     <div className="rounded-lg border bg-bolt-elements-background-depth-1 shadow-sm">

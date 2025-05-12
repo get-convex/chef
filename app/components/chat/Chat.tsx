@@ -42,6 +42,7 @@ import { models, type ModelProvider } from '~/components/chat/ModelSelector';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { useLocalStorage } from '@uidotdev/usehooks';
 import { KeyIcon } from '@heroicons/react/24/outline';
+import { UsageDebugView } from '~/components/debug/UsageDebugView';
 
 const logger = createScopedLogger('Chat');
 
@@ -542,44 +543,47 @@ export const Chat = memo(
     );
 
     return (
-      <BaseChat
-        ref={animationScope}
-        messageRef={messageRef}
-        scrollRef={scrollRef}
-        showChat={showChat}
-        chatStarted={chatStarted}
-        description={title}
-        onStop={abort}
-        onSend={sendMessage}
-        streamStatus={status}
-        currentError={error}
-        toolStatus={toolStatus}
-        messages={parsedMessages /* Note that parsedMessages are throttled. */}
-        actionAlert={actionAlert}
-        clearAlert={() => workbenchStore.clearAlert()}
-        terminalInitializationOptions={terminalInitializationOptions}
-        disableChatMessage={
-          disableChatMessage?.type === 'ExceededQuota' ? (
-            <NoTokensText resetDisableChatMessage={() => setDisableChatMessage(null)} />
-          ) : disableChatMessage?.type === 'TeamDisabled' ? (
-            <DisabledText
-              isPaidPlan={disableChatMessage.isPaidPlan}
-              resetDisableChatMessage={() => setDisableChatMessage(null)}
-            />
-          ) : disableChatMessage?.type === 'MissingApiKey' ? (
-            <MissingApiKey
-              provider={disableChatMessage.provider}
-              requireKey={disableChatMessage.requireKey}
-              resetDisableChatMessage={() => setDisableChatMessage(null)}
-            />
-          ) : null
-        }
-        sendMessageInProgress={sendMessageInProgress}
-        modelSelection={modelSelection}
-        setModelSelection={handleModelSelectionChange}
-        onRewindToMessage={rewindToMessage}
-        earliestRewindableMessageRank={earliestRewindableMessageRank}
-      />
+      <>
+        <BaseChat
+          ref={animationScope}
+          messageRef={messageRef}
+          scrollRef={scrollRef}
+          showChat={showChat}
+          chatStarted={chatStarted}
+          description={title}
+          onStop={abort}
+          onSend={sendMessage}
+          streamStatus={status}
+          currentError={error}
+          toolStatus={toolStatus}
+          messages={parsedMessages /* Note that parsedMessages are throttled. */}
+          actionAlert={actionAlert}
+          clearAlert={() => workbenchStore.clearAlert()}
+          terminalInitializationOptions={terminalInitializationOptions}
+          disableChatMessage={
+            disableChatMessage?.type === 'ExceededQuota' ? (
+              <NoTokensText resetDisableChatMessage={() => setDisableChatMessage(null)} />
+            ) : disableChatMessage?.type === 'TeamDisabled' ? (
+              <DisabledText
+                isPaidPlan={disableChatMessage.isPaidPlan}
+                resetDisableChatMessage={() => setDisableChatMessage(null)}
+              />
+            ) : disableChatMessage?.type === 'MissingApiKey' ? (
+              <MissingApiKey
+                provider={disableChatMessage.provider}
+                requireKey={disableChatMessage.requireKey}
+                resetDisableChatMessage={() => setDisableChatMessage(null)}
+              />
+            ) : null
+          }
+          sendMessageInProgress={sendMessageInProgress}
+          modelSelection={modelSelection}
+          setModelSelection={handleModelSelectionChange}
+          onRewindToMessage={rewindToMessage}
+          earliestRewindableMessageRank={earliestRewindableMessageRank}
+        />
+        <UsageDebugView />
+      </>
     );
   },
 );

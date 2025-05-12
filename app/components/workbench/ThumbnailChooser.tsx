@@ -9,7 +9,6 @@ import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
-import { useWhatChanged } from '~/lib/hooks/useWhatChanged';
 
 export async function uploadThumbnail(imageData: string, sessionId: string, chatId: string): Promise<void> {
   // Convert base64 to blob
@@ -91,7 +90,6 @@ export function ThumbnailChooser({ isOpen, onOpenChange, onRequestCapture }: Thu
       captureNewImage();
     }
   }, [isOpen, currentThumbnail, localPreview, captureNewImage, onRequestCapture]);
-  useWhatChanged({ isOpen, currentThumbnail, localPreview, isCapturing, captureNewImage, onRequestCapture });
 
   const uploadImage = useCallback(
     async (imageData: string) => {
