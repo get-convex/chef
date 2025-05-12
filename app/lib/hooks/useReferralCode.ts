@@ -34,6 +34,53 @@ export function useReferralStats() {
   };
 }
 
+export function useEntitlements() {
+  const authToken = useAuthToken();
+  const teamId = useSelectedTeam()?.id;
+  const { data } = useReactQuery(
+    {
+      queryKey: ['referral stats', teamId],
+      enabled: !!authToken,
+      queryFn: async () => {
+        const data = (await bbGet(`/api/dashboard/teams/${teamId}/get_entitlements`, authToken!)) as Entitlements;
+        return data;
+      },
+    },
+    queryClientStore.get(),
+  );
+  if (!data) {
+    return null;
+  }
+  const { maxChefTokens } = data;
+  console.log(data);
+  return {
+    maxChefTokens,
+  };
+}
+
+type Entitlements = {
+  maxChefTokens: number;
+  /*
+  auditLogsEnabled: false;
+  customDomainsEnabled: false;
+  logStreamingEnabled: false;
+  maxCloudBackups: 2;
+  maxProjects: 20;
+  maxTeamMembers: 6;
+  periodicBackupsEnabled: false;
+  projectMaxPreviewDeployments: 0;
+  streamingExportEnabled: false;
+  teamMaxActionCompute: 20;
+  teamMaxDatabaseBandwidth: 1073741824;
+  teamMaxDatabaseStorage: 536870912;
+  teamMaxFileBandwidth: 1073741824;
+  teamMaxFileStorage: 1073741824;
+  teamMaxFunctionCalls: 1000000;
+  teamMaxVectorBandwidth: 536870912;
+  teamMaxVectorStorage: 536870912;
+  */
+};
+
 export async function bbGet(path: string, authToken: string) {
   const url = `${VITE_PROVISION_HOST}${path}`;
   const response = await fetch(url, {

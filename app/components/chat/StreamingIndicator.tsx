@@ -12,10 +12,13 @@ import { Donut } from '@ui/Donut';
 import { Loading } from '@ui/Loading';
 import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { Tooltip } from '@ui/Tooltip';
-import { useReferralStats } from '~/lib/hooks/useReferralCode';
+import { useEntitlements, useReferralStats } from '~/lib/hooks/useReferralCode';
+import { Popover } from '@ui/Popover';
+
+type StreamStatus = 'streaming' | 'submitted' | 'ready' | 'error';
 
 interface StreamingIndicatorProps {
-  streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
+  streamStatus: StreamStatus;
   numMessages: number;
   toolStatus?: ToolStatus;
   currentError?: Error;
@@ -172,7 +175,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                       <div className="mt-1">{icon}</div>
                       {message}
                       <div className="min-h-6 grow" />
-                      <LittleUsage teamSlug={teamSlug} />
+                      <LittleUsage teamSlug={teamSlug} streamStatus={streamStatus} />
                       {streamStatus === 'error' && (
                         <Button type="button" className="mt-auto" onClick={props.resendMessage} icon={<ResetIcon />}>
                           Resend
@@ -190,37 +193,19 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
   );
 }
 
-function LittleUsage({ teamSlug }: { teamSlug: string | null }) {
-  const { isLoadingUsage, usagePercentage, tokenUsage } = useUsage({ teamSlug });
-
-  const referralStats = useReferralStats();
-
-  const loading = isLoadingUsage || !referralStats;
-
-  if (!isLoadingUsage && (tokenUsage?.centitokensQuota == null || tokenUsage?.centitokensQuota == null)) {
-    return null;
-  }
-
-  // donut hover
-  const tip = tokenUsage?.isPaidPlan
-    ? usagePercentage > 100
-      ? `Your team is into usage billing for Chef tokens.`
-      : `Your team has used ${Math.floor(usagePercentage)}% of its monthly included amount (before usage-based billing)`
-    : usagePercentage < 100
-      ? `Your team has used ${Math.floor(usagePercentage)}% of its monthly free tier`
-      : `Your team has exceeded its monthly free tier`;
-
-  // appears to the right of the donut
-  const label = tokenUsage?.isPaidPlan
-    ? usagePercentage > 100
-      ? ``
-      : `${Math.floor(usagePercentage)}% used`
-    : usagePercentage < 100
-      ? `${Math.floor(usagePercentage)}% used`
-      : `out of tokens`;
-
+function UsageDonut({
+  tokenUsage,
+  loading,
+  tip,
+  label,
+}: {
+  tokenUsage: any;
+  loading: boolean;
+  tip?: string;
+  label: string;
+}) {
   return (
-    <div className="flex items-center gap-2 text-sm text-content-secondary">
+    <div className="flex items-center gap-2">
       <div className="grow">
         {!loading && tokenUsage ? (
           <Tooltip side="top" tip={tip} className="flex animate-fadeInFromLoading items-center">
@@ -231,6 +216,122 @@ function LittleUsage({ teamSlug }: { teamSlug: string | null }) {
         )}
       </div>
       {label}
+    </div>
+  );
+}
+
+function displayChefTokenNumber(num: number) {
+  if (num >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(1)}M`;
+  } else if (num >= 1_000) {
+    return `${(num / 1_000).toFixed(0)}K`;
+  }
+  return num.toString();
+}
+
+function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; streamStatus: StreamStatus }) {
+  const { isLoadingUsage, usagePercentage, tokenUsage, refetch } = useUsage({ teamSlug });
+  const referralStats = useReferralStats();
+  const entitlements = useEntitlements();
+  const loading = isLoadingUsage || !referralStats || !entitlements;
+
+  useEffect(() => {
+    if (streamStatus === 'ready') {
+      console.log('refetching usage...');
+      refetch();
+    }
+  }, [streamStatus, refetch]);
+
+  if (!isLoadingUsage && (tokenUsage?.centitokensQuota == null || tokenUsage?.centitokensQuota == null)) {
+    return null;
+  }
+
+  // donut hover
+  const tip = tokenUsage?.isPaidPlan
+    ? usagePercentage > 100
+      ? `Your team is billed is in usage-based billing for Chef tokens.`
+      : `Your team has used ${Math.floor(usagePercentage)}% of its monthly included Chef tokens. Billing after this is $10 per 1,000,000 Chef tokens.`
+    : usagePercentage < 100
+      ? `Your team has used ${Math.floor(usagePercentage)}% of its monthly free Chef tokens.`
+      : `Your team has exceeded its monthly free tier.`;
+
+  // appears to the right of the donut
+  const label = tokenUsage?.isPaidPlan
+    ? usagePercentage > 100
+      ? ``
+      : `${Math.floor(usagePercentage)}% used`
+    : usagePercentage < 100
+      ? `${Math.floor(usagePercentage)}% used`
+      : `out of tokens`;
+
+  const detailedLabel = tokenUsage?.isPaidPlan
+    ? `${displayChefTokenNumber(tokenUsage?.centitokensUsed)} / ${displayChefTokenNumber(tokenUsage?.centitokensQuota)} included tokens (${Math.floor(usagePercentage)}% used)`
+    : tokenUsage
+      ? usagePercentage < 100
+        ? `${displayChefTokenNumber(tokenUsage?.centitokensUsed)} / ${displayChefTokenNumber(tokenUsage?.centitokensQuota)} Chef tokens (${Math.floor(usagePercentage)}% used) `
+        : `out of tokens`
+      : '';
+
+  return (
+    <div className="flex flex-col items-end gap-1 text-sm text-content-secondary">
+      <UsageDonut tokenUsage={tokenUsage} loading={loading} tip={tip} label={label} />
+      <Popover
+        button={
+          <button className="border-b border-dotted border-content-secondary text-xs text-content-secondary hover:border-content-primary hover:text-content-primary">
+            Get more tokens
+          </button>
+        }
+        placement="top-end"
+        offset={[0, 8]}
+        portal={true}
+        className="w-96"
+      >
+        {loading ? null : (
+          <div className="space-y-2">
+            <UsageDonut tokenUsage={tokenUsage} loading={loading} label={detailedLabel} />
+            <p className="text-sm ">
+              Chef tokens power Chef code generation with more expensive models using more Chef tokens.
+            </p>
+            <p className="text-sm text-content-secondary">
+              Your team&rsquo;s Chef tokens are set to {displayChefTokenNumber(tokenUsage.centitokensQuota)} on the
+              first of each month. Unused tokens from the previous month are not saved.
+            </p>
+            <ul className="space-y-1.5 text-sm text-content-secondary">
+              {tokenUsage.isPaidPlan ? null : referralStats.left === 5 ? (
+                <li>
+                  <Button variant="unstyled" className="hover:text-content-primary">
+                    Refer up to 5 new Chef users
+                  </Button>{' '}
+                  to get more 85K more Chef tokens now and each month
+                </li>
+              ) : (
+                <li>
+                  <Button variant="unstyled" className="hover:text-content-primary">
+                    Refer up to {referralStats.left} more new users
+                  </Button>{' '}
+                  to get 85K Chef tokens each now and each month
+                </li>
+              )}
+              <li>
+                <Button
+                  href={`https://dashboard.convex.dev/t/${teamSlug}/settings/billing`}
+                  variant="unstyled"
+                  className="hover:text-content-primary"
+                >
+                  Upgrade to a paid plan
+                </Button>{' '}
+                for 500K Chef tokens each month.
+              </li>
+              <li>
+                <Button href="/settings" variant="unstyled" className="hover:text-content-primary">
+                  Add an API key
+                </Button>{' '}
+                to use Chef without paying
+              </li>
+            </ul>
+          </div>
+        )}
+      </Popover>
     </div>
   );
 }

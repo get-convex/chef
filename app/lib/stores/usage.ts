@@ -6,7 +6,7 @@ import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import { debugOverrideStore, debugOverrideEnabledStore } from './debug';
 import { queryClientStore } from './reactQueryClient';
 import { QueryObserver } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 export function useTokenUsage(teamSlug: string | null): TeamUsageState {
   // getConvexAuthToken has a side effect we might need? TODO
@@ -83,6 +83,8 @@ type TeamUsageState =
 // Maintains token usage information for every team that it's ever been requested for.
 export const serverTeamUsageStore = map<Record<string, TeamUsageState>>({});
 
+const refetchForTeam: Record<string, () => Promise<void>> = {};
+
 onMount(serverTeamUsageStore, () => {
   const unsubscribers: Map<string, () => void> = new Map();
 
@@ -93,8 +95,10 @@ onMount(serverTeamUsageStore, () => {
     const observer = new QueryObserver<UsageData>(queryClientStore.get(), {
       queryKey: ['teamUsage', teamSlug],
       queryFn: async () => await getTokenUsage(VITE_PROVISION_HOST, convexAuthTokenStore.get()!, teamSlug),
-      refetchInterval: 30000,
+      // TODO instead of fetching so much, refetch when know some tokens were just used
+      refetchInterval: 10 * 60 * 1000,
     });
+    refetchForTeam[teamSlug] = async () => void observer.refetch();
 
     const unsubscribe = observer.subscribe(({ data }) => {
       if (data) {
@@ -122,6 +126,11 @@ onMount(serverTeamUsageStore, () => {
   };
 });
 
+async function refetchUsageForTeam(teamSlug: string) {
+  const cb = refetchForTeam[teamSlug];
+  await cb?.();
+}
+
 const debugOverrideUsageStore = computed(debugOverrideStore, (store) => store.usage);
 const debugEnabledUsageStore = computed(debugOverrideEnabledStore, (store) => store.usage);
 
@@ -147,9 +156,25 @@ export function useUsage({ teamSlug }: { teamSlug: string | null }) {
     ? (teamState.tokenUsage.centitokensUsed / teamState.tokenUsage.centitokensQuota) * 100
     : 0;
 
+  const refetch = useCallback(async () => {
+    if (teamSlug) {
+      await refetchUsageForTeam(teamSlug);
+    }
+  }, [teamSlug]);
+
+  if (!teamState || teamState.isLoading) {
+    return {
+      isLoadingUsage: true as const,
+      usagePercentage: 0,
+      tokenUsage: null,
+      refetch,
+    };
+  }
+
   return {
-    isLoadingUsage: teamState?.isLoading ?? true,
+    isLoadingUsage: false as const,
     usagePercentage,
-    tokenUsage: teamState?.tokenUsage ?? null,
+    tokenUsage: teamState.tokenUsage,
+    refetch,
   };
 }
