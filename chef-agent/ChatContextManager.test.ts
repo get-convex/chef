@@ -132,6 +132,57 @@ describe('ChatContextManager', () => {
       expect(collapsedMessages).toBe(false);
     });
 
+    test('should preserve collapsed messages when last message is not from user', () => {
+      const maxCollapsedMessagesSize = 2000;
+      const collapsedMessagesSize = 1000;
+      const chatContextManager = createManager();
+      const messages: UIMessage[] = [
+        {
+          id: '1',
+          role: 'user',
+          content: 'Hello',
+          parts: [{ type: 'text', text: 'Hello' }],
+        },
+        {
+          id: '2',
+          role: 'assistant',
+          content: 'Hi there',
+          parts: [{ type: 'text', text: 'Hi there' }],
+        },
+        {
+          id: '3',
+          role: 'user',
+          content: 'A'.repeat(3000), // Create a large message
+          parts: [{ type: 'text', text: 'A'.repeat(3000) }],
+        },
+      ];
+
+      const { messages: newMessages, collapsedMessages } = chatContextManager.prepareContext(
+        messages,
+        maxCollapsedMessagesSize,
+        collapsedMessagesSize,
+      );
+      expect(newMessages.length).toBe(1);
+      // The last message is the only one that should be kept
+      expect(newMessages[0].id).toBe('3');
+      expect(collapsedMessages).toBe(true);
+      // Add another assistant message
+      messages.push({
+        id: '4',
+        role: 'assistant',
+        content: 'Hi there',
+        parts: [{ type: 'text', text: 'Hi there' }],
+      });
+      const { messages: newMessages2, collapsedMessages: collapsedMessages2 } = chatContextManager.prepareContext(
+        messages,
+        maxCollapsedMessagesSize,
+        collapsedMessagesSize,
+      );
+      // The previously collapsed message state should be preserved
+      expect(newMessages2.length).toEqual(2);
+      expect(collapsedMessages2).toBe(false);
+    });
+
     test('should collapse messages when size exceeds maxCollapsedMessagesSize', () => {
       const maxCollapsedMessagesSize = 2000;
       const collapsedMessagesSize = 1000;
