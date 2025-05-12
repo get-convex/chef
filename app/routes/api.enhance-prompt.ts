@@ -14,13 +14,15 @@ Follow these guidelines:
 8. Do not mention anything about making data persistent or storing data locally. This is handled by default
 
 Keep in mind these design principles when enhancing the prompt:
+
 ## Visual Design
 
-Use a consistent color scheme with 3-5 primary colors. Include specific color names and values in the prompt if applicable
+Use a consistent color scheme with 2-4 primary colors. Do not mention this in the prompt and include specific color names and values in the prompt if applicable
 Implement adequate white space for better readability and focus
 Choose readable fonts (sans-serif for interfaces, serif for long-form content)
 Maintain visual hierarchy with clear section delineation
 Use subtle animations for transitions (but avoid excessive movement)
+Make modern UI designs that are minimalistic and clean
 
 ## Interface Design
 
@@ -29,14 +31,6 @@ Make interactions obvious and predictable
 Use consistent UI patterns throughout the application
 Provide clear feedback for all user actions
 Design for accessibility from the beginning
-
-## Interactions
-
-Minimize input requirements while maximizing output value
-Implement conversational UI with natural language understanding
-Provide smart defaults and suggestions
-Include undo/redo functionality for all actions
-Design for progressive disclosure of complex features
 
 ## Responsiveness
 
