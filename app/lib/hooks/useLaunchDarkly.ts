@@ -12,7 +12,7 @@ const flagDefaults: {
   maxCollapsedMessagesSize: number;
   maxRelevantFilesSize: number;
   enhancePromptButton: boolean;
-  collapsedMessagesSize: number;
+  minCollapsedMessagesSize: number;
 } = {
   maintenanceMode: false,
   openAiLaunch202504: false,
@@ -24,7 +24,7 @@ const flagDefaults: {
   maxCollapsedMessagesSize: 65536,
   maxRelevantFilesSize: 8192,
   enhancePromptButton: false,
-  collapsedMessagesSize: 8192,
+  minCollapsedMessagesSize: 8192,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {

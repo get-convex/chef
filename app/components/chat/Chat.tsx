@@ -134,7 +134,7 @@ export const Chat = memo(
       smallFiles,
       maxCollapsedMessagesSize,
       maxRelevantFilesSize,
-      collapsedMessagesSize,
+      minCollapsedMessagesSize,
     } = useLaunchDarkly();
 
     const title = useStore(description);
@@ -295,7 +295,7 @@ export const Chat = memo(
         const { messages: preparedMessages, collapsedMessages } = chatContextManager.current.prepareContext(
           messages,
           maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
-          collapsedMessagesSize,
+          minCollapsedMessagesSize,
         );
         return {
           messages: preparedMessages,
