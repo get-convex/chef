@@ -53,10 +53,15 @@ export class ChatContextManager {
     if (messages[messages.length - 1].role === 'user') {
       const [messageIndex, partIndex] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
       if (messageIndex >= this.messageIndex && partIndex > this.partIndex) {
+        // Truncate more than just the `maxCollapsedMessagesSize` limit because we want to get some cache hits before needing to truncate again.
+        // If we only truncate to the `maxCollapsedMessagesSize` limit, we'll keep truncating on each new message, which means cache misses.
+        const [newMessageIndex, newPartIndex] = this.messagePartCutoff(messages, collapsedMessagesSize);
+        this.messageIndex = newMessageIndex;
+        this.partIndex = newPartIndex;
         collapsedMessages = true;
-        messages = this.collapseMessages(messages, collapsedMessagesSize);
       }
     }
+    messages = this.collapseMessages(messages);
     return { messages, collapsedMessages };
   }
 
@@ -147,10 +152,7 @@ export class ChatContextManager {
     return makeUserMessage(fileActions, id);
   }
 
-  private collapseMessages(messages: UIMessage[], collapsedMessagesSize: number): UIMessage[] {
-    const [newMessageIndex, newPartIndex] = this.messagePartCutoff(messages, collapsedMessagesSize);
-    this.messageIndex = newMessageIndex;
-    this.partIndex = newPartIndex;
+  private collapseMessages(messages: UIMessage[]): UIMessage[] {
     const fullMessages = [];
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i];
