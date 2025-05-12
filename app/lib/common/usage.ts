@@ -195,10 +195,12 @@ export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) 
     const googleCompletionTokens = totalUsage.completionTokens * 140;
     chefTokens += googleCompletionTokens;
     breakdown.completionTokens.google = googleCompletionTokens;
-    const googlePromptTokens = totalUsage.promptTokens * 18;
+    const googlePromptTokens = (totalUsage.promptTokens - totalUsage.googleCachedContentTokenCount) * 18;
     chefTokens += googlePromptTokens;
     breakdown.promptTokens.google.uncached = googlePromptTokens;
-    // TODO: Implement Google billing for the prompt tokens that are cached. Google doesn't offer caching yet.
+    const googleCachedContentTokens = totalUsage.googleCachedContentTokenCount * 5;
+    chefTokens += googleCachedContentTokens;
+    breakdown.promptTokens.google.cached = googleCachedContentTokens;
   } else {
     captureMessage('WARNING: Unknown provider. Not recording usage. Giving away for free.', {
       level: 'error',

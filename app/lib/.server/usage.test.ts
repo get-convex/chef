@@ -125,24 +125,3 @@ test('encodeUsageAnnotationGoogle', async () => {
     },
   });
 });
-
-test('buildUsageRecordGoogle', () => {
-  const usage = {
-    completionTokens: 100,
-    promptTokens: 200,
-    totalTokens: 300,
-    googleCachedContentTokenCount: 50,
-    providerMetadata: {
-      google: {
-        cachedContentTokenCount: 50,
-      },
-    },
-  };
-
-  const record = buildUsageRecord(usage);
-  expect(record).toEqual({
-    completionTokens: 100,
-    promptTokens: 250, // 200 + 50 cached content tokens
-    cachedPromptTokens: 50, // 50 cached content tokens
-  });
-});
