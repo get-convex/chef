@@ -9,6 +9,10 @@ import { QueryObserver } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 export function useTokenUsage(teamSlug: string | null): TeamUsageState {
+  // getConvexAuthToken has a side effect we might need? TODO
+  const convex = useConvex();
+  void getConvexAuthToken(convex);
+
   const usageByTeam = useStore(usageStore);
 
   useEffect(() => {
@@ -137,12 +141,7 @@ export const usageStore = computed(
 );
 
 export function useUsage({ teamSlug }: { teamSlug: string | null }) {
-  // has a side effect
-  const convex = useConvex();
-  void getConvexAuthToken(convex);
-
-  const derivedState = useStore(usageStore);
-  const teamState = teamSlug ? derivedState[teamSlug] : null;
+  const teamState = useTokenUsage(teamSlug);
 
   const usagePercentage = teamState?.tokenUsage
     ? (teamState.tokenUsage.centitokensUsed / teamState.tokenUsage.centitokensQuota) * 100

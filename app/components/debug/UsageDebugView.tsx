@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDebugState } from '~/lib/stores/debug';
 import { DraggableDebugView } from './DraggableDebugView';
 import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
-import { usageStore } from '~/lib/stores/usage';
+import { serverTeamUsageStore } from '~/lib/stores/usage';
 
 export function UsageDebugView() {
   const { isVisible, setVisible, setOverride, isOverriding, setIsOverriding } = useDebugState('usage');
@@ -16,7 +16,7 @@ export function UsageDebugView() {
   // Initialize values from store only when first opened
   useEffect(() => {
     if (isVisible && selectedTeamSlug) {
-      const current = usageStore.get()[selectedTeamSlug];
+      const current = serverTeamUsageStore.get()[selectedTeamSlug];
       if (current && !current.isLoading) {
         setOverrideValues(current.tokenUsage);
       }
@@ -38,7 +38,7 @@ export function UsageDebugView() {
         setIsOverriding(false);
       }}
     >
-      <div className="p-4 space-y-4">
+      <div className="space-y-4 p-4">
         <div className="text-sm text-gray-500">Current Team: {selectedTeamSlug || 'None'}</div>
 
         <div className="space-y-2">
@@ -92,7 +92,7 @@ export function UsageDebugView() {
         <div className="flex justify-end">
           <button
             onClick={() => setIsOverriding(false)}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             Reset
           </button>

@@ -25,17 +25,19 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
   for (const [index, part] of message.parts.entries()) {
     const partId = makePartId(message.id, index);
     if (part.type === 'tool-invocation') {
-      const model = parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId];
-      const usage = parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId];
-      const success = part.toolInvocation.state === 'result' && !part.toolInvocation.result.startsWith('Error: ');
-      children.push(
-        displayModelAndUsage({
-          model,
-          usageAnnotation: usage ?? undefined,
-          success,
-          showUsageAnnotations,
-        }),
-      );
+      if (showUsageAnnotations) {
+        const model = parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId];
+        const usage = parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId];
+        const success = part.toolInvocation.state === 'result' && !part.toolInvocation.result.startsWith('Error: ');
+        children.push(
+          displayModelAndUsage({
+            model,
+            usageAnnotation: usage ?? undefined,
+            success,
+            showUsageAnnotations,
+          }),
+        );
+      }
       children.push(<ToolCall key={children.length} partId={partId} toolCallId={part.toolInvocation.toolCallId} />);
     }
     if (part.type === 'text') {
@@ -46,16 +48,18 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
       );
     }
   }
-  const finalModel = parsedAnnotations.modelForToolCall.final;
-  const finalUsage = parsedAnnotations.usageForToolCall.final;
-  children.push(
-    displayModelAndUsage({
-      model: finalModel,
-      usageAnnotation: finalUsage ?? undefined,
-      success: true,
-      showUsageAnnotations,
-    }),
-  );
+  if (showUsageAnnotations) {
+    const finalModel = parsedAnnotations.modelForToolCall.final;
+    const finalUsage = parsedAnnotations.usageForToolCall.final;
+    children.push(
+      displayModelAndUsage({
+        model: finalModel,
+        usageAnnotation: finalUsage ?? undefined,
+        success: true,
+        showUsageAnnotations,
+      }),
+    );
+  }
   return (
     <div className="w-full overflow-hidden text-sm">
       <div className="flex flex-col gap-2">
@@ -125,7 +129,6 @@ function displayUsage(
     usage: usageAnnotation,
     providerMetadata: usageAnnotation.providerMetadata,
   });
-  console.log('displayUsage', usageAnnotation, success, provider, showUsageAnnotations);
   const { chefTokens, breakdown } = calculateChefTokens(usage, provider);
   if (!success) {
     return (

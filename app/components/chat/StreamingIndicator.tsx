@@ -171,7 +171,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                     <div className="flex w-full items-center gap-1.5">
                       <div className="mt-1">{icon}</div>
                       {message}
-                      <div className="grow min-h-6" />
+                      <div className="min-h-6 grow" />
                       <LittleUsage teamSlug={teamSlug} />
                       {streamStatus === 'error' && (
                         <Button type="button" className="mt-auto" onClick={props.resendMessage} icon={<ResetIcon />}>

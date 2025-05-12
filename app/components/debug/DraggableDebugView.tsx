@@ -44,6 +44,7 @@ export function DraggableDebugView({ title, isVisible, onClose, children }: Drag
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
+    return () => {};
   }, [isDragging]);
 
   if (!isVisible) {
