@@ -213,10 +213,14 @@ async function onFinishHandler({
     span.setAttribute('featureFlags.smallFiles', smallFiles);
     span.setAttribute('collapsedMessages', collapsedMessages);
     if (providerMetadata) {
-      const anthropic: any = providerMetadata.anthropic;
-      if (anthropic) {
+      if (providerMetadata.anthropic) {
+        const anthropic: any = providerMetadata.anthropic;
         span.setAttribute('providerMetadata.anthropic.cacheCreationInputTokens', anthropic.cacheCreationInputTokens);
         span.setAttribute('providerMetadata.anthropic.cacheReadInputTokens', anthropic.cacheReadInputTokens);
+      }
+      if (providerMetadata.google) {
+        const google: any = providerMetadata.google;
+        span.setAttribute('providerMetadata.google.cachedContentTokenCount', google.cachedContentTokenCount);
       }
     }
     if (result.finishReason === 'stop') {
