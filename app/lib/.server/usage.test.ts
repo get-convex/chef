@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import { encodeUsageAnnotation } from './usage';
 import { annotationValidator, usageAnnotationValidator } from '~/lib/common/annotations';
+import { buildUsageRecord } from './usage';
 
 test('encodeUsageAnnotationAnthropic', async () => {
   const usage = {
@@ -92,5 +93,56 @@ test('encodeUsageAnnotationXAI', async () => {
         cachedPromptTokens: 10,
       },
     },
+  });
+});
+
+test('encodeUsageAnnotationGoogle', async () => {
+  const usage = {
+    completionTokens: 100,
+    promptTokens: 200,
+    totalTokens: 300,
+  };
+  const providerMetadata = {
+    google: {
+      cachedContentTokenCount: 10,
+    },
+  };
+  const annotation = encodeUsageAnnotation({ kind: 'tool-call', toolCallId: undefined }, usage, providerMetadata);
+  const parsed = annotationValidator.safeParse({ type: 'usage', usage: annotation });
+  expect(parsed.success).toBe(true);
+  if (parsed.data?.type !== 'usage') {
+    throw new Error('Expected usage annotation');
+  }
+  const payload = usageAnnotationValidator.parse(JSON.parse(parsed.data?.usage.payload ?? '{}'));
+  expect(payload).toEqual({
+    completionTokens: 100,
+    promptTokens: 200,
+    totalTokens: 300,
+    providerMetadata: {
+      google: {
+        cachedContentTokenCount: 10,
+      },
+    },
+  });
+});
+
+test('buildUsageRecordGoogle', () => {
+  const usage = {
+    completionTokens: 100,
+    promptTokens: 200,
+    totalTokens: 300,
+    googleCachedContentTokenCount: 50,
+    providerMetadata: {
+      google: {
+        cachedContentTokenCount: 50,
+      },
+    },
+  };
+
+  const record = buildUsageRecord(usage);
+  expect(record).toEqual({
+    completionTokens: 100,
+    promptTokens: 250, // 200 + 50 cached content tokens
+    cachedPromptTokens: 50, // 50 cached content tokens
   });
 });

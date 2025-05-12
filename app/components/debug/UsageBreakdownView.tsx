@@ -249,6 +249,7 @@ function BreakdownView({
     'Completion - Anthropic': chefBreakdown.completionTokens.anthropic,
     'Completion - OpenAI': chefBreakdown.completionTokens.openai,
     'Completion - XAI': chefBreakdown.completionTokens.xai,
+    'Completion - Google': chefBreakdown.completionTokens.google,
   };
   return (
     <div>
@@ -303,6 +304,7 @@ async function getUsageBreakdown(messages: Message[]) {
     anthropicCacheReadInputTokens: 0,
     openaiCachedPromptTokens: 0,
     xaiCachedPromptTokens: 0,
+    googleCachedContentTokenCount: 0,
   };
   const chatTotalUsageBilledFor = {
     completionTokens: 0,
@@ -312,6 +314,7 @@ async function getUsageBreakdown(messages: Message[]) {
     anthropicCacheReadInputTokens: 0,
     openaiCachedPromptTokens: 0,
     xaiCachedPromptTokens: 0,
+    googleCachedContentTokenCount: 0,
   };
   let chatTotalChefTokens = 0;
   const chatTotalChefBreakdown: ChefBreakdown = {
@@ -319,6 +322,7 @@ async function getUsageBreakdown(messages: Message[]) {
       anthropic: 0,
       openai: 0,
       xai: 0,
+      google: 0,
     },
     promptTokens: {
       anthropic: {
@@ -493,6 +497,7 @@ type ChefBreakdown = {
     anthropic: number;
     openai: number;
     xai: number;
+    google: number;
   };
   promptTokens: {
     anthropic: {
@@ -518,6 +523,7 @@ function addBreakdown(breakdownA: ChefBreakdown, update: ChefBreakdown) {
   breakdownA.completionTokens.anthropic += update.completionTokens.anthropic;
   breakdownA.completionTokens.openai += update.completionTokens.openai;
   breakdownA.completionTokens.xai += update.completionTokens.xai;
+  breakdownA.completionTokens.google += update.completionTokens.google;
   breakdownA.promptTokens.anthropic.cached += update.promptTokens.anthropic.cached;
   breakdownA.promptTokens.anthropic.uncached += update.promptTokens.anthropic.uncached;
   breakdownA.promptTokens.openai.cached += update.promptTokens.openai.cached;
@@ -525,6 +531,7 @@ function addBreakdown(breakdownA: ChefBreakdown, update: ChefBreakdown) {
   breakdownA.promptTokens.xai.cached += update.promptTokens.xai.cached;
   breakdownA.promptTokens.xai.uncached += update.promptTokens.xai.uncached;
   breakdownA.promptTokens.google.cached += update.promptTokens.google.cached;
+  breakdownA.promptTokens.google.uncached += update.promptTokens.google.uncached;
 }
 
 function CollapsibleView({

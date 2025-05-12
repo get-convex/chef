@@ -326,6 +326,11 @@ function buildUsageRecord(usage: Usage): UsageRecord {
         usageRecord.promptTokens += usage.anthropicCacheCreationInputTokens;
         break;
       }
+      case 'googleCachedContentTokenCount': {
+        usageRecord.cachedPromptTokens += usage.googleCachedContentTokenCount;
+        usageRecord.promptTokens += usage.googleCachedContentTokenCount;
+        break;
+      }
       case 'toolCallId':
       case 'providerMetadata':
       case 'totalTokens': {
