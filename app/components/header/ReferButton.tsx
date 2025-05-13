@@ -22,7 +22,7 @@ export function ReferButton() {
     <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
       <Popover.Trigger asChild>
         <Button variant="neutral" size="xs" className="px-2">
-          <span>Refer to get Tokens {used}/5</span>
+          <span>Refer to get tokens {used}/5</span>
         </Button>
       </Popover.Trigger>
       <Popover.Portal>
@@ -35,8 +35,8 @@ export function ReferButton() {
             {referralCode && (
               <div className="space-y-2">
                 <p className="text-sm text-content-secondary">
-                  Refer a friend to chef to earn more tokens. <br />
-                  Each referral gets you 85,000 tokens.
+                  Refer a friend to Chef to earn more tokens. <br />
+                  Each referral gets you 85,000 more tokens.
                 </p>
                 <div className="flex items-center gap-2">
                   <input
