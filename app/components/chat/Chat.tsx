@@ -256,7 +256,7 @@ export const Chat = memo(
       } catch (error) {
         captureException(error);
       }
-    }, [apiKey, convex, modelSelection, setDisableChatMessage]);
+    }, [apiKey, convex, modelSelection, setDisableChatMessage, useGeminiAuto]);
 
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
@@ -549,7 +549,7 @@ export const Chat = memo(
           });
         }
       },
-      [apiKey, checkApiKeyForCurrentModel, checkTokenUsage, setModelSelection],
+      [apiKey, checkApiKeyForCurrentModel, checkTokenUsage, setModelSelection, useGeminiAuto],
     );
 
     return (
