@@ -226,7 +226,7 @@ async function onFinishHandler({
         span.setAttribute('providerMetadata.openai.cachedPromptTokens', openai.cachedPromptTokens);
       }
     }
-    if (result.finishReason === 'stop') {
+    if (result.finishReason === 'stop' || result.finishReason === 'unknown') {
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.role === 'assistant') {
         // This field is deprecated, but for some reason, the new field "parts", does not contain all of the tool calls. This is likely a
