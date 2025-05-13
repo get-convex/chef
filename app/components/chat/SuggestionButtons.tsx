@@ -1,7 +1,6 @@
 import { Button } from '@ui/Button';
-import { ArrowUpIcon } from '@radix-ui/react-icons';
+import { ArrowUpIcon, VideoIcon } from '@radix-ui/react-icons';
 import { SUGGESTIONS } from 'chef-agent/constants';
-import { AcademicCapIcon } from '@heroicons/react/24/outline';
 
 interface SuggestionButtonsProps {
   chatStarted: boolean;
@@ -37,8 +36,8 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
           target="_blank"
           variant="neutral"
           className="items-center rounded-full border-[#EE352F] bg-[#FEF4E2] fill-[#EE342F] px-3 text-[#EE352F] shadow-sm hover:bg-[#FDEFD2] dark:border-[#FFD700] dark:bg-[#2F2917] dark:fill-[#FFD700] dark:text-[#FFD700] dark:hover:bg-[#3F3920]"
+          icon={<VideoIcon />}
         >
-          <AcademicCapIcon className="size-5" />
           <span>Tips for building with Chef</span>
         </Button>
       </div>
