@@ -10,6 +10,7 @@ import { type ModelProvider, displayModelProviderName } from './ModelSelector';
 import { KeyIcon } from '@heroicons/react/24/outline';
 import type { Doc } from '@convex/_generated/dataModel';
 import { ConfirmationDialog } from '@ui/ConfirmationDialog';
+import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 
 export interface MissingApiKeyProps {
   provider: ModelProvider;
@@ -23,6 +24,7 @@ export function MissingApiKey({ provider, requireKey, resetDisableChatMessage }:
   const [newKeyValue, setNewKeyValue] = useState('');
   const [showKey, setShowKey] = useState(false);
   const convex = useConvex();
+  const { useGeminiAuto } = useLaunchDarkly();
 
   const handleSaveKey = async () => {
     try {
@@ -53,7 +55,11 @@ export function MissingApiKey({ provider, requireKey, resetDisableChatMessage }:
           apiKeyMutation.xai = newKeyValue.trim();
           break;
         case 'auto':
-          apiKeyMutation.value = newKeyValue.trim();
+          if (useGeminiAuto) {
+            apiKeyMutation.google = newKeyValue.trim();
+          } else {
+            apiKeyMutation.value = newKeyValue.trim();
+          }
           break;
         default: {
           const _exhaustiveCheck: never = provider;

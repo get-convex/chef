@@ -13,6 +13,7 @@ const flagDefaults: {
   maxRelevantFilesSize: number;
   enhancePromptButton: boolean;
   minCollapsedMessagesSize: number;
+  useGeminiAuto: boolean;
 } = {
   maintenanceMode: false,
   openAiLaunch202504: false,
@@ -25,6 +26,7 @@ const flagDefaults: {
   maxRelevantFilesSize: 8192,
   enhancePromptButton: false,
   minCollapsedMessagesSize: 8192,
+  useGeminiAuto: false,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {

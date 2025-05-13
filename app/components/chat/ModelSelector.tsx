@@ -8,6 +8,7 @@ import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import type { Doc } from '@convex/_generated/dataModel';
 import { captureMessage } from '@sentry/remix';
+import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 
 export type ModelProvider = 'openai' | 'google' | 'xai' | 'anthropic' | 'auto';
 
@@ -82,6 +83,7 @@ export const models: Partial<
   },
   'gemini-2.5-pro': {
     name: 'Gemini 2.5 Pro',
+    recommended: true,
     provider: 'google',
   },
   'gpt-4.1': {
@@ -111,6 +113,7 @@ export const ModelSelector = React.memo(function ModelSelector({
 }: ModelSelectorProps) {
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
   const selectedModel = models[modelSelection];
+  const { useGeminiAuto } = useLaunchDarkly();
   if (!selectedModel) {
     captureMessage(`Model ${modelSelection} not found`);
     setModelSelection('auto');
@@ -140,7 +143,7 @@ export const ModelSelector = React.memo(function ModelSelector({
           return null;
         }
         const prefersAlwaysUseApiKey = apiKey?.preference === 'always';
-        const key = apiKey ? keyForProvider(apiKey, model.provider) : undefined;
+        const key = apiKey ? keyForProvider(apiKey, model.provider, useGeminiAuto) : undefined;
         const canUseModel = !(model.requireKey && !key) && !(prefersAlwaysUseApiKey && !key);
         return (
           <div className={'flex items-center gap-2'}>
@@ -178,9 +181,16 @@ export const ModelSelector = React.memo(function ModelSelector({
   );
 });
 
-const keyForProvider = (apiKeys: Doc<'convexMembers'>['apiKey'], provider: ModelProvider) => {
-  if (provider === 'auto' || provider === 'anthropic') {
+const keyForProvider = (apiKeys: Doc<'convexMembers'>['apiKey'], provider: ModelProvider, useGeminiAuto: boolean) => {
+  if (provider === 'anthropic') {
     return apiKeys?.value;
+  }
+  if (provider === 'auto') {
+    if (useGeminiAuto) {
+      return apiKeys?.google;
+    } else {
+      return apiKeys?.value;
+    }
   }
   return apiKeys?.[provider];
 };
