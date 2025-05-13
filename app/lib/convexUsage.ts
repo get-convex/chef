@@ -20,10 +20,8 @@ export function disabledText(isPaidPlan: boolean) {
         'Please upgrade to a Pro plan or reach out to us at support@convex.dev for help.';
 }
 
-// We render centitokens as 100x smaller than their actual amount to get them
-// closer to user's expectations for Claude tokens.
-export function renderTokenCount(centitokens: number) {
-  const renderedTokens = Math.max(1, Math.floor(centitokens / 100));
+export function renderTokenCount(tokens: number) {
+  const renderedTokens = Math.max(1, tokens);
   return renderedTokens.toLocaleString();
 }
 
@@ -31,7 +29,7 @@ export function noTokensText(centitokensUsed: number, centitokensQuota: number) 
   return (
     `No remaining tokens available. ` +
     `Please upgrade to a paid plan or add your own API key at chef.convex.dev/settings to continue. ` +
-    `Used ${renderTokenCount(centitokensUsed)} of ${renderTokenCount(centitokensQuota)}.`
+    `Used ${renderTokenCount(Math.floor(centitokensUsed / 100))} of ${renderTokenCount(Math.floor(centitokensQuota / 100))}.`
   );
 }
 

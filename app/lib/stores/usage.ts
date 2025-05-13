@@ -176,6 +176,8 @@ export function useUsage({ teamSlug }: { teamSlug: string | null }) {
   return {
     isLoadingUsage: false as const,
     usagePercentage,
+    // We render centitokens as 100x smaller than their actual amount to get them
+    // closer to user's expectations for Claude tokens.
     used: Math.ceil(teamState.tokenUsage.centitokensUsed / 100),
     quota: Math.ceil(teamState.tokenUsage.centitokensQuota / 100),
     isPaidPlan: teamState.tokenUsage.isPaidPlan,

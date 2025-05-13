@@ -21,7 +21,7 @@ export function UsageCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teams]);
 
-  const { isLoadingUsage, usagePercentage, tokenUsage } = useUsage({
+  const { isLoadingUsage, usagePercentage, used, quota, isPaidPlan } = useUsage({
     teamSlug: selectedTeamSlug,
   });
 
@@ -66,13 +66,13 @@ export function UsageCard() {
               </span>
             ) : (
               <span>
-                {`${renderTokenCount(tokenUsage?.centitokensUsed || 0)} / ${renderTokenCount(
-                  tokenUsage?.centitokensQuota || 0,
+                {`${renderTokenCount(used || 0)} / ${renderTokenCount(
+                  quota || 0,
                 )} included tokens used this billing period.`}
               </span>
             )}
           </p>
-          {tokenUsage && !tokenUsage.isPaidPlan && tokenUsage.centitokensUsed > tokenUsage.centitokensQuota ? (
+          {!isLoadingUsage && !isPaidPlan && used > quota ? (
             <Callout variant="upsell" className="min-w-full rounded-md">
               <div className="flex w-full flex-col gap-4">
                 <h3>You&apos;ve used all the tokens included with your free plan.</h3>
