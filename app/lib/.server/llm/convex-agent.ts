@@ -73,6 +73,9 @@ export async function convexAgent(args: {
     console.debug('Using user provided API key');
   }
 
+  const startTime = Date.now();
+  let firstResponseTime: number | null = null;
+
   const provider = getProvider(userApiKey, modelProvider, modelChoice);
   const opts: SystemPromptOptions = {
     enableBulkEdits: true,
@@ -134,12 +137,13 @@ export async function convexAgent(args: {
             modelProvider,
             modelChoice,
             collapsedMessages,
+            _startTime: startTime,
+            _firstResponseTime: firstResponseTime,
           });
         },
         onError({ error }) {
           console.error(error);
         },
-
         experimental_telemetry: {
           isEnabled: true,
           metadata: {
@@ -149,6 +153,34 @@ export async function convexAgent(args: {
           },
         },
       });
+
+      // Track first response time
+      (async () => {
+        try {
+          for await (const _ of result.textStream) {
+            if (firstResponseTime === null) {
+              firstResponseTime = Date.now();
+              const timeToFirstResponse = firstResponseTime - startTime;
+              if (tracer) {
+                const span = tracer.startSpan('first-response');
+                span.setAttribute('chatInitialId', chatInitialId);
+                span.setAttribute('timeToFirstResponse', timeToFirstResponse);
+                span.setAttribute('provider', modelProvider);
+                span.end();
+              }
+              console.log('First response metrics:', {
+                timeToFirstResponse: `${timeToFirstResponse}ms`,
+                provider: modelProvider,
+                chatInitialId,
+              });
+              break;
+            }
+          }
+        } catch (error) {
+          console.error('Error tracking first response time:', error);
+        }
+      })();
+
       result.mergeIntoDataStream(dataStream);
     },
     onError(error: any) {
@@ -172,6 +204,8 @@ async function onFinishHandler({
   modelProvider,
   modelChoice,
   collapsedMessages,
+  _startTime,
+  _firstResponseTime,
 }: {
   dataStream: DataStreamWriter;
   messages: Messages;
@@ -189,6 +223,8 @@ async function onFinishHandler({
   modelProvider: ModelProvider;
   modelChoice: string | undefined;
   collapsedMessages: boolean;
+  _startTime: number;
+  _firstResponseTime: number | null;
 }) {
   const { providerMetadata } = result;
   // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
