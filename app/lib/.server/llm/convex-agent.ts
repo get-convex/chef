@@ -203,7 +203,6 @@ async function onFinishHandler({
     providerMetadata,
   });
   if (tracer) {
-    // TODO we're not tracing other providers!
     const span = tracer.startSpan('on-finish-handler');
     span.setAttribute('chatInitialId', chatInitialId);
     span.setAttribute('finishReason', result.finishReason);
@@ -221,6 +220,10 @@ async function onFinishHandler({
       if (providerMetadata.google) {
         const google: any = providerMetadata.google;
         span.setAttribute('providerMetadata.google.cachedContentTokenCount', google.cachedContentTokenCount);
+      }
+      if (providerMetadata.openai) {
+        const openai: any = providerMetadata.openai;
+        span.setAttribute('providerMetadata.openai.cachedPromptTokens', openai.cachedPromptTokens);
       }
     }
     if (result.finishReason === 'stop') {
