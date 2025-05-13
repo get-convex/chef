@@ -52,7 +52,6 @@ export function useEntitlements() {
     return null;
   }
   const { maxChefTokens } = data;
-  console.log(data);
   return {
     maxChefTokens,
   };
