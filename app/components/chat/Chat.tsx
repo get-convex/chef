@@ -44,6 +44,7 @@ import { useLocalStorage } from '@uidotdev/usehooks';
 import { KeyIcon } from '@heroicons/react/24/outline';
 import { UsageDebugView } from '~/components/debug/UsageDebugView';
 import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
+import { useUsage } from '~/lib/stores/usage';
 
 const logger = createScopedLogger('Chat');
 
@@ -179,13 +180,6 @@ export const Chat = memo(
         () => workbenchStore.userWrites,
       ),
     );
-    const [disableChatMessage, setDisableChatMessage] = useState<
-      | { type: 'ExceededQuota' }
-      | { type: 'TeamDisabled'; isPaidPlan: boolean }
-      | { type: 'MissingApiKey'; provider: ModelProvider; requireKey: boolean }
-      | null
-    >(null);
-    const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     const checkApiKeyForCurrentModel = useCallback(
       (model: ModelSelection): { hasMissingKey: boolean; provider?: ModelProvider; requireKey: boolean } => {
@@ -220,6 +214,20 @@ export const Chat = memo(
       },
       [apiKey],
     );
+
+    const [_disableChatMessage, setDisableChatMessage] = useState<
+      | { type: 'ExceededQuota' }
+      | { type: 'TeamDisabled'; isPaidPlan: boolean }
+      | { type: 'MissingApiKey'; provider: ModelProvider; requireKey: boolean }
+      | null
+    >(null);
+    const teamSlug = useSelectedTeamSlug();
+    const usage = useUsage({ teamSlug });
+    const forceDisable = usage && !usage.isLoadingUsage && !usage.isPaidPlan && usage.usagePercentage > 200;
+    // Normally set manually, but you can force it by going way over quota (useful simulating this state)
+    const disableChatMessage = forceDisable ? { type: 'ExceededQuota' as const } : _disableChatMessage;
+
+    const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     const checkTokenUsage = useCallback(async () => {
       if (hasApiKeySet(modelSelection, useGeminiAuto, apiKey)) {

@@ -278,7 +278,7 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
             <UsageDonut tokenUsage={loading ? null : { used, quota }} label={detailedLabel} />
             <p className="mt-1 text-xs text-content-secondary">
               {isPaidPlan
-                ? `Chef tokens power code generation. Your team&rsquo;s Chef tokens reset to ${displayChefTokenNumber(quota)} on your regular billing cycle. Unused tokens from the previous month are not carried over. Beyond the per month included in your plan, Chef tokens cost $10 per 1M tokens.`
+                ? `Chef tokens power code generation. Your team's Chef tokens reset to ${displayChefTokenNumber(quota)} on your regular billing cycle. Unused tokens from the previous month are not carried over.`
                 : 'Chef tokens power code generation. Tokens reset on the first of each month and tokens from the previous month are not carried over.'}
             </p>
             <ul className="space-y-1.5 text-sm text-content-primary">
