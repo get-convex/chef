@@ -1,18 +1,18 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { ToolStatus } from '~/lib/common/types';
+import { toast } from 'sonner';
 import { classNames } from '~/utils/classNames';
 import { useStore } from '@nanostores/react';
 import { chatStore } from '~/lib/stores/chatId';
 import { Spinner } from '@ui/Spinner';
-import { ExclamationTriangleIcon, CheckCircledIcon, ResetIcon } from '@radix-ui/react-icons';
+import { ExclamationTriangleIcon, CheckCircledIcon, ResetIcon, ClipboardIcon } from '@radix-ui/react-icons';
 import { useEffect, useState } from 'react';
 import { Button } from '@ui/Button';
 import { useUsage } from '~/lib/stores/usage';
 import { Donut } from '@ui/Donut';
 import { Loading } from '@ui/Loading';
 import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
-import { Tooltip } from '@ui/Tooltip';
-import { useEntitlements, useReferralStats } from '~/lib/hooks/useReferralCode';
+import { useEntitlements, useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 import { Popover } from '@ui/Popover';
 
 type StreamStatus = 'streaming' | 'submitted' | 'ready' | 'error';
@@ -179,7 +179,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                       {streamStatus === 'error' && (
                         <Button
                           type="button"
-                          className="h-auto ml-2"
+                          className="ml-2 h-auto"
                           onClick={props.resendMessage}
                           icon={<ResetIcon />}
                         >
@@ -198,17 +198,11 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
   );
 }
 
-function UsageDonut({ tokenUsage, loading, label }: { tokenUsage: any; loading: boolean; label: string }) {
+function UsageDonut({ tokenUsage, label }: { tokenUsage: { used: number; quota: number } | null; label: string }) {
   return (
     <div className="flex items-center gap-2">
-      <div className="grow h-6">
-        {!loading && tokenUsage ? (
-          <Tooltip side="top" className="flex animate-fadeInFromLoading items-center">
-            <Donut current={tokenUsage.centitokensUsed} max={tokenUsage?.centitokensQuota} />
-          </Tooltip>
-        ) : (
-          <Loading className="size-4" />
-        )}
+      <div className="h-6">
+        {tokenUsage ? <Donut current={tokenUsage.used} max={tokenUsage.quota} /> : <Loading className="size-4" />}
       </div>
       <div className="text-sm">{label}</div>
     </div>
@@ -225,10 +219,11 @@ function displayChefTokenNumber(num: number) {
 }
 
 function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; streamStatus: StreamStatus }) {
-  const { isLoadingUsage, usagePercentage, tokenUsage, refetch } = useUsage({ teamSlug });
+  const { isLoadingUsage, usagePercentage, used, quota, isPaidPlan, refetch } = useUsage({ teamSlug });
   const referralStats = useReferralStats();
   const entitlements = useEntitlements();
-  const loading = isLoadingUsage || !referralStats || !entitlements;
+  const referralCode = useReferralCode();
+  const loading = isLoadingUsage || !referralStats || !entitlements || !referralCode || !teamSlug;
 
   useEffect(() => {
     if (streamStatus === 'ready') {
@@ -236,12 +231,12 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
     }
   }, [streamStatus, refetch]);
 
-  if (!isLoadingUsage && (tokenUsage?.centitokensQuota == null || tokenUsage?.centitokensQuota == null)) {
+  if (!isLoadingUsage && (used == null || quota == null)) {
     return null;
   }
 
   // appears to the right of the donut
-  const label = tokenUsage?.isPaidPlan
+  const label = isPaidPlan
     ? usagePercentage > 100
       ? ``
       : `${Math.floor(usagePercentage)}% used`
@@ -249,25 +244,25 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
       ? `${Math.floor(usagePercentage)}% used`
       : `out of tokens`;
 
-  const detailedLabel = tokenUsage?.isPaidPlan
-    ? `${displayChefTokenNumber(tokenUsage?.centitokensUsed)} used / ${displayChefTokenNumber(tokenUsage?.centitokensQuota)} included tokens (${Math.floor(usagePercentage)}%)`
-    : tokenUsage
-      ? usagePercentage < 100
-        ? `${displayChefTokenNumber(tokenUsage?.centitokensUsed)} used / ${displayChefTokenNumber(tokenUsage?.centitokensQuota)} Chef tokens (${Math.floor(usagePercentage)}%)`
-        : `out of tokens`
-      : '';
+  const detailedLabel = isPaidPlan
+    ? `${displayChefTokenNumber(used)} used / ${displayChefTokenNumber(quota)} included tokens (${Math.floor(usagePercentage)}%)`
+    : isLoadingUsage
+      ? ''
+      : usagePercentage < 100
+        ? `${displayChefTokenNumber(used)} used / ${displayChefTokenNumber(quota)} Chef tokens (${Math.floor(usagePercentage)}%)`
+        : `out of tokens`;
 
-  const needsMore = !tokenUsage?.isPaidPlan;
+  const needsMore = !isPaidPlan;
 
   return (
-    <div className="h-auto">
+    <div className={classNames('flex flex-col items-center', needsMore ? 'h-auto' : 'h-6')}>
       <Popover
         button={
-          <button className="hover:text-content-primary h-auto">
+          <button className="hover:text-content-primary">
             <div className="flex flex-col items-end gap-1 text-sm text-content-secondary">
-              <UsageDonut tokenUsage={tokenUsage} loading={loading} label={label} />
+              <UsageDonut tokenUsage={loading ? null : { used, quota }} label={label} />
               {needsMore && (
-                <div className="text-xs text-content-secondary hover:border-content-primary border-b border-dotted border-content-secondary ">
+                <div className="border-b border-dotted border-content-secondary text-xs text-content-secondary hover:border-content-primary ">
                   Get more tokens
                 </div>
               )}
@@ -281,54 +276,85 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
       >
         {loading ? null : (
           <div className="space-y-2">
-            <UsageDonut tokenUsage={tokenUsage} loading={loading} label={detailedLabel} />
-            <p className="text-xs text-content-secondary mt-1">
+            <UsageDonut tokenUsage={loading ? null : { used, quota }} label={detailedLabel} />
+            <p className="mt-1 text-xs text-content-secondary">
               Chef tokens power code generation with more expensive models using more Chef tokens. Your team&rsquo;s
               Chef tokens reset on the first of each month. Unused tokens from the previous month are not carried over.
             </p>
             <ul className="space-y-1.5 text-sm text-content-primary">
-              {tokenUsage.isPaidPlan ? (
+              {isPaidPlan ? (
                 <li>
-                  Beyond the {displayChefTokenNumber(tokenUsage.centitokensQuota)} per month included in your plan, Chef
-                  tokens cost $10 per 1M.
-                </li>
-              ) : referralStats.left === 5 ? (
-                <li>
-                  <Button variant="unstyled" className="hover:text-content-link underline">
-                    Refer up to 5 new Chef users
-                  </Button>{' '}
-                  to get more 85K more Chef tokens now and each month
+                  Beyond the {displayChefTokenNumber(quota)} per month included in your plan, Chef tokens cost $10 per
+                  1M
                 </li>
               ) : (
                 <li>
-                  <Button variant="unstyled" className="hover:text-content-link underline">
-                    Refer up to {referralStats.left} more new users
-                  </Button>{' '}
-                  to get 85K Chef tokens each now and each month
+                  <div className="flex flex-col items-center gap-2">
+                    <p>
+                      {referralStats.left === 5
+                        ? 'Refer up to 5 new Chef users '
+                        : `Refer up to ${referralStats.left} more new users `}
+                      to get 85K Chef tokens each, now and every month
+                    </p>
+                    {referralStats.left > 0 && <Referrals referralCode={referralCode} />}
+                  </div>
                 </li>
               )}
-              {tokenUsage.isPaidPlan ? null : (
+              {isPaidPlan ? null : (
                 <li>
                   <Button
                     href={`https://dashboard.convex.dev/t/${teamSlug}/settings/billing`}
+                    target="_blank"
                     variant="unstyled"
-                    className="hover:text-content-link underline"
+                    className="underline hover:text-content-link"
                   >
                     Upgrade to a paid plan
                   </Button>{' '}
-                  for 500K Chef tokens each month.
+                  for 500K included Chef tokens every month
                 </li>
               )}
               <li>
-                <Button href="/settings" variant="unstyled" className="hover:text-content-link underline">
+                <Button
+                  href="/settings"
+                  target="_blank"
+                  variant="unstyled"
+                  className="underline hover:text-content-link"
+                >
                   Add your own API key
                 </Button>{' '}
-                to avoid spending Chef tokens.
+                in settings to avoid spending Chef tokens
               </li>
             </ul>
           </div>
         )}
       </Popover>
+    </div>
+  );
+}
+
+function Referrals({ referralCode }: { referralCode: string }) {
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url);
+    toast.success('Link copied to clipboard!');
+  };
+
+  return (
+    <div className="-mx-2 w-full flex-1 rounded-md text-content-primary">
+      <div className="relative flex w-full items-center gap-2">
+        <input
+          type="text"
+          readOnly
+          value={`https://convex.dev/referral/${referralCode}`}
+          className="w-full flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
+        />
+        <Button
+          variant="neutral"
+          size="xs"
+          onClick={() => copyToClipboard(`https://convex.dev/referral/${referralCode}`)}
+          tip="Copy link"
+          icon={<ClipboardIcon />}
+        />
+      </div>
     </div>
   );
 }

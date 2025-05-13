@@ -166,7 +166,9 @@ export function useUsage({ teamSlug }: { teamSlug: string | null }) {
     return {
       isLoadingUsage: true as const,
       usagePercentage: 0,
-      tokenUsage: null,
+      used: null,
+      quota: null,
+      isPaidPlan: null,
       refetch,
     };
   }
@@ -174,7 +176,9 @@ export function useUsage({ teamSlug }: { teamSlug: string | null }) {
   return {
     isLoadingUsage: false as const,
     usagePercentage,
-    tokenUsage: teamState.tokenUsage,
+    used: Math.ceil(teamState.tokenUsage.centitokensUsed / 100),
+    quota: Math.ceil(teamState.tokenUsage.centitokensQuota / 100),
+    isPaidPlan: teamState.tokenUsage.isPaidPlan,
     refetch,
   };
 }

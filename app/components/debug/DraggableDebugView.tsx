@@ -35,6 +35,7 @@ export function DraggableDebugView({ title, isVisible, onClose, children }: Drag
     setIsDragging(false);
   };
 
+  // eslint-disable-next-line consistent-return
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -44,7 +45,7 @@ export function DraggableDebugView({ title, isVisible, onClose, children }: Drag
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-    return () => {};
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging]);
 
   if (!isVisible) {
