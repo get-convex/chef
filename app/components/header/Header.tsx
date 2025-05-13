@@ -16,6 +16,10 @@ import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
 import { FeedbackButton } from './FeedbackButton';
 import { DiscordButton } from './DiscordButton';
 import { PromptDebugButton } from './PromptDebugButton';
+import { ReferButton } from './ReferButton';
+import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { useUsage } from '~/lib/stores/usage';
+import { useReferralStats } from '~/lib/hooks/useReferralCode';
 
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
@@ -26,6 +30,10 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
 
   const profile = useStore(profileStore);
   const { logout } = useAuth0();
+
+  const teamSlug = useSelectedTeamSlug();
+  const { isPaidPlan } = useUsage({ teamSlug });
+  const referralStats = useReferralStats();
 
   const handleLogout = () => {
     setProfile(null);
@@ -63,6 +71,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
               {chat.started && (
                 <>
                   <PromptDebugButton />
+                  {isPaidPlan === false && referralStats && referralStats.left > 0 && <ReferButton />}
                   <DownloadButton />
                   <ShareButton />
                   <DeployButton />
