@@ -9,7 +9,7 @@ import { QueryObserver } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
 
 export function useTokenUsage(teamSlug: string | null): TeamUsageState {
-  // getConvexAuthToken has a side effect we might need? TODO
+  // getConvexAuthToken has a side effect may need
   const convex = useConvex();
   void getConvexAuthToken(convex);
 

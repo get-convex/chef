@@ -12,7 +12,7 @@ import { useUsage } from '~/lib/stores/usage';
 import { Donut } from '@ui/Donut';
 import { Loading } from '@ui/Loading';
 import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
-import { useEntitlements, useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
+import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 import { Popover } from '@ui/Popover';
 
 type StreamStatus = 'streaming' | 'submitted' | 'ready' | 'error';
@@ -221,9 +221,8 @@ function displayChefTokenNumber(num: number) {
 function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; streamStatus: StreamStatus }) {
   const { isLoadingUsage, usagePercentage, used, quota, isPaidPlan, refetch } = useUsage({ teamSlug });
   const referralStats = useReferralStats();
-  const entitlements = useEntitlements();
   const referralCode = useReferralCode();
-  const loading = isLoadingUsage || !referralStats || !entitlements || !referralCode || !teamSlug;
+  const loading = isLoadingUsage || !referralStats || !referralCode || !teamSlug;
 
   useEffect(() => {
     if (streamStatus === 'ready') {
