@@ -219,11 +219,11 @@ async function onFinishHandler({
       }
       if (providerMetadata.google) {
         const google: any = providerMetadata.google;
-        span.setAttribute('providerMetadata.google.cachedContentTokenCount', google.cachedContentTokenCount);
+        span.setAttribute('providerMetadata.google.cachedContentTokenCount', google.cachedContentTokenCount ?? 0);
       }
       if (providerMetadata.openai) {
         const openai: any = providerMetadata.openai;
-        span.setAttribute('providerMetadata.openai.cachedPromptTokens', openai.cachedPromptTokens);
+        span.setAttribute('providerMetadata.openai.cachedPromptTokens', openai.cachedPromptTokens ?? 0);
       }
     }
     if (result.finishReason === 'stop') {
