@@ -314,7 +314,6 @@ function buildUsageRecord(usage: Usage): UsageRecord {
       }
       case 'openaiCachedPromptTokens': {
         usageRecord.cachedPromptTokens += usage.openaiCachedPromptTokens;
-        usageRecord.promptTokens += usage.openaiCachedPromptTokens;
         break;
       }
       case 'anthropicCacheReadInputTokens': {
@@ -328,7 +327,6 @@ function buildUsageRecord(usage: Usage): UsageRecord {
       }
       case 'googleCachedContentTokenCount': {
         usageRecord.cachedPromptTokens += usage.googleCachedContentTokenCount;
-        usageRecord.promptTokens += usage.googleCachedContentTokenCount;
         break;
       }
       case 'toolCallId':
