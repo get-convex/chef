@@ -11,13 +11,9 @@ function defaultObject<const T extends readonly PropertyKey[], V>(array: T, valu
 export const debugVisibilityStore = map<Record<DebugView, boolean>>(defaultObject(views, false));
 export const debugOverrideEnabledStore = map<Record<DebugView, boolean>>(defaultObject(views, false));
 export const debugOverrideStore = map<{
-  usage: UsageData;
+  usage: UsageData | null;
 }>({
-  usage: {
-    centitokensUsed: 1,
-    centitokensQuota: 2,
-    isPaidPlan: false,
-  },
+  usage: null,
 });
 
 // Helper hook to manage debug state for a specific feature
@@ -30,7 +26,7 @@ export function useDebugState<T extends DebugView>(view: T) {
     debugVisibilityStore.setKey(view, visible);
   };
 
-  const setOverride = (value: NonNullable<typeof debugOverrideStore.value>[T]) => {
+  const setOverride = (value: NonNullable<typeof debugOverrideStore.value>[T] | null) => {
     debugOverrideStore.setKey(view, value);
   };
 

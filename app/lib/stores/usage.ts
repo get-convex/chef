@@ -139,7 +139,7 @@ export const usageStore = computed(
   (debugOverride, isOverriding, teamUsage): Record<string, TeamUsageState> => {
     const result: Record<string, TeamUsageState> = {};
     for (const [teamSlug, teamUsageState] of Object.entries(teamUsage)) {
-      if (isOverriding) {
+      if (isOverriding && debugOverride) {
         result[teamSlug] = { isLoading: false, tokenUsage: debugOverride };
       } else {
         result[teamSlug] = teamUsageState;

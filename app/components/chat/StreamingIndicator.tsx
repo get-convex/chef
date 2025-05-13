@@ -277,23 +277,19 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
           <div className="space-y-2">
             <UsageDonut tokenUsage={loading ? null : { used, quota }} label={detailedLabel} />
             <p className="mt-1 text-xs text-content-secondary">
-              Chef tokens power code generation with more expensive models using more Chef tokens. Your team&rsquo;s
-              Chef tokens reset on the first of each month. Unused tokens from the previous month are not carried over.
+              {isPaidPlan
+                ? `Chef tokens power code generation. Your team&rsquo;s Chef tokens reset to ${displayChefTokenNumber(quota)} on your regular billing cycle. Unused tokens from the previous month are not carried over. Beyond the per month included in your plan, Chef tokens cost $10 per 1M tokens.`
+                : 'Chef tokens power code generation. Tokens reset on the first of each month and tokens from the previous month are not carried over.'}
             </p>
             <ul className="space-y-1.5 text-sm text-content-primary">
-              {isPaidPlan ? (
-                <li>
-                  Beyond the {displayChefTokenNumber(quota)} per month included in your plan, Chef tokens cost $10 per
-                  1M
-                </li>
-              ) : (
+              {!isPaidPlan && (
                 <li>
                   <div className="flex flex-col items-center gap-2">
                     <p>
                       {referralStats.left === 5
                         ? 'Refer up to 5 new Chef users '
                         : `Refer up to ${referralStats.left} more new users `}
-                      to get 85K Chef tokens each, now and every month
+                      to get 85K Chef tokens each, now and every month.
                     </p>
                     {referralStats.left > 0 && <Referrals referralCode={referralCode} />}
                   </div>
@@ -309,7 +305,7 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
                   >
                     Upgrade to a paid plan
                   </Button>{' '}
-                  for 500K included Chef tokens every month
+                  for 500K included Chef tokens every month.
                 </li>
               )}
               <li>
@@ -321,7 +317,7 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
                 >
                   Add your own API key
                 </Button>{' '}
-                in settings to avoid spending Chef tokens
+                in settings to avoid spending Chef tokens.
               </li>
             </ul>
           </div>

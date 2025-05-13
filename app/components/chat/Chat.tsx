@@ -701,7 +701,7 @@ export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMess
           Upgrade to a paid plan
         </Button>
         {referralCode && referralStats?.left !== 0 && (
-          <div className="space-y-2 w-full">
+          <div className="w-full space-y-2">
             <p className="text-sm text-content-secondary">
               Refer a friend and Get 85,000 free Chef tokens for each
               {referralStats?.left === 5 || !referralStats ? ' (limit 5)' : ` (${referralStats.left} / 5)`}
