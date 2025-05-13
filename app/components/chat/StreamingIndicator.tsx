@@ -238,17 +238,17 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
   const label = isPaidPlan
     ? usagePercentage > 100
       ? ``
-      : `${Math.floor(usagePercentage)}% used`
+      : `${Math.floor(usagePercentage)}% tokens used`
     : usagePercentage < 100
-      ? `${Math.floor(usagePercentage)}% used`
+      ? `${Math.floor(usagePercentage)}% tokens used`
       : `out of tokens`;
 
   const detailedLabel = isPaidPlan
-    ? `${displayChefTokenNumber(used)} used / ${displayChefTokenNumber(quota)} included tokens (${Math.floor(usagePercentage)}%)`
+    ? `${displayChefTokenNumber(used)} tokens used / ${displayChefTokenNumber(quota)} included (${Math.floor(usagePercentage)}%)`
     : isLoadingUsage
       ? ''
       : usagePercentage < 100
-        ? `${displayChefTokenNumber(used)} used / ${displayChefTokenNumber(quota)} Chef tokens (${Math.floor(usagePercentage)}%)`
+        ? `${displayChefTokenNumber(used)} tokens used / ${displayChefTokenNumber(quota)} (${Math.floor(usagePercentage)}%)`
         : `out of tokens`;
 
   const needsMore = !isPaidPlan;
@@ -262,41 +262,28 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
               <UsageDonut tokenUsage={loading ? null : { used, quota }} label={label} />
               {needsMore && (
                 <div className="border-b border-dotted border-content-secondary text-xs text-content-secondary hover:border-content-primary ">
-                  Get more tokens
+                  Upgrade or refer a friend to get more tokens
                 </div>
               )}
             </div>
           </button>
         }
         placement="top-end"
-        offset={[-4, 8]}
+        offset={[6, 8]}
         portal={true}
         className="w-96"
       >
         {loading ? null : (
-          <div className="space-y-2">
+          <div>
             <UsageDonut tokenUsage={loading ? null : { used, quota }} label={detailedLabel} />
             <p className="mt-1 text-xs text-content-secondary">
               {isPaidPlan
-                ? `Chef tokens power code generation. Your team's Chef tokens reset to ${displayChefTokenNumber(quota)} on your regular billing cycle. Unused tokens from the previous month are not carried over. Beyond the per month included in your plan, Chef tokens cost $10 per 1M tokens.`
+                ? `Chef tokens power code generation. Your team's Chef tokens reset to ${displayChefTokenNumber(quota)} on your regular billing cycle. Unused tokens from the previous month are not carried over. Additional Chef tokens cost $10 per 1M tokens.`
                 : 'Chef tokens power code generation. Tokens reset on the first of each month and tokens from the previous month are not carried over.'}
             </p>
-            <ul className="space-y-1.5 text-sm text-content-primary">
-              {!isPaidPlan && (
-                <li>
-                  <div className="flex flex-col items-center gap-2">
-                    <p>
-                      {referralStats.left === 5
-                        ? 'Refer up to 5 new Chef users '
-                        : `Refer up to ${referralStats.left} more new users `}
-                      to get 85K Chef tokens each, now and every month.
-                    </p>
-                    {referralStats.left > 0 && <Referrals referralCode={referralCode} />}
-                  </div>
-                </li>
-              )}
+            <ul className="mt-2 space-y-2 text-sm text-content-primary">
               {isPaidPlan ? null : (
-                <li>
+                <li className="mt-2 border-t pt-2">
                   <Button
                     href={`https://dashboard.convex.dev/t/${teamSlug}/settings/billing`}
                     target="_blank"
@@ -308,7 +295,20 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
                   for 500K included Chef tokens every month.
                 </li>
               )}
-              <li>
+              {!isPaidPlan && (
+                <li className="border-t pt-2">
+                  <div className="flex flex-col items-center gap-2">
+                    <p>
+                      {referralStats.left === 5
+                        ? 'Refer a friend '
+                        : `Refer up to ${referralStats.left} more new users `}
+                      to get 85K additional Chef tokens per month.
+                    </p>
+                    {referralStats.left > 0 && <Referrals referralCode={referralCode} />}
+                  </div>
+                </li>
+              )}
+              <li className="mt-2 border-t pt-2 text-xs text-content-secondary">
                 <Button
                   href="/settings"
                   target="_blank"
