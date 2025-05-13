@@ -31,7 +31,7 @@ import { atom } from 'nanostores';
 import { STATUS_MESSAGES } from './StreamingIndicator';
 import { Button } from '@ui/Button';
 import { TeamSelector } from '~/components/convex/TeamSelector';
-import { ExternalLinkIcon } from '@radix-ui/react-icons';
+import { ClipboardIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import type { Doc, Id } from 'convex/_generated/dataModel';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
@@ -43,6 +43,7 @@ import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { useLocalStorage } from '@uidotdev/usehooks';
 import { KeyIcon } from '@heroicons/react/24/outline';
 import { UsageDebugView } from '~/components/debug/UsageDebugView';
+import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 
 const logger = createScopedLogger('Chat');
 
@@ -655,6 +656,14 @@ function getConvexAuthToken(convex: ConvexReactClient): string | null {
 
 export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMessage: () => void }) {
   const selectedTeamSlug = useSelectedTeamSlug();
+  const referralCode = useReferralCode();
+  const referralStats = useReferralStats();
+
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url);
+    toast.success('Link copied to clipboard!');
+  };
+
   return (
     <div className="flex w-full flex-col gap-4">
       <h4>You&apos;ve used all the tokens included with your free plan.</h4>
@@ -680,6 +689,29 @@ export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMess
         >
           Upgrade to a paid plan
         </Button>
+        {referralCode && referralStats?.left !== 0 && (
+          <div className="space-y-2 w-full">
+            <p className="text-sm text-content-secondary">
+              Refer a friend and Get 85,000 free Chef tokens for each
+              {referralStats?.left === 5 || !referralStats ? ' (limit 5)' : ` (${referralStats.left} / 5)`}
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={`https://convex.dev/referral/${referralCode}`}
+                className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
+              />
+              <Button
+                variant="neutral"
+                size="xs"
+                onClick={() => copyToClipboard(`https://convex.dev/referral/${referralCode}`)}
+                tip="Copy link"
+                icon={<ClipboardIcon />}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
