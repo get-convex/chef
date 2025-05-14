@@ -183,6 +183,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       toolStatus={toolStatus}
                       currentError={currentError}
                       resendMessage={resendMessage}
+                      modelSelection={modelSelection}
                     />
                   )}
                   {chatEnabled && (

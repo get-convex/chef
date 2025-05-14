@@ -33,7 +33,7 @@ import { Button } from '@ui/Button';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ClipboardIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
-import type { Doc, Id } from 'convex/_generated/dataModel';
+import type { Id } from 'convex/_generated/dataModel';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import type { ProviderType } from '~/lib/common/annotations';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
@@ -45,6 +45,7 @@ import { KeyIcon } from '@heroicons/react/24/outline';
 import { UsageDebugView } from '~/components/debug/UsageDebugView';
 import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 import { useUsage } from '~/lib/stores/usage';
+import { hasAnyApiKeySet, hasApiKeySet } from '~/lib/common/apiKey';
 
 const logger = createScopedLogger('Chat');
 
@@ -774,53 +775,6 @@ export function DisabledText({
       </div>
     </div>
   );
-}
-
-function hasAnyApiKeySet(apiKey?: Doc<'convexMembers'>['apiKey'] | null) {
-  if (!apiKey) {
-    return false;
-  }
-  return Object.entries(apiKey).some(([key, value]) => {
-    if (key === 'preference') {
-      return false;
-    }
-    if (typeof value === 'string') {
-      return value.trim() !== '';
-    }
-    return false;
-  });
-}
-
-function hasApiKeySet(
-  modelSelection: ModelSelection,
-  useGeminiAuto: boolean,
-  apiKey?: Doc<'convexMembers'>['apiKey'] | null,
-) {
-  if (!apiKey) {
-    return false;
-  }
-
-  switch (modelSelection) {
-    case 'auto':
-      if (useGeminiAuto) {
-        return !!apiKey.google?.trim();
-      }
-      return !!apiKey.value?.trim();
-    case 'claude-3.5-sonnet':
-    case 'claude-3-5-haiku':
-      return !!apiKey.value?.trim();
-    case 'gpt-4.1':
-    case 'gpt-4.1-mini':
-      return !!apiKey.openai?.trim();
-    case 'grok-3-mini':
-      return !!apiKey.xai?.trim();
-    case 'gemini-2.5-pro':
-      return !!apiKey.google?.trim();
-    default: {
-      const _exhaustiveCheck: never = modelSelection;
-      return false;
-    }
-  }
 }
 
 function maxSizeForModel(modelSelection: ModelSelection, maxSize: number) {

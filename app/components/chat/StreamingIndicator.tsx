@@ -14,6 +14,11 @@ import { Loading } from '@ui/Loading';
 import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 import { Popover } from '@ui/Popover';
+import { hasApiKeySet } from '~/lib/common/apiKey';
+import type { ModelSelection } from '~/utils/constants';
+import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
+import { useQuery } from 'convex/react';
+import { api } from '@convex/_generated/api';
 
 type StreamStatus = 'streaming' | 'submitted' | 'ready' | 'error';
 
@@ -23,6 +28,7 @@ interface StreamingIndicatorProps {
   toolStatus?: ToolStatus;
   currentError?: Error;
   resendMessage: () => void;
+  modelSelection: ModelSelection;
 }
 
 // Icon components
@@ -175,7 +181,11 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
                       <div className="">{icon}</div>
                       {message}
                       <div className="min-h-6 grow" />
-                      <LittleUsage teamSlug={teamSlug} streamStatus={streamStatus} />
+                      <LittleUsage
+                        teamSlug={teamSlug}
+                        streamStatus={streamStatus}
+                        modelSelection={props.modelSelection}
+                      />
                       {streamStatus === 'error' && (
                         <Button
                           type="button"
@@ -198,9 +208,17 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
   );
 }
 
-function UsageDonut({ tokenUsage, label }: { tokenUsage: { used: number; quota: number } | null; label: string }) {
+function UsageDonut({
+  tokenUsage,
+  label,
+  hidden,
+}: {
+  tokenUsage: { used: number; quota: number } | null;
+  label: string;
+  hidden: boolean;
+}) {
   return (
-    <div className="flex items-center gap-2">
+    <div className={classNames('flex items-center gap-2', { invisible: hidden })}>
       <div className="h-6">
         {tokenUsage ? <Donut current={tokenUsage.used} max={tokenUsage.quota} /> : <Loading className="size-4" />}
       </div>
@@ -218,11 +236,21 @@ function displayChefTokenNumber(num: number) {
   return num.toString();
 }
 
-function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; streamStatus: StreamStatus }) {
+function LittleUsage({
+  teamSlug,
+  streamStatus,
+  modelSelection,
+}: {
+  teamSlug: string | null;
+  streamStatus: StreamStatus;
+  modelSelection: ModelSelection;
+}) {
   const { isLoadingUsage, usagePercentage, used, quota, isPaidPlan, refetch } = useUsage({ teamSlug });
   const referralStats = useReferralStats();
   const referralCode = useReferralCode();
   const loading = isLoadingUsage || !referralStats || !referralCode || !teamSlug;
+  const { useGeminiAuto } = useLaunchDarkly();
+  const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
 
   useEffect(() => {
     if (streamStatus === 'ready') {
@@ -234,14 +262,28 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
     return null;
   }
 
+  const usingApiKey = hasApiKeySet(modelSelection, useGeminiAuto, apiKey);
+  const alwaysUsingApiKey = usingApiKey && apiKey?.preference === 'always';
+
+  // show referral or upgrade CTA
+  const needsMore = !isPaidPlan && !alwaysUsingApiKey && !(usingApiKey && usagePercentage > 100);
+  // donut isn't relevant if always using API key
+  const hideDonut = alwaysUsingApiKey;
+
   // appears to the right of the donut
-  const label = isPaidPlan
-    ? usagePercentage > 100
-      ? ``
-      : `${Math.floor(usagePercentage)}% tokens used`
-    : usagePercentage < 100
-      ? `${Math.floor(usagePercentage)}% tokens used`
-      : `out of tokens`;
+  const label = alwaysUsingApiKey
+    ? `Using API key instead of tokens`
+    : isPaidPlan
+      ? usagePercentage > 100
+        ? usingApiKey
+          ? `Using API key`
+          : ``
+        : `${Math.floor(usagePercentage)}% tokens used`
+      : usagePercentage > 100
+        ? usingApiKey
+          ? `Using API key`
+          : `Out of tokens`
+        : `${Math.floor(usagePercentage)}% tokens used`;
 
   const detailedLabel = isPaidPlan
     ? `${displayChefTokenNumber(used)} tokens used / ${displayChefTokenNumber(quota)} included (${Math.floor(usagePercentage)}%)`
@@ -249,9 +291,9 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
       ? ''
       : usagePercentage < 100
         ? `${displayChefTokenNumber(used)} tokens used / ${displayChefTokenNumber(quota)} (${Math.floor(usagePercentage)}%)`
-        : `out of tokens`;
-
-  const needsMore = !isPaidPlan;
+        : usingApiKey
+          ? `Out of tokens (${displayChefTokenNumber(used)} used), using API key`
+          : `Out of tokens`;
 
   return (
     <div className={classNames('flex flex-col items-center', needsMore ? 'h-auto' : 'h-6')}>
@@ -259,7 +301,7 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
         button={
           <button className="hover:text-content-primary">
             <div className="flex flex-col items-end gap-1 text-sm text-content-secondary">
-              <UsageDonut tokenUsage={loading ? null : { used, quota }} label={label} />
+              <UsageDonut tokenUsage={loading ? null : { used, quota }} label={label} hidden={hideDonut} />
               {needsMore && (
                 <div className="border-b border-dotted border-content-secondary text-xs text-content-secondary hover:border-content-primary ">
                   Upgrade or refer a friend to get more tokens
@@ -275,7 +317,7 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
       >
         {loading ? null : (
           <div>
-            <UsageDonut tokenUsage={loading ? null : { used, quota }} label={detailedLabel} />
+            <UsageDonut tokenUsage={loading ? null : { used, quota }} label={detailedLabel} hidden={false} />
             <p className="mt-1 text-xs text-content-secondary">
               {isPaidPlan
                 ? `Chef tokens power code generation. Your team's Chef tokens reset to ${displayChefTokenNumber(quota)} on your regular billing cycle. Unused tokens from the previous month are not carried over. Additional Chef tokens cost $10 per 1M tokens.`
@@ -309,15 +351,25 @@ function LittleUsage({ teamSlug, streamStatus }: { teamSlug: string | null; stre
                 </li>
               )}
               <li className="mt-2 border-t pt-2 text-xs text-content-secondary">
-                <Button
-                  href="/settings"
-                  target="_blank"
-                  variant="unstyled"
-                  className="underline hover:text-content-link"
-                >
-                  Add your own API key
-                </Button>{' '}
-                in settings to avoid spending Chef tokens.
+                {usingApiKey ? (
+                  usagePercentage >= 100 ? (
+                    "You're using an API key so can keep building without using Chef tokens."
+                  ) : (
+                    "You have an API key set for the model you're using so you'll be able to keep building after running out of Chef tokens."
+                  )
+                ) : (
+                  <>
+                    <Button
+                      href="/settings"
+                      target="_blank"
+                      variant="unstyled"
+                      className="underline hover:text-content-link"
+                    >
+                      Add your own API key
+                    </Button>{' '}
+                    in settings to avoid spending Chef tokens.
+                  </>
+                )}
               </li>
             </ul>
           </div>
