@@ -218,8 +218,8 @@ function UsageDonut({
   hidden: boolean;
 }) {
   return (
-    <div className={classNames('flex items-center gap-2', { invisible: hidden })}>
-      <div className="h-6">
+    <div className="flex items-center gap-2">
+      <div className={classNames('h-6', { invisible: hidden })}>
         {tokenUsage ? <Donut current={tokenUsage.used} max={tokenUsage.quota} /> : <Loading className="size-4" />}
       </div>
       <div className="text-sm">{label}</div>
@@ -268,7 +268,7 @@ function LittleUsage({
   // show referral or upgrade CTA
   const needsMore = !isPaidPlan && !alwaysUsingApiKey && !(usingApiKey && usagePercentage > 100);
   // donut isn't relevant if always using API key
-  const hideDonut = alwaysUsingApiKey;
+  const hideDonut = alwaysUsingApiKey || (!!isPaidPlan && usagePercentage > 100);
 
   // appears to the right of the donut
   const label = alwaysUsingApiKey
@@ -277,7 +277,7 @@ function LittleUsage({
       ? usagePercentage > 100
         ? usingApiKey
           ? `Using API key`
-          : ``
+          : `Token usage`
         : `${Math.floor(usagePercentage)}% tokens used`
       : usagePercentage > 100
         ? usingApiKey
