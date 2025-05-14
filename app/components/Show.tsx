@@ -232,7 +232,7 @@ const ShowInner: FC<ShowInnerProps> = ({ share, className }) => {
               When you sign up, {author.username} will earn bonus resources too!
             </p>
             <Button
-              href={`https://convex.dev/referral/${share.referralCode}`}
+              href={`https://convex.dev/try-chef/${share.referralCode}`}
               target="_blank"
               variant="primary"
               className="mt-2"

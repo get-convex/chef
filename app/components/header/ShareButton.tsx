@@ -348,13 +348,13 @@ export function ShareButton() {
                           <input
                             type="text"
                             readOnly
-                            value={`https://convex.dev/referral/${referralCode}`}
+                            value={`https://convex.dev/try-chef/${referralCode}`}
                             className="flex-1 rounded-md border bg-bolt-elements-background-depth-2 px-3 py-1.5 text-sm text-content-primary"
                           />
                           <Button
                             variant="neutral"
                             size="xs"
-                            onClick={() => copyToClipboard(`https://convex.dev/referral/${referralCode}`)}
+                            onClick={() => copyToClipboard(`https://convex.dev/try-chef/${referralCode}`)}
                             tip="Copy link"
                             icon={<ClipboardIcon />}
                           />
