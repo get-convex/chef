@@ -22,16 +22,10 @@ export function CompatibilityWarnings({ setEnabled }: { setEnabled: (enabled: bo
     }
   }, [isDebug, setEnabled, selectedExperience]);
 
-  const hasDismissedMobileWarning = localStorage.getItem('hasDismissedMobileWarning') === 'true';
-
   const recommendedExperience = chooseExperience(navigator.userAgent, window.crossOriginIsolated);
   const experience = selectedExperience || recommendedExperience;
 
-  if (hasDismissedMobileWarning) {
-    return null;
-  }
-
-  if (experience === 'the-real-thing' || (experience === 'mobile-warning' && hasDismissedMobileWarning)) {
+  if (experience === 'the-real-thing') {
     return null;
   }
 

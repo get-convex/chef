@@ -1,6 +1,6 @@
 import { Sheet } from '@ui/Sheet';
 import type { Message } from 'ai';
-import React, { type ReactNode, type RefCallback, useCallback, useMemo, useState } from 'react';
+import React, { type ReactNode, type RefCallback, useCallback, useEffect, useMemo, useState } from 'react';
 import Landing from '~/components/landing/Landing';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
@@ -90,6 +90,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
     const recommendedExperience = chooseExperience(navigator.userAgent, window.crossOriginIsolated);
     const [chatEnabled, setChatEnabled] = useState(recommendedExperience === 'the-real-thing');
+    useEffect(() => {
+      const hasDismissedMobileWarning = localStorage.getItem('hasDismissedMobileWarning') === 'true';
+      if (hasDismissedMobileWarning) {
+        setChatEnabled(true);
+      }
+    }, []);
 
     const chatId = useChatId();
     const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -216,7 +222,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     )}
                   </AnimatePresence>
                 </div>
-                <CompatibilityWarnings setEnabled={setChatEnabled} />
+                {!chatEnabled && <CompatibilityWarnings setEnabled={setChatEnabled} />}
               </div>
               {maintenanceMode && (
                 <div className="mx-auto my-4 max-w-chat">
