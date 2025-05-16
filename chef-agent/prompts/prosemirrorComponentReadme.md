@@ -40,18 +40,6 @@ function CollaborativeEditor() {
 }
 ```
 
-Features:
-
-- Safely merges changes between clients via operational transformations (OT).
-- Simple React hook to fetch the initial document and keep it in sync via a
-  Tiptap extension.
-- Supports both Tiptap and BlockNote.
-- Server-side entrypoints for authorizing reads, writes, and snapshots.
-- Create a new document, online or offline.
-- Debounced snapshots allow new clients to avoid reading the full history.
-- Deletion API for old snapshots & steps.
-- Transform the document server-side, enabling easy AI interoperation.
-
 ## Installation
 
 Install the component package:
@@ -73,6 +61,8 @@ app.use(prosemirrorSync);
 export default app;
 ```
 
+You do NOT need to add component tables to your `schema.ts`. The component tables are only read and written to from the component functions.
+
 ## Usage
 
 To use the component, you expose the API in a file in your `convex/` folder, and
@@ -90,6 +80,80 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
   // ...
 });
 ```
+
+/\*\*
+
+- Expose the sync API to the client for use with the `useBlockNote` hook.
+- If you export these in `convex/prosemirror.ts`, pass `api.prosemirror`
+- to the `useTiptapSync` hook.
+-
+- It allows you to define optional read and write permissions, along with
+- a callback when new snapshots are available.
+-
+- You can pass the optional type argument `<DataModel>` to have the `ctx`
+- parameter specific to your tables.
+-
+- ```ts
+
+  ```
+- import { DataModel } from "./convex/\_generated/dataModel";
+- // ...
+- export const { ... } = prosemirrorSync.syncApi<DataModel>({...});
+- ```
+
+  ```
+-
+- To define just one function to use for both, you can define it like this:
+- ```ts
+
+  ```
+- async function checkPermissions(ctx: QueryCtx, id: string) {
+- const user = await getAuthUser(ctx);
+- if (!user || !(await canUserAccessDocument(user, id))) {
+-     throw new Error("Unauthorized");
+- }
+- }
+- ```
+
+  ```
+- @param opts - Optional callbacks.
+- @returns functions to export, so the `useTiptapSync` hook can use them.
+  \*/
+  syncApi<DataModel extends GenericDataModel>(opts?: {
+  /\*\*
+  - Optional callback to check read permissions.
+  - Throw an error if the user is not authorized to read the document.
+  - @param ctx - A Convex query context.
+  - @param id - The document ID.
+    \*/
+    checkRead?: (
+    ctx: GenericQueryCtx<DataModel>,
+    id: Id
+    ) => void | Promise<void>;
+    /\*\*
+  - Optional callback to check write permissions.
+  - Throw an error if the user is not authorized to write to the document.
+  - @param ctx - A Convex mutation context.
+  - @param id - The document ID.
+    \*/
+    checkWrite?: (
+    ctx: GenericMutationCtx<DataModel>,
+    id: Id
+    ) => void | Promise<void>;
+    /\*\*
+  - Optional callback to run when a new snapshot is available.
+  - Version 1 is the initial content.
+  - @param ctx - A Convex mutation context.
+  - @param id - The document ID.
+  - @param snapshot - The snapshot content, as stringified ProseMirror JSON.
+  - @param version - The version this snapshot represents.
+    \*/
+    onSnapshot?: (
+    ctx: GenericMutationCtx<DataModel>,
+    id: Id,
+    snapshot: string,
+    version: number
+    ) => void | Promise<void>;
 
 In your React components, you can then use the editor-specific hook to fetch the
 document and keep it in sync via a Tiptap extension. **Note**: This requires a
@@ -155,7 +219,7 @@ For client-side document creation:
   different initial content.
 - Note: if you don't open that document while online, it won't sync.
 
-### Transforming the document server-side
+### Transforming the document serverside
 
 You can transform the document server-side. It will give you the latest
 version of the document, and you return a
