@@ -59,6 +59,10 @@ function artifactInstructions(_options: SystemPromptOptions) {
     IMPORTANT: Write as many files as possible in a single artifact. Do NOT split up the creation of different
     files across multiple artifacts unless absolutely necessary.
 
+    IMPORTANT: Always rewrite the entire file in the artifact. Do not use placeholders like "// rest of the code remains the same..." or "<- leave original code here ->".
+
+    IMPORTANT: Never write empty files. This will cause the old version of the file to be deleted.
+
     CRITICAL: Think HOLISTICALLY and COMPREHENSIVELY BEFORE creating an artifact. This means:
 
       - Consider ALL relevant files in the project

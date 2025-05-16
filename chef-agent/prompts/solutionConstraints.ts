@@ -163,9 +163,13 @@ export function solutionConstraints(options: SystemPromptOptions) {
 
         You can use the \`api\` object to call any public Convex function.
 
-        Always use \`canvas\` for image compression.
+        Do not use \`sharp\` for image compression, always use \`canvas\` for image compression.
 
         Always make sure your UIs work well with anonymous users.
+
+        Always make sure the functions you are calling are defined in the \`convex/\` directory and use the \`api\` or \`internal\` object to call them.
+        
+        Always make sure you are using the correct arguments for convex functions. If arguments are not optional, make sure they are not null.
       </client_guidelines>
     </convex_guidelines>
   </solution_constraints>

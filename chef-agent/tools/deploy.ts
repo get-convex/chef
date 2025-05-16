@@ -12,7 +12,8 @@ to the filesystem.
 
 If this tool call fails with esbuild bundler errors, a library that requires Node.js
 APIs may be being used. Isolating those dependencies into a convex file of only actions
-with "use node" at the top is a way to fix this.
+with "use node" at the top is the only way to fix this. The files with "use node" at the
+top can only contain actions. They can NEVER contains queries or mutations.
 `;
 
 export const deployTool: Tool = {

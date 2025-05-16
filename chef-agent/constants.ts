@@ -15,7 +15,6 @@ export const SUGGESTIONS = [
     prompt: `Build an app similar to Instagram with a global shared image stream that has these features:
 
 - Has a drag and drop box for uploading images to Convex storage
-- Automatically resizes uploaded images to max 800x800 and crops to square
 - Has a "Stream" tab for viewing the global image stream
 - Has a "My Photos" tab for viewing and deleting your own images
 - Allows liking images in the "Stream" tab

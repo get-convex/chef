@@ -175,13 +175,13 @@ export const g = query({
 ### Function references
 
 - Function references are pointers to registered Convex functions.
-- ALWAYS use the \`api\` object defined by the framework in \`convex/_generated/api.ts\` to call public functions registered with \`query\`, \`mutation\`, or \`action\`. Importing the \`api\` object looks like:
+- ALWAYS use the \`api\` object defined by the framework in \`convex/_generated/api.ts\` to call public functions registered with \`query\`, \`mutation\`, or \`action\`. You must import the \`api\` object in the same file when using it and it looks like:
 
 \`\`\`ts
 import { api } from "./_generated/api";
 \`\`\`
 
-- ALWAYS use the \`internal\` object defined by the framework in \`convex/_generated/api.ts\` to call internal (or private) functions registered with \`internalQuery\`, \`internalMutation\`, or \`internalAction\`. Importing the \`internal\` object looks like:
+- ALWAYS use the \`internal\` object defined by the framework in \`convex/_generated/api.ts\` to call internal (or private) functions registered with \`internalQuery\`, \`internalMutation\`, or \`internalAction\`. You must import the \`internal\` object in the same file when using it and it looks like:
 
 \`\`\`ts
 import { internal } from "./_generated/api";
