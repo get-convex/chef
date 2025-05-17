@@ -22,7 +22,7 @@ import { makePartId } from 'chef-agent/partId';
 import { logger } from 'chef-agent/utils/logger';
 import { traced, wrapTraced } from 'braintrust';
 
-const MAX_STEPS = 8;
+const MAX_STEPS = 16;
 const OUTPUT_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.json'];
 const IGNORED_FILENAMES = [
   '.gitignore',
@@ -61,7 +61,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
     const messageParser = new StreamingMessageParser({
       callbacks: {
         onActionClose: (data) => {
-          if (data.action.type === 'file') {
+          if (data.action.type === 'file' && !IGNORED_FILENAMES.includes(data.action.filePath)) {
             const filePath = path.join(repoDir, data.action.filePath);
             logger.info(`Writing to ${filePath}`);
             mkdirSync(path.dirname(filePath), { recursive: true });
@@ -98,6 +98,8 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       // app to setup the OpenAI and Resend proxies + manage their tokens.
       openaiProxyEnabled: false,
       resendProxyEnabled: false,
+      skipSystemPrompt: false,
+      smallFiles: true,
     };
     const assistantMessage: UIMessage = {
       id: generateId(),
@@ -108,7 +110,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
     let numDeploys = 0;
     let success: boolean;
     let hadSuccessfulDeploy = false;
-    const totalUsage: LanguageModelUsage = {
+    let totalUsage: LanguageModelUsage = {
       promptTokens: 0,
       completionTokens: 0,
       totalTokens: 0,
@@ -123,7 +125,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       if (assistantMessage.parts.length > 0) {
         messages.push(assistantMessage);
       }
-      const context = contextManager.prepareContext(messages);
+      const { messages: context } = contextManager.prepareContext(messages, 65536, 8192);
       const start = performance.now();
       logger.info('Generating...');
       const response = await invokeGenerateText(model, opts, context);
@@ -142,7 +144,6 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       totalUsage.promptTokens += response.usage.promptTokens;
       totalUsage.completionTokens += response.usage.completionTokens;
       totalUsage.totalTokens += response.usage.totalTokens;
-
       if (response.finishReason == 'stop') {
         success = hadSuccessfulDeploy;
         break;
@@ -313,9 +314,9 @@ async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, c
             toolCalls: result.toolCalls,
           },
           metrics: {
-            promptTokens: result.usage.promptTokens,
-            completionTokens: result.usage.completionTokens,
-            totalTokens: result.usage.totalTokens,
+            prompt_tokens: result.usage.promptTokens,
+            completion_tokens: result.usage.completionTokens,
+            total_tokens: result.usage.totalTokens,
           },
           metadata: {
             model: model.model_slug,
