@@ -125,7 +125,13 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       if (assistantMessage.parts.length > 0) {
         messages.push(assistantMessage);
       }
-      const { messages: context } = contextManager.prepareContext(messages, 65536, 8192);
+      const minCollapsedMessagesSize = 8192;
+      const maxCollapsedMessagesSize = 65536;
+      const { messages: context } = contextManager.prepareContext(
+        messages,
+        maxCollapsedMessagesSize,
+        minCollapsedMessagesSize,
+      );
       const start = performance.now();
       logger.info('Generating...');
       const response = await invokeGenerateText(model, opts, context);
