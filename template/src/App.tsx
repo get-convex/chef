@@ -7,7 +7,7 @@ import { Toaster } from "sonner";
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm p-4 flex justify-between items-center border-b shadow-sm">
+      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm h-16 flex justify-between items-center border-b shadow-sm px-4">
         <h2 className="text-xl font-semibold text-primary">Chef</h2>
         <SignOutButton />
       </header>
