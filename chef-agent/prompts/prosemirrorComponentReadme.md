@@ -96,17 +96,20 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
 - ```ts
 
   ```
+
 - import { DataModel } from "./convex/\_generated/dataModel";
 - // ...
 - export const { ... } = prosemirrorSync.syncApi<DataModel>({...});
 - ```
 
   ```
+
 -
 - To define just one function to use for both, you can define it like this:
 - ```ts
 
   ```
+
 - async function checkPermissions(ctx: QueryCtx, id: string) {
 - const user = await getAuthUser(ctx);
 - if (!user || !(await canUserAccessDocument(user, id))) {
@@ -116,6 +119,7 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
 - ```
 
   ```
+
 - @param opts - Optional callbacks.
 - @returns functions to export, so the `useTiptapSync` hook can use them.
   \*/
