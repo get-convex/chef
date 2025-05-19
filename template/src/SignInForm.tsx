@@ -33,14 +33,14 @@ export function SignInForm() {
         }}
       >
         <input
-          className="input-field"
+          className="auth-input-field"
           type="email"
           name="email"
           placeholder="Email"
           required
         />
         <input
-          className="input-field"
+          className="auth-input-field"
           type="password"
           name="password"
           placeholder="Password"
