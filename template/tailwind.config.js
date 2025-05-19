@@ -33,7 +33,7 @@ module.exports = {
       },
       spacing: {
         "form-field": "16px",
-        "section": "32px",
+        section: "32px",
       },
     },
   },
