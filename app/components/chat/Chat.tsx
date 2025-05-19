@@ -8,7 +8,7 @@ import { useSnapScroll } from '~/lib/hooks/useSnapScroll';
 import { description } from '~/lib/stores/description';
 import { chatStore } from '~/lib/stores/chatId';
 import { workbenchStore } from '~/lib/stores/workbench.client';
-import { type ModelSelection } from '~/utils/constants';
+import { MAX_CONSECUTIVE_DEPLOY_ERRORS, type ModelSelection } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { BaseChat } from './BaseChat.client';
@@ -91,7 +91,6 @@ const retryState = atom({
   numFailures: 0,
   nextRetry: Date.now(),
 });
-const shouldDisableToolsStore = atom(false);
 const skipSystemPromptStore = atom(false);
 export const Chat = memo(
   ({
@@ -311,6 +310,25 @@ export const Chat = memo(
         } else {
           modelProvider = 'OpenAI';
         }
+        let shouldDisableTools = false;
+        if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+          const lastSystemMessage = messages[messages.length - 1];
+          const toolCalls = lastSystemMessage.parts.filter(
+            (part) => part.type === 'tool-invocation' && part.toolInvocation.state === 'result',
+          );
+          if (toolCalls.length >= MAX_CONSECUTIVE_DEPLOY_ERRORS) {
+            const lastToolCalls = toolCalls.slice(-MAX_CONSECUTIVE_DEPLOY_ERRORS);
+            const allFailed = lastToolCalls.every(
+              (t) =>
+                t.type === 'tool-invocation' &&
+                t.toolInvocation.state === 'result' &&
+                t.toolInvocation.result.startsWith('Error:'),
+            );
+            if (allFailed) {
+              shouldDisableTools = true;
+            }
+          }
+        }
         const { messages: preparedMessages, collapsedMessages } = chatContextManager.current.prepareContext(
           messages,
           maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
@@ -326,7 +344,7 @@ export const Chat = memo(
           modelProvider,
           // Fall back to the user's API key if the request has failed too many times
           userApiKey: retries.numFailures < MAX_RETRIES ? apiKey : { ...apiKey, preference: 'always' },
-          shouldDisableTools: shouldDisableToolsStore.get(),
+          shouldDisableTools,
           skipSystemPrompt: skipSystemPromptStore.get(),
           smallFiles,
           recordRawPromptsForDebugging,
@@ -337,13 +355,8 @@ export const Chat = memo(
       maxSteps: 64,
       async onToolCall({ toolCall }) {
         console.log('Starting tool call', toolCall);
-        const { result, shouldDisableTools, skipSystemPrompt } = await workbenchStore.waitOnToolCall(
-          toolCall.toolCallId,
-        );
+        const { result, skipSystemPrompt } = await workbenchStore.waitOnToolCall(toolCall.toolCallId);
         console.log('Tool call finished', result);
-        if (shouldDisableTools) {
-          shouldDisableToolsStore.set(true);
-        }
         if (skipSystemPrompt && enableSkipSystemPrompt) {
           skipSystemPromptStore.set(true);
         }
@@ -514,7 +527,6 @@ export const Chat = memo(
 
         const modifiedFiles = workbenchStore.getModifiedFiles();
         chatStore.setKey('aborted', false);
-        shouldDisableToolsStore.set(false);
         skipSystemPromptStore.set(false);
         if (modifiedFiles !== undefined) {
           const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);

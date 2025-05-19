@@ -42,17 +42,14 @@ export interface ArtifactState {
 type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 
 export type WorkbenchViewType = 'code' | 'diff' | 'preview' | 'dashboard';
-const MAX_CONSECUTIVE_DEPLOY_ERRORS = 5;
 
 export class WorkbenchStore {
   #previewsStore = new PreviewsStore(webcontainer);
   #filesStore = new FilesStore(webcontainer);
   #editorStore = new EditorStore(this.#filesStore);
   #terminalStore = new TerminalStore(webcontainer);
-  #toolCalls: Map<
-    string,
-    PromiseWithResolvers<{ result: string; shouldDisableTools: boolean; skipSystemPrompt: boolean }> & { done: boolean }
-  > = new Map();
+  #toolCalls: Map<string, PromiseWithResolvers<{ result: string; skipSystemPrompt: boolean }> & { done: boolean }> =
+    new Map();
 
   #reloadedParts = import.meta.hot?.data.reloadedParts ?? new Set<string>();
 
@@ -148,13 +145,11 @@ export class WorkbenchStore {
     return this.#filesStore.prewarmWorkdir(container);
   }
 
-  async waitOnToolCall(
-    toolCallId: string,
-  ): Promise<{ result: string; shouldDisableTools: boolean; skipSystemPrompt: boolean }> {
+  async waitOnToolCall(toolCallId: string): Promise<{ result: string; skipSystemPrompt: boolean }> {
     let resolvers = this.#toolCalls.get(toolCallId);
     if (!resolvers) {
       resolvers = {
-        ...withResolvers<{ result: string; shouldDisableTools: boolean; skipSystemPrompt: boolean }>(),
+        ...withResolvers<{ result: string; skipSystemPrompt: boolean }>(),
         done: false,
       };
       this.#toolCalls.set(toolCallId, resolvers);
@@ -418,7 +413,7 @@ export class WorkbenchStore {
           const toolCallResults = this._toolCallResults.get(messageId);
           if (!toolCallResults) {
             console.error('Tool call results not found');
-            toolCallPromise.resolve({ result, shouldDisableTools: false, skipSystemPrompt: false });
+            toolCallPromise.resolve({ result, skipSystemPrompt: false });
             return;
           }
           toolCallResults.push({ partId, kind, toolName });
@@ -426,27 +421,14 @@ export class WorkbenchStore {
           if (kind === 'success') {
             toolCallPromise.resolve({
               result,
-              shouldDisableTools: false,
               // Skip sending the system prompt if the last tool call was a successful deploy. The model should not need any Convex information at that point.
               skipSystemPrompt: toolName === 'deploy',
             });
             return;
           }
           if (kind === 'error') {
-            let numConsecutiveDeployErrors = 0;
-            for (let i = toolCallResults.length - 1; i >= 0; i--) {
-              const toolCallResult = toolCallResults[i];
-              if (toolCallResult.toolName === 'deploy') {
-                if (toolCallResult.kind === 'error') {
-                  numConsecutiveDeployErrors++;
-                } else {
-                  break;
-                }
-              }
-            }
             toolCallPromise.resolve({
               result,
-              shouldDisableTools: numConsecutiveDeployErrors >= MAX_CONSECUTIVE_DEPLOY_ERRORS,
               skipSystemPrompt: false,
             });
           }
@@ -541,7 +523,7 @@ export class WorkbenchStore {
         let toolCallPromise = this.#toolCalls.get(action.parsedContent.toolCallId);
         if (!toolCallPromise) {
           toolCallPromise = {
-            ...withResolvers<{ result: string; shouldDisableTools: boolean; skipSystemPrompt: boolean }>(),
+            ...withResolvers<{ result: string; skipSystemPrompt: boolean }>(),
             done: false,
           };
           this.#toolCalls.set(action.parsedContent.toolCallId, toolCallPromise);
