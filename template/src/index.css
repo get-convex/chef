@@ -37,11 +37,11 @@ body {
 }
 
 .input-field {
-  @apply w-full px-3 py-2 rounded-md bg-transparent border-2 border-slate-200 focus:outline-none focus:border-blue-500 transition-colors;
+  @apply w-full px-4 py-3 rounded-container bg-white border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow shadow-sm hover:shadow;
 }
 
 .auth-button {
-  @apply w-full py-2 rounded-md text-white font-medium button hover:opacity-90 transition-opacity;
+  @apply w-full px-4 py-3 rounded bg-primary text-white font-semibold hover:bg-primary-hover transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .link-text {

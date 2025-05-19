@@ -23,7 +23,7 @@ import { chatSyncState } from '~/lib/stores/startup/history';
 import { FILE_EVENTS_DEBOUNCE_MS } from '~/lib/stores/files';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 
-const TEMPLATE_URL = '/template-snapshot-99a242ca.bin';
+const TEMPLATE_URL = '/template-snapshot-83a7eafd.bin';
 
 export function useNewChatContainerSetup() {
   const convex = useConvex();
