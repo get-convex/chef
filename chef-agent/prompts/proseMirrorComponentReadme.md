@@ -83,9 +83,9 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
 
 /\*\*
 
-- Expose the sync API to the client for use with the `useBlockNote` hook.
+- Expose the sync API to the client for use with the `useBlockNoteSync` hook.
 - If you export these in `convex/prosemirror.ts`, pass `api.prosemirror`
-- to the `useTiptapSync` hook.
+- to the `useBlockNoteSync` hook.
 -
 - It allows you to define optional read and write permissions, along with
 - a callback when new snapshots are available.
@@ -98,6 +98,7 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
   ```
 
 - import { DataModel } from "./convex/\_generated/dataModel";
+- import { GenericQueryCtx } from 'convex/server';
 - // ...
 - export const { ... } = prosemirrorSync.syncApi<DataModel>({...});
 - ```
@@ -110,7 +111,7 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
 
   ```
 
-- async function checkPermissions(ctx: QueryCtx, id: string) {
+- async function checkPermissions(ctx: GenericQueryCtx<DataModel>, id: string) {
 - const user = await getAuthUser(ctx);
 - if (!user || !(await canUserAccessDocument(user, id))) {
 -     throw new Error("Unauthorized");
@@ -120,8 +121,11 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
 
   ```
 
+  Id in the following type definition extends the string type:
+  export class ProsemirrorSync<Id extends string = string> {
+
 - @param opts - Optional callbacks.
-- @returns functions to export, so the `useTiptapSync` hook can use them.
+- @returns functions to export, so the `useBlockNoteSync` hook can use them.
   \*/
   syncApi<DataModel extends GenericDataModel>(opts?: {
   /\*\*
@@ -158,6 +162,8 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
     snapshot: string,
     version: number
     ) => void | Promise<void>;
+    ...
+    }
 
 In your React components, you can then use the editor-specific hook to fetch the
 document and keep it in sync via a Tiptap extension. **Note**: This requires a
