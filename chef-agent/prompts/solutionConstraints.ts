@@ -1,6 +1,7 @@
 import { stripIndents } from '../utils/stripIndent.js';
 import { convexGuidelines } from './convexGuidelines.js';
 import type { SystemPromptOptions } from '../types.js';
+import { proseMirrorComponentReadmePrompt } from './proseMirrorComponentReadme.js';
 
 export function solutionConstraints(options: SystemPromptOptions) {
   return stripIndents`
@@ -14,6 +15,7 @@ export function solutionConstraints(options: SystemPromptOptions) {
       subscriptions. Here are some guidelines, documentation, and best practices for using Convex effectively:
 
       ${convexGuidelines}
+      ${proseMirrorComponentReadmePrompt}
 
       <http_guidelines>
         - All user-defined HTTP endpoints are defined in \`convex/router.ts\` and require an \`httpAction\` decorator.
