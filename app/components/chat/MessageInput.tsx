@@ -270,9 +270,22 @@ export const MessageInput = memo(function MessageInput({
               placement="top-start"
             >
               <MenuItemComponent action={() => insertTemplate('Add a collaborative text editor to [...]')}>
-                Add a collaborative text editor
+                <div className="flex w-full flex-col items-center">
+                  <span className="text-center font-bold">Add a collaborative text editor</span>
+                  <div className="mt-2 flex w-full justify-center">
+                    <img src="/features/TextEditor.png" width={112} height={80} />
+                  </div>
+                </div>
               </MenuItemComponent>
-              <MenuItemComponent action={() => insertTemplate('Add AI chat to [...]')}>Add AI chat</MenuItemComponent>
+              <hr className="my-2 w-full border-t border-gray-200" />
+              <MenuItemComponent action={() => insertTemplate('Add AI chat to [...]')}>
+                <div className="flex w-full flex-col items-center">
+                  <span className="text-center font-bold">Add AI chat</span>
+                  <div className="mt-2 flex w-full justify-center">
+                    <img src="/features/AIChat.png" width={112} height={80} />
+                  </div>
+                </div>
+              </MenuItemComponent>
             </MenuComponent>
             {enhancePromptButton && chefAuthState.kind === 'fullyLoggedIn' && (
               <EnhancePromptButton
