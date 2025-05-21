@@ -196,7 +196,7 @@ export const MessageInput = memo(function MessageInput({
       setTimeout(() => {
         const textarea = textareaRef.current;
         if (textarea) {
-          const start = newValue.indexOf('[...]');
+          const start = newValue.lastIndexOf('[...]');
           if (start !== -1) {
             textarea.focus();
             textarea.setSelectionRange(start, start + 5);
