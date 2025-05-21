@@ -19,6 +19,7 @@ import { PROMPT_COOKIE_KEY, type ModelSelection } from '~/utils/constants';
 import { ModelSelector } from './ModelSelector';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ArrowRightIcon, ExclamationTriangleIcon, StopIcon } from '@radix-ui/react-icons';
+import { SquaresPlusIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from '@ui/Tooltip';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useChefAuth } from './ChefAuthWrapper';
@@ -31,6 +32,7 @@ import { debounce } from '~/utils/debounce';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { toast } from 'sonner';
 import { captureException } from '@sentry/remix';
+import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
@@ -181,6 +183,30 @@ export const MessageInput = memo(function MessageInput({
     }
   }, [input]);
 
+  // Helper to insert template and select '[...]'
+  const insertTemplate = useCallback(
+    (template: string) => {
+      let newValue;
+      if (input && input.trim().length > 0) {
+        newValue = input + (input.endsWith('\n') ? '' : '\n\n') + template;
+      } else {
+        newValue = template;
+      }
+      messageInputStore.set(newValue);
+      setTimeout(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+          const start = newValue.indexOf('[...]');
+          if (start !== -1) {
+            textarea.focus();
+            textarea.setSelectionRange(start, start + 5);
+          }
+        }
+      }, 0);
+    },
+    [input],
+  );
+
   return (
     <div className="relative z-20 mx-auto w-full max-w-chat rounded-xl shadow transition-all duration-200">
       <div className="rounded-xl bg-background-primary/75 backdrop-blur-md">
@@ -230,6 +256,24 @@ export const MessageInput = memo(function MessageInput({
           {input.length > PROMPT_LENGTH_WARNING_THRESHOLD && <CharacterWarning />}
           <div className="ml-auto flex items-center gap-2">
             {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
+            <MenuComponent
+              buttonProps={{
+                variant: 'neutral',
+                tip: 'Add a feature',
+                inline: true,
+                icon: (
+                  <div className="text-lg">
+                    <SquaresPlusIcon className="size-4" />
+                  </div>
+                ),
+              }}
+              placement="top-start"
+            >
+              <MenuItemComponent action={() => insertTemplate('Add a collaborative text editor to [...]')}>
+                Add a collaborative text editor
+              </MenuItemComponent>
+              <MenuItemComponent action={() => insertTemplate('Add AI chat to [...]')}>Add AI chat</MenuItemComponent>
+            </MenuComponent>
             {enhancePromptButton && chefAuthState.kind === 'fullyLoggedIn' && (
               <EnhancePromptButton
                 isEnhancing={isEnhancing}
