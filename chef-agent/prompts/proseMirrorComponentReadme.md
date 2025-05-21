@@ -8,6 +8,9 @@ Each component is installed as its own independent library from NPM. You also ne
 
 ALWAYS prefer using a component for a feature than writing the code yourself.
 
+Component functions are only accessible by `components.<component_name>.<component_function_path>` imported from `./_generated/api` like
+`import { components } from "./_generated/api";` after code is initially pushed.
+
 # Convex ProseMirror Component
 
 [![npm version](https://badge.fury.io/js/@convex-dev%2Fprosemirror-sync.svg)](https://badge.fury.io/js/@convex-dev%2Fprosemirror-sync)
@@ -81,6 +84,8 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
 });
 ```
 
+DO NOT use any other component functions outside the functions exposed by `prosemirrorSync.syncApi`.
+
 /\*\*
 
 - Expose the sync API to the client for use with the `useBlockNoteSync` hook.
@@ -121,7 +126,8 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
 
   ```
 
-  Id in the following type definition extends the string type:
+  Id in the following type definition extends the string type. Pass ids as strings into the functions.
+
   export class ProsemirrorSync<Id extends string = string> {
 
 - @param opts - Optional callbacks.
@@ -189,6 +195,102 @@ export function MyComponent() {
   ) : (
     <button onClick={() => sync.create({ type: 'doc', content: [] })}>Create document</button>
   );
+}
+```
+
+sync.create accepts an argument with `JSONContent` type. DO NOT pass it a string, it must be an object that matches `JSONContent` type:
+
+```
+export type JSONContent = {
+  type?: string;
+  attrs?: Record<string, any>;
+  content?: JSONContent[];
+  marks?: {
+    type: string;
+    attrs?: Record<string, any>;
+    [key: string]: any;
+  }[];
+  text?: string;
+  [key: string]: any;
+};
+```
+
+Here is the source code for the `useBlockNoteSync` hook.
+
+```ts
+import { useMemo } from 'react';
+import type { SyncApi } from '../client';
+import { type UseSyncOptions, useTiptapSync } from '../tiptap';
+import { type Block, BlockNoteEditor, type BlockNoteEditorOptions, nodeToBlock } from '@blocknote/core';
+
+export type BlockNoteSyncOptions = UseSyncOptions & {
+  /**
+   * If you pass options into the editor, you should pass them here, to ensure
+   * the initialContent is parsed with the correct schema.
+   */
+  editorOptions?: Partial<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Omit<BlockNoteEditorOptions<any, any, any>, 'initialContent'>
+  >;
+};
+
+export function useBlockNoteSync(syncApi: SyncApi, id: string, opts?: BlockNoteSyncOptions) {
+  const sync = useTiptapSync(syncApi, id, opts);
+  const editor = useMemo(() => {
+    if (sync.initialContent === null) return null;
+    const editor = BlockNoteEditor.create({
+      ...opts?.editorOptions,
+      _headless: true,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const blocks: Block<any, any, any>[] = [];
+
+    // Convert the prosemirror document to BlockNote blocks.
+    // inspired by https://github.com/TypeCellOS/BlockNote/blob/main/packages/server-util/src/context/ServerBlockNoteEditor.ts#L42
+    const pmNode = editor.pmSchema.nodeFromJSON(sync.initialContent);
+    if (pmNode.firstChild) {
+      pmNode.firstChild.descendants((node) => {
+        blocks.push(nodeToBlock(node, editor.pmSchema));
+        return false;
+      });
+    }
+    return BlockNoteEditor.create({
+      ...opts?.editorOptions,
+      _tiptapOptions: {
+        ...opts?.editorOptions?._tiptapOptions,
+        extensions: [...(opts?.editorOptions?._tiptapOptions?.extensions ?? []), sync.extension],
+      },
+      initialContent: blocks.length > 0 ? blocks : undefined,
+    });
+  }, [sync.initialContent]);
+
+  if (sync.isLoading) {
+    return {
+      editor: null,
+      isLoading: true,
+      /**
+       * Create the document without waiting to hear from the server.
+       * Warning: Only call this if you just created the document id.
+       * It's safer to wait until loading is false.
+       * It's also best practice to pass in the same initial content everywhere,
+       * so if two clients create the same document id, they'll both end up
+       * with the same initial content. Otherwise the second client will
+       * throw an exception on the snapshot creation.
+       */
+      create: sync.create,
+    } as const;
+  }
+  if (!editor) {
+    return {
+      editor: null,
+      isLoading: false,
+      create: sync.create!,
+    } as const;
+  }
+  return {
+    editor,
+    isLoading: false,
+  } as const;
 }
 ```
 
