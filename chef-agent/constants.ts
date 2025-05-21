@@ -33,6 +33,21 @@ export const SUGGESTIONS = [
 - Each member should be able to record a payment to another member, which adds to how much they have paid and adds to how much the recipient has been reimbursed
 - Members should record payments so that every member in the group has the same net balance`,
   },
+  {
+    title: 'Notion clone',
+    prompt: `Make a collaborative text editor like Notion with these features:
+- Real-time collaboration where multiple users can edit the same document
+- Document Organization:
+  - Private documents (only visible to the creator)
+  - Group documents (shared with specific users who are part of a group)
+  - Simple sidebar navigation between documents
+- Groups:
+  - Create groups and add users to them
+  - Documents can be created in a group for shared access
+- Interface:
+  - Clean, minimal design with lots of white space and a neutral color palette (soft grays and whites)
+  - Focus on readable text and minimal distractions`,
+  },
 ];
 
 export const WORK_DIR_NAME = 'project';
@@ -54,4 +69,5 @@ export const EXCLUDED_FILE_PATHS = [
   'src/SignInForm.tsx',
   'src/SignOutButton.tsx',
   'vite.config.ts',
+  'package.json',
 ];
