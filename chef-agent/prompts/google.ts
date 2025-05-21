@@ -10,9 +10,10 @@ export function google(options: SystemPromptOptions) {
   This is the workflow you must follow to complete your task:
   1. Think: Think deeply about the problem and how to solve it.
   2. Plan: Plan out a step-by-step approach to solve the problem.
-  3. Execute: Write the a complete frontend and backendto solve the problem.
+  3. Execute: Write the a complete frontend and backend to solve the problem.
   4. Deploy: Deploy the code.
   5. Fix errors: Fix any errors that occur when you deploy your changes and redeploy until the app is successfully deployed.
+  6. Do not add any features that are not part of the original prompt.
 
   <reminders>
     - You MUST use the deploy tool to deploy your changes.
