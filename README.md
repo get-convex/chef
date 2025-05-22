@@ -68,7 +68,7 @@ Test your work, we don't have e2e tests.
 Push from main to staging whenever it makes sense, it's not a protected branch on GitHub.
 
 ```
-git checkout main;
+git checkout main
 git pull
 git push origin main:staging
 ```
@@ -78,7 +78,7 @@ Announce in the #project-chef Slack channel when you do this. Try out staging fo
 release.
 
 ```
-git checkout staging;
+git checkout staging
 git pull
 git push origin staging:release
 ```
