@@ -24,4 +24,4 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
-        run: cd test-kitchen && npx braintrust eval initialGeneration.eval.ts
+        run: cd test-kitchen && npx braintrust eval initialGeneration.eval.ts --terminate-on-failure
