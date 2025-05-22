@@ -81,11 +81,6 @@ export const models: Partial<
     recommended: true,
     provider: 'anthropic',
   },
-  'claude-4-opus': {
-    name: 'Claude 4 Opus',
-    provider: 'anthropic',
-    requireKey: false,
-  },
   'claude-4-sonnet': {
     name: 'Claude 4 Sonnet',
     provider: 'anthropic',
@@ -123,16 +118,13 @@ export const ModelSelector = React.memo(function ModelSelector({
 }: ModelSelectorProps) {
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
   const selectedModel = models[modelSelection];
-  const { useGeminiAuto, enableClaude4Opus, enableClaude4Sonnet } = useLaunchDarkly();
+  const { useGeminiAuto, enableClaude4Sonnet } = useLaunchDarkly();
   if (!selectedModel) {
     captureMessage(`Model ${modelSelection} not found`);
     setModelSelection('auto');
   }
 
   const availableModels = Object.entries(models).filter(([key]) => {
-    if (key === 'claude-4-opus') {
-      return enableClaude4Opus;
-    }
     if (key === 'claude-4-sonnet') {
       return enableClaude4Sonnet;
     }

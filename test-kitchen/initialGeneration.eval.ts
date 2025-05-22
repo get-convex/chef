@@ -52,12 +52,6 @@ if (process.env.ANTHROPIC_API_KEY) {
     ai: anthropic('claude-sonnet-4-20250514'),
     maxTokens: 8192,
   });
-  chefEval({
-    name: 'claude-4-opus',
-    model_slug: 'claude-opus-4-20250514',
-    ai: anthropic('claude-opus-4-20250514'),
-    maxTokens: 8192,
-  });
 }
 
 if (process.env.OPENAI_API_KEY) {

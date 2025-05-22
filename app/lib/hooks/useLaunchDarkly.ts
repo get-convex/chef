@@ -14,7 +14,6 @@ const flagDefaults: {
   enhancePromptButton: boolean;
   minCollapsedMessagesSize: number;
   useGeminiAuto: boolean;
-  enableClaude4Opus: boolean;
   enableClaude4Sonnet: boolean;
 } = {
   maintenanceMode: false,
@@ -29,7 +28,6 @@ const flagDefaults: {
   enhancePromptButton: false,
   minCollapsedMessagesSize: 8192,
   useGeminiAuto: false,
-  enableClaude4Opus: false,
   enableClaude4Sonnet: false,
 };
 
