@@ -29,6 +29,10 @@ type Provider = {
 
 export function modelForProvider(provider: ModelProvider, modelChoice: string | undefined) {
   if (modelChoice) {
+    if (modelChoice === 'claude-sonnet-4-0' && provider === 'Bedrock') {
+      return 'anthropic.claude-sonnet-4-20250514-v1:0';
+    }
+
     return modelChoice;
   }
   switch (provider) {

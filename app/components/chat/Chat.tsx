@@ -302,7 +302,8 @@ export const Chat = memo(
           modelProvider = 'Anthropic';
           modelChoice = 'claude-3-5-haiku-latest';
         } else if (modelSelection === 'claude-4-sonnet') {
-          modelProvider = 'Anthropic';
+          const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
+          modelProvider = providers[retries.numFailures % providers.length];
           modelChoice = 'claude-sonnet-4-0';
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
