@@ -30,7 +30,7 @@ type Provider = {
 export function modelForProvider(provider: ModelProvider, modelChoice: string | undefined) {
   if (modelChoice) {
     if (modelChoice === 'claude-sonnet-4-0' && provider === 'Bedrock') {
-      return 'anthropic.claude-sonnet-4-20250514-v1:0';
+      return 'us.anthropic.claude-sonnet-4-20250514-v1:0';
     }
 
     return modelChoice;
@@ -113,9 +113,9 @@ export function getProvider(
       }
       const bedrock = createAmazonBedrock({
         region,
-        credentialProvider: awsCredentialsProvider({
-          roleArn: getEnv('AWS_ROLE_ARN')!,
-        }),
+        // credentialProvider: awsCredentialsProvider({
+        //   roleArn: getEnv('AWS_ROLE_ARN')!,
+        // }),
         fetch,
       });
       provider = {
