@@ -33,6 +33,8 @@ import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { toast } from 'sonner';
 import { captureException } from '@sentry/remix';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
@@ -269,21 +271,17 @@ export const MessageInput = memo(function MessageInput({
               }}
               placement="top-start"
             >
+              <h2 className="ml-3 text-sm font-bold">Add a feature</h2>
               <MenuItemComponent action={() => insertTemplate('Add a collaborative text editor to [...]')}>
-                <div className="flex w-full flex-col items-center">
-                  <span className="text-center font-bold">Add a collaborative text editor</span>
-                  <div className="mt-2 flex w-full justify-center">
-                    <img src="/features/TextEditor.png" width={112} height={80} />
-                  </div>
+                <div className="flex w-full items-center gap-2">
+                  <PencilSquareIcon className="size-4 text-content-secondary" />
+                  Add a collaborative text editor
                 </div>
               </MenuItemComponent>
-              <hr className="my-2 w-full border-t border-gray-200" />
               <MenuItemComponent action={() => insertTemplate('Add AI chat to [...]')}>
-                <div className="flex w-full flex-col items-center">
-                  <span className="text-center font-bold">Add AI chat</span>
-                  <div className="mt-2 flex w-full justify-center">
-                    <img src="/features/AIChat.png" width={112} height={80} />
-                  </div>
+                <div className="flex w-full items-center gap-2">
+                  <ChatBubbleLeftIcon className="size-4 text-content-secondary" />
+                  Add AI chat
                 </div>
               </MenuItemComponent>
             </MenuComponent>
