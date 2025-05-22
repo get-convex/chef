@@ -113,9 +113,9 @@ export function getProvider(
       }
       const bedrock = createAmazonBedrock({
         region,
-        // credentialProvider: awsCredentialsProvider({
-        //   roleArn: getEnv('AWS_ROLE_ARN')!,
-        // }),
+        credentialProvider: awsCredentialsProvider({
+          roleArn: getEnv('AWS_ROLE_ARN')!,
+        }),
         fetch,
       });
       provider = {
