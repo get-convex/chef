@@ -9,7 +9,7 @@ import { google } from '@ai-sdk/google';
 import { xai } from '@ai-sdk/xai';
 import { chefTask } from './chefTask.js';
 import { chefScorer } from './chefScorer.js';
-import { ChefModel } from './types.js';
+import type { ChefModel } from './types.js';
 import * as net from 'net';
 
 const CHEF_PROJECT = 'chef';
@@ -44,6 +44,18 @@ if (process.env.ANTHROPIC_API_KEY) {
     name: 'claude-3.5-sonnet',
     model_slug: 'claude-3-5-sonnet-20240620',
     ai: anthropic('claude-3-5-sonnet-20241022'),
+    maxTokens: 8192,
+  });
+  chefEval({
+    name: 'claude-4-sonnet',
+    model_slug: 'claude-sonnet-4-20250514',
+    ai: anthropic('claude-sonnet-4-20250514'),
+    maxTokens: 8192,
+  });
+  chefEval({
+    name: 'claude-4-opus',
+    model_slug: 'claude-opus-4-20250514',
+    ai: anthropic('claude-opus-4-20250514'),
     maxTokens: 8192,
   });
 }

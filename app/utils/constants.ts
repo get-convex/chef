@@ -28,6 +28,8 @@ export type ModelSelection =
   | 'auto'
   | 'claude-3.5-sonnet'
   | 'claude-3-5-haiku'
+  | 'claude-4-sonnet'
+  | 'claude-4-opus'
   | 'gpt-4.1'
   | 'gpt-4.1-mini'
   | 'grok-3-mini'
