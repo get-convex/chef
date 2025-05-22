@@ -256,7 +256,7 @@ export const MessageInput = memo(function MessageInput({
           {chatStarted && <ConvexConnection />}
           {input.length > 3 && input.length <= PROMPT_LENGTH_WARNING_THRESHOLD && <NewLineShortcut />}
           {input.length > PROMPT_LENGTH_WARNING_THRESHOLD && <CharacterWarning />}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1">
             {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
             <MenuComponent
               buttonProps={{
@@ -309,7 +309,7 @@ export const MessageInput = memo(function MessageInput({
               }
               onClick={handleClickButton}
               size="xs"
-              className="h-[1.625rem]"
+              className=" ml-2 h-[1.625rem]"
               aria-label={isStreaming ? 'Stop' : 'Send'}
               icon={!isStreaming ? <ArrowRightIcon /> : <StopIcon />}
             />
