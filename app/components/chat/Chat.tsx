@@ -302,6 +302,12 @@ export const Chat = memo(
         } else if (modelSelection === 'claude-3-5-haiku') {
           modelProvider = 'Anthropic';
           modelChoice = 'claude-3-5-haiku-latest';
+        } else if (modelSelection === 'claude-4-opus') {
+          modelProvider = 'Anthropic';
+          modelChoice = 'claude-opus-4-0';
+        } else if (modelSelection === 'claude-4-sonnet') {
+          modelProvider = 'Anthropic';
+          modelChoice = 'claude-sonnet-4-0';
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
         } else if (modelSelection === 'gemini-2.5-pro') {
@@ -309,8 +315,11 @@ export const Chat = memo(
         } else if (modelSelection === 'gpt-4.1-mini') {
           modelProvider = 'OpenAI';
           modelChoice = 'gpt-4.1-mini';
-        } else {
+        } else if (modelSelection === 'gpt-4.1') {
           modelProvider = 'OpenAI';
+        } else {
+          const _exhaustiveCheck: never = modelSelection;
+          throw new Error(`Unknown model: ${_exhaustiveCheck}`);
         }
         let shouldDisableTools = false;
         if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
