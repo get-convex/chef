@@ -304,10 +304,10 @@ export const Chat = memo(
           modelChoice = 'claude-3-5-haiku-latest';
         } else if (modelSelection === 'claude-4-opus') {
           modelProvider = 'Anthropic';
-          modelChoice = 'claude-opus-4-0';
+          modelChoice = 'claude-opus-4-20250514';
         } else if (modelSelection === 'claude-4-sonnet') {
           modelProvider = 'Anthropic';
-          modelChoice = 'claude-sonnet-4-0';
+          modelChoice = 'claude-sonnet-4-20250514';
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
         } else if (modelSelection === 'gemini-2.5-pro') {
