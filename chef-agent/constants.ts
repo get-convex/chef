@@ -39,11 +39,8 @@ export const SUGGESTIONS = [
 - Real-time collaboration where multiple users can edit the same document
 - Document Organization:
   - Private documents (only visible to the creator)
-  - Group documents (shared with specific users who are part of a group)
+  - Public documents (visible to all users)
   - Simple sidebar navigation between documents
-- Groups:
-  - Create groups and add users to them
-  - Documents can be created in a group for shared access
 - Interface:
   - Clean, minimal design with lots of white space and a neutral color palette (soft grays and whites)
   - Focus on readable text and minimal distractions`,
