@@ -75,7 +75,8 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   let useUserApiKey = false;
 
   // Use the user's API key if they're set to always mode or if they manually set a model.
-  if (body.userApiKey?.preference === 'always' || body.modelChoice) {
+  // Sonnet 4 can be used with the default API key since it has the same pricing as Sonnet 3.5
+  if (body.userApiKey?.preference === 'always' || (body.modelChoice && body.modelChoice !== 'claude-sonnet-4-0')) {
     useUserApiKey = true;
   }
 
