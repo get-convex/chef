@@ -31,7 +31,7 @@
     "node": ">=18.18.0"
   },
   "dependencies": {
-    "@ai-sdk/amazon-bedrock": "^2.2.5",
+    "@ai-sdk/amazon-bedrock": "^2.2.9",
     "@ai-sdk/anthropic": "^1.2.12",
     "@convex-dev/ai-sdk-google": "1.2.17",
     "@ai-sdk/google": "^1.2.11",

@@ -14,7 +14,7 @@ importers:
   .:
     dependencies:
       '@ai-sdk/amazon-bedrock':
-        specifier: ^2.2.5
+        specifier: ^2.2.9
         version: 2.2.9(zod@3.24.1)
       '@ai-sdk/anthropic':
         specifier: ^1.2.12
