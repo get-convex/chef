@@ -261,7 +261,7 @@ export const MessageInput = memo(function MessageInput({
             <MenuComponent
               buttonProps={{
                 variant: 'neutral',
-                tip: 'Add a feature',
+                tip: 'Use a recipe',
                 inline: true,
                 icon: (
                   <div className="text-lg">
@@ -271,7 +271,7 @@ export const MessageInput = memo(function MessageInput({
               }}
               placement="top-start"
             >
-              <h2 className="ml-3 text-sm font-bold">Add a feature</h2>
+              <h2 className="ml-3 text-sm font-bold">Use a recipe</h2>
               <MenuItemComponent action={() => insertTemplate('Add a collaborative text editor to [...]')}>
                 <div className="flex w-full items-center gap-2">
                   <PencilSquareIcon className="size-4 text-content-secondary" />
