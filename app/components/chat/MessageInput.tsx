@@ -309,7 +309,7 @@ export const MessageInput = memo(function MessageInput({
               }
               onClick={handleClickButton}
               size="xs"
-              className=" ml-2 h-[1.625rem]"
+              className="ml-2 h-[1.625rem]"
               aria-label={isStreaming ? 'Stop' : 'Send'}
               icon={!isStreaming ? <ArrowRightIcon /> : <StopIcon />}
             />
