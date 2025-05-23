@@ -139,6 +139,7 @@ export const Chat = memo(
       maxRelevantFilesSize,
       minCollapsedMessagesSize,
       useGeminiAuto,
+      useClaude4Auto,
     } = useLaunchDarkly();
 
     const title = useStore(description);
@@ -288,7 +289,11 @@ export const Chat = memo(
         const retries = retryState.get();
         let modelChoice: string | undefined = undefined;
         if (modelSelection === 'auto') {
-          if (useGeminiAuto) {
+          if (useClaude4Auto) {
+            const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
+            modelProvider = providers[retries.numFailures % providers.length];
+            modelChoice = 'claude-sonnet-4-0';
+          } else if (useGeminiAuto) {
             modelProvider = 'Google';
           } else {
             // Send all traffic to Anthropic first before failing over to Bedrock.

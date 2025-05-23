@@ -16,6 +16,7 @@ const flagDefaults: {
   useGeminiAuto: boolean;
   enableClaude4Sonnet: boolean;
   notionClonePrompt: boolean;
+  useClaude4Auto: boolean;
 } = {
   maintenanceMode: false,
   openAiLaunch202504: false,
@@ -31,6 +32,7 @@ const flagDefaults: {
   useGeminiAuto: false,
   enableClaude4Sonnet: false,
   notionClonePrompt: false,
+  useClaude4Auto: false,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {
