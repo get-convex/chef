@@ -76,15 +76,16 @@ export const models: Partial<
     recommended: true,
     provider: 'auto',
   },
+  'claude-4-sonnet': {
+    name: 'Claude 4 Sonnet',
+    provider: 'anthropic',
+    recommended: true,
+    requireKey: false,
+  },
   'claude-3.5-sonnet': {
     name: 'Claude 3.5 Sonnet',
     recommended: true,
     provider: 'anthropic',
-  },
-  'claude-4-sonnet': {
-    name: 'Claude 4 Sonnet',
-    provider: 'anthropic',
-    requireKey: false,
   },
   'gemini-2.5-pro': {
     name: 'Gemini 2.5 Pro',
