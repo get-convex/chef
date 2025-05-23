@@ -87,11 +87,7 @@ function AssistantMessagePart({
   }
 
   if (part.type === 'text') {
-    return (
-      <Markdown html key={partId}>
-        {part.text}
-      </Markdown>
-    );
+    return <Markdown html>{part.text}</Markdown>;
   }
 
   captureMessage('Unknown part type ' + part.type);
