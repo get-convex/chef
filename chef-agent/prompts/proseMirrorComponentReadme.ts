@@ -186,8 +186,8 @@ import { BlockNoteView } from '@blocknote/mantine';
 import '@blocknote/mantine/style.css';
 import { api } from '../convex/_generated/api';
 
-export function MyComponent() {
-  const sync = useBlockNoteSync(api.example, 'some-id');
+function MyComponent({ id }: { id: string }) {
+  const sync = useBlockNoteSync(api.example, id);
   return sync.isLoading ? (
     <p>Loading...</p>
   ) : sync.editor ? (
@@ -196,7 +196,14 @@ export function MyComponent() {
     <button onClick={() => sync.create({ type: 'doc', content: [] })}>Create document</button>
   );
 }
+
+export function MyComponentWrapper({ id }: { id: string }) {
+  return <MyComponent key={id} id={id} />;
+}
 \`\`\`
+
+The \`MyComponentWrapper\` component is a wrapper that ensures the editor is re-rendered when the \`id\` prop changes. 
+This is a workaround for a bug where \`useBlockNoteSync\` doesn't reinitialize the editor when the \`id\` prop changes.
 
 sync.create accepts an argument with \`JSONContent\` type. DO NOT pass it a string, it must be an object that matches \`JSONContent\` type:
 
