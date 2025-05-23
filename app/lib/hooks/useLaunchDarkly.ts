@@ -15,6 +15,7 @@ const flagDefaults: {
   minCollapsedMessagesSize: number;
   useGeminiAuto: boolean;
   enableClaude4Sonnet: boolean;
+  notionClonePrompt: boolean;
 } = {
   maintenanceMode: false,
   openAiLaunch202504: false,
@@ -29,6 +30,7 @@ const flagDefaults: {
   minCollapsedMessagesSize: 8192,
   useGeminiAuto: false,
   enableClaude4Sonnet: false,
+  notionClonePrompt: false,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {

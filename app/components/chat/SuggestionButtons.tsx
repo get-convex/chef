@@ -1,6 +1,7 @@
 import { Button } from '@ui/Button';
 import { ArrowUpIcon, VideoIcon } from '@radix-ui/react-icons';
 import { SUGGESTIONS } from 'chef-agent/constants';
+import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 
 interface SuggestionButtonsProps {
   chatStarted: boolean;
@@ -9,14 +10,30 @@ interface SuggestionButtonsProps {
 }
 
 export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: SuggestionButtonsProps) => {
+  const { notionClonePrompt } = useLaunchDarkly();
   if (chatStarted) {
     return null;
+  }
+  const suggestions = SUGGESTIONS;
+  if (notionClonePrompt) {
+    suggestions.push({
+      title: 'Notion clone',
+      prompt: `Make a collaborative text editor like Notion with these features:
+- Real-time collaboration where multiple users can edit the same document
+- Document Organization:
+  - Private documents (only visible to the creator)
+  - Public documents (visible to all users)
+  - Simple sidebar navigation between documents
+- Interface:
+  - Clean, minimal design with lots of white space and a neutral color palette (soft grays and whites)
+  - Focus on readable text and minimal distractions`,
+    });
   }
 
   return (
     <div id="suggestions">
       <div className="mt-6 flex flex-wrap justify-center gap-4">
-        {SUGGESTIONS.map((suggestion) => (
+        {suggestions.map((suggestion) => (
           <Button
             key={suggestion.title}
             onClick={() => onSuggestionClick?.(suggestion.prompt)}
