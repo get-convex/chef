@@ -7,6 +7,7 @@ import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
 import { parseAnnotations, type ProviderType, type Usage, type UsageAnnotation } from '~/lib/common/annotations';
 import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { calculateChefTokens, usageFromGeneration, type ChefTokenBreakdown } from '~/lib/common/usage';
+import { captureMessage } from '@sentry/remix';
 
 interface AssistantMessageProps {
   message: Message;
@@ -93,6 +94,7 @@ function AssistantMessagePart({
     );
   }
 
+  captureMessage('Unknown part type ' + part.type);
   return null;
 }
 
