@@ -27,7 +27,7 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
   return (
     <div className="w-full overflow-hidden text-sm">
       <div className="flex flex-col gap-2">
-        {message.parts.entries().map(([index, part]) => (
+        {message.parts.map((part, index) => (
           <AssistantMessagePart
             key={index}
             part={part}
