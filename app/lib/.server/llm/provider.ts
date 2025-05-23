@@ -53,6 +53,10 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
   }
 }
 
+export function anthropicMaxTokens(modelChoice: string | undefined) {
+  return modelChoice === 'claude-sonnet-4-0' ? 16384 : 8192;
+}
+
 export function getProvider(
   userApiKey: string | undefined,
   modelProvider: ModelProvider,
@@ -120,7 +124,7 @@ export function getProvider(
       });
       provider = {
         model: bedrock(model),
-        maxTokens: 8192,
+        maxTokens: anthropicMaxTokens(modelChoice),
         options: undefined,
       };
       break;
@@ -186,7 +190,7 @@ export function getProvider(
 
       provider = {
         model: anthropic(model),
-        maxTokens: 8192,
+        maxTokens: anthropicMaxTokens(modelChoice),
       };
       break;
     }

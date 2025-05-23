@@ -50,7 +50,7 @@ if (process.env.ANTHROPIC_API_KEY) {
     name: 'claude-4-sonnet',
     model_slug: 'claude-sonnet-4-20250514',
     ai: anthropic('claude-sonnet-4-20250514'),
-    maxTokens: 8192,
+    maxTokens: 16384,
   });
 }
 
