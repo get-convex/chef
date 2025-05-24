@@ -272,10 +272,10 @@ export const MessageInput = memo(function MessageInput({
               placement="top-start"
             >
               <h2 className="ml-3 text-sm font-bold">Use a recipe</h2>
-              <MenuItemComponent action={() => insertTemplate('Add a collaborative text editor to [...]')}>
+              <MenuItemComponent action={() => insertTemplate('Make a collaborative text editor that [...]')}>
                 <div className="flex w-full items-center gap-2">
                   <PencilSquareIcon className="size-4 text-content-secondary" />
-                  Add a collaborative text editor
+                  Make a collaborative text editor
                 </div>
               </MenuItemComponent>
               <MenuItemComponent action={() => insertTemplate('Add AI chat to [...]')}>
