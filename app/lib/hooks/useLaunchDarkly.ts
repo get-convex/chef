@@ -3,7 +3,6 @@ import { kebabCase } from 'lodash';
 
 const flagDefaults: {
   maintenanceMode: boolean;
-  openAiLaunch202504: boolean;
   rewindButton: boolean;
   enableSkipSystemPrompt: boolean;
   showUsageAnnotations: boolean;
@@ -19,7 +18,6 @@ const flagDefaults: {
   useClaude4Auto: boolean;
 } = {
   maintenanceMode: false,
-  openAiLaunch202504: false,
   rewindButton: true,
   enableSkipSystemPrompt: false,
   showUsageAnnotations: false,
