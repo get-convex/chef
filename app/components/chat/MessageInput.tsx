@@ -196,7 +196,7 @@ export const MessageInput = memo(function MessageInput({
       setTimeout(() => {
         const textarea = textareaRef.current;
         if (textarea) {
-          const start = newValue.lastIndexOf('[...]');
+          const start = newValue.lastIndexOf('...');
           if (start !== -1) {
             textarea.focus();
             textarea.setSelectionRange(start, start + 5);
@@ -270,25 +270,25 @@ export const MessageInput = memo(function MessageInput({
               placement="top-start"
             >
               <h2 className="ml-3 text-sm font-bold">Use a recipe</h2>
-              <MenuItemComponent action={() => insertTemplate('Make a collaborative text editor that [...]')}>
+              <MenuItemComponent action={() => insertTemplate('Make a collaborative text editor that ...')}>
                 <div className="flex w-full items-center gap-2">
                   <PencilSquareIcon className="size-4 text-content-secondary" />
                   Make a collaborative text editor
                 </div>
               </MenuItemComponent>
-              <MenuItemComponent action={() => insertTemplate('Add AI chat to [...]')}>
+              <MenuItemComponent action={() => insertTemplate('Add AI chat to ...')}>
                 <div className="flex w-full items-center gap-2">
                   <ChatBubbleLeftIcon className="size-4 text-content-secondary" />
                   Add AI chat
                 </div>
               </MenuItemComponent>
-              <MenuItemComponent action={() => insertTemplate('Add file uploads to [...]')}>
+              <MenuItemComponent action={() => insertTemplate('Add file uploads to ...')}>
                 <div className="flex w-full items-center gap-2">
                   <DocumentArrowUpIcon className="size-4 text-content-secondary" />
                   Add file uploads
                 </div>
               </MenuItemComponent>
-              <MenuItemComponent action={() => insertTemplate('Add full text search to [...]')}>
+              <MenuItemComponent action={() => insertTemplate('Add full text search to ...')}>
                 <div className="flex w-full items-center gap-2">
                   <MagnifyingGlassIcon className="size-4 text-content-secondary" />
                   Add full text search
