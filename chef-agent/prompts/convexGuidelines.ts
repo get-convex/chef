@@ -380,6 +380,38 @@ export const exampleQuery = query({
 
 ## Full text search guidelines
 
+### Defining a search index
+To use full text search, you need to define a search index in the schema. 
+Every search index definition consists of:
+
+1. A name.
+   - Must be unique per table.
+2. A \`searchField\`
+   - This is the field which will be indexed for full text search.
+   - It must be of type \`string\`.
+3. [Optional] A list of \`filterField\`s
+   - These are additional fields that are indexed for fast equality filtering
+     within your search index.
+
+Here's an example of how to define a search index:
+\`\`\`ts
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+  messages: defineTable({
+    body: v.string(),
+    channel: v.string(),
+  }).searchIndex("search_body", {
+    searchField: "body",
+    filterFields: ["channel"],
+  }),
+});
+\`\`\`
+You can specify search and filter fields on nested documents by using a dot-separated path like properties.name.
+
+### Querying with full text search
+
 - A query for "10 messages in channel '#general' that best match the query 'hello hi' in their body" would look like:
 
 \`\`\`ts
