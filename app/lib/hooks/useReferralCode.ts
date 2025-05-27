@@ -15,7 +15,7 @@ export function useReferralStats() {
   const { data } = useReactQuery(
     {
       queryKey: ['referral stats', teamId],
-      enabled: !!authToken,
+      enabled: !!(authToken && teamId !== undefined),
       queryFn: async () => {
         const data = (await bbGet(`/api/dashboard/teams/${teamId}/referral_state`, authToken!)) as {
           referrals: unknown[];
