@@ -3,8 +3,6 @@ import { kebabCase } from 'lodash';
 
 const flagDefaults: {
   maintenanceMode: boolean;
-  rewindButton: boolean;
-  enableSkipSystemPrompt: boolean;
   showUsageAnnotations: boolean;
   smallFiles: boolean;
   recordRawPromptsForDebugging: boolean;
@@ -18,8 +16,6 @@ const flagDefaults: {
   useClaude4Auto: boolean;
 } = {
   maintenanceMode: false,
-  rewindButton: true,
-  enableSkipSystemPrompt: false,
   showUsageAnnotations: false,
   smallFiles: true,
   recordRawPromptsForDebugging: false,

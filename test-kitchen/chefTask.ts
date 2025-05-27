@@ -98,7 +98,6 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       // app to setup the OpenAI and Resend proxies + manage their tokens.
       openaiProxyEnabled: false,
       resendProxyEnabled: false,
-      skipSystemPrompt: false,
       smallFiles: true,
     };
     const assistantMessage: UIMessage = {

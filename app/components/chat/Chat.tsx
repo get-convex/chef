@@ -91,7 +91,6 @@ const retryState = atom({
   numFailures: 0,
   nextRetry: Date.now(),
 });
-const skipSystemPromptStore = atom(false);
 export const Chat = memo(
   ({
     initialMessages,
@@ -133,7 +132,6 @@ export const Chat = memo(
     };
     const {
       recordRawPromptsForDebugging,
-      enableSkipSystemPrompt,
       smallFiles,
       maxCollapsedMessagesSize,
       maxRelevantFilesSize,
@@ -358,7 +356,6 @@ export const Chat = memo(
           // Fall back to the user's API key if the request has failed too many times
           userApiKey: retries.numFailures < MAX_RETRIES ? apiKey : { ...apiKey, preference: 'always' },
           shouldDisableTools,
-          skipSystemPrompt: skipSystemPromptStore.get(),
           smallFiles,
           recordRawPromptsForDebugging,
           modelChoice,
@@ -368,11 +365,8 @@ export const Chat = memo(
       maxSteps: 64,
       async onToolCall({ toolCall }) {
         console.log('Starting tool call', toolCall);
-        const { result, skipSystemPrompt } = await workbenchStore.waitOnToolCall(toolCall.toolCallId);
+        const { result } = await workbenchStore.waitOnToolCall(toolCall.toolCallId);
         console.log('Tool call finished', result);
-        if (skipSystemPrompt && enableSkipSystemPrompt) {
-          skipSystemPromptStore.set(true);
-        }
         return result;
       },
       onError: async (e: Error) => {
@@ -540,7 +534,6 @@ export const Chat = memo(
 
         const modifiedFiles = workbenchStore.getModifiedFiles();
         chatStore.setKey('aborted', false);
-        skipSystemPromptStore.set(false);
         if (modifiedFiles !== undefined) {
           const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
           maybeRelevantFilesMessage.parts.push({

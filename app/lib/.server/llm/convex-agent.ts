@@ -44,7 +44,6 @@ export async function convexAgent(args: {
   modelChoice: string | undefined;
   userApiKey: string | undefined;
   shouldDisableTools: boolean;
-  skipSystemPrompt: boolean;
   smallFiles: boolean;
   recordUsageCb: (
     lastMessage: Message | undefined,
@@ -62,7 +61,6 @@ export async function convexAgent(args: {
     userApiKey,
     modelChoice,
     shouldDisableTools,
-    skipSystemPrompt,
     smallFiles,
     recordUsageCb,
     recordRawPromptsForDebugging,
@@ -85,7 +83,6 @@ export async function convexAgent(args: {
     usingOpenAi: modelProvider == 'OpenAI',
     usingGoogle: modelProvider == 'Google',
     resendProxyEnabled: getEnv('RESEND_PROXY_ENABLED') == '1',
-    skipSystemPrompt,
     smallFiles,
   };
   const tools: ConvexToolSet = {
@@ -102,14 +99,10 @@ export async function convexAgent(args: {
       role: 'system' as const,
       content: ROLE_SYSTEM_PROMPT,
     },
-    ...(skipSystemPrompt
-      ? []
-      : [
-          {
-            role: 'system' as const,
-            content: generalSystemPrompt(opts),
-          },
-        ]),
+    {
+      role: 'system' as const,
+      content: generalSystemPrompt(opts),
+    },
     ...cleanupAssistantMessages(messages),
   ];
 
