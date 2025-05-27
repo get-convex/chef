@@ -291,7 +291,7 @@ export const MessageInput = memo(function MessageInput({
                 </div>
               </MenuItemComponent>
             </MenuComponent>
-            {enhancePromptButton && chefAuthState.kind === 'fullyLoggedIn' && (
+            {chefAuthState.kind === 'fullyLoggedIn' && (
               <EnhancePromptButton
                 isEnhancing={isEnhancing}
                 disabled={!selectedTeamSlug || disabled || input.length === 0}

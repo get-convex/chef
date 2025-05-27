@@ -8,7 +8,6 @@ const flagDefaults: {
   recordRawPromptsForDebugging: boolean;
   maxCollapsedMessagesSize: number;
   maxRelevantFilesSize: number;
-  enhancePromptButton: boolean;
   minCollapsedMessagesSize: number;
   useGeminiAuto: boolean;
   enableClaude4Sonnet: boolean;
@@ -21,7 +20,6 @@ const flagDefaults: {
   recordRawPromptsForDebugging: false,
   maxCollapsedMessagesSize: 65536,
   maxRelevantFilesSize: 8192,
-  enhancePromptButton: false,
   minCollapsedMessagesSize: 8192,
   useGeminiAuto: false,
   enableClaude4Sonnet: false,
