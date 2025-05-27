@@ -32,6 +32,7 @@ import type { UsageRecord } from '@convex/schema';
 import { getProvider, type ModelProvider } from '~/lib/.server/llm/provider';
 import { getEnv } from '~/lib/.server/env';
 import { calculateChefTokens, usageFromGeneration } from '~/lib/common/usage';
+import { lookupDocsTool } from '~/lib/tools/lookupDocs';
 
 type Messages = Message[];
 
@@ -88,6 +89,7 @@ export async function convexAgent(args: {
   const tools: ConvexToolSet = {
     deploy: deployTool,
     npmInstall: npmInstallTool,
+    lookupDocs: lookupDocsTool,
   };
   if (opts.enablePreciseEdits) {
     tools.view = viewTool;

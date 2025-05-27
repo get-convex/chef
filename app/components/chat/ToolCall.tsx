@@ -34,6 +34,7 @@ import { Spinner } from '@ui/Spinner';
 import { FolderIcon } from '@heroicons/react/24/outline';
 import { outputLabels } from '~/lib/runtime/deployToolOutputLabels';
 import { getRelativePath } from 'chef-agent/utils/workDir';
+import { lookupDocsParameters } from '~/lib/tools/lookupDocs';
 
 export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId: PartId; toolCallId: string }) {
   const userToggledAction = useRef(false);
@@ -143,6 +144,9 @@ const ToolUseContents = memo(function ToolUseContents({
     }
     case 'edit': {
       return <EditTool invocation={invocation} />;
+    }
+    case 'lookupDocs': {
+      return <LookupDocsTool invocation={invocation} />;
     }
     default: {
       // Fallback for other tool types
@@ -445,6 +449,18 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         </div>
       );
     }
+    case 'lookupDocs': {
+      const args = loggingSafeParse(lookupDocsParameters, invocation.args);
+      if (!args.success) {
+        return 'Looking up documentation...';
+      }
+      return (
+        <div className="flex items-center gap-2">
+          <FileIcon className="text-content-secondary" />
+          <span>Looking up documentation for: {args.data.query}</span>
+        </div>
+      );
+    }
     default: {
       return (invocation as any).toolName;
     }
@@ -598,6 +614,30 @@ function EditTool({ invocation }: { invocation: ConvexToolInvocation }) {
             <pre className="text-bolt-elements-icon-success">{args.data.new}</pre>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LookupDocsTool({ invocation }: { invocation: ConvexToolInvocation }) {
+  if (invocation.toolName !== 'lookupDocs') {
+    throw new Error('LookupDocs tool can only be used for the lookupDocs tool');
+  }
+  if (invocation.state === 'partial-call' || invocation.state === 'call') {
+    return null;
+  }
+  if (invocation.result.startsWith('Error:')) {
+    return (
+      <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+        <pre>{invocation.result}</pre>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+      <div className="max-h-[400px] overflow-auto p-4">
+        <pre className="whitespace-pre-wrap">{invocation.result}</pre>
       </div>
     </div>
   );

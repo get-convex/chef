@@ -15,7 +15,6 @@ export function solutionConstraints(options: SystemPromptOptions) {
       subscriptions. Here are some guidelines, documentation, and best practices for using Convex effectively:
 
       ${convexGuidelines}
-      ${proseMirrorComponentReadmePrompt}
 
       <http_guidelines>
         - All user-defined HTTP endpoints are defined in \`convex/router.ts\` and require an \`httpAction\` decorator.

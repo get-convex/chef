@@ -4,12 +4,14 @@ import type { npmInstallToolParameters } from 'chef-agent/tools/npmInstall';
 import type { editToolParameters } from 'chef-agent/tools/edit';
 import type { viewParameters } from 'chef-agent/tools/view';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
+import type { lookupDocsParameters } from '~/lib/tools/lookupDocs';
 
 type EmptyArgs = z.ZodObject<Record<string, never>>;
 
 export type ConvexToolSet = {
   deploy: Tool<EmptyArgs, string>;
   npmInstall: Tool<typeof npmInstallToolParameters, string>;
+  lookupDocs: Tool<typeof lookupDocsParameters, string>;
   view?: Tool<typeof viewParameters, string>;
   edit?: Tool<typeof editToolParameters, string>;
 };
@@ -37,6 +39,11 @@ type ConvexToolResult =
   | {
       toolName: 'edit';
       args: typeof editToolParameters;
+      result: string;
+    }
+  | {
+      toolName: 'lookupDocs';
+      args: typeof lookupDocsParameters;
       result: string;
     };
 

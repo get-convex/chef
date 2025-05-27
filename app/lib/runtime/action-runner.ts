@@ -22,6 +22,7 @@ import type { BoltShell } from '~/utils/shell';
 import { streamOutput } from '~/utils/process';
 import { outputLabels, type OutputLabels } from '~/lib/runtime/deployToolOutputLabels';
 import type { ConvexToolName } from '~/lib/common/types';
+import { lookupDocsParameters, docs, type DocKey } from '~/lib/tools/lookupDocs';
 
 const logger = createScopedLogger('ActionRunner');
 
@@ -384,6 +385,22 @@ export class ActionRunner {
               result = `Error: An unknown error occurred during npm install`;
             }
           }
+          break;
+        }
+        case 'lookupDocs': {
+          const args = lookupDocsParameters.parse(parsed.args);
+          const docsToLookup = args.docs;
+          const results: string[] = [];
+
+          for (const doc of docsToLookup) {
+            if (doc in docs) {
+              results.push(docs[doc as DocKey]);
+            } else {
+              throw new Error(`Unknown documentation key: ${doc}`);
+            }
+          }
+
+          result = results.join('\n\n');
           break;
         }
         case 'deploy': {

@@ -908,4 +908,13 @@ export default defineSchema({
   ...applicationTables,
 });
 \`\`\`
+      Convex Components package up code and data in a sandbox that allows you to confidently and quickly add new features to your backend.
+      Convex Components are like mini self-contained Convex backends, and installing them is always safe. They can't read your app's tables or call your app's functions unless you pass them in explicitly.
+      Each component is installed as its own independent library from NPM. You also need to add a \`convex.config.ts\` file that includes the component.
+      ALWAYS prefer using a component for a feature than writing the code yourself.
+      ALWAYS use the \`lookupDocs\` tool to lookup documentation for a component before trying to use the \`npmInstall\` tool to install the relevant dependencies.
+
+      Convex has the following components:
+      - \`proseMirror\`: A collaborative text editor component.
+
 `;
