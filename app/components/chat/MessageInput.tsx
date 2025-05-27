@@ -34,7 +34,7 @@ import { toast } from 'sonner';
 import { captureException } from '@sentry/remix';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
-import { ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
@@ -282,6 +282,12 @@ export const MessageInput = memo(function MessageInput({
                 <div className="flex w-full items-center gap-2">
                   <ChatBubbleLeftIcon className="size-4 text-content-secondary" />
                   Add AI chat
+                </div>
+              </MenuItemComponent>
+              <MenuItemComponent action={() => insertTemplate('Add file uploads to [...]')}>
+                <div className="flex w-full items-center gap-2">
+                  <DocumentArrowUpIcon className="size-4 text-content-secondary" />
+                  Add file uploads
                 </div>
               </MenuItemComponent>
             </MenuComponent>
