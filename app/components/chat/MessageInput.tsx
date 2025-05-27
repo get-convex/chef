@@ -29,7 +29,6 @@ import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Button } from '@ui/Button';
 import { Spinner } from '@ui/Spinner';
 import { debounce } from '~/utils/debounce';
-import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { toast } from 'sonner';
 import { captureException } from '@sentry/remix';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
@@ -61,7 +60,6 @@ export const MessageInput = memo(function MessageInput({
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chefAuthState = useChefAuth();
   const selectedTeamSlug = useSelectedTeamSlug();
-  const { enhancePromptButton } = useLaunchDarkly();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 

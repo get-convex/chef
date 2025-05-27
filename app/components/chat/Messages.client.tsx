@@ -12,7 +12,6 @@ import { PersonIcon } from '@radix-ui/react-icons';
 import { ResetIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
-import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 
 interface MessagesProps {
   id?: string;
