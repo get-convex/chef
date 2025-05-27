@@ -18,7 +18,7 @@ import { ConvexConnection } from '~/components/convex/ConvexConnection';
 import { PROMPT_COOKIE_KEY, type ModelSelection } from '~/utils/constants';
 import { ModelSelector } from './ModelSelector';
 import { TeamSelector } from '~/components/convex/TeamSelector';
-import { ArrowRightIcon, ExclamationTriangleIcon, StopIcon } from '@radix-ui/react-icons';
+import { ArrowRightIcon, ExclamationTriangleIcon, MagnifyingGlassIcon, StopIcon } from '@radix-ui/react-icons';
 import { SquaresPlusIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from '@ui/Tooltip';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
@@ -288,6 +288,12 @@ export const MessageInput = memo(function MessageInput({
                 <div className="flex w-full items-center gap-2">
                   <DocumentArrowUpIcon className="size-4 text-content-secondary" />
                   Add file uploads
+                </div>
+              </MenuItemComponent>
+              <MenuItemComponent action={() => insertTemplate('Add full text search to [...]')}>
+                <div className="flex w-full items-center gap-2">
+                  <MagnifyingGlassIcon className="size-4 text-content-secondary" />
+                  Add full text search
                 </div>
               </MenuItemComponent>
             </MenuComponent>
