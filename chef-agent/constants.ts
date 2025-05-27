@@ -8,7 +8,8 @@ export const SUGGESTIONS = [
 - Each message has a name and avatar next to it for the author
 - Has an "edit profile" tab for uploading a profile photo to Convex storage and changing your name
 - Only the messages are scrollable, with message box and channel selector fixed like the header
-- Automatically scrolls to the bottom when new messages are sent`,
+- Automatically scrolls to the bottom when new messages are sent
+- Includes a search bar at the top that queries all messages`,
   },
   {
     title: 'Instagram clone',
