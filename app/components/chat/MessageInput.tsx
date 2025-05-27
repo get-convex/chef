@@ -33,7 +33,7 @@ import { toast } from 'sonner';
 import { captureException } from '@sentry/remix';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
-import { ChatBubbleLeftIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon, DocumentArrowUpIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
@@ -269,7 +269,14 @@ export const MessageInput = memo(function MessageInput({
               }}
               placement="top-start"
             >
-              <h2 className="ml-3 text-sm font-bold">Use a recipe</h2>
+              <div className="ml-3 flex items-center gap-1">
+                <h2 className="text-sm font-bold">Use a recipe</h2>
+                <Tooltip tip="Recipes are Chef prompts that add powerful full-stack features to your app." side="top">
+                  <span className="cursor-help text-content-tertiary">
+                    <InformationCircleIcon className="size-4" />
+                  </span>
+                </Tooltip>
+              </div>
               <MenuItemComponent action={() => insertTemplate('Make a collaborative text editor that ...')}>
                 <div className="flex w-full items-center gap-2">
                   <PencilSquareIcon className="size-4 text-content-secondary" />
