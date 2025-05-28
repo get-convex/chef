@@ -134,6 +134,7 @@ export async function convexAgent(args: {
             collapsedMessages,
             _startTime: startTime,
             _firstResponseTime: firstResponseTime,
+            providerModel: provider.model.modelId,
           });
         },
         onError({ error }) {
@@ -201,6 +202,7 @@ async function onFinishHandler({
   collapsedMessages,
   _startTime,
   _firstResponseTime,
+  providerModel,
 }: {
   dataStream: DataStreamWriter;
   messages: Messages;
@@ -220,6 +222,7 @@ async function onFinishHandler({
   collapsedMessages: boolean;
   _startTime: number;
   _firstResponseTime: number | null;
+  providerModel: string;
 }) {
   const { providerMetadata } = result;
   // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
@@ -242,6 +245,7 @@ async function onFinishHandler({
     span.setAttribute('usage.totalTokens', usage.totalTokens);
     span.setAttribute('featureFlags.smallFiles', smallFiles);
     span.setAttribute('collapsedMessages', collapsedMessages);
+    span.setAttribute('model', providerModel);
     if (providerMetadata) {
       if (providerMetadata.anthropic) {
         const anthropic: any = providerMetadata.anthropic;
