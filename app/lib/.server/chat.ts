@@ -67,6 +67,9 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     smallFiles: boolean;
     recordRawPromptsForDebugging?: boolean;
     collapsedMessages: boolean;
+    featureFlags: {
+      enablePreciseEdits: boolean;
+    };
   };
   const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug, recordRawPromptsForDebugging } =
     body;
@@ -166,6 +169,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       recordUsageCb,
       recordRawPromptsForDebugging: !!recordRawPromptsForDebugging,
       collapsedMessages: body.collapsedMessages,
+      featureFlags: body.featureFlags,
     });
 
     return new Response(dataStream, {

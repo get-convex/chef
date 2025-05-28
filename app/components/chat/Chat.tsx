@@ -138,6 +138,7 @@ export const Chat = memo(
       minCollapsedMessagesSize,
       useGeminiAuto,
       useClaude4Auto,
+      enablePreciseEdits,
     } = useLaunchDarkly();
 
     const title = useStore(description);
@@ -360,6 +361,9 @@ export const Chat = memo(
           recordRawPromptsForDebugging,
           modelChoice,
           collapsedMessages,
+          featureFlags: {
+            enablePreciseEdits,
+          },
         };
       },
       maxSteps: 64,

@@ -52,6 +52,9 @@ export async function convexAgent(args: {
   ) => Promise<void>;
   recordRawPromptsForDebugging: boolean;
   collapsedMessages: boolean;
+  featureFlags: {
+    enablePreciseEdits: boolean;
+  };
 }) {
   const {
     chatInitialId,
@@ -66,6 +69,7 @@ export async function convexAgent(args: {
     recordUsageCb,
     recordRawPromptsForDebugging,
     collapsedMessages,
+    featureFlags,
   } = args;
   console.debug('Starting agent with model provider', modelProvider);
   if (userApiKey) {
@@ -78,7 +82,7 @@ export async function convexAgent(args: {
   const provider = getProvider(userApiKey, modelProvider, modelChoice);
   const opts: SystemPromptOptions = {
     enableBulkEdits: true,
-    enablePreciseEdits: false,
+    enablePreciseEdits: featureFlags.enablePreciseEdits,
     includeTemplate: true,
     openaiProxyEnabled: getEnv('OPENAI_PROXY_ENABLED') == '1',
     usingOpenAi: modelProvider == 'OpenAI',

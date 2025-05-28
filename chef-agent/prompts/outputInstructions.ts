@@ -53,7 +53,19 @@ export function outputInstructions(options: SystemPromptOptions) {
 function artifactInstructions(_options: SystemPromptOptions) {
   return stripIndents`
   <artifacts>
-    To achieve your goal, you need to write code to the WebContainer . You can write files by specifying
+    CRITICAL: Artifacts should ONLY be used for:
+    1. Creating new files
+    2. Making large changes that affect multiple files
+    3. Completely rewriting a file
+
+    NEVER use artifacts for:
+    1. Small changes to existing files
+    2. Adding new functions or methods
+    3. Updating specific parts of a file
+
+    For ALL of the above cases, use the \`edit\` tool instead.
+
+    If you're not using the \`edit\` tool, you can write code to the WebContainer by specifying
     a \`<boltArtifact>\` tag in your response with many \`<boltAction>\` tags inside.
 
     IMPORTANT: Write as many files as possible in a single artifact. Do NOT split up the creation of different
@@ -195,7 +207,56 @@ function preciseToolInstructions(_options: SystemPromptOptions) {
     </view_tool>
 
     <edit_tool>
-      Use the \`edit\` tool to make small, targeted changes to code.
+      CRITICAL: For small, targeted changes to existing files, ALWAYS use the \`edit\` tool instead of artifacts.
+      The \`edit\` tool is specifically designed for:
+      - Fixing bugs
+      - Making small changes to existing code
+      - Adding new functions or methods to existing files
+      - Updating specific parts of a file
+
+      IMPORTANT: The edit tool has specific requirements:
+      - The text to replace must be less than 1024 characters
+      - The new text must be less than 1024 characters
+      - The text to replace must appear exactly once in the file
+      - You must know the file's current contents before using it
+
+      Here are examples of correct edit tool usage:
+
+      Example 1: Adding a new function
+      \`\`\`typescript
+      // Before:
+      export function existingFunction() {
+        // ...
+      }
+
+      // After using edit tool:
+      export function existingFunction() {
+        // ...
+      }
+
+      export function newFunction() {
+        // ...
+      }
+      \`\`\`
+      The edit tool would replace the exact string "export function existingFunction() {" with "export function existingFunction() {\n\n  export function newFunction() {"
+
+      Example 2: Fixing a bug
+      \`\`\`typescript
+      // Before:
+      if (value > 10) {
+        return true;
+      }
+
+      // After using edit tool:
+      if (value >= 10) {
+        return true;
+      }
+      \`\`\`
+      The edit tool would replace the exact string "if (value > 10) {" with "if (value >= 10) {"
+
+
+      CRITICAL: Always use the view tool first to see the exact content of the file before using the edit tool.
+      This ensures you can provide the exact text to replace.
     </edit_tool>
   `;
 }
