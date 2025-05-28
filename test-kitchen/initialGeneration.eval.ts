@@ -32,8 +32,6 @@ function chefEval(model: ChefModel) {
       tempdir: outputDir,
     },
   });
-
-  console.log(`Eval for ${model.name} completed`);
 }
 
 // This is tricky: Node v17 and higher resolve `localhost` IPv6 (::1), which can fail
@@ -44,11 +42,14 @@ net.setDefaultAutoSelectFamily(true);
 
 if (process.env.ANTHROPIC_API_KEY) {
   chefEval({
-    name: 'claude-3.5-sonnet',
+    name: 'claude-3-5-sonnet',
     model_slug: 'claude-3-5-sonnet-20241022',
     ai: anthropic('claude-3-5-sonnet-20241022'),
     maxTokens: 8192,
   });
+}
+
+if (process.env.ANTHROPIC_API_KEY) {
   chefEval({
     name: 'claude-4-sonnet',
     model_slug: 'claude-sonnet-4-20250514',

@@ -18,24 +18,7 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
   return (
     <div id="suggestions">
       <div className="mt-6 flex flex-wrap justify-center gap-4">
-        {(notionClonePrompt
-          ? [
-              ...SUGGESTIONS,
-              {
-                title: 'Notion clone',
-                prompt: `Make a collaborative text editor like Notion with these features:
-- Real-time collaboration where multiple users can edit the same document
-- Document Organization:
-  - Private documents (only visible to the creator)
-  - Public documents (visible to all users)
-  - Simple sidebar navigation between documents
-- Interface:
-  - Clean, minimal design with lots of white space and a neutral color palette (soft grays and whites)
-  - Focus on readable text and minimal distractions`,
-              },
-            ]
-          : SUGGESTIONS
-        ).map((suggestion) => (
+        {SUGGESTIONS.map((suggestion) => (
           <Button
             key={suggestion.title}
             onClick={() => onSuggestionClick?.(suggestion.prompt)}
