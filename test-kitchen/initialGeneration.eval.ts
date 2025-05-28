@@ -15,6 +15,7 @@ import * as net from 'net';
 const CHEF_PROJECT = 'chef';
 
 function chefEval(model: ChefModel) {
+  console.log(`Starting eval for ${model.name}...`);
   let outputDir = process.env.OUTPUT_TEMPDIR;
   if (!outputDir) {
     outputDir = mkdtempSync(path.join(os.tmpdir(), 'chef-eval'));
@@ -31,6 +32,8 @@ function chefEval(model: ChefModel) {
       tempdir: outputDir,
     },
   });
+
+  console.log(`Eval for ${model.name} completed`);
 }
 
 // This is tricky: Node v17 and higher resolve `localhost` IPv6 (::1), which can fail
@@ -42,7 +45,7 @@ net.setDefaultAutoSelectFamily(true);
 if (process.env.ANTHROPIC_API_KEY) {
   chefEval({
     name: 'claude-3.5-sonnet',
-    model_slug: 'claude-3-5-sonnet-20240620',
+    model_slug: 'claude-3-5-sonnet-20241022',
     ai: anthropic('claude-3-5-sonnet-20241022'),
     maxTokens: 8192,
   });
