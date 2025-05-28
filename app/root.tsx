@@ -103,6 +103,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // Initialize PostHog.
   useEffect(() => {
+    if (window.location.pathname.startsWith('/admin/')) {
+      // Don't log in admin routes, there's a big perf penalty somehow.
+      return;
+    }
     // Note that this the the 'Project API Key' from PostHog, which is
     // write-only and PostHog says is safe to use in public apps.
     const key = import.meta.env.VITE_POSTHOG_KEY || '';

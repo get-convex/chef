@@ -1,5 +1,5 @@
 /* eslint-disable curly */
-import { useEffect, useCallback, useState, useRef } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { JsonView } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 import type { CoreMessage, FilePart, ToolCallPart, TextPart } from 'ai';
@@ -385,13 +385,6 @@ function CoreMessageView({ message, getTokenEstimate, totalCompletionTokens }: C
         ? Math.round((tokenEstimate / totalCompletionTokens) * 100)
         : 0;
 
-  const hiddenUntilFoundRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (hiddenUntilFoundRef.current) {
-      hiddenUntilFoundRef.current.hidden = (isExpanded ? false : 'until-found') as any;
-    }
-  }, [isExpanded]);
-
   return (
     <div className={`rounded border px-4 py-1 ${roleColor}`}>
       <button
@@ -418,14 +411,16 @@ function CoreMessageView({ message, getTokenEstimate, totalCompletionTokens }: C
         />
       </button>
 
-      <div ref={hiddenUntilFoundRef}>
-        <div className="mt-2">
-          <div className={'text-sm text-gray-600 dark:text-gray-300'}>
-            <div>
-              <MessageContentView content={message.content} />
+      <div>
+        {isExpanded && (
+          <div className="mt-2">
+            <div className={'text-sm text-gray-600 dark:text-gray-300'}>
+              <div>
+                <MessageContentView content={message.content} />
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -499,6 +494,12 @@ function groupIntoUserPrompts(data: LlmPromptAndResponse[]): AllPromptsForUserIn
   return groups;
 }
 
+function userMessageWithoutBoltArtifact(s: string) {
+  const closeTag = '</boltArtifact>';
+  const lastIndex = s.lastIndexOf(closeTag);
+  return lastIndex === -1 ? s : s.slice(lastIndex + closeTag.length);
+}
+
 function UserPrompt({ group }: { group: AllPromptsForUserInteraction }) {
   // Calculate total characters for the group
   const totalPromptChars = group.promptAndResponses.reduce((sum, item) => {
@@ -512,7 +513,7 @@ function UserPrompt({ group }: { group: AllPromptsForUserInteraction }) {
     <div className="space-y-2 rounded-lg border-2 border-gray-200 p-4 dark:border-gray-700">
       <div className="mb-4 border-b border-gray-200 pb-2 dark:border-gray-700">
         <div className="text-lg font-medium text-gray-900 dark:text-gray-100">
-          {group.summary.triggeringUserMessage}
+          {userMessageWithoutBoltArtifact(group.summary.triggeringUserMessage)}
         </div>
         <div className="mt-1 flex gap-4 text-sm text-gray-500 dark:text-gray-400">
           <div>Model(s): {group.summary.modelId.join(', ')}</div>
