@@ -35,6 +35,7 @@ import { FolderIcon } from '@heroicons/react/24/outline';
 import { outputLabels } from '~/lib/runtime/deployToolOutputLabels';
 import { getRelativePath } from 'chef-agent/utils/workDir';
 import { lookupDocsParameters } from '~/lib/tools/lookupDocs';
+import { Markdown } from '~/components/chat/Markdown';
 
 export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId: PartId; toolCallId: string }) {
   const userToggledAction = useRef(false);
@@ -457,7 +458,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
       return (
         <div className="flex items-center gap-2">
           <FileIcon className="text-content-secondary" />
-          <span>Looking up documentation for: {args.data.query}</span>
+          <span>Looking up documentation for: {args.data.docs.join(', ')}</span>
         </div>
       );
     }
@@ -637,7 +638,7 @@ function LookupDocsTool({ invocation }: { invocation: ConvexToolInvocation }) {
   return (
     <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
       <div className="max-h-[400px] overflow-auto p-4">
-        <pre className="whitespace-pre-wrap">{invocation.result}</pre>
+        <Markdown html>{invocation.result}</Markdown>
       </div>
     </div>
   );

@@ -1,15 +1,5 @@
-export const proseMirrorComponentReadmePrompt = `# Convex Components
+export const proseMirrorComponentReadmePrompt = `
 
-Convex Components package up code and data in a sandbox that allows you to confidently and quickly add new features to your backend.
-
-Convex Components are like mini self-contained Convex backends, and installing them is always safe. They can't read your app's tables or call your app's functions unless you pass them in explicitly.
-
-Each component is installed as its own independent library from NPM. You also need to add a \`convex.config.ts\` file that includes the component.
-
-ALWAYS prefer using a component for a feature than writing the code yourself.
-
-Component functions are only accessible by \`components.<component_name>.<component_function_path>\` imported from \`./_generated/api\` like
-\`import { components } from "./_generated/api";\` after code is initially pushed.
 
 # Convex ProseMirror Component
 
@@ -65,6 +55,9 @@ export default app;
 \`\`\`
 
 You do NOT need to add component tables to your \`schema.ts\`. The component tables are only read and written to from the component functions.
+
+Component functions are only accessible by \`components.<component_name>.<component_function_path>\` imported from \`./_generated/api\` like
+\`import { components } from "./_generated/api";\` after code is initially pushed.
 
 ## Usage
 

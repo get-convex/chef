@@ -1,7 +1,6 @@
 import { stripIndents } from '../utils/stripIndent.js';
 import { convexGuidelines } from './convexGuidelines.js';
 import type { SystemPromptOptions } from '../types.js';
-import { proseMirrorComponentReadmePrompt } from './proseMirrorComponentReadme.js';
 
 export function solutionConstraints(options: SystemPromptOptions) {
   return stripIndents`
