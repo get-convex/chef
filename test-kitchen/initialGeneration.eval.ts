@@ -15,15 +15,18 @@ import * as net from 'net';
 const CHEF_PROJECT = 'chef';
 
 function chefEval(model: ChefModel) {
+  const experimentName = `${CHEF_PROJECT}-${model.name}`;
   let outputDir = process.env.OUTPUT_TEMPDIR;
   if (!outputDir) {
     outputDir = mkdtempSync(path.join(os.tmpdir(), 'chef-eval'));
   }
   const environment = process.env.ENVIRONMENT ?? 'dev';
-  braintrust.Eval(CHEF_PROJECT, {
+  return braintrust.Eval(CHEF_PROJECT, {
+    experimentName,
     data: SUGGESTIONS.map((s) => ({ input: s.prompt })),
     task: (input) => chefTask(model, outputDir, input),
     scores: [chefScorer],
+    maxConcurrency: 2,
     metadata: {
       model: model.name,
       model_slug: model.model_slug,
@@ -42,7 +45,7 @@ net.setDefaultAutoSelectFamily(true);
 if (process.env.ANTHROPIC_API_KEY) {
   chefEval({
     name: 'claude-3.5-sonnet',
-    model_slug: 'claude-3-5-sonnet-20240620',
+    model_slug: 'claude-3-5-sonnet-20241022',
     ai: anthropic('claude-3-5-sonnet-20241022'),
     maxTokens: 8192,
   });

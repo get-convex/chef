@@ -1,5 +1,11 @@
 import type { ToolInvocation } from 'ai';
 import type { AbsolutePath, RelativePath } from './utils/workDir.js';
+import type { Tool, ToolCallUnion } from 'ai';
+import type { npmInstallToolParameters } from './tools/npmInstall.js';
+import type { editToolParameters } from './tools/edit.js';
+import type { viewParameters } from './tools/view.js';
+import type { lookupDocsParameters } from './tools/lookupDocs.js';
+import type { z } from 'zod';
 
 export type ConvexProject = {
   token: string;
@@ -68,6 +74,16 @@ export interface File {
 export interface Folder {
   type: 'folder';
 }
+
+export type EmptyArgs = z.ZodObject<Record<string, never>>;
+
+export type ConvexToolSet = {
+  deploy: Tool<EmptyArgs, string>;
+  npmInstall: Tool<typeof npmInstallToolParameters, string>;
+  lookupDocs: Tool<typeof lookupDocsParameters, string>;
+  view?: Tool<typeof viewParameters, string>;
+  edit?: Tool<typeof editToolParameters, string>;
+};
 
 export type Dirent = File | Folder;
 
