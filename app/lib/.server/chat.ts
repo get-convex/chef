@@ -67,6 +67,10 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     smallFiles: boolean;
     recordRawPromptsForDebugging?: boolean;
     collapsedMessages: boolean;
+    featureFlags: {
+      enablePreciseEdits: boolean;
+      smallFiles: boolean;
+    };
   };
   const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug, recordRawPromptsForDebugging } =
     body;
@@ -162,10 +166,10 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       modelChoice: userApiKey || body.modelChoice === 'claude-sonnet-4-0' ? body.modelChoice : undefined,
       userApiKey,
       shouldDisableTools: body.shouldDisableTools,
-      smallFiles: body.smallFiles,
       recordUsageCb,
       recordRawPromptsForDebugging: !!recordRawPromptsForDebugging,
       collapsedMessages: body.collapsedMessages,
+      featureFlags: body.featureFlags,
     });
 
     return new Response(dataStream, {

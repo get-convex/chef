@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 const SPLINES_MESSAGES = [
   'Reticulating splines...',
-  'Procuring VHS casettes...',
+  'Procuring VHS cassettes...',
   'Adding an "n" to Covex...',
   'Twisting knobs...',
   'Booking a Hot Pockets gig...',

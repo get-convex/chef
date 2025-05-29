@@ -89,7 +89,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
     };
     const opts: SystemPromptOptions = {
       enableBulkEdits: true,
-      enablePreciseEdits: false,
+      enablePreciseEdits: true,
       includeTemplate: true,
       usingOpenAi: model.name.startsWith('gpt-'),
       usingGoogle: model.name.startsWith('gemini-'),

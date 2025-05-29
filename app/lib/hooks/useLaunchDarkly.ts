@@ -13,6 +13,7 @@ const flagDefaults: {
   enableClaude4Sonnet: boolean;
   notionClonePrompt: boolean;
   useClaude4Auto: boolean;
+  enablePreciseEdits: boolean;
 } = {
   maintenanceMode: false,
   showUsageAnnotations: false,
@@ -25,6 +26,7 @@ const flagDefaults: {
   enableClaude4Sonnet: false,
   notionClonePrompt: false,
   useClaude4Auto: false,
+  enablePreciseEdits: false,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {
