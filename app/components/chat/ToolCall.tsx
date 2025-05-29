@@ -34,7 +34,7 @@ import { Spinner } from '@ui/Spinner';
 import { FolderIcon } from '@heroicons/react/24/outline';
 import { outputLabels } from '~/lib/runtime/deployToolOutputLabels';
 import { getRelativePath } from 'chef-agent/utils/workDir';
-import { lookupDocsParameters } from '~/lib/tools/lookupDocs';
+import { lookupDocsParameters } from 'chef-agent/tools/lookupDocs';
 import { Markdown } from '~/components/chat/Markdown';
 
 export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId: PartId; toolCallId: string }) {
