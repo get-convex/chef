@@ -26,6 +26,7 @@ function chefEval(model: ChefModel) {
     data: SUGGESTIONS.map((s) => ({ input: s.prompt })),
     task: (input) => chefTask(model, outputDir, input),
     scores: [chefScorer],
+    maxConcurrency: 2,
     metadata: {
       model: model.name,
       model_slug: model.model_slug,
