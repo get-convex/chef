@@ -165,125 +165,127 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       if (response.finishReason != 'tool-calls') {
         throw new Error(`Unknown finish reason: ${response.finishReason}`);
       }
-      if (response.toolCalls.length != 1) {
-        throw new Error('Expected exactly one tool call');
+      if (response.toolCalls.length < 1) {
+        throw new Error('Expected at least one tool call');
       }
-      const toolCall = response.toolCalls[0];
-      if (!toolCall) {
-        throw new Error('Expected exactly one tool call');
-      }
-      let toolCallResult: string;
-      try {
-        switch (toolCall.toolName) {
-          case 'edit': {
-            const args = editToolParameters.parse(toolCall.args);
-            const filePath = path.join(repoDir, cleanFilePath(args.path));
-            let content: string;
-            try {
-              content = readFileSync(filePath, 'utf8');
-            } catch (e) {
-              throw new Error(`Could not read ${args.path}: ${e.message}`);
-            }
+      for (const toolCall of response.toolCalls) {
+        if (!toolCall) {
+          throw new Error('Expected tool call to be non-null');
+        }
 
-            if (args.old.length > 1024) {
-              throw new Error(`Old text must be less than 1024 characters: ${args.old}`);
+        let toolCallResult: string;
+        try {
+          switch (toolCall.toolName) {
+            case 'edit': {
+              const args = editToolParameters.parse(toolCall.args);
+              const filePath = path.join(repoDir, cleanFilePath(args.path));
+              let content: string;
+              try {
+                content = readFileSync(filePath, 'utf8');
+              } catch (e) {
+                throw new Error(`Could not read ${args.path}: ${e.message}`);
+              }
+
+              if (args.old.length > 1024) {
+                throw new Error(`Old text must be less than 1024 characters: ${args.old}`);
+              }
+              if (args.new.length > 1024) {
+                throw new Error(`New text must be less than 1024 characters: ${args.new}`);
+              }
+              const matchPos = content.indexOf(args.old);
+              if (matchPos === -1) {
+                throw new Error(`Old text not found: ${args.old}`);
+              }
+              const secondMatchPos = content.indexOf(args.old, matchPos + args.old.length);
+              if (secondMatchPos !== -1) {
+                throw new Error(`Old text found multiple times: ${args.old}`);
+              }
+              content = content.replace(args.old, args.new);
+              writeFileSync(filePath, content);
+              toolCallResult = `Successfully edited ${args.path}`;
+              break;
             }
-            if (args.new.length > 1024) {
-              throw new Error(`New text must be less than 1024 characters: ${args.new}`);
-            }
-            const matchPos = content.indexOf(args.old);
-            if (matchPos === -1) {
-              throw new Error(`Old text not found: ${args.old}`);
-            }
-            const secondMatchPos = content.indexOf(args.old, matchPos + args.old.length);
-            if (secondMatchPos !== -1) {
-              throw new Error(`Old text found multiple times: ${args.old}`);
-            }
-            content = content.replace(args.old, args.new);
-            writeFileSync(filePath, content);
-            toolCallResult = `Successfully edited ${args.path}`;
-            break;
-          }
-          case 'view': {
-            const args = viewParameters.parse(toolCall.args);
-            const filePath = path.join(repoDir, cleanFilePath(args.path));
-            try {
-              const stats = statSync(filePath);
-              if (stats.isDirectory()) {
-                const files = walkdir.sync(filePath);
-                toolCallResult = renderDirectory(
-                  files.map((file) => ({
-                    name: file,
-                    isFile: () => !stats.isDirectory(),
-                    isDirectory: () => stats.isDirectory(),
-                  })),
-                );
-              } else {
-                const fileContent = readFileSync(filePath, 'utf8');
-                if (args.view_range && args.view_range.length !== 2) {
-                  throw new Error('When provided, view_range must be an array of two numbers');
+            case 'view': {
+              const args = viewParameters.parse(toolCall.args);
+              const filePath = path.join(repoDir, cleanFilePath(args.path));
+              try {
+                const stats = statSync(filePath);
+                if (stats.isDirectory()) {
+                  const files = walkdir.sync(filePath);
+                  toolCallResult = renderDirectory(
+                    files.map((file) => ({
+                      name: file,
+                      isFile: () => !stats.isDirectory(),
+                      isDirectory: () => stats.isDirectory(),
+                    })),
+                  );
+                } else {
+                  const fileContent = readFileSync(filePath, 'utf8');
+                  if (args.view_range && args.view_range.length !== 2) {
+                    throw new Error('When provided, view_range must be an array of two numbers');
+                  }
+                  toolCallResult = renderFile(fileContent, args.view_range as [number, number]);
                 }
-                toolCallResult = renderFile(fileContent, args.view_range as [number, number]);
+              } catch (e) {
+                throw new Error(`Could not read ${args.path}: ${e.message}`);
               }
-            } catch (e) {
-              throw new Error(`Could not read ${args.path}: ${e.message}`);
+              break;
             }
-            break;
-          }
-          case 'lookupDocs': {
-            const args = lookupDocsParameters.parse(toolCall.args);
-            const docsToLookup = args.docs;
-            const results: string[] = [];
+            case 'lookupDocs': {
+              const args = lookupDocsParameters.parse(toolCall.args);
+              const docsToLookup = args.docs;
+              const results: string[] = [];
 
-            for (const doc of docsToLookup) {
-              if (doc in docs) {
-                results.push(docs[doc as DocKey]);
-              } else {
-                throw new Error(`Unknown documentation key: ${doc}`);
+              for (const doc of docsToLookup) {
+                if (doc in docs) {
+                  results.push(docs[doc as DocKey]);
+                } else {
+                  throw new Error(`Unknown documentation key: ${doc}`);
+                }
               }
-            }
 
-            toolCallResult = results.join('\n\n');
-            break;
-          }
-          case 'deploy': {
-            numDeploys++;
-            toolCallResult = await deploy(repoDir, backend);
-            toolCallResult += await runTypecheck(repoDir);
-            if (numDeploys == 1) {
-              toolCallResult += '\n\nDev server started successfully!';
+              toolCallResult = results.join('\n\n');
+              break;
             }
-            logger.info('Successfully deployed');
-            hadSuccessfulDeploy = true;
-            break;
+            case 'deploy': {
+              numDeploys++;
+              toolCallResult = await deploy(repoDir, backend);
+              toolCallResult += await runTypecheck(repoDir);
+              if (numDeploys == 1) {
+                toolCallResult += '\n\nDev server started successfully!';
+              }
+              logger.info('Successfully deployed');
+              hadSuccessfulDeploy = true;
+              break;
+            }
+            case 'npmInstall': {
+              const args = npmInstallToolParameters.parse(toolCall.args);
+              const packages = args.packages.split(' ');
+              toolCallResult = await npmInstall(repoDir, packages);
+              break;
+            }
+            default:
+              throw new Error(`Unknown tool call: ${JSON.stringify(toolCall)}`);
           }
-          case 'npmInstall': {
-            const args = npmInstallToolParameters.parse(toolCall.args);
-            const packages = args.packages.split(' ');
-            toolCallResult = await npmInstall(repoDir, packages);
-            break;
+        } catch (e: any) {
+          logger.info('Tool call failed', e);
+          let message = e.toString();
+          if (!message.startsWith('Error:')) {
+            message = 'Error: ' + message;
           }
-          default:
-            throw new Error(`Unknown tool call: ${JSON.stringify(toolCall)}`);
+          toolCallResult = message;
         }
-      } catch (e: any) {
-        logger.info('Tool call failed', e);
-        let message = e.toString();
-        if (!message.startsWith('Error:')) {
-          message = 'Error: ' + message;
-        }
-        toolCallResult = message;
+        assistantMessage.parts.push({
+          type: 'tool-invocation',
+          toolInvocation: {
+            toolCallId: toolCall.toolCallId,
+            toolName: toolCall.toolName,
+            state: 'result',
+            args: toolCall.args,
+            result: toolCallResult,
+          },
+        });
       }
-      assistantMessage.parts.push({
-        type: 'tool-invocation',
-        toolInvocation: {
-          toolCallId: toolCall.toolCallId,
-          toolName: toolCall.toolName,
-          state: 'result',
-          args: toolCall.args,
-          result: toolCallResult,
-        },
-      });
     }
     return {
       success,
