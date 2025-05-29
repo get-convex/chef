@@ -1,7 +1,6 @@
 import { Button } from '@ui/Button';
 import { ArrowUpIcon, VideoIcon } from '@radix-ui/react-icons';
 import { SUGGESTIONS } from 'chef-agent/constants';
-import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 
 interface SuggestionButtonsProps {
   chatStarted: boolean;
@@ -10,7 +9,6 @@ interface SuggestionButtonsProps {
 }
 
 export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: SuggestionButtonsProps) => {
-  const { notionClonePrompt } = useLaunchDarkly();
   if (chatStarted) {
     return null;
   }
