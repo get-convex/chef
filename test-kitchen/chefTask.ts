@@ -22,7 +22,7 @@ import { makePartId } from 'chef-agent/partId';
 import { logger } from 'chef-agent/utils/logger';
 import { traced, wrapTraced } from 'braintrust';
 import { viewTool } from 'chef-agent/tools/view';
-import { editTool } from 'chef-agent/tools/edit';
+import { editTool, editToolParameters } from 'chef-agent/tools/edit';
 import { renderFile } from 'chef-agent/utils/renderFile';
 import { renderDirectory } from 'chef-agent/utils/renderDirectory';
 import { viewParameters } from 'chef-agent/tools/view';
@@ -175,6 +175,35 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       let toolCallResult: string;
       try {
         switch (toolCall.toolName) {
+          case 'edit': {
+            const args = editToolParameters.parse(toolCall.args);
+            const filePath = path.join(repoDir, args.path);
+            let content: string;
+            try {
+              content = readFileSync(filePath, 'utf8');
+            } catch (e) {
+              throw new Error(`Could not read ${args.path}: ${e.message}`);
+            }
+
+            if (args.old.length > 1024) {
+              throw new Error(`Old text must be less than 1024 characters: ${args.old}`);
+            }
+            if (args.new.length > 1024) {
+              throw new Error(`New text must be less than 1024 characters: ${args.new}`);
+            }
+            const matchPos = content.indexOf(args.old);
+            if (matchPos === -1) {
+              throw new Error(`Old text not found: ${args.old}`);
+            }
+            const secondMatchPos = content.indexOf(args.old, matchPos + args.old.length);
+            if (secondMatchPos !== -1) {
+              throw new Error(`Old text found multiple times: ${args.old}`);
+            }
+            content = content.replace(args.old, args.new);
+            writeFileSync(filePath, content);
+            toolCallResult = `Successfully edited ${args.path}`;
+            break;
+          }
           case 'view': {
             const args = viewParameters.parse(toolCall.args);
             const filePath = path.join(repoDir, args.path);
