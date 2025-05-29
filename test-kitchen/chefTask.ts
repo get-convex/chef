@@ -177,7 +177,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
         switch (toolCall.toolName) {
           case 'edit': {
             const args = editToolParameters.parse(toolCall.args);
-            const filePath = path.join(repoDir, args.path);
+            const filePath = path.join(repoDir, cleanFilePath(args.path));
             let content: string;
             try {
               content = readFileSync(filePath, 'utf8');
@@ -206,7 +206,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
           }
           case 'view': {
             const args = viewParameters.parse(toolCall.args);
-            const filePath = path.join(repoDir, args.path);
+            const filePath = path.join(repoDir, cleanFilePath(args.path));
             try {
               const stats = statSync(filePath);
               if (stats.isDirectory()) {
@@ -420,4 +420,8 @@ async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, c
       name: model.name,
     },
   );
+}
+
+function cleanFilePath(filePath: string) {
+  return filePath.replace('/home/project/', '/');
 }
