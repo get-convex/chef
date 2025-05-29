@@ -85,6 +85,7 @@ export class ActionRunner {
   #webcontainer: Promise<WebContainer>;
   #currentExecutionPromise: Promise<void> = Promise.resolve();
   #shellTerminal: BoltShell;
+  #previousToolCalls: Map<string, { toolName: string; args: any }> = new Map();
   runnerId = atom<string>(`${Date.now()}`);
   actions: ActionsMap = map({});
   onAlert?: (alert: ActionAlert) => void;
@@ -167,6 +168,25 @@ export class ActionRunner {
 
     if (args.isStreaming && action.type !== 'file') {
       return; // No return value here
+    }
+
+    // Check for duplicate tool calls
+    if (action.type === 'toolUse') {
+      const parsed = action.parsedContent;
+      if (parsed.state === 'call') {
+        const key = `${parsed.toolName}:${JSON.stringify(parsed.args)}`;
+        const previousCall = this.#previousToolCalls.get(key);
+        if (previousCall) {
+          this.onToolCallComplete({
+            kind: 'error',
+            result: 'Error: This exact action was already executed. Please try a different approach.',
+            toolCallId: parsed.toolCallId,
+            toolName: parsed.toolName as ConvexToolName,
+          });
+          return;
+        }
+        this.#previousToolCalls.set(key, { toolName: parsed.toolName, args: parsed.args });
+      }
     }
 
     this.updateAction(actionId, { ...action, ...data.action, executed: !args.isStreaming });
