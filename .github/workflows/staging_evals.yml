@@ -5,7 +5,7 @@ on:
     branches: [staging]
   push:
     branches: [staging]
- 
+
 permissions:
   pull-requests: write
   contents: read
