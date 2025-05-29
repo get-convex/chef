@@ -15,13 +15,14 @@ import * as net from 'net';
 const CHEF_PROJECT = 'chef';
 
 function chefEval(model: ChefModel) {
-  const evalName = `${CHEF_PROJECT}-${model.name}`;
+  const experimentName = `${CHEF_PROJECT}-${model.name}`;
   let outputDir = process.env.OUTPUT_TEMPDIR;
   if (!outputDir) {
     outputDir = mkdtempSync(path.join(os.tmpdir(), 'chef-eval'));
   }
   const environment = process.env.ENVIRONMENT ?? 'dev';
-  return braintrust.Eval(evalName, {
+  return braintrust.Eval(CHEF_PROJECT, {
+    experimentName,
     data: SUGGESTIONS.map((s) => ({ input: s.prompt })),
     task: (input) => chefTask(model, outputDir, input),
     scores: [chefScorer],
