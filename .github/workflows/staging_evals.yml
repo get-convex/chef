@@ -1,0 +1,37 @@
+name: Run braintrust evals
+ 
+on:
+  push:
+    # Uncomment to run only when files in the 'evals' directory change
+    # - paths:
+    #     - "evals/**"
+ 
+permissions:
+  pull-requests: write
+  contents: read
+ 
+jobs:
+  eval:
+    name: Run evals
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup and Build
+        uses: ./.github/actions/setup-and-build
+ 
+      - name: Run Evals
+        env:
+            ENVIRONMENT: ci
+            BRAINTRUST_API_KEY: ${{ secrets.BRAINTRUST_API_KEY }}
+            ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+            GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+            XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+        uses: braintrustdata/eval-action@v1
+        with:
+          api_key: ${{ secrets.BRAINTRUST_API_KEY }}
+          runtime: node
+          root: test-kitchen
