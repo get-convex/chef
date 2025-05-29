@@ -2,7 +2,7 @@ import { CoreMessage, generateText, LanguageModelUsage } from 'ai';
 import * as walkdir from 'walkdir';
 import { path } from 'chef-agent/utils/path';
 import { ChefResult, ChefModel } from './types';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs';
+import { copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { execFileSync } from 'child_process';
 import { ChatContextManager } from 'chef-agent/ChatContextManager';
 import { UIMessage } from 'ai';
@@ -10,17 +10,23 @@ import { deploy, npmInstall, runTypecheck } from './convexBackend';
 import { StreamingMessageParser } from 'chef-agent/message-parser';
 import { withConvexBackend } from './convexBackend';
 import { initializeConvexAuth } from 'chef-agent/convexAuth';
-import { deployToolParameters } from 'chef-agent/tools/deploy';
+import { deployTool } from 'chef-agent/tools/deploy';
 import { ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
 import { generateId } from 'ai';
-import { SystemPromptOptions } from 'chef-agent/types';
-import { npmInstallToolDescription, npmInstallToolParameters } from 'chef-agent/tools/npmInstall';
+import { ConvexToolSet, SystemPromptOptions } from 'chef-agent/types';
+import { npmInstallTool, npmInstallToolParameters } from 'chef-agent/tools/npmInstall';
+import { lookupDocsTool } from 'chef-agent/tools/lookupDocs';
 import { cleanupAssistantMessages } from 'chef-agent/cleanupAssistantMessages';
 import { generalSystemPrompt } from 'chef-agent/prompts/system';
-import { deployToolDescription } from 'chef-agent/tools/deploy';
 import { makePartId } from 'chef-agent/partId';
 import { logger } from 'chef-agent/utils/logger';
 import { traced, wrapTraced } from 'braintrust';
+import { viewTool } from 'chef-agent/tools/view';
+import { editTool } from 'chef-agent/tools/edit';
+import { renderFile } from 'chef-agent/utils/renderFile';
+import { renderDirectory } from 'chef-agent/utils/renderDirectory';
+import { viewParameters } from 'chef-agent/tools/view';
+import { lookupDocsParameters, docs, type DocKey } from 'chef-agent/tools/lookupDocs';
 
 const MAX_STEPS = 16;
 const OUTPUT_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.json'];
@@ -163,9 +169,54 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
         throw new Error('Expected exactly one tool call');
       }
       const toolCall = response.toolCalls[0];
+      if (!toolCall) {
+        throw new Error('Expected exactly one tool call');
+      }
       let toolCallResult: string;
       try {
         switch (toolCall.toolName) {
+          case 'view': {
+            const args = viewParameters.parse(toolCall.args);
+            const filePath = path.join(repoDir, args.path);
+            try {
+              const stats = statSync(filePath);
+              if (stats.isDirectory()) {
+                const files = walkdir.sync(filePath);
+                toolCallResult = renderDirectory(
+                  files.map((file) => ({
+                    name: file,
+                    isFile: () => !stats.isDirectory(),
+                    isDirectory: () => stats.isDirectory(),
+                  })),
+                );
+              } else {
+                const fileContent = readFileSync(filePath, 'utf8');
+                if (args.view_range && args.view_range.length !== 2) {
+                  throw new Error('When provided, view_range must be an array of two numbers');
+                }
+                toolCallResult = renderFile(fileContent, args.view_range as [number, number]);
+              }
+            } catch (e) {
+              throw new Error(`Could not read ${args.path}: ${e.message}`);
+            }
+            break;
+          }
+          case 'lookupDocs': {
+            const args = lookupDocsParameters.parse(toolCall.args);
+            const docsToLookup = args.docs;
+            const results: string[] = [];
+
+            for (const doc of docsToLookup) {
+              if (doc in docs) {
+                results.push(docs[doc as DocKey]);
+              } else {
+                throw new Error(`Unknown documentation key: ${doc}`);
+              }
+            }
+
+            toolCallResult = results.join('\n\n');
+            break;
+          }
           case 'deploy': {
             numDeploys++;
             toolCallResult = await deploy(repoDir, backend);
@@ -296,20 +347,20 @@ async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, c
         ...cleanupAssistantMessages(context),
       ];
       try {
+        const tools: ConvexToolSet = {
+          deploy: deployTool,
+          npmInstall: npmInstallTool,
+          lookupDocs: lookupDocsTool,
+        };
+        if (opts.enablePreciseEdits) {
+          tools.view = viewTool;
+          tools.edit = editTool;
+        }
         const result = await generateText({
           model: model.ai,
           maxTokens: model.maxTokens,
           messages,
-          tools: {
-            deploy: {
-              description: deployToolDescription,
-              parameters: deployToolParameters,
-            },
-            npmInstall: {
-              description: npmInstallToolDescription,
-              parameters: npmInstallToolParameters,
-            },
-          },
+          tools,
           maxSteps: 64,
         });
         span.log({
