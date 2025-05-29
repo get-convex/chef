@@ -52,7 +52,10 @@ export class ChatContextManager {
     let collapsedMessages = false;
     if (messages[messages.length - 1].role === 'user') {
       const [messageIndex, partIndex] = this.messagePartCutoff(messages, maxCollapsedMessagesSize);
-      if (messageIndex >= this.messageIndex && partIndex > this.partIndex) {
+      if (messageIndex == this.messageIndex && partIndex == this.partIndex) {
+        return { messages, collapsedMessages };
+      }
+      if (messageIndex >= this.messageIndex && partIndex >= this.partIndex) {
         // Truncate more than just the `maxCollapsedMessagesSize` limit because we want to get some cache hits before needing to truncate again.
         // If we only truncate to the `maxCollapsedMessagesSize` limit, we'll keep truncating on each new message, which means cache misses.
         const [newMessageIndex, newPartIndex] = this.messagePartCutoff(messages, minCollapsedMessagesSize);

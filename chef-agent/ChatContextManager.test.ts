@@ -132,6 +132,50 @@ describe('ChatContextManager', () => {
       expect(collapsedMessages).toBe(false);
     });
 
+    test('should truncate when message cutoff changes even if partIndex is equal', () => {
+      const maxCollapsedMessagesSize = 2000;
+      const collapsedMessagesSize = 1000;
+      const chatContextManager = createManager();
+
+      // First message that will establish initial cutoff
+      const initialMessages: UIMessage[] = [
+        {
+          id: '1',
+          role: 'user',
+          content: 'A'.repeat(3000), // Create a large message
+          parts: [{ type: 'text', text: 'A'.repeat(3000) }],
+        },
+      ];
+
+      // This will set the initial cutoff
+      const { collapsedMessages: collapsed1 } = chatContextManager.prepareContext(
+        initialMessages,
+        maxCollapsedMessagesSize,
+        collapsedMessagesSize,
+      );
+      expect(collapsed1).toBe(true);
+
+      // Now create a new message with the same size
+      // This will have a different messageIndex but same partIndex
+      initialMessages.push({
+        id: '2',
+        role: 'user',
+        content: 'B'.repeat(3000), // Same size as first message
+        parts: [{ type: 'text', text: 'B'.repeat(3000) }],
+      });
+
+      // This should truncate even though partIndex is equal
+      const { messages: truncatedMessages, collapsedMessages: collapsed2 } = chatContextManager.prepareContext(
+        initialMessages,
+        maxCollapsedMessagesSize,
+        collapsedMessagesSize,
+      );
+      expect(collapsed2).toBe(true);
+      // The last message should be kept
+      expect(truncatedMessages.length).toBe(1);
+      expect(truncatedMessages[0].id).toBe('2');
+    });
+
     test('should preserve collapsed messages when last message is not from user', () => {
       const maxCollapsedMessagesSize = 2000;
       const collapsedMessagesSize = 1000;
