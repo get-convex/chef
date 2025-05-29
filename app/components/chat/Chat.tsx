@@ -357,12 +357,12 @@ export const Chat = memo(
           // Fall back to the user's API key if the request has failed too many times
           userApiKey: retries.numFailures < MAX_RETRIES ? apiKey : { ...apiKey, preference: 'always' },
           shouldDisableTools,
-          smallFiles,
           recordRawPromptsForDebugging,
           modelChoice,
           collapsedMessages,
           featureFlags: {
             enablePreciseEdits,
+            smallFiles,
           },
         };
       },

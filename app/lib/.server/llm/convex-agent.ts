@@ -45,7 +45,6 @@ export async function convexAgent(args: {
   modelChoice: string | undefined;
   userApiKey: string | undefined;
   shouldDisableTools: boolean;
-  smallFiles: boolean;
   recordUsageCb: (
     lastMessage: Message | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
@@ -54,6 +53,7 @@ export async function convexAgent(args: {
   collapsedMessages: boolean;
   featureFlags: {
     enablePreciseEdits: boolean;
+    smallFiles: boolean;
   };
 }) {
   const {
@@ -65,7 +65,6 @@ export async function convexAgent(args: {
     userApiKey,
     modelChoice,
     shouldDisableTools,
-    smallFiles,
     recordUsageCb,
     recordRawPromptsForDebugging,
     collapsedMessages,
@@ -88,7 +87,7 @@ export async function convexAgent(args: {
     usingOpenAi: modelProvider == 'OpenAI',
     usingGoogle: modelProvider == 'Google',
     resendProxyEnabled: getEnv('RESEND_PROXY_ENABLED') == '1',
-    smallFiles,
+    smallFiles: featureFlags.smallFiles,
   };
   const tools: ConvexToolSet = {
     deploy: deployTool,
@@ -132,13 +131,13 @@ export async function convexAgent(args: {
             toolsDisabledFromRepeatedErrors: shouldDisableTools,
             recordRawPromptsForDebugging,
             coreMessages: messagesForDataStream,
-            smallFiles,
             modelProvider,
             modelChoice,
             collapsedMessages,
             _startTime: startTime,
             _firstResponseTime: firstResponseTime,
             providerModel: provider.model.modelId,
+            featureFlags,
           });
         },
         onError({ error }) {
@@ -200,13 +199,13 @@ async function onFinishHandler({
   toolsDisabledFromRepeatedErrors,
   recordRawPromptsForDebugging,
   coreMessages,
-  smallFiles,
   modelProvider,
   modelChoice,
   collapsedMessages,
   _startTime,
   _firstResponseTime,
   providerModel,
+  featureFlags,
 }: {
   dataStream: DataStreamWriter;
   messages: Messages;
@@ -220,13 +219,16 @@ async function onFinishHandler({
   recordRawPromptsForDebugging: boolean;
   toolsDisabledFromRepeatedErrors: boolean;
   coreMessages: CoreMessage[];
-  smallFiles: boolean;
   modelProvider: ModelProvider;
   modelChoice: string | undefined;
   collapsedMessages: boolean;
   _startTime: number;
   _firstResponseTime: number | null;
   providerModel: string;
+  featureFlags: {
+    enablePreciseEdits: boolean;
+    smallFiles: boolean;
+  };
 }) {
   const { providerMetadata } = result;
   // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
@@ -247,7 +249,8 @@ async function onFinishHandler({
     span.setAttribute('usage.completionTokens', usage.completionTokens);
     span.setAttribute('usage.promptTokens', usage.promptTokens);
     span.setAttribute('usage.totalTokens', usage.totalTokens);
-    span.setAttribute('featureFlags.smallFiles', smallFiles);
+    span.setAttribute('featureFlags.smallFiles', featureFlags.smallFiles);
+    span.setAttribute('featureFlags.enablePreciseEdits', featureFlags.enablePreciseEdits);
     span.setAttribute('collapsedMessages', collapsedMessages);
     span.setAttribute('model', providerModel);
     if (providerMetadata) {
