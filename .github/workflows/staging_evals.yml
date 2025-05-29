@@ -1,10 +1,10 @@
 name: Run braintrust evals
 
 on:
+  pull_request:
+    branches: [staging]
   push:
-    # Uncomment to run only when files in the 'evals' directory change
-    # - paths:
-    #     - "evals/**"
+    branches: [staging]
  
 permissions:
   pull-requests: write
