@@ -915,6 +915,7 @@ Convex Components are like mini self-contained Convex backends, and installing t
 Each component is installed as its own independent library from NPM. You also need to add a \`convex.config.ts\` file that includes the component.
 ALWAYS prefer using a component for a feature than writing the code yourself.
 ALWAYS use the \`lookupDocs\` tool to lookup documentation for a component before trying to use the \`npmInstall\` tool to install the relevant dependencies.
+You DO NOT need to deploy a component to use it. You can use it after you've installed it.
 
 Convex has the following components:
 - \`proseMirror\`: A collaborative text editor component.

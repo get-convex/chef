@@ -28,7 +28,8 @@ import { renderDirectory } from 'chef-agent/utils/renderDirectory';
 import { viewParameters } from 'chef-agent/tools/view';
 import { lookupDocsParameters, docs, type DocKey } from 'chef-agent/tools/lookupDocs';
 
-const MAX_STEPS = 16;
+const MAX_STEPS = 32;
+const MAX_DEPLOYS = 10;
 const OUTPUT_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.json'];
 const IGNORED_FILENAMES = [
   '.gitignore',
@@ -102,8 +103,10 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
 
       // TODO: We need to set up a Convex deployment running the `chef`
       // app to setup the OpenAI and Resend proxies + manage their tokens.
-      openaiProxyEnabled: false,
-      resendProxyEnabled: false,
+      // For now, we are enabling the proxies to mirror the behavior of production. These
+      // proxies should never be used in the test kitchen.
+      openaiProxyEnabled: true,
+      resendProxyEnabled: true,
       smallFiles: true,
     };
     const assistantMessage: UIMessage = {
@@ -114,7 +117,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
     };
     let numDeploys = 0;
     let success: boolean;
-    let hadSuccessfulDeploy = false;
+    let lastDeploySuccess = false;
     let totalUsage: LanguageModelUsage = {
       promptTokens: 0,
       completionTokens: 0,
@@ -123,6 +126,11 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
     while (true) {
       if (assistantMessage.parts.length >= MAX_STEPS) {
         logger.error('Reached max steps, ending test.');
+        success = false;
+        break;
+      }
+      if (numDeploys >= MAX_DEPLOYS) {
+        logger.error('Reached max deploys, ending test.');
         success = false;
         break;
       }
@@ -156,7 +164,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       totalUsage.completionTokens += response.usage.completionTokens;
       totalUsage.totalTokens += response.usage.totalTokens;
       if (response.finishReason == 'stop') {
-        success = hadSuccessfulDeploy;
+        success = lastDeploySuccess;
         break;
       }
       if (response.finishReason === 'length') {
@@ -249,13 +257,25 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
             }
             case 'deploy': {
               numDeploys++;
-              toolCallResult = await deploy(repoDir, backend);
-              toolCallResult += await runTypecheck(repoDir);
-              if (numDeploys == 1) {
+              try {
+                toolCallResult = await deploy(repoDir, backend);
+              } catch (e) {
+                toolCallResult = `\n\nError: [ConvexTypecheck] ${e.message}`;
+                lastDeploySuccess = false;
+                break;
+              }
+              try {
+                toolCallResult += await runTypecheck(repoDir);
+              } catch (e) {
+                toolCallResult += `\n\nError: [FrontendTypecheck] ${e.message}`;
+                lastDeploySuccess = false;
+                break;
+              }
+              lastDeploySuccess = true;
+              if (numDeploys == 1 && lastDeploySuccess) {
                 toolCallResult += '\n\nDev server started successfully!';
               }
               logger.info('Successfully deployed');
-              hadSuccessfulDeploy = true;
               break;
             }
             case 'npmInstall': {
