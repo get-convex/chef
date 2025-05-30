@@ -73,10 +73,16 @@ git pull
 git push origin main:staging
 ```
 
-Make a PR from staging to release using (go/chef-release)[https://go.cvx.is/chef-release] and confirm that the evals look good once they run (they should take ~10 mins). All of the evals should have an `isSuccess` rate of 100%.
+Make a PR from staging to release using (go/chef-release)[https://go.cvx.is/chef-release] and confirm that the evals look good once they run (they should take ~10 mins). All of the evals should have an `isSuccess` rate of 100%. (Do NOT merge this PR because the GitHub merge queue doesn't allow fast-forward only merges)
 
-Merge this PR in once we know that staging is in a good state.
+Merge the staging branch into release using the command below.
 Announce in the #project-chef Slack channel when you do this. Try out staging for a while before promoting it to release.
+
+```
+git checkout staging
+git pull
+git push origin staging:release
+```
 
 If the change does not include non-backward compatible Convex DB changes you
 can use the Vercel instant rollbacks to prompt old deployments to production.
