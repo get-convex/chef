@@ -71,29 +71,6 @@ export const MessageInput = memo(function MessageInput({
     messageInputStore.set(searchParams.get('prefill') || Cookies.get(PROMPT_COOKIE_KEY) || '');
   }, [searchParams]);
 
-  // Textarea auto-sizing
-  const TEXTAREA_MIN_HEIGHT = 100;
-  const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
-  useEffect(() => {
-    const textarea = textareaRef.current;
-
-    if (textarea) {
-      textarea.style.height = 'auto';
-
-      const scrollHeight = textarea.scrollHeight;
-
-      textarea.style.height = `${Math.min(scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
-      textarea.style.overflowY = scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
-    }
-  }, [input, textareaRef, TEXTAREA_MAX_HEIGHT]);
-  const textareaStyle = useMemo(
-    () => ({
-      minHeight: TEXTAREA_MIN_HEIGHT,
-      maxHeight: TEXTAREA_MAX_HEIGHT,
-    }),
-    [TEXTAREA_MAX_HEIGHT],
-  );
-
   // Send messages
   const handleSend = useCallback(async () => {
     const trimmedInput = input.trim();
@@ -216,23 +193,15 @@ export const MessageInput = memo(function MessageInput({
             'border has-[textarea:focus]:border-border-selected',
           )}
         >
-          <textarea
-            ref={textareaRef}
-            className={classNames(
-              'w-full px-3 pt-1 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
-              'transition-all',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              'scrollbar-thin scrollbar-thumb-macosScrollbar-thumb scrollbar-track-transparent',
-            )}
-            disabled={disabled}
+          <TextareaWithHighlights
             onKeyDown={handleKeyDown}
-            value={input}
             onChange={handleChange}
-            style={textareaStyle}
+            value={input}
+            chatStarted={chatStarted}
+            minHeight={100}
+            maxHeight={chatStarted ? 400 : 200}
             placeholder={chatStarted ? 'Request changes by sending another message…' : 'What app do you want to serve?'}
-            translate="no"
-            // Disable Grammarly
-            data-gramm="false"
+            disabled={disabled}
           />
         </div>
         <div
@@ -334,6 +303,69 @@ export const MessageInput = memo(function MessageInput({
         </div>
       </div>
     </div>
+  );
+});
+
+const TextareaWithHighlights = memo(function TextareaWithHighlights({
+  onKeyDown,
+  onChange,
+  value,
+  minHeight,
+  maxHeight,
+  placeholder,
+  disabled,
+}: {
+  onKeyDown: KeyboardEventHandler<HTMLTextAreaElement>;
+  onChange: ChangeEventHandler<HTMLTextAreaElement>;
+  value: string;
+  chatStarted: boolean;
+  placeholder: string;
+  disabled: boolean;
+  minHeight: number;
+  maxHeight: number;
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Textarea auto-sizing
+  useEffect(() => {
+    const textarea = textareaRef.current;
+
+    if (textarea) {
+      textarea.style.height = 'auto';
+
+      const scrollHeight = textarea.scrollHeight;
+
+      textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+      textarea.style.overflowY = scrollHeight > maxHeight ? 'auto' : 'hidden';
+    }
+  }, [value, textareaRef, maxHeight]);
+  const textareaStyle = useMemo(
+    () => ({
+      minHeight,
+      maxHeight,
+    }),
+    [minHeight, maxHeight],
+  );
+
+  return (
+    <textarea
+      ref={textareaRef}
+      className={classNames(
+        'w-full px-3 pt-1 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
+        'transition-all',
+        'disabled:opacity-50 disabled:cursor-not-allowed',
+        'scrollbar-thin scrollbar-thumb-macosScrollbar-thumb scrollbar-track-transparent',
+      )}
+      disabled={disabled}
+      onKeyDown={onKeyDown}
+      onChange={onChange}
+      value={value}
+      style={textareaStyle}
+      placeholder={placeholder}
+      translate="no"
+      // Disable Grammarly
+      data-gramm="false"
+    />
   );
 });
 
