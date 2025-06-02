@@ -91,7 +91,6 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                     icon: profile.avatar ? (
                       <img
                         src={profile.avatar}
-                        alt={profile.username || 'User'}
                         className="size-8 min-w-8 rounded-full object-cover"
                         loading="eager"
                         decoding="sync"

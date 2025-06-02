@@ -185,13 +185,13 @@ function OptInsScreen() {
   if (optIns.kind === 'mustLink') {
     const provider = user?.sub?.split('|')[0];
     return (
-      <div className="flex size-full flex-col items-center justify-center gap-4">
+      <div className="flex size-full flex-col items-center justify-center gap-4 p-4">
         <h2>Link your account to continue</h2>
         <div className="max-w-prose text-sm text-content-secondary">
           The email associated with your login method is already used by another Convex account. To continue, link your
           accounts or log in with your existing account.
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             // This flow is specifically crafted to be the least confusing. If the user is already logged in to the dashboard with their existing account
             // linking them directly to /link_identity would create a broken flow.
@@ -201,9 +201,9 @@ function OptInsScreen() {
             href={
               provider
                 ? // We know what provider they just logged in with, so we can use that to redirect them to the correct login page
-                  `${dashboardHost}/api/auth/login?connection=${provider}&returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin)}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
+                  `${dashboardHost}/api/auth/login?connection=${provider}&returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin + 'close-me')}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
                 : // If we don't know what provider they just logged in with, take them to the generic login page
-                  `${dashboardHost}/login?returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin)}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
+                  `${dashboardHost}/login?returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin + '/close-me')}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
             }
             onClickOfAnchorLink={() => {
               setProfile(null);
@@ -222,7 +222,7 @@ function OptInsScreen() {
   }
   if (optIns.kind === 'error') {
     return (
-      <div className="flex size-full flex-col items-center justify-center gap-4">
+      <div className="flex size-full flex-col items-center justify-center gap-4 p-4">
         <h2>Finish signing up for Convex on the dashboard!</h2>
         <div className="text-sm text-content-secondary">
           Go to the{' '}
