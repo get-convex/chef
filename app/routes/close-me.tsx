@@ -12,7 +12,9 @@ export default function CloseMe() {
       <Header hideSidebarIcon />
       <div className="flex flex-1 flex-col items-center justify-center">
         <h2 className="mb-2">All done!</h2>
-        <div className="text-lg text-content-secondary">You may now close this window.</div>
+        <div className="text-lg text-content-secondary">
+          You may now close this window. You may need to log in again to proceed.
+        </div>
       </div>
     </div>
   );

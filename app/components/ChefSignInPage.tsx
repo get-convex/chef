@@ -206,7 +206,7 @@ function OptInsScreen() {
                   `${dashboardHost}/login?returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin + '/close-me')}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
             }
             onClickOfAnchorLink={() => {
-              setProfile(null);
+              handleLogout();
             }}
             icon={<Link2Icon />}
             variant="neutral"
