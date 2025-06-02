@@ -15,7 +15,6 @@ import { setProfile } from '~/lib/stores/profile';
 export const ChefSignInPage = () => {
   const chefAuth = useChefAuthContext();
 
-  console.log(chefAuth);
   switch (chefAuth.state.kind) {
     case 'loading':
       return <Loading />;
