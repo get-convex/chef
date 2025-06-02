@@ -206,6 +206,9 @@ function OptInsScreen() {
                   `${dashboardHost}/login?returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin + '/close-me')}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
             }
             onClickOfAnchorLink={() => {
+              // Linking accounts gets you into a funky state, so we just log out and
+              // have them log in again after they're done linking
+              // It's fine for the flow to be janky here -- not many users will need to do this, and they only do it once.
               handleLogout();
             }}
             icon={<Link2Icon />}
