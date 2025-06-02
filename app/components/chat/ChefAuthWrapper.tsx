@@ -169,7 +169,6 @@ export const ChefAuthProvider = ({
 
   const isLoading = sessionId === undefined || isConvexAuthLoading;
   const isUnauthenticated = sessionId === null || !isAuthenticated;
-  console.log(sessionId, isAuthenticated);
   const state: ChefAuthState = isLoading
     ? { kind: 'loading' }
     : isUnauthenticated
