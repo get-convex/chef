@@ -30,7 +30,7 @@ async function handleSignIn(page: Page, chefUrl: string, credentials: { email: s
   await signInPage.goto(`${chefUrl}/signin?use-email=1`, {
     timeout: 60000,
   });
-  await signInPage.click('button:has-text("Log in")');
+  await signInPage.click('button:has-text("Continue with GitHub")');
   await signInPage.fill('input[name="username"]', credentials.email);
   await signInPage.fill('input[type="password"]', credentials.password);
   await signInPage.click('button[type="submit"]');

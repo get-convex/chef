@@ -32,24 +32,44 @@ function ConvexSignInForm() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4">
       <h1>Connect to Convex</h1>
-      <Button
-        variant="neutral"
-        onClick={() => {
-          if (!started) {
-            setStarted(true);
-            loginWithRedirect({
-              authorizationParams: {
-                connection: query.get('use-email') ? 'Username-Password-Authentication' : 'github',
-                redirect_uri: `${window.location.origin}/signin`,
-              },
-            });
-          }
-        }}
-        loading={started}
-        icon={<img className="size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />}
-      >
-        Log in with your Convex account
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button
+          variant="neutral"
+          onClick={() => {
+            if (!started) {
+              setStarted(true);
+              loginWithRedirect({
+                authorizationParams: {
+                  connection: query.get('use-email') ? 'Username-Password-Authentication' : 'github',
+                  redirect_uri: `${window.location.origin}/signin`,
+                },
+              });
+            }
+          }}
+          loading={started}
+          icon={<img className="size-4" height="16" width="16" src="/github.svg" alt="GitHub" />}
+        >
+          Continue with GitHub
+        </Button>
+        <Button
+          variant="neutral"
+          onClick={() => {
+            if (!started) {
+              setStarted(true);
+              loginWithRedirect({
+                authorizationParams: {
+                  connection: 'google-oauth2',
+                  redirect_uri: `${window.location.origin}/signin`,
+                },
+              });
+            }
+          }}
+          loading={started}
+          icon={<img className="size-4" height="16" width="16" src="/google.svg" alt="Google" />}
+        >
+          Continue with Google
+        </Button>
+      </div>
     </div>
   );
 }
@@ -138,12 +158,12 @@ function OptInsScreen() {
   }
   if (optIns.kind === 'error') {
     return (
-      <div className="flex size-full flex-col items-center justify-center">
+      <div className="flex size-full flex-col items-center justify-center gap-4">
         <div className="text-2xl font-bold">Finish signing up for Convex on the dashboard!</div>
         <div className="text-sm text-content-secondary">
           Go to the{' '}
           <Link
-            className="text-bolt-elements-button-primary-text underline"
+            className="text-content-link underline"
             to="https://dashboard.convex.dev"
             target="_blank"
             rel="noopener noreferrer"
