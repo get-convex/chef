@@ -200,8 +200,10 @@ function OptInsScreen() {
             // There's probably a way to make this more seamless, but opting for this for convenience.
             href={
               provider
-                ? `${dashboardHost}/api/auth/login?connection=${provider}&returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin)}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
-                : `${dashboardHost}/login?returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin)}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
+                ? // We know what provider they just logged in with, so we can use that to redirect them to the correct login page
+                  `${dashboardHost}/api/auth/login?connection=${provider}&returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin)}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
+                : // If we don't know what provider they just logged in with, take them to the generic login page
+                  `${dashboardHost}/login?returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin)}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
             }
             onClickOfAnchorLink={() => {
               setProfile(null);
