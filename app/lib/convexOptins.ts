@@ -21,6 +21,9 @@ export async function fetchOptIns(convex: ConvexReactClient): Promise<
   | {
       kind: 'missingAuth';
     }
+  | {
+      kind: 'mustLink';
+    }
 > {
   const token = getConvexAuthToken(convex);
   if (!token) {
@@ -43,6 +46,11 @@ export async function fetchOptIns(convex: ConvexReactClient): Promise<
     };
   }
   if (!response.ok) {
+    if (response.status === 403) {
+      return {
+        kind: 'mustLink',
+      };
+    }
     // We cannot fetch the opt ins, which means we probably failed to create an account
     // dynamically (which we can't do from Chef)
     return {
