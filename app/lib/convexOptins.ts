@@ -23,6 +23,7 @@ export async function fetchOptIns(convex: ConvexReactClient): Promise<
     }
   | {
       kind: 'mustLink';
+      hint?: string;
     }
 > {
   const token = getConvexAuthToken(convex);
@@ -47,8 +48,11 @@ export async function fetchOptIns(convex: ConvexReactClient): Promise<
   }
   if (!response.ok) {
     if (response.status === 403) {
+      const { message } = await response.json();
+      const hint = message.match(/\(hint:(.*?)\)$/)?.[1];
       return {
         kind: 'mustLink',
+        hint,
       };
     }
     // We cannot fetch the opt ins, which means we probably failed to create an account

@@ -86,7 +86,7 @@ type OptInToAccept = {
 };
 
 function OptInsScreen() {
-  const { logout } = useAuth0();
+  const { logout, user } = useAuth0();
 
   const handleLogout = () => {
     setProfile(null);
@@ -114,6 +114,7 @@ function OptInsScreen() {
       }
     | {
         kind: 'mustLink';
+        hint?: string;
       }
   >({
     kind: 'loading',
@@ -144,6 +145,7 @@ function OptInsScreen() {
         case 'mustLink':
           setOptIns({
             kind: 'mustLink',
+            hint: result.hint,
           });
           break;
       }
@@ -181,6 +183,7 @@ function OptInsScreen() {
     return <Loading />;
   }
   if (optIns.kind === 'mustLink') {
+    const provider = user?.sub?.split('|')[0];
     return (
       <div className="flex size-full flex-col items-center justify-center gap-4">
         <h2>Link your account to continue</h2>
@@ -195,11 +198,18 @@ function OptInsScreen() {
             // So instead, prompt them to login to the dashboard (they should pick the method they just logged in with)
             // Then redirect them to /link_identity, which will link their accounts and redirect them back to Chef.
             // There's probably a way to make this more seamless, but opting for this for convenience.
-            href={`${dashboardHost}/login?returnTo=${dashboardHost}/link_identity?returnTo=${window.location.origin}`}
+            href={
+              provider
+                ? `${dashboardHost}/api/auth/login?connection=${provider}&returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin)}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
+                : `${dashboardHost}/login?returnTo=${encodeURIComponent(`${dashboardHost}/link_identity?returnTo=${encodeURIComponent(window.location.origin)}${optIns.hint ? `&hint=${encodeURIComponent(optIns.hint)}` : ''}`)}`
+            }
+            onClickOfAnchorLink={() => {
+              setProfile(null);
+            }}
             icon={<Link2Icon />}
             variant="neutral"
           >
-            Link account
+            Link account (You&apos;ll need to log in again)
           </Button>
           <Button onClick={handleLogout} icon={<ExitIcon />} variant="neutral">
             Log out
