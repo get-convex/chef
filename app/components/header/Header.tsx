@@ -88,16 +88,17 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                     title: 'User menu',
                     inline: true,
                     className: 'rounded-full',
-                    icon: profile.avatar ? (
-                      <img
-                        src={profile.avatar}
-                        className="size-8 min-w-8 rounded-full object-cover"
-                        loading="eager"
-                        decoding="sync"
-                      />
-                    ) : (
-                      <PersonIcon className="size-8 min-w-8" />
-                    ),
+                    icon:
+                      profile.avatar && !profile.avatar.includes('googleusercontent.com') ? (
+                        <img
+                          src={profile.avatar}
+                          className="size-8 min-w-8 rounded-full object-cover"
+                          loading="eager"
+                          decoding="sync"
+                        />
+                      ) : (
+                        <PersonIcon className="size-8 min-w-8 rounded-full border text-content-secondary" />
+                      ),
                   }}
                 >
                   <FeedbackButton showInMenu={true} />
