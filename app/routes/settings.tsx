@@ -3,6 +3,7 @@ import { ChefAuthProvider } from '~/components/chat/ChefAuthWrapper';
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
 import { SettingsContent } from '~/components/SettingsContent.client';
+import { ClientOnly } from 'remix-utils/client-only';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Settings | Chef' }];
@@ -25,7 +26,7 @@ export default function Settings() {
 
   return (
     <ChefAuthProvider redirectIfUnauthenticated={true}>
-      <SettingsContent />
+      <ClientOnly>{() => <SettingsContent />}</ClientOnly>
     </ChefAuthProvider>
   );
 }
