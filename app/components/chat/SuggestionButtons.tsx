@@ -21,7 +21,7 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
         {/* Default to the new prompt so evals run on the new prompt */}
         {(!enablePresence
           ? [
-              ...SUGGESTIONS,
+              ...SUGGESTIONS.filter((s) => s.title !== 'Notion clone'),
               {
                 title: 'Notion clone',
                 prompt: `Make a collaborative text editor like Notion with these features:
