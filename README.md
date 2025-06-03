@@ -73,10 +73,13 @@ git pull
 git push origin main:staging
 ```
 
-Make a PR from staging to release using (go/chef-release)[https://go.cvx.is/chef-release] and confirm that the evals look good once they run (they should take ~10 mins). All of the evals should have an `isSuccess` rate of 100%. (Do NOT merge this PR because the GitHub merge queue doesn't allow fast-forward only merges)
+Make a PR from staging to release using (go/chef-release)[https://go.cvx.is/chef-release] and confirm that
+the evals look good once they run (they should take ~10 mins). All of the evals should have an `isSuccess`
+rate of 100%. (Do NOT merge this PR because the GitHub merge queue doesn't allow fast-forward only merges)
+While you're waiting for evals to run, manually test staging.
 
 Merge the staging branch into release using the command below.
-Announce in the #project-chef Slack channel when you do this. Try out staging for a while before promoting it to release.
+Announce in the #project-chef Slack channel when you do this.
 
 ```
 git checkout staging
