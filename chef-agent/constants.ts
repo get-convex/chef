@@ -43,6 +43,7 @@ export const SUGGESTIONS = [
 - Private documents (only visible to the creator)
 - Public documents (visible to all users)
 - Simple sidebar navigation between documents
+- Full text search over document titles
 - Interface:
 - Clean, minimal design with lots of white space and a neutral color palette (soft grays and whites)
 - Focus on readable text and minimal distractions`,
