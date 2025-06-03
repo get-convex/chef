@@ -49,7 +49,7 @@ function ConvexSignInForm() {
             }
           }}
           loading={started}
-          icon={<img className="size-4" height="16" width="16" src="/github.svg" alt="GitHub" />}
+          icon={<img className="size-4 dark:invert" height="16" width="16" src="/github.svg" alt="GitHub" />}
         >
           Continue with GitHub
         </Button>
