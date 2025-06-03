@@ -1,7 +1,7 @@
 import { stripIndents } from '../utils/stripIndent.js';
 import type { SystemPromptOptions } from '../types.js';
 
-export function solutionConstraints(options: SystemPromptOptions) {
+export function convexGuidelines(options: SystemPromptOptions) {
   return stripIndents`# Convex guidelines
 
 ## Function guidelines

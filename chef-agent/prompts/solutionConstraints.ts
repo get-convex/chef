@@ -1,6 +1,6 @@
 import { stripIndents } from '../utils/stripIndent.js';
-import { convexGuidelines } from './convexGuidelines.js';
 import type { SystemPromptOptions } from '../types.js';
+import { convexGuidelines } from './convexGuidelines.js';
 
 export function solutionConstraints(options: SystemPromptOptions) {
   return stripIndents`
@@ -13,7 +13,7 @@ export function solutionConstraints(options: SystemPromptOptions) {
       and search functionality. Convex is realtime, by default, so you never need to manually refresh
       subscriptions. Here are some guidelines, documentation, and best practices for using Convex effectively:
 
-      ${convexGuidelines}
+      ${convexGuidelines(options)}
 
       <http_guidelines>
         - All user-defined HTTP endpoints are defined in \`convex/router.ts\` and require an \`httpAction\` decorator.
