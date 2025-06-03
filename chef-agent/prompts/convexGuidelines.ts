@@ -1,4 +1,8 @@
-export const convexGuidelines = `# Convex guidelines
+import { stripIndents } from '../utils/stripIndent.js';
+import type { SystemPromptOptions } from '../types.js';
+
+export function solutionConstraints(options: SystemPromptOptions) {
+  return stripIndents`# Convex guidelines
 
 ## Function guidelines
 
@@ -915,8 +919,12 @@ Convex Components are like mini self-contained Convex backends, and installing t
 Each component is installed as its own independent library from NPM. You also need to add a \`convex.config.ts\` file that includes the component.
 ALWAYS prefer using a component for a feature than writing the code yourself.
 ALWAYS use the \`lookupDocs\` tool to lookup documentation for a component before trying to use the \`npmInstall\` tool to install the relevant dependencies.
-You DO NOT need to deploy a component to use it. You can use it after you've installed it.
+You DO NOT need to deploy a component to use it. You can use it after you've installed it. You can use multiple components in the same project.
 
 Convex has the following components:
 - \`proseMirror\`: A collaborative text editor component.
+${options.enablePresence ? presenceComponent : ''}
 `;
+}
+
+const presenceComponent = `- \`presence\`: A component for managing presence functionality, i.e., a live-updating list of users in a "room" including their status for when they were last online.`;

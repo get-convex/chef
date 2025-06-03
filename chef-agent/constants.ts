@@ -38,6 +38,7 @@ export const SUGGESTIONS = [
     title: 'Notion clone',
     prompt: `Make a collaborative text editor like Notion with these features:
 - Real-time collaboration where multiple users can edit the same document
+- Presence functionality for each document with a facepile
 - Document Organization:
 - Private documents (only visible to the creator)
 - Public documents (visible to all users)

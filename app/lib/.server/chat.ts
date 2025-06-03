@@ -70,6 +70,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     featureFlags: {
       enablePreciseEdits: boolean;
       smallFiles: boolean;
+      enablePresence?: boolean;
     };
   };
   const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug, recordRawPromptsForDebugging } =
@@ -169,7 +170,12 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       recordUsageCb,
       recordRawPromptsForDebugging: !!recordRawPromptsForDebugging,
       collapsedMessages: body.collapsedMessages,
-      featureFlags: body.featureFlags,
+      featureFlags: {
+        enablePreciseEdits: body.featureFlags.enablePreciseEdits,
+        smallFiles: body.featureFlags.smallFiles,
+        // Default to false for backwards compatibility
+        enablePresence: body.featureFlags.enablePresence ?? false,
+      },
     });
 
     return new Response(dataStream, {

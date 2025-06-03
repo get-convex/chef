@@ -134,7 +134,7 @@ DO NOT use any other component functions outside the functions exposed by \`pros
   - @param id - The document ID.
     \*/
     checkRead?: (
-    ctx: GenericQueryCtx<DataModel>,
+  ctx: GenericQueryCtx<DataModel>,
     id: Id
     ) => void | Promise<void>;
     /\*\*

@@ -458,7 +458,7 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
       return (
         <div className="flex items-center gap-2">
           <FileIcon className="text-content-secondary" />
-          <span>Looking up documentation for: {args.data.docs.join(', ')}</span>
+          <span>Looked up documentation for: {args.data.docs.join(', ')}</span>
         </div>
       );
     }

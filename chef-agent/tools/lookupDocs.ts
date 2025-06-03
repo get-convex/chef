@@ -1,21 +1,29 @@
 import type { Tool } from 'ai';
-import { proseMirrorComponentReadmePrompt } from 'chef-agent/prompts/proseMirrorComponentReadme';
+import { presenceComponentReadmePrompt } from 'chef-agent/prompts/components/presence';
+import { proseMirrorComponentReadmePrompt } from 'chef-agent/prompts/components/proseMirror';
 import { z } from 'zod';
 
 export const lookupDocsParameters = z.object({
-  docs: z.array(z.string()).describe('List of features to look up in the documentation'),
+  docs: z
+    .array(z.string())
+    .describe(
+      'List of features to look up in the documentation. You should look up all the docs for the features you are implementing.',
+    ),
 });
 
-export const lookupDocsTool: Tool = {
-  description: 'Lookup documentation for a list of features. Valid features to lookup are: `proseMirror`',
-  parameters: lookupDocsParameters,
-};
+export function lookupDocsTool(enablePresence: boolean): Tool {
+  return {
+    description: `Lookup documentation for a list of features. Valid features to lookup are: \`proseMirror\`${enablePresence ? ' and `presence`' : ''}`,
+    parameters: lookupDocsParameters,
+  };
+}
 
 export type LookupDocsParameters = z.infer<typeof lookupDocsParameters>;
 
 // Documentation content that can be looked up
 export const docs = {
   proseMirror: proseMirrorComponentReadmePrompt,
+  presence: presenceComponentReadmePrompt,
 } as const;
 
 export type DocKey = keyof typeof docs;

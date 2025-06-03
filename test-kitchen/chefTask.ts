@@ -108,6 +108,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       openaiProxyEnabled: true,
       resendProxyEnabled: true,
       smallFiles: true,
+      enablePresence: true,
     };
     const assistantMessage: UIMessage = {
       id: generateId(),
@@ -401,7 +402,7 @@ async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, c
         const tools: ConvexToolSet = {
           deploy: deployTool,
           npmInstall: npmInstallTool,
-          lookupDocs: lookupDocsTool,
+          lookupDocs: lookupDocsTool(opts.enablePresence),
         };
         if (opts.enablePreciseEdits) {
           tools.view = viewTool;
