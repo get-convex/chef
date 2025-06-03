@@ -8,6 +8,7 @@ import { ThemeCard } from '~/components/settings/ThemeCard';
 import { ProfileCard } from '~/components/settings/ProfileCard';
 import { UsageCard } from '~/components/settings/UsageCard';
 import { Toaster } from '~/components/ui/Toaster';
+import { UserProvider } from '~/components/UserProvider';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Settings | Chef' }];
@@ -30,7 +31,9 @@ export default function Settings() {
 
   return (
     <ChefAuthProvider redirectIfUnauthenticated={true}>
-      <SettingsContent />
+      <UserProvider>
+        <SettingsContent />
+      </UserProvider>
     </ChefAuthProvider>
   );
 }
