@@ -2,9 +2,7 @@ name: Run braintrust evals
 
 on:
   pull_request:
-    branches: [staging]
-  push:
-    branches: [staging]
+    branches: [release]
 
 permissions:
   pull-requests: write
