@@ -9,7 +9,7 @@ PARTNER_URL = "https://github.com/get-convex/chef-%s"
 # 4) Install copybara if you haven't https://github.com/get-convex/convex/blob/main/ops/release.md#install-copybara
 # 5) Manually run once `copybara copy.bara.sky push_${PARTNER} main --init-history --force --git-committer-email "team@convex.dev" --git-committer-name "Convex, Inc."`. May take a while.
 # 6) Submit/land your PR that updates the PARTNERS variable - to auto-keep things up to date.
-PARTNERS = ["testcustomer", "vly"]
+PARTNERS = ["testcustomer", "vly", "lovable"]
 
 def push_to_partner(partner):
     return core.workflow(
