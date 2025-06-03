@@ -60,10 +60,10 @@ export const heartbeat = mutation({
   args: { roomId: v.string(), userId: v.string(), sessionId: v.string(), interval: v.number() },
   handler: async (ctx, { roomId, userId, sessionId, interval }) => {
     const authUserId = await getAuthUserId(ctx);
-    if (authUserId === null || authUserId !== userId) {
-      throw new Error("Unauthorized");
+    if (!authUserId) {
+      throw new Error("Not authenticated");
     }
-    return await presence.heartbeat(ctx, roomId, userId, sessionId, interval);
+    return await presence.heartbeat(ctx, roomId, authUserId, sessionId, interval);
   },
 });
 
@@ -132,9 +132,6 @@ export default function usePresence(
   convexUrl?: string
 ): PresenceState[] | undefined
 \`\`\`
-
-All of the arguments are presence, roomId, and userId are all not optional and cannot be null or undefined.
-The userId must always be a valid userId and never should be an empty string.
 
 ALWAYS use the \`FacePile\` UI component included with this package unless the user
 explicitly requests to use a custom presence UI. You can copy this code and use the
