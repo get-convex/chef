@@ -2,7 +2,7 @@ name: Daily Evals
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Run at midnight UTC daily
+    - cron: '0 * * * *' # Run at the start of every hour UTC
   workflow_dispatch: # Allow manual triggering
 
 jobs:
