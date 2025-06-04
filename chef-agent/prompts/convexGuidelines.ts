@@ -917,13 +917,35 @@ export default defineSchema({
 Convex Components package up code and data in a sandbox that allows you to confidently and quickly add new features to your backend.
 Convex Components are like mini self-contained Convex backends, and installing them is always safe. They can't read your app's tables or call your app's functions unless you pass them in explicitly.
 Each component is installed as its own independent library from NPM. You also need to add a \`convex.config.ts\` file that includes the component.
-ALWAYS prefer using a component for a feature than writing the code yourself.
+ALWAYS prefer using a component for a feature than writing the code yourself, unless the component is not yet supported.
 ALWAYS use the \`lookupDocs\` tool to lookup documentation for a component before trying to use the \`npmInstall\` tool to install the relevant dependencies.
 You DO NOT need to deploy a component to use it. You can use it after you've installed it. ${options.enablePresence ? multiComponent : ''}
 
 Convex has the following components:
 - \`proseMirror\`: A collaborative text editor component.
 ${options.enablePresence ? presenceComponent : ''}
+
+Convex has but does not support the following components in Chef: 
+DO NOT use the \`lookupDocs\` tool to lookup documentation for these or install them.
+Chef does not have documentation for them. Tell the user that they are unsupported now but will be supported in the future.
+- Workflow
+- AI Agent
+- Persistent Text Streaming
+- Workpool
+- Crons
+- Action Retrier
+- Sharded Counter
+- Migrations
+- Aggregate
+- Geospatial
+- Cloudflare R2
+- Expo push notifications
+- Twilio SMS
+- LaunchDarkly feature flags
+- Polar
+- OSS stats
+- Rate limiter
+- Action cache
 `;
 }
 
