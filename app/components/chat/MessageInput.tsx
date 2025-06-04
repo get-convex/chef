@@ -379,7 +379,7 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
       <textarea
         ref={textareaRef}
         className={classNames(
-          'w-full px-3 pt-3 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm leading-snug',
+          'w-full px-3 py-3 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm leading-snug',
           'transition-opacity',
           'disabled:opacity-50 disabled:cursor-not-allowed',
           'scrollbar-thin scrollbar-thumb-macosScrollbar-thumb scrollbar-track-transparent',
@@ -480,7 +480,7 @@ const HighlightBlocks = memo(function HighlightBlocks({
     <div>
       <div
         ref={mirrorRef}
-        className="pointer-events-none absolute inset-0 -z-20 whitespace-pre-wrap break-words px-3 pt-3 text-sm leading-snug opacity-0"
+        className="pointer-events-none absolute inset-0 -z-20 whitespace-pre-wrap break-words p-3 text-sm leading-snug opacity-0"
         aria-hidden
       >
         {text}
