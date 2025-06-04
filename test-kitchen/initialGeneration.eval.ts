@@ -57,7 +57,9 @@ if (process.env.ANTHROPIC_API_KEY) {
   });
 }
 
-if (process.env.OPENAI_API_KEY) {
+// Braintrust sets the OPENAI_API_KEY environment variable even if we don't set it, so we need
+// to manually check the USE_OPENAI environment variable to determine if we should use OpenAI.
+if (process.env.OPENAI_API_KEY && process.env.USE_OPENAI === 'true') {
   chefEval({
     name: 'gpt-4.1',
     model_slug: 'gpt-4.1',
