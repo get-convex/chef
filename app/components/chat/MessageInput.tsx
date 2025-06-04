@@ -418,7 +418,6 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
 });
 
 // TODO Fix scroll
-// TODO Animation
 const HighlightBlocks = memo(function HighlightBlocks({
   text,
   blocks,
@@ -507,7 +506,7 @@ const HighlightBlocks = memo(function HighlightBlocks({
 
       <div>
         {blockPositions.map((block, index) => (
-          <HighlightTooltip key={index} {...block} /> /* todo fix key */
+          <HighlightTooltip key={index} {...block} />
         ))}
       </div>
     </div>
