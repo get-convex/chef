@@ -416,7 +416,7 @@ export class ActionRunner {
             if (doc in docs) {
               results.push(docs[doc as DocKey]);
             } else {
-              throw new Error(`Unknown documentation key: ${doc}`);
+              throw new Error(`Could not find documentation for component: ${doc}. It may not yet be supported.`);
             }
           }
 
