@@ -417,6 +417,7 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
   );
 });
 
+// TODO Fix scroll
 // TODO Animation
 const HighlightBlocks = memo(function HighlightBlocks({
   text,
@@ -506,23 +507,39 @@ const HighlightBlocks = memo(function HighlightBlocks({
 
       <div>
         {blockPositions.map((block, index) => (
-          <div
-            // TODO Fix the key
-            key={index}
-            className="absolute flex overflow-hidden bg-[#f8d077] mix-blend-color"
-            style={{
-              width: block.width,
-              height: block.height,
-              top: block.top,
-              left: block.left,
-            }}
-          >
-            <Tooltip className="absolute inset-0" tip={block.tip}>
-              {null}
-            </Tooltip>
-          </div>
+          <HighlightTooltip key={index} {...block} /> /* todo fix key */
         ))}
       </div>
+    </div>
+  );
+});
+
+const HighlightTooltip = memo(function HighlightTooltip({
+  tip,
+  width,
+  height,
+  top,
+  left,
+}: {
+  tip: string;
+  width: number;
+  height: number;
+  top: number;
+  left: number;
+}) {
+  return (
+    <div
+      className="absolute flex overflow-hidden bg-[#f8d077] mix-blend-color"
+      style={{
+        width,
+        height,
+        top,
+        left,
+      }}
+    >
+      <Tooltip className="absolute inset-0" tip={tip}>
+        {null}
+      </Tooltip>
     </div>
   );
 });
