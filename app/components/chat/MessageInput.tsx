@@ -412,13 +412,13 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
         data-gramm="false"
       />
 
-      <HighlightsBlocks textareaRef={textareaRef} text={value} blocks={blocks} />
+      <HighlightBlocks textareaRef={textareaRef} text={value} blocks={blocks} />
     </div>
   );
 });
 
-// TODO Memoize this component!!
-function HighlightsBlocks({
+// TODO Animation
+const HighlightBlocks = memo(function HighlightBlocks({
   text,
   blocks,
   textareaRef,
@@ -525,7 +525,7 @@ function HighlightsBlocks({
       </div>
     </div>
   );
-}
+});
 
 const NewLineShortcut = memo(function NewLineShortcut() {
   return (
