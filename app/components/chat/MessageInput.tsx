@@ -212,12 +212,7 @@ export const MessageInput = memo(function MessageInput({
   return (
     <div className="relative z-20 mx-auto w-full max-w-chat rounded-xl shadow transition-all duration-200">
       <div className="rounded-xl bg-background-primary/75 backdrop-blur-md">
-        <div
-          className={classNames(
-            'pt-2 pr-1 rounded-t-xl transition-all',
-            'border has-[textarea:focus]:border-border-selected',
-          )}
-        >
+        <div className="rounded-t-xl border transition-all has-[textarea:focus]:border-border-selected">
           <TextareaWithHighlights
             onKeyDown={handleKeyDown}
             onChange={handleChange}
@@ -357,23 +352,11 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
   // Textarea auto-sizing
   useEffect(() => {
     const textarea = textareaRef.current;
-
     if (textarea) {
       textarea.style.height = 'auto';
-
-      const scrollHeight = textarea.scrollHeight;
-
-      textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
-      textarea.style.overflowY = scrollHeight > maxHeight ? 'auto' : 'hidden';
+      textarea.style.height = `${textarea.scrollHeight}px`;
     }
-  }, [value, textareaRef, maxHeight]);
-  const textareaStyle = useMemo(
-    () => ({
-      minHeight,
-      maxHeight,
-    }),
-    [minHeight, maxHeight],
-  );
+  }, [value]);
 
   const blocks = useMemo(() => {
     const pattern = highlights
@@ -392,12 +375,12 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
   }, [highlights, value]);
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-y-auto" style={{ minHeight, maxHeight }}>
       <textarea
         ref={textareaRef}
         className={classNames(
-          'w-full px-3 pt-1 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm leading-snug',
-          'transition-all',
+          'w-full px-3 pt-3 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm leading-snug',
+          'transition-opacity',
           'disabled:opacity-50 disabled:cursor-not-allowed',
           'scrollbar-thin scrollbar-thumb-macosScrollbar-thumb scrollbar-track-transparent',
         )}
@@ -405,7 +388,7 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
         onKeyDown={onKeyDown}
         onChange={onChange}
         value={value}
-        style={textareaStyle}
+        style={{ minHeight }}
         placeholder={placeholder}
         translate="no"
         // Disable Grammarly
@@ -417,7 +400,6 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
   );
 });
 
-// TODO Fix scroll
 const HighlightBlocks = memo(function HighlightBlocks({
   text,
   blocks,
@@ -498,7 +480,7 @@ const HighlightBlocks = memo(function HighlightBlocks({
     <div>
       <div
         ref={mirrorRef}
-        className="pointer-events-none absolute inset-0 -z-20 whitespace-pre-wrap break-words px-3 pt-1 text-sm leading-snug opacity-0"
+        className="pointer-events-none absolute inset-0 -z-20 whitespace-pre-wrap break-words px-3 pt-3 text-sm leading-snug opacity-0"
         aria-hidden
       >
         {text}
