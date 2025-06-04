@@ -6,6 +6,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -36,6 +37,30 @@ import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftIcon, DocumentArrowUpIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
+
+type Highlight = {
+  text: string; // must be lowercase
+  tooltip: string;
+};
+
+const HIGHLIGHTS: Highlight[] = [
+  {
+    text: 'ai chat',
+    tooltip: 'Unless otherwise configured, Chef will prototype with GPT‑4o mini or GPT‑4.1 nano (limits apply).',
+  },
+  {
+    text: 'collaborative text editor',
+    tooltip: 'Chef will use Collaborative Text Editor Convex component.',
+  },
+  {
+    text: 'upload',
+    tooltip: 'Chef will use Convex’s built-in file upload capabilities.',
+  },
+  {
+    text: 'full text search',
+    tooltip: 'Chef will use Convex’s built-in full text search capabilities.',
+  },
+];
 
 export const MessageInput = memo(function MessageInput({
   chatStarted,
@@ -202,6 +227,7 @@ export const MessageInput = memo(function MessageInput({
             maxHeight={chatStarted ? 400 : 200}
             placeholder={chatStarted ? 'Request changes by sending another message…' : 'What app do you want to serve?'}
             disabled={disabled}
+            highlights={HIGHLIGHTS}
           />
         </div>
         <div
@@ -299,6 +325,7 @@ export const MessageInput = memo(function MessageInput({
               aria-label={isStreaming ? 'Stop' : 'Send'}
               icon={!isStreaming ? <ArrowRightIcon /> : <StopIcon />}
             />
+            <Tooltip tip="hey">HEy</Tooltip>
           </div>
         </div>
       </div>
@@ -314,6 +341,7 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
   maxHeight,
   placeholder,
   disabled,
+  highlights,
 }: {
   onKeyDown: KeyboardEventHandler<HTMLTextAreaElement>;
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
@@ -323,6 +351,7 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
   disabled: boolean;
   minHeight: number;
   maxHeight: number;
+  highlights: Highlight[];
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -347,27 +376,148 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
     [minHeight, maxHeight],
   );
 
+  const blocks = useMemo(() => {
+    const pattern = highlights
+      .map((h) => h.text) // we assume text doesn’t contain special characters
+      .join('|');
+    const regex = new RegExp(pattern, 'gi');
+
+    return Array.from(value.matchAll(regex)).map((match) => {
+      const pos = match.index;
+      return {
+        from: pos,
+        length: match[0].length,
+        tip: highlights.find((h) => h.text === match[0].toLowerCase())!.tooltip,
+      };
+    });
+  }, [highlights, value]);
+
+  // needs to be updated when:
+  // - text changes
+  // - scroll changes
+  // - resized
+
   return (
-    <textarea
-      ref={textareaRef}
-      className={classNames(
-        'w-full px-3 pt-1 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm',
-        'transition-all',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
-        'scrollbar-thin scrollbar-thumb-macosScrollbar-thumb scrollbar-track-transparent',
-      )}
-      disabled={disabled}
-      onKeyDown={onKeyDown}
-      onChange={onChange}
-      value={value}
-      style={textareaStyle}
-      placeholder={placeholder}
-      translate="no"
-      // Disable Grammarly
-      data-gramm="false"
-    />
+    <div className="relative overflow-hidden">
+      <textarea
+        ref={textareaRef}
+        className={classNames(
+          'w-full px-3 pt-1 outline-none resize-none text-content-primary placeholder-content-tertiary bg-transparent text-sm leading-snug',
+          'transition-all',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          'scrollbar-thin scrollbar-thumb-macosScrollbar-thumb scrollbar-track-transparent',
+        )}
+        disabled={disabled}
+        onKeyDown={onKeyDown}
+        onChange={onChange}
+        value={value}
+        style={textareaStyle}
+        placeholder={placeholder}
+        translate="no"
+        // Disable Grammarly
+        data-gramm="false"
+      />
+
+      <HighlightsBlocks textareaRef={textareaRef} text={value} blocks={blocks} />
+    </div>
   );
 });
+
+function HighlightsBlocks({
+  text,
+  blocks,
+  textareaRef,
+}: {
+  text: string;
+  blocks: {
+    from: number;
+    length: number;
+    tip: string;
+  }[];
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
+}) {
+  const mirrorRef = useRef<HTMLDivElement>(null);
+
+  const [blockPositions, setBlockPositions] = useState<
+    {
+      top: number;
+      left: number;
+      width: number;
+      height: number;
+      tip: string;
+    }[]
+  >([]);
+
+  // Listen to textarea scroll + resize to force a rerender
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      throw new Error('Textarea not found');
+    }
+
+    // TODO
+  });
+
+  useLayoutEffect(() => {
+    const mirror = mirrorRef.current;
+    if (!mirror) {
+      throw new Error('Mirror not found');
+    }
+
+    const wrapperRect = mirror.getBoundingClientRect();
+
+    const positions = blocks.flatMap((block) => {
+      const range = document.createRange();
+      range.setStart(mirror.firstChild!, block.from);
+      range.setEnd(mirror.firstChild!, block.from + block.length);
+
+      console.log(range.getClientRects());
+      return [...range.getClientRects()].map((rect) => {
+        return {
+          top: rect.top - wrapperRect.top + mirror.scrollTop,
+          left: rect.left - wrapperRect.left + mirror.scrollLeft,
+          width: rect.width,
+          height: rect.height,
+          tip: block.tip,
+        };
+      });
+    });
+    setBlockPositions(positions);
+  }, [blocks, textareaRef]);
+
+  return (
+    <div>
+      <div
+        ref={mirrorRef}
+        className="pointer-events-none absolute inset-0 -z-20 whitespace-pre-wrap break-words px-3 pt-1 text-sm leading-snug opacity-0"
+        aria-hidden
+      >
+        {text}
+      </div>
+
+      <div>
+        {blockPositions.map((block, index) => (
+          <div
+            key={index}
+            className="absolute"
+            style={{
+              background: '#f8d077',
+              opacity: 0.5,
+              width: block.width,
+              height: block.height,
+              top: block.top,
+              left: block.left,
+            }}
+          >
+            <Tooltip className="size-full" tip={block.tip}>
+              {null}
+            </Tooltip>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const NewLineShortcut = memo(function NewLineShortcut() {
   return (
