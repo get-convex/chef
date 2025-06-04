@@ -325,7 +325,6 @@ export const MessageInput = memo(function MessageInput({
               aria-label={isStreaming ? 'Stop' : 'Send'}
               icon={!isStreaming ? <ArrowRightIcon /> : <StopIcon />}
             />
-            <Tooltip tip="hey">HEy</Tooltip>
           </div>
         </div>
       </div>
@@ -392,11 +391,6 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
     });
   }, [highlights, value]);
 
-  // needs to be updated when:
-  // - text changes
-  // - scroll changes
-  // - resized
-
   return (
     <div className="relative overflow-hidden">
       <textarea
@@ -423,6 +417,7 @@ const TextareaWithHighlights = memo(function TextareaWithHighlights({
   );
 });
 
+// TODO Memoize this component!!
 function HighlightsBlocks({
   text,
   blocks,
@@ -437,6 +432,7 @@ function HighlightsBlocks({
   textareaRef: React.RefObject<HTMLTextAreaElement>;
 }) {
   const mirrorRef = useRef<HTMLDivElement>(null);
+  const [forceRerender, setForceRerender] = useState(0);
 
   const [blockPositions, setBlockPositions] = useState<
     {
@@ -448,17 +444,25 @@ function HighlightsBlocks({
     }[]
   >([]);
 
-  // Listen to textarea scroll + resize to force a rerender
+  // Rerender on textarea resize
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) {
       throw new Error('Textarea not found');
     }
 
-    // TODO
-  });
+    const resizeObserver = new ResizeObserver(() => {
+      setForceRerender((prev) => prev + 1);
+    });
+    resizeObserver.observe(textarea);
+    return () => resizeObserver.disconnect();
+  }, [textareaRef]);
 
   useLayoutEffect(() => {
+    if (blocks.length === 0) {
+      return;
+    }
+
     const mirror = mirrorRef.current;
     if (!mirror) {
       throw new Error('Mirror not found');
@@ -471,19 +475,24 @@ function HighlightsBlocks({
       range.setStart(mirror.firstChild!, block.from);
       range.setEnd(mirror.firstChild!, block.from + block.length);
 
-      console.log(range.getClientRects());
-      return [...range.getClientRects()].map((rect) => {
-        return {
+      const result: typeof blockPositions = [];
+      for (const rect of range.getClientRects()) {
+        result.push({
           top: rect.top - wrapperRect.top + mirror.scrollTop,
           left: rect.left - wrapperRect.left + mirror.scrollLeft,
           width: rect.width,
           height: rect.height,
           tip: block.tip,
-        };
-      });
+        });
+      }
+      return result;
     });
     setBlockPositions(positions);
-  }, [blocks, textareaRef]);
+  }, [blocks, textareaRef, forceRerender]);
+
+  if (blocks.length === 0) {
+    return null;
+  }
 
   return (
     <div>
@@ -498,18 +507,17 @@ function HighlightsBlocks({
       <div>
         {blockPositions.map((block, index) => (
           <div
+            // TODO Fix the key
             key={index}
-            className="absolute"
+            className="absolute flex overflow-hidden bg-[#f8d077] mix-blend-color"
             style={{
-              background: '#f8d077',
-              opacity: 0.5,
               width: block.width,
               height: block.height,
               top: block.top,
               left: block.left,
             }}
           >
-            <Tooltip className="size-full" tip={block.tip}>
+            <Tooltip className="absolute inset-0" tip={block.tip}>
               {null}
             </Tooltip>
           </div>
