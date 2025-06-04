@@ -279,10 +279,10 @@ export const MessageInput = memo(function MessageInput({
                   Add AI chat
                 </div>
               </MenuItemComponent>
-              <MenuItemComponent action={() => insertTemplate('Add file uploads to ...')}>
+              <MenuItemComponent action={() => insertTemplate('Add file upload to ...')}>
                 <div className="flex w-full items-center gap-2">
                   <DocumentArrowUpIcon className="size-4 text-content-secondary" />
-                  Add file uploads
+                  Add file upload
                 </div>
               </MenuItemComponent>
               <MenuItemComponent action={() => insertTemplate('Add full text search to ...')}>
