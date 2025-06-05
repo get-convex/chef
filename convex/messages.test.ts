@@ -77,6 +77,20 @@ async function assertStorageInfo(
   expect(storageInfo.partIndex).toBe(options.expectedPartIndex);
 }
 
+async function createSocialShare(t: TestConvex, chatId: string, sessionId: Id<"sessions">, code: string = "test123") {
+  await t.run(async (ctx) => {
+    await ctx.db.insert("socialShares", {
+      chatId: (await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId }))!._id,
+      code,
+      allowForkFromLatest: true,
+      shared: true,
+      allowShowInGallery: true,
+      linkToDeployed: true,
+    });
+  });
+  return code;
+}
+
 describe("messages", () => {
   let t: TestConvex;
   beforeEach(async () => {
@@ -584,5 +598,147 @@ describe("messages", () => {
       },
       true,
     );
+  });
+});
+
+describe("eraseMessageHistory", () => {
+  let t: TestConvex;
+  beforeEach(async () => {
+    vi.useFakeTimers();
+    t = setupTest();
+  });
+
+  afterEach(async () => {
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    vi.useRealTimers();
+  });
+
+  test("successfully erases message history and rewinds chat", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Create initial messages and snapshot
+    const firstMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
+    });
+    const initialSnapshotContent = "initial snapshot";
+    const snapshotBlob = new Blob([initialSnapshotContent]);
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage],
+      snapshot: snapshotBlob,
+    });
+
+    // Add more messages
+    const secondMessage: SerializedMessage = createMessage({
+      role: "assistant",
+      parts: [{ text: "How can I help you today?", type: "text" }],
+    });
+    const nextSnapshotContent = "final snapshot";
+    const nextSnapshotBlob = new Blob([nextSnapshotContent]);
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage, secondMessage],
+      snapshot: nextSnapshotBlob,
+    });
+
+    // Create a social share
+    const shareCode = await createSocialShare(t, chatId, sessionId);
+
+    // Erase message history
+    await t.mutation(internal.messages.eraseMessageHistory, {
+      shareCode,
+    });
+
+    // Verify chat was rewound to first message
+    const chat = await t.run(async (ctx) => {
+      return await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    });
+    expect(chat?.lastMessageRank).toBe(0);
+
+    // Verify snapshot state was updated with most recent snapshot
+    const storageStates = await getChatStorageStates(t, chatId, sessionId);
+    const earliestStorageStateWithSnapshot = storageStates[1];
+    const latestStorageState = storageStates[storageStates.length - 1];
+    expect(earliestStorageStateWithSnapshot.snapshotId).toBe(latestStorageState.snapshotId);
+    expect(latestStorageState.snapshotId).toBeDefined();
+  });
+
+  test("throws error when share not found", async () => {
+    await expect(
+      t.mutation(internal.messages.eraseMessageHistory, {
+        shareCode: "nonexistent",
+      }),
+    ).rejects.toThrow("Share not found");
+  });
+
+  test("throws error when no storage state found", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Create a social share without any storage state
+    const shareCode = await createSocialShare(t, chatId, sessionId);
+
+    await expect(
+      t.mutation(internal.messages.eraseMessageHistory, {
+        shareCode,
+      }),
+    ).rejects.toThrow("No filesystem snapshot found for chat");
+  });
+
+  test("throws error when no filesystem snapshot found", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Create messages without snapshot
+    const firstMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage],
+    });
+
+    // Create a social share
+    const shareCode = await createSocialShare(t, chatId, sessionId);
+
+    await expect(
+      t.mutation(internal.messages.eraseMessageHistory, {
+        shareCode,
+      }),
+    ).rejects.toThrow("No filesystem snapshot found for chat");
+  });
+
+  test("throws error when no message with snapshot found", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Create initial messages with snapshot
+    const firstMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
+    });
+    const initialSnapshotContent = "initial snapshot";
+    const snapshotBlob = new Blob([initialSnapshotContent]);
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage],
+      snapshot: snapshotBlob,
+    });
+
+    // Create a social share
+    const shareCode = await createSocialShare(t, chatId, sessionId);
+
+    // Delete all storage states with snapshots
+    await t.run(async (ctx) => {
+      const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+      const storageStates = await ctx.db
+        .query("chatMessagesStorageState")
+        .withIndex("byChatId", (q) => q.eq("chatId", chat!._id))
+        .collect();
+      for (const state of storageStates) {
+        await ctx.db.patch(state._id, { snapshotId: undefined });
+      }
+    });
+
+    await expect(
+      t.mutation(internal.messages.eraseMessageHistory, {
+        shareCode,
+      }),
+    ).rejects.toThrow("No filesystem snapshot found for chat");
   });
 });
