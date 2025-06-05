@@ -50,7 +50,7 @@ const HIGHLIGHTS: Highlight[] = [
   },
   {
     text: 'collaborative text editor',
-    tooltip: 'Chef will use Collaborative Text Editor Convex component.',
+    tooltip: 'Chef will use the Collaborative Text Editor Convex component.',
   },
   {
     text: 'upload',
@@ -59,6 +59,10 @@ const HIGHLIGHTS: Highlight[] = [
   {
     text: 'full text search',
     tooltip: 'Chef will use Convex’s built-in full text search capabilities.',
+  },
+  {
+    text: 'presence',
+    tooltip: 'Chef will use the Presence Convex component.',
   },
 ];
 
