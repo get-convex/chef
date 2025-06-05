@@ -675,3 +675,82 @@ export async function getChatByIdOrUrlIdEnsuringAccess(
 function getIdentifier(chat: Doc<"chats">): string {
   return chat.urlId ?? chat.initialId!;
 }
+
+export const eraseMessageHistory = internalMutation({
+  args: {
+    shareCode: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { shareCode } = args;
+    const share = await ctx.db
+      .query("socialShares")
+      .withIndex("byCode", (q) => q.eq("code", shareCode))
+      .unique();
+    if (share === null) {
+      throw new ConvexError({ code: "NotFound", message: "Share not found" });
+    }
+    console.log("ChatId for share is", share.chatId);
+    // Get the most recent filesystem snapshot
+    const mostRecentStorageState = await ctx.db
+      .query("chatMessagesStorageState")
+      .withIndex("byChatId", (q) => q.eq("chatId", share.chatId))
+      .order("desc")
+      .first();
+    if (mostRecentStorageState === null) {
+      throw new ConvexError({ code: "NotFound", message: "No storage state found for chat" });
+    }
+    console.log("Most recent storage state is", mostRecentStorageState);
+    const mostRecentFilesystemSnapshot = mostRecentStorageState.snapshotId;
+    if (mostRecentFilesystemSnapshot === undefined) {
+      throw new ConvexError({ code: "NotFound", message: "No filesystem snapshot found for chat" });
+    }
+    const earliestMessages = await ctx.db
+      .query("chatMessagesStorageState")
+      .withIndex("byChatId", (q) => q.eq("chatId", share.chatId))
+      .order("asc")
+      .take(100);
+    let earliestMessageWithSnapshot: Doc<"chatMessagesStorageState"> | null = null;
+    for (const storageState of earliestMessages) {
+      if (storageState.snapshotId !== undefined) {
+        earliestMessageWithSnapshot = storageState;
+        break;
+      }
+    }
+    if (earliestMessageWithSnapshot === null) {
+      throw new ConvexError({
+        code: "NotFound",
+        message: "No message with snapshot found for chat after looking at the first 100 message states",
+      });
+    }
+
+    // Get the latest part with the same lastMessageRank
+    const latestEarlyStorageState = await ctx.db
+      .query("chatMessagesStorageState")
+      .withIndex("byChatId", (q) =>
+        q.eq("chatId", share.chatId).eq("lastMessageRank", earliestMessageWithSnapshot.lastMessageRank),
+      )
+      .order("desc")
+      .first();
+    if (latestEarlyStorageState === null) {
+      throw new ConvexError({
+        code: "NotFound",
+        message: `No storage state found with lastMessageRank ${earliestMessageWithSnapshot.lastMessageRank}`,
+      });
+    }
+
+    // Replace the latestEarlyStorageState's filesystem snapshot with the most recent filesystem snapshot
+    console.log(
+      "Replacing filesystem snapshot for chat from",
+      latestEarlyStorageState.snapshotId,
+      "to",
+      mostRecentFilesystemSnapshot,
+    );
+    await ctx.db.patch(latestEarlyStorageState._id, { snapshotId: mostRecentFilesystemSnapshot });
+
+    // Rewind the chat to look at the lastMessageRank of the earliestMessageWithSnapshot
+    console.log("Rewinding chat to lastMessageRank", earliestMessageWithSnapshot.lastMessageRank);
+    await ctx.db.patch(share.chatId, {
+      lastMessageRank: earliestMessageWithSnapshot.lastMessageRank,
+    });
+  },
+});
