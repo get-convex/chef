@@ -51,19 +51,38 @@ const HIGHLIGHTS: Highlight[] = [
   },
   {
     text: 'collaborative text editor',
-    tooltip: 'Chef will use the Collaborative Text Editor Convex component.',
+    tooltip: (
+      <>
+        Chef will use the <a href="https://www.convex.dev/components/prosemirror-sync">Collaborative Text Editor</a>{' '}
+        Convex <a href="https://www.convex.dev/components">component</a>.
+      </>
+    ),
   },
   {
     text: 'upload',
-    tooltip: 'Chef will use Convex’s built-in file upload capabilities.',
+    tooltip: (
+      <>
+        Chef will use Convex’s built-in <a href="https://docs.convex.dev/file-storage">file upload capabilities</a>.
+      </>
+    ),
   },
   {
     text: 'full text search',
-    tooltip: 'Chef will use Convex’s built-in full text search capabilities.',
+    tooltip: (
+      <>
+        Chef will use Convex’s built-in <a href="https://docs.convex.dev/search/text-search">full text search</a>{' '}
+        capabilities.
+      </>
+    ),
   },
   {
     text: 'presence',
-    tooltip: 'Chef will use the Presence Convex component.',
+    tooltip: (
+      <>
+        Chef will use the <a href="https://www.convex.dev/components/presence">Presence</a> Convex{' '}
+        <a href="https://www.convex.dev/components">component</a>.
+      </>
+    ),
   },
 ];
 
