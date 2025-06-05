@@ -53,8 +53,9 @@ const HIGHLIGHTS: Highlight[] = [
     text: 'collaborative text editor',
     tooltip: (
       <>
-        Chef will use the <a href="https://www.convex.dev/components/prosemirror-sync">Collaborative Text Editor</a>{' '}
-        Convex <a href="https://www.convex.dev/components">component</a>.
+        Chef will use the{' '}
+        <TooltipLink href="https://www.convex.dev/components/prosemirror-sync">Collaborative Text Editor</TooltipLink>{' '}
+        Convex <TooltipLink href="https://www.convex.dev/components">component</TooltipLink>.
       </>
     ),
   },
@@ -62,7 +63,8 @@ const HIGHLIGHTS: Highlight[] = [
     text: 'upload',
     tooltip: (
       <>
-        Chef will use Convex’s built-in <a href="https://docs.convex.dev/file-storage">file upload capabilities</a>.
+        Chef will use Convex’s built-in{' '}
+        <TooltipLink href="https://docs.convex.dev/file-storage">file upload capabilities</TooltipLink>.
       </>
     ),
   },
@@ -70,8 +72,8 @@ const HIGHLIGHTS: Highlight[] = [
     text: 'full text search',
     tooltip: (
       <>
-        Chef will use Convex’s built-in <a href="https://docs.convex.dev/search/text-search">full text search</a>{' '}
-        capabilities.
+        Chef will use Convex’s built-in{' '}
+        <TooltipLink href="https://docs.convex.dev/search/text-search">full text search</TooltipLink> capabilities.
       </>
     ),
   },
@@ -79,8 +81,8 @@ const HIGHLIGHTS: Highlight[] = [
     text: 'presence',
     tooltip: (
       <>
-        Chef will use the <a href="https://www.convex.dev/components/presence">Presence</a> Convex{' '}
-        <a href="https://www.convex.dev/components">component</a>.
+        Chef will use the <TooltipLink href="https://www.convex.dev/components/presence">Presence</TooltipLink>{' '}
+        Convex&nbsp;<TooltipLink href="https://www.convex.dev/components">component</TooltipLink>.
       </>
     ),
   },
@@ -607,3 +609,11 @@ const SignInButton = memo(function SignInButton() {
 const cachePrompt = debounce(function cachePrompt(prompt: string) {
   Cookies.set(PROMPT_COOKIE_KEY, prompt.trim(), { expires: 30 });
 }, 1000);
+
+function TooltipLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-content-link hover:underline">
+      {children}
+    </a>
+  );
+}
