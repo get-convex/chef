@@ -646,6 +646,7 @@ describe("eraseMessageHistory", () => {
     // Erase message history
     await t.mutation(internal.messages.eraseMessageHistory, {
       shareCode,
+      dryRun: false,
     });
 
     // Verify chat was rewound to first message
@@ -662,10 +663,60 @@ describe("eraseMessageHistory", () => {
     expect(latestStorageState.snapshotId).toBeDefined();
   });
 
+  test("dry run does not update chat or filesystem snapshot", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Create initial messages and snapshot
+    const firstMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
+    });
+    const initialSnapshotContent = "initial snapshot";
+    const snapshotBlob = new Blob([initialSnapshotContent]);
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage],
+      snapshot: snapshotBlob,
+    });
+
+    // Add more messages
+    const secondMessage: SerializedMessage = createMessage({
+      role: "assistant",
+      parts: [{ text: "How can I help you today?", type: "text" }],
+    });
+    const nextSnapshotContent = "final snapshot";
+    const nextSnapshotBlob = new Blob([nextSnapshotContent]);
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage, secondMessage],
+      snapshot: nextSnapshotBlob,
+    });
+
+    // Create a social share
+    const shareCode = await createSocialShare(t, chatId, sessionId);
+
+    // Erase message history
+    await t.mutation(internal.messages.eraseMessageHistory, {
+      shareCode,
+      dryRun: true,
+    });
+
+    // Verify chat was not rewound
+    const chat = await t.run(async (ctx) => {
+      return await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
+    });
+    expect(chat?.lastMessageRank).toBe(undefined);
+
+    // Verify snapshot state was not updated
+    const storageStates = await getChatStorageStates(t, chatId, sessionId);
+    const earliestStorageStateWithSnapshot = storageStates[1];
+    const latestStorageState = storageStates[storageStates.length - 1];
+    expect(earliestStorageStateWithSnapshot.snapshotId).not.toBe(latestStorageState.snapshotId);
+  });
+
   test("throws error when share not found", async () => {
     await expect(
       t.mutation(internal.messages.eraseMessageHistory, {
         shareCode: "nonexistent",
+        dryRun: false,
       }),
     ).rejects.toThrow("Share not found");
   });
@@ -679,6 +730,7 @@ describe("eraseMessageHistory", () => {
     await expect(
       t.mutation(internal.messages.eraseMessageHistory, {
         shareCode,
+        dryRun: false,
       }),
     ).rejects.toThrow("No filesystem snapshot found for chat");
   });
@@ -701,6 +753,7 @@ describe("eraseMessageHistory", () => {
     await expect(
       t.mutation(internal.messages.eraseMessageHistory, {
         shareCode,
+        dryRun: false,
       }),
     ).rejects.toThrow("No filesystem snapshot found for chat");
   });
@@ -738,6 +791,7 @@ describe("eraseMessageHistory", () => {
     await expect(
       t.mutation(internal.messages.eraseMessageHistory, {
         shareCode,
+        dryRun: false,
       }),
     ).rejects.toThrow("No filesystem snapshot found for chat");
   });

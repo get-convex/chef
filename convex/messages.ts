@@ -679,9 +679,10 @@ function getIdentifier(chat: Doc<"chats">): string {
 export const eraseMessageHistory = internalMutation({
   args: {
     shareCode: v.string(),
+    dryRun: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const { shareCode } = args;
+    const { shareCode, dryRun } = args;
     const share = await ctx.db
       .query("socialShares")
       .withIndex("byCode", (q) => q.eq("code", shareCode))
@@ -745,12 +746,20 @@ export const eraseMessageHistory = internalMutation({
       "to",
       mostRecentFilesystemSnapshot,
     );
-    await ctx.db.patch(latestEarlyStorageState._id, { snapshotId: mostRecentFilesystemSnapshot });
+    if (!dryRun) {
+      await ctx.db.patch(latestEarlyStorageState._id, { snapshotId: mostRecentFilesystemSnapshot });
+    }
 
     // Rewind the chat to look at the lastMessageRank of the earliestMessageWithSnapshot
     console.log("Rewinding chat to lastMessageRank", earliestMessageWithSnapshot.lastMessageRank);
-    await ctx.db.patch(share.chatId, {
-      lastMessageRank: earliestMessageWithSnapshot.lastMessageRank,
-    });
+    if (!dryRun) {
+      await ctx.db.patch(share.chatId, {
+        lastMessageRank: earliestMessageWithSnapshot.lastMessageRank,
+      });
+    }
+
+    if (dryRun) {
+      console.log("Dry run, did not update chat or filesystem snapshot");
+    }
   },
 });
