@@ -70,9 +70,9 @@ if (process.env.OPENAI_API_KEY && process.env.USE_OPENAI === 'true') {
 
 if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
   chefEval({
-    name: 'gemini-2.5-pro-preview-05-06',
-    model_slug: 'gemini-2.5-pro-preview-05-06',
-    ai: google('gemini-2.5-pro-preview-05-06'),
+    name: 'gemini-2.5-pro-preview-06-05',
+    model_slug: 'gemini-2.5-pro-preview-06-05',
+    ai: google('gemini-2.5-pro-preview-06-05'),
     maxTokens: 20000,
   });
 }
