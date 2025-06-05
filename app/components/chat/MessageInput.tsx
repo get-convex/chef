@@ -2,7 +2,7 @@ import Cookies from 'js-cookie';
 import { useStore } from '@nanostores/react';
 import { EnhancePromptButton } from './EnhancePromptButton.client';
 import { messageInputStore } from '~/lib/stores/messageInput';
-import {
+import React, {
   memo,
   useCallback,
   useEffect,
@@ -10,6 +10,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
   type ChangeEventHandler,
   type KeyboardEventHandler,
 } from 'react';
@@ -40,7 +41,7 @@ const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
 type Highlight = {
   text: string; // must be lowercase
-  tooltip: string;
+  tooltip: ReactNode;
 };
 
 const HIGHLIGHTS: Highlight[] = [
@@ -413,7 +414,7 @@ const HighlightBlocks = memo(function HighlightBlocks({
   blocks: {
     from: number;
     length: number;
-    tip: string;
+    tip: ReactNode;
   }[];
   textareaRef: React.RefObject<HTMLTextAreaElement>;
 }) {
@@ -426,7 +427,7 @@ const HighlightBlocks = memo(function HighlightBlocks({
       left: number;
       width: number;
       height: number;
-      tip: string;
+      tip: ReactNode;
     }[]
   >([]);
 
@@ -506,7 +507,7 @@ const HighlightTooltip = memo(function HighlightTooltip({
   top,
   left,
 }: {
-  tip: string;
+  tip: ReactNode;
   width: number;
   height: number;
   top: number;
