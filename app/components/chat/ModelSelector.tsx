@@ -89,7 +89,7 @@ export const models: Partial<
   },
   'gemini-2.5-pro': {
     name: 'Gemini 2.5 Pro',
-    recommended: true,
+    recommended: false,
     provider: 'google',
   },
   'gpt-4.1': {
