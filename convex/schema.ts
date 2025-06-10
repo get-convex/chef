@@ -117,6 +117,7 @@ export default defineSchema({
     storageId: v.union(v.id("_storage"), v.null()),
     featureId: v.optional(v.number()),
     lastMessageRank: v.number(),
+    description: v.optional(v.string()),
     partIndex: v.number(),
     snapshotId: v.optional(v.id("_storage")),
   })
