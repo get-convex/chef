@@ -13,6 +13,7 @@ import type * as apiKeys from "../apiKeys.js";
 import type * as cleanup from "../cleanup.js";
 import type * as compressMessages from "../compressMessages.js";
 import type * as convexProjects from "../convexProjects.js";
+import type * as crons from "../crons.js";
 import type * as debugPrompt from "../debugPrompt.js";
 import type * as deploy from "../deploy.js";
 import type * as dev from "../dev.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   cleanup: typeof cleanup;
   compressMessages: typeof compressMessages;
   convexProjects: typeof convexProjects;
+  crons: typeof crons;
   debugPrompt: typeof debugPrompt;
   deploy: typeof deploy;
   dev: typeof dev;
