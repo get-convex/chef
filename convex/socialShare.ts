@@ -207,3 +207,37 @@ export const saveThumbnail = internalMutation({
     }
   },
 });
+
+// This is used for admin's to create a share link for debugging purposes. Be sure to delete the share link after use.
+export const createAdminShare = internalMutation({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, { chatId }) => {
+    const chat = await ctx.db.get(chatId);
+    if (!chat) {
+      throw new ConvexError("Chat not found");
+    }
+    // Use an existing share link for this chat if it exists
+    const existing = await ctx.db
+      .query("socialShares")
+      .withIndex("byChatId", (q) => q.eq("chatId", chatId))
+      .unique();
+    if (existing) {
+      console.log(`Already have a share for chat ${chatId}: Go to https://chef.show/${existing.code}`);
+      return;
+    }
+
+    const randomCode = await generateUniqueCode(ctx.db);
+    const code = `support-${randomCode}`;
+    await ctx.db.insert("socialShares", {
+      chatId,
+      code,
+      shared: "shared",
+      linkToDeployed: false,
+      allowForkFromLatest: true,
+      allowShowInGallery: false,
+    });
+    console.log(`Created admin share for chat ${chatId}. Go to https://chef.show/${code}`);
+  },
+});
