@@ -10,6 +10,7 @@
 
 import type * as admin from "../admin.js";
 import type * as apiKeys from "../apiKeys.js";
+import type * as cleanup from "../cleanup.js";
 import type * as compressMessages from "../compressMessages.js";
 import type * as convexProjects from "../convexProjects.js";
 import type * as debugPrompt from "../debugPrompt.js";
@@ -45,6 +46,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   apiKeys: typeof apiKeys;
+  cleanup: typeof cleanup;
   compressMessages: typeof compressMessages;
   convexProjects: typeof convexProjects;
   debugPrompt: typeof debugPrompt;
