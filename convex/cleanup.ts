@@ -46,9 +46,3 @@ export const deleteDebugFilesForInactiveChats = internalMutation({
     }
   },
 });
-
-// Paginate over the debugChatApiRequestLog table
-// Check if the chat is inactive - no chatMessagesStorageState in the past two weeks
-// Delete the debug files
-// Run this on a cron every day
-// Maybe instead of an action it should be a scheduled job
