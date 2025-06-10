@@ -111,31 +111,6 @@ httpWithCors.route({
 });
 
 httpWithCors.route({
-  path: "/store_messages",
-  method: "POST",
-  handler: httpActionWithErrorHandling(async (ctx, request) => {
-    const url = new URL(request.url);
-    const sessionId = url.searchParams.get("sessionId");
-    const chatId = url.searchParams.get("chatId");
-    const lastMessageRank = url.searchParams.get("lastMessageRank");
-    const partIndex = url.searchParams.get("partIndex");
-    // Older pathway that sends just messages as a single blob
-    const messageBlob = await request.blob();
-    const storageId = await ctx.storage.store(messageBlob);
-    await ctx.runMutation(internal.messages.updateStorageState, {
-      sessionId: sessionId as Id<"sessions">,
-      chatId: chatId as Id<"chats">,
-      lastMessageRank: parseInt(lastMessageRank!),
-      partIndex: parseInt(partIndex!),
-      storageId,
-    });
-    return new Response(null, {
-      status: 200,
-    });
-  }),
-});
-
-httpWithCors.route({
   path: "/store_chat",
   method: "POST",
   handler: httpActionWithErrorHandling(async (ctx, request) => {
@@ -143,6 +118,7 @@ httpWithCors.route({
     const sessionId = url.searchParams.get("sessionId");
     const chatId = url.searchParams.get("chatId");
     const lastMessageRank = url.searchParams.get("lastMessageRank");
+    const lastFeatureId = url.searchParams.get("lastFeatureId");
     const partIndex = url.searchParams.get("partIndex");
     const formData = await request.formData();
     let messageStorageId: Id<"_storage"> | null = null;
@@ -159,6 +135,8 @@ httpWithCors.route({
       sessionId: sessionId as Id<"sessions">,
       chatId: chatId as Id<"chats">,
       lastMessageRank: parseInt(lastMessageRank!),
+      // Default to the first feature if not provided
+      featureId: parseInt(lastFeatureId ?? "0"),
       partIndex: parseInt(partIndex!),
       storageId: messageStorageId,
       snapshotId: snapshotStorageId,
