@@ -162,6 +162,7 @@ export const storageInfo = v.object({
   lastMessageRank: v.number(),
   partIndex: v.number(),
   snapshotId: v.optional(v.id("_storage")),
+  featureId: v.optional(v.number()),
 });
 
 export type StorageInfo = Infer<typeof storageInfo>;
@@ -187,6 +188,7 @@ export const getInitialMessagesStorageInfo = internalQuery({
       lastMessageRank: doc.lastMessageRank,
       partIndex: doc.partIndex,
       snapshotId: doc.snapshotId,
+      featureId: doc.featureId,
     };
   },
 });

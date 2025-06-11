@@ -41,6 +41,7 @@ export const create = mutation({
 
       code,
       lastMessageRank: storageState.lastMessageRank,
+      lastFeatureId: storageState.featureId,
       partIndex: storageState.partIndex,
       description: chat.description,
     });
