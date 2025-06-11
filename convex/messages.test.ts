@@ -644,6 +644,7 @@ describe("messages", () => {
       expectedSnapshotContent: initialSnapshotContent,
       expectedLastMessageRank: 0,
       expectedPartIndex: 0,
+      expectedSubchatIndex: 0,
     });
 
     // Store update with same lastMessageRank but different content
@@ -675,6 +676,7 @@ describe("messages", () => {
       expectedSnapshotContent: updatedSnapshotContent,
       expectedLastMessageRank: 0,
       expectedPartIndex: 1,
+      expectedSubchatIndex: 0,
     });
 
     // Verify old storage files are deleted
