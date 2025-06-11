@@ -118,7 +118,7 @@ httpWithCors.route({
     const sessionId = url.searchParams.get("sessionId");
     const chatId = url.searchParams.get("chatId");
     const lastMessageRank = url.searchParams.get("lastMessageRank");
-    const lastSubchatId = url.searchParams.get("lastSubchatId");
+    const lastSubchatIndex = url.searchParams.get("lastSubchatIndex");
     const partIndex = url.searchParams.get("partIndex");
     const formData = await request.formData();
     let messageStorageId: Id<"_storage"> | null = null;
@@ -136,7 +136,7 @@ httpWithCors.route({
       chatId: chatId as Id<"chats">,
       lastMessageRank: parseInt(lastMessageRank!),
       // Default to the first feature if not provided
-      subchatId: parseInt(lastSubchatId ?? "0"),
+      subchatIndex: parseInt(lastSubchatIndex ?? "0"),
       partIndex: parseInt(partIndex!),
       storageId: messageStorageId,
       snapshotId: snapshotStorageId,
