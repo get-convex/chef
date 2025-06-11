@@ -14,7 +14,7 @@ describe("cleanup", () => {
     vi.useRealTimers();
   });
 
-  test("deleteDebugFilesForInactiveChats only deletes from debugChatApiRequestLog and referenced storage", async () => {
+  async function setupTestData() {
     // Create a chat
     const chatId = await t.run(async (ctx) => {
       return await ctx.db.insert("chats", {
@@ -56,6 +56,12 @@ describe("cleanup", () => {
       });
     });
 
+    return { chatId, storageId, storageStateId, logId };
+  }
+
+  test("deleteDebugFilesForInactiveChats only deletes from debugChatApiRequestLog and referenced storage", async () => {
+    const { chatId, storageId, storageStateId, logId } = await setupTestData();
+
     // Advance time by a second
     vi.advanceTimersByTime(1000);
 
@@ -63,7 +69,7 @@ describe("cleanup", () => {
     await t.mutation(internal.cleanup.deleteDebugFilesForInactiveChats, {
       forReal: true,
       shouldScheduleNext: false,
-      ageInDays: 0,
+      daysInactive: 0,
     });
 
     // Verify the debug log entry was deleted
@@ -79,6 +85,44 @@ describe("cleanup", () => {
     expect(storageFile).toBeNull();
 
     // Verify the chat and storage state were NOT deleted
+    const chat = await t.run(async (ctx) => {
+      return await ctx.db.get(chatId);
+    });
+    expect(chat).not.toBeNull();
+
+    const storageState = await t.run(async (ctx) => {
+      return await ctx.db.get(storageStateId);
+    });
+    expect(storageState).not.toBeNull();
+  });
+
+  test("no deletion when data is too recent", async () => {
+    const { chatId, storageId, storageStateId, logId } = await setupTestData();
+
+    // Run the cleanup function with daysInactive=1 (older than our test data)
+    await t.mutation(internal.cleanup.deleteDebugFilesForInactiveChats, {
+      forReal: true,
+      shouldScheduleNext: true,
+      daysInactive: 1,
+    });
+
+    // Verify no new jobs were scheduled
+    const scheduledJobs = await t.run(async (ctx) => {
+      return await ctx.db.system.query("_scheduled_functions").collect();
+    });
+    expect(scheduledJobs).toHaveLength(0);
+
+    // Verify nothing was deleted
+    const logEntry = await t.run(async (ctx) => {
+      return await ctx.db.get(logId);
+    });
+    expect(logEntry).not.toBeNull();
+
+    const storageFile = await t.run(async (ctx) => {
+      return await ctx.storage.getUrl(storageId);
+    });
+    expect(storageFile).not.toBeNull();
+
     const chat = await t.run(async (ctx) => {
       return await ctx.db.get(chatId);
     });
