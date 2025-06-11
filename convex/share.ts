@@ -162,6 +162,7 @@ async function cloneShow(
     description: parentChat.description,
     timestamp: new Date().toISOString(),
     snapshotId,
+    lastSubchatIndex: storageState.subchatIndex,
     isDeleted: false,
   };
   const clonedChatId = await ctx.db.insert("chats", clonedChat);
@@ -170,6 +171,7 @@ async function cloneShow(
     chatId: clonedChatId,
     storageId: storageState.storageId,
     lastMessageRank: storageState.lastMessageRank,
+    subchatIndex: storageState.subchatIndex,
     partIndex: storageState.partIndex,
   });
 
@@ -221,6 +223,7 @@ export const clone = mutation({
       description: parentChat.description,
       timestamp: new Date().toISOString(),
       snapshotId: getShare.snapshotId,
+      lastSubchatIndex: getShare.lastSubchatIndex,
       isDeleted: false,
     };
     const clonedChatId = await ctx.db.insert("chats", clonedChat);
