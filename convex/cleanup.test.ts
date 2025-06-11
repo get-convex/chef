@@ -16,11 +16,13 @@ describe("cleanup", () => {
 
   async function setupTestData() {
     // Create a chat
+    const subchatIndex = 0;
     const chatId = await t.run(async (ctx) => {
       return await ctx.db.insert("chats", {
         creatorId: await ctx.db.insert("sessions", {}),
         initialId: "test-chat",
         timestamp: new Date().toISOString(),
+        lastSubchatIndex: subchatIndex,
       });
     });
 
@@ -36,6 +38,7 @@ describe("cleanup", () => {
         storageId,
         lastMessageRank: 1,
         partIndex: 0,
+        subchatIndex,
       });
     });
 
