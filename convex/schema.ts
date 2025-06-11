@@ -76,7 +76,7 @@ export default defineSchema({
     metadata: v.optional(v.any()), // TODO migration to remove this column
     snapshotId: v.optional(v.id("_storage")),
     lastMessageRank: v.optional(v.number()),
-    lastFeatureId: v.optional(v.number()),
+    lastSubchatId: v.optional(v.number()),
     hasBeenDeployed: v.optional(v.boolean()),
     isDeleted: v.optional(v.boolean()),
     convexProject: v.optional(
@@ -115,7 +115,7 @@ export default defineSchema({
   chatMessagesStorageState: defineTable({
     chatId: v.id("chats"),
     storageId: v.union(v.id("_storage"), v.null()),
-    featureId: v.optional(v.number()),
+    subchatId: v.optional(v.number()),
     lastMessageRank: v.number(),
     description: v.optional(v.string()),
     partIndex: v.number(),
@@ -141,7 +141,7 @@ export default defineSchema({
     lastMessageRank: v.number(),
 
     // This should not be optional, but we need to migrate it.
-    lastFeatureId: v.optional(v.number()),
+    lastSubchatId: v.optional(v.number()),
     partIndex: v.optional(v.number()),
     // The description of the chat at the time the share was created.
     description: v.optional(v.string()),

@@ -48,7 +48,7 @@ async function assertStorageInfo(
     expectedSnapshotContent: string | null;
     expectedLastMessageRank: number;
     expectedPartIndex: number;
-    expectedFeatureId?: number;
+    expectedSubchatId?: number;
   },
 ): Promise<void> {
   expect(storageInfo).not.toBeNull();
@@ -76,7 +76,7 @@ async function assertStorageInfo(
   }
   expect(storageInfo.lastMessageRank).toBe(options.expectedLastMessageRank);
   expect(storageInfo.partIndex).toBe(options.expectedPartIndex);
-  expect(storageInfo.featureId).toBe(options.expectedFeatureId);
+  expect(storageInfo.subchatId).toBe(options.expectedSubchatId);
 }
 
 async function createSocialShare(t: TestConvex, chatId: string, sessionId: Id<"sessions">, code: string = "test123") {
@@ -139,7 +139,7 @@ describe("messages", () => {
       expectedSnapshotContent: null,
       expectedLastMessageRank: 0,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
   });
 
@@ -180,7 +180,7 @@ describe("messages", () => {
       expectedSnapshotContent: null,
       expectedLastMessageRank: 0,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
 
     const secondMessage: SerializedMessage = createMessage({
@@ -201,7 +201,7 @@ describe("messages", () => {
       expectedSnapshotContent: null,
       expectedLastMessageRank: 1,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
 
     // Should still have both message states in the table
@@ -233,7 +233,7 @@ describe("messages", () => {
       expectedSnapshotContent: initialSnapshotContent,
       expectedLastMessageRank: 0,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
 
     // Store second message without snapshot - should keep the old snapshot ID
@@ -255,7 +255,7 @@ describe("messages", () => {
       expectedSnapshotContent: initialSnapshotContent,
       expectedLastMessageRank: 1,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
 
     // Store only a new snapshot - should keep the old storage ID
@@ -275,7 +275,7 @@ describe("messages", () => {
       expectedSnapshotContent: updatedSnapshotContent,
       expectedLastMessageRank: 1,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
 
     // Should have all states in the table
@@ -307,7 +307,7 @@ describe("messages", () => {
       expectedSnapshotContent: initialSnapshotContent,
       expectedLastMessageRank: 0,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
     const secondMessage: SerializedMessage = createMessage({
       role: "user",
@@ -330,7 +330,7 @@ describe("messages", () => {
       expectedSnapshotContent: updatedSnapshotContent,
       expectedLastMessageRank: 1,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
 
     // Should see lower lastMessageRank after rewinding
@@ -344,7 +344,7 @@ describe("messages", () => {
       expectedSnapshotContent: initialSnapshotContent,
       expectedLastMessageRank: 0,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
 
     // Should still have higher lastMessageRank state in the table
@@ -388,7 +388,7 @@ describe("messages", () => {
       expectedSnapshotContent: updatedSnapshotContent,
       expectedLastMessageRank: 1,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
     const preRewindStorageId = preRewindInfo?.storageId;
     const preRewindSnapshotId = preRewindInfo?.snapshotId;
@@ -464,7 +464,7 @@ describe("messages", () => {
       expectedSnapshotContent: updatedSnapshotContent,
       expectedLastMessageRank: 1,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
 
     // Rewind to first message
@@ -496,14 +496,14 @@ describe("messages", () => {
         snapshotId: share?.snapshotId,
         lastMessageRank: share?.lastMessageRank,
         partIndex: share?.partIndex,
-        featureId: share?.lastFeatureId,
+        subchatId: share?.lastSubchatId,
       },
       {
         expectedMessages: [firstMessage, secondMessage],
         expectedSnapshotContent: updatedSnapshotContent,
         expectedLastMessageRank: 1,
         expectedPartIndex: 0,
-        expectedFeatureId: 0,
+        expectedSubchatId: 0,
       },
     );
 
@@ -516,7 +516,7 @@ describe("messages", () => {
       expectedSnapshotContent: newSnapshotContent,
       expectedLastMessageRank: 1,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
   });
 
@@ -544,7 +544,7 @@ describe("messages", () => {
       expectedSnapshotContent: initialSnapshotContent,
       expectedLastMessageRank: 0,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
 
     // Store second message with the same snapshot (using doNotUpdateMessages to keep the snapshot reference)
@@ -566,7 +566,7 @@ describe("messages", () => {
       expectedSnapshotContent: initialSnapshotContent,
       expectedLastMessageRank: 1,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
 
     // Rewind to first message
@@ -591,7 +591,7 @@ describe("messages", () => {
       expectedSnapshotContent: newSnapshotContent,
       expectedLastMessageRank: 1,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
     // Importantly, the snapshot is still there since it's referenced by the previous chatMessageStorageState
     await assertStorageInfo(t, finalStorageStates[1], {
@@ -599,7 +599,7 @@ describe("messages", () => {
       expectedSnapshotContent: initialSnapshotContent,
       expectedLastMessageRank: 0,
       expectedPartIndex: 0,
-      expectedFeatureId: 0,
+      expectedSubchatId: 0,
     });
   });
 

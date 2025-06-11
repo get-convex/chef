@@ -15,35 +15,35 @@ export const setDefaultDeletedFalse = migrations.define({
 
 export const runSetDefaultDeletedFalse = migrations.runner(internal.migrations.setDefaultDeletedFalse);
 
-export const addLastFeatureId = migrations.define({
+export const addLastSubchatId = migrations.define({
   table: "chats",
   migrateOne: async (ctx, doc) => {
-    if (doc.lastFeatureId === undefined) {
-      await ctx.db.patch(doc._id, { lastFeatureId: 0 });
+    if (doc.lastSubchatId === undefined) {
+      await ctx.db.patch(doc._id, { lastSubchatId: 0 });
     }
   },
 });
 
-export const runAddLastFeatureId = migrations.runner(internal.migrations.addLastFeatureId);
+export const runAddLastSubchatId = migrations.runner(internal.migrations.addLastSubchatId);
 
-export const addFeatureId = migrations.define({
+export const addSubchatId = migrations.define({
   table: "chatMessagesStorageState",
   migrateOne: async (ctx, doc) => {
-    if (doc.featureId === undefined) {
-      await ctx.db.patch(doc._id, { featureId: 0 });
+    if (doc.subchatId === undefined) {
+      await ctx.db.patch(doc._id, { subchatId: 0 });
     }
   },
 });
 
-export const runAddFeatureId = migrations.runner(internal.migrations.addFeatureId);
+export const runAddSubchatId = migrations.runner(internal.migrations.addSubchatId);
 
-export const addLastFeatureIdToShares = migrations.define({
+export const addLastSubchatIdToShares = migrations.define({
   table: "shares",
   migrateOne: async (ctx, doc) => {
-    if (doc.lastFeatureId === undefined) {
-      await ctx.db.patch(doc._id, { lastFeatureId: 0 });
+    if (doc.lastSubchatId === undefined) {
+      await ctx.db.patch(doc._id, { lastSubchatId: 0 });
     }
   },
 });
 
-export const runAddLastFeatureIdToShares = migrations.runner(internal.migrations.addLastFeatureIdToShares);
+export const runAddLastSubchatIdToShares = migrations.runner(internal.migrations.addLastSubchatIdToShares);
