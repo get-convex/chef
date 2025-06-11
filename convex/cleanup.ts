@@ -3,6 +3,7 @@ import { internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 const delayInMs = parseFloat(process.env.DEBUG_FILE_CLEANUP_DELAY_MS ?? "500");
+const debugFileCleanupBatchSize = parseInt(process.env.DEBUG_FILE_CLEANUP_BATCH_SIZE ?? "100");
 
 export const deleteDebugFilesForInactiveChats = internalMutation({
   args: {
@@ -13,7 +14,7 @@ export const deleteDebugFilesForInactiveChats = internalMutation({
   },
   handler: async (ctx, { forReal, cursor, shouldScheduleNext, daysInactive }) => {
     const { page, isDone, continueCursor } = await ctx.db.query("debugChatApiRequestLog").paginate({
-      numItems: 10,
+      numItems: debugFileCleanupBatchSize,
       cursor: cursor ?? null,
     });
     for (const doc of page) {
