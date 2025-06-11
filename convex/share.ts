@@ -162,7 +162,7 @@ async function cloneShow(
     description: parentChat.description,
     timestamp: new Date().toISOString(),
     snapshotId,
-    lastSubchatIndex: storageState.subchatIndex,
+    lastSubchatIndex: parentChat.lastSubchatIndex,
     isDeleted: false,
   };
   const clonedChatId = await ctx.db.insert("chats", clonedChat);
