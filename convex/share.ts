@@ -235,6 +235,7 @@ export const clone = mutation({
       chatId: clonedChatId,
       storageId: getShare.chatHistoryId,
       lastMessageRank: getShare.lastMessageRank,
+      featureId: getShare.lastFeatureId,
       partIndex: getShare.partIndex ?? -1,
     });
 
