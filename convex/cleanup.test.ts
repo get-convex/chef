@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { api, internal } from "./_generated/api";
-import { setupTest, testProjectInitParams, type TestConvex } from "./test.setup";
+import { internal } from "./_generated/api";
+import { setupTest, type TestConvex } from "./test.setup";
 
 async function createChatId(t: TestConvex) {
   return await t.run(async (ctx) => {
