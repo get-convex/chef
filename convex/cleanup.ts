@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 
 const delayInMs = parseFloat(process.env.DEBUG_FILE_CLEANUP_DELAY_MS ?? "500");
 const debugFileCleanupBatchSize = parseInt(process.env.DEBUG_FILE_CLEANUP_BATCH_SIZE ?? "100");
@@ -104,7 +105,10 @@ export const deleteOldChatStorageStates = internalMutation({
       });
     const lastMessageRankCounts = new Map<number, number>();
     for (const storageState of page) {
-      lastMessageRankCounts.set(storageState.lastMessageRank, (lastMessageRankCounts.get(storageState.lastMessageRank) ?? 0) + 1);
+      lastMessageRankCounts.set(
+        storageState.lastMessageRank,
+        (lastMessageRankCounts.get(storageState.lastMessageRank) ?? 0) + 1,
+      );
     }
     for (const [lastMessageRank, count] of lastMessageRankCounts) {
       if (count > 1) {
@@ -148,11 +152,15 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
     const latestSnapshotId = storageStates[storageStates.length - 1].snapshotId;
 
     // Delete all storage states except the last one
+    const deletedStorageIds = new Set<Id<"_storage">>();
     for (let i = 0; i < storageStates.length - 1; i++) {
       const storageState = storageStates[i];
       if (forReal) {
         if (storageState.storageId !== null) {
-          await ctx.storage.delete(storageState.storageId);
+          if (!deletedStorageIds.has(storageState.storageId)) {
+            await ctx.storage.delete(storageState.storageId);
+            deletedStorageIds.add(storageState.storageId);
+          }
           console.log(
             `Deleted storageId ${storageState.storageId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
           );
@@ -163,11 +171,16 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
           );
         }
         // Do not remove the latest snapshotId!
-        if (storageState.snapshotId && storageState.snapshotId !== latestSnapshotId) {
+        if (
+          storageState.snapshotId &&
+          storageState.snapshotId !== latestSnapshotId &&
+          !deletedStorageIds.has(storageState.snapshotId)
+        ) {
           await ctx.storage.delete(storageState.snapshotId);
           console.log(
             `Deleted snapshotId ${storageState.snapshotId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
           );
+          deletedStorageIds.add(storageState.snapshotId);
         }
         await ctx.db.delete(storageState._id);
         console.log(
