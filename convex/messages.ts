@@ -284,7 +284,7 @@ export const updateStorageState = internalMutation({
       if (previous.storageId !== null) {
         await ctx.storage.delete(previous.storageId);
       }
-      if (previous.snapshotId && previous.snapshotId !== snapshotId && snapshotId !== null) {
+      if (previous.snapshotId && previous.snapshotId !== snapshotId && snapshotId) {
         await ctx.storage.delete(previous.snapshotId);
       }
       await ctx.db.patch(previous._id, {
