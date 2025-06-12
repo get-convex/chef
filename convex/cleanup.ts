@@ -50,3 +50,18 @@ export const deleteDebugFilesForInactiveChats = internalMutation({
     }
   },
 });
+
+export const deleteOldChatStorageStates = internalMutation({
+  args: {
+    forReal: v.boolean(),
+    cursor: v.optional(v.string()),
+    shouldScheduleNext: v.boolean(),
+    numRewindableMessages: v.number(),
+  },
+  handler: async (ctx, { forReal, cursor, shouldScheduleNext, numRewindableMessages }) => {
+    const { page, isDone, continueCursor } = await ctx.db.query("chatMessagesStorageState").paginate({
+      numItems: debugFileCleanupBatchSize,
+      cursor: cursor ?? null,
+    });
+  },
+});
