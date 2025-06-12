@@ -420,7 +420,8 @@ export const rewindChat = mutation({
   args: {
     sessionId: v.id("sessions"),
     chatId: v.string(),
-    subchatIndex: v.number(),
+    // TODO: Make this required
+    subchatIndex: v.optional(v.number()),
     lastMessageRank: v.number(),
   },
   handler: async (ctx, args): Promise<void> => {
@@ -431,7 +432,7 @@ export const rewindChat = mutation({
     }
     const latestStorageState = await getLatestChatMessageStorageState(ctx, {
       _id: chat._id,
-      subchatIndex: args.subchatIndex,
+      subchatIndex: args.subchatIndex ?? 0,
       lastMessageRank,
     });
     if (latestStorageState === null) {
