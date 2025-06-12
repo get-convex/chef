@@ -57,4 +57,6 @@ export const addSubchatIndexToDebugChatApiRequestLog = migrations.define({
   },
 });
 
-export const runAddSubchatIndexToDebugChatApiRequestLog = migrations.runner(internal.migrations.addSubchatIndexToDebugChatApiRequestLog);
+export const runAddSubchatIndexToDebugChatApiRequestLog = migrations.runner(
+  internal.migrations.addSubchatIndexToDebugChatApiRequestLog,
+);
