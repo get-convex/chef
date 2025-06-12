@@ -725,8 +725,8 @@ export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMess
         <Button
           href={
             selectedTeamSlug
-              ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
-              : 'https://dashboard.convex.dev/team/settings/billing'
+              ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing?source=chef`
+              : 'https://dashboard.convex.dev/team/settings/billing?source=chef'
           }
           className="w-fit"
           icon={<ExternalLinkIcon />}
@@ -787,13 +787,13 @@ export function DisabledText({
         <Button
           href={
             selectedTeamSlug
-              ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`
-              : 'https://dashboard.convex.dev/team/settings/billing'
+              ? `https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing?source=chef`
+              : 'https://dashboard.convex.dev/team/settings/billing?source=chef'
           }
           className="w-fit"
           icon={<ExternalLinkIcon />}
         >
-          {isPaidPlan ? 'Increase spending limit' : 'Upgrade to Pro'}
+          {isPaidPlan ? 'Increase spending limit' : 'Upgrade your plan'}
         </Button>
         {isPaidPlan && <span>or wait until limits reset</span>}
       </div>

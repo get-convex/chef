@@ -327,14 +327,14 @@ function LittleUsage({
               {isPaidPlan ? null : (
                 <li className="mt-2 border-t pt-2">
                   <Button
-                    href={`https://dashboard.convex.dev/t/${teamSlug}/settings/billing`}
+                    href={`https://dashboard.convex.dev/t/${teamSlug}/settings/billing?source=chef`}
                     target="_blank"
                     variant="unstyled"
                     className="underline hover:text-content-link"
                   >
-                    Upgrade to a paid plan
+                    Upgrade your plan
                   </Button>{' '}
-                  for 500K included Chef tokens every month.
+                  to get more tokens.
                 </li>
               )}
               {!isPaidPlan && (
