@@ -646,6 +646,9 @@ describe("messages", () => {
       expectedPartIndex: 0,
       expectedSubchatIndex: 0,
     });
+    const firstStorageState = await getChatStorageStates(t, chatId, sessionId);
+    // Should only have 2 states: initial chat record and the new message state
+    expect(firstStorageState.length).toBe(2);
 
     // Store update with same lastMessageRank but different content
     const updatedMessage: SerializedMessage = createMessage({
@@ -662,9 +665,9 @@ describe("messages", () => {
     });
 
     // Verify storage states
-    const storageStates = await getChatStorageStates(t, chatId, sessionId);
+    const finalStorageStates = await getChatStorageStates(t, chatId, sessionId);
     // Should only have 2 states: initial chat record and the updated message state
-    expect(storageStates.length).toBe(2);
+    expect(finalStorageStates.length).toBe(2);
 
     // Verify the updated state
     const updatedStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {

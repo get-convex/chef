@@ -276,6 +276,9 @@ export const updateStorageState = internalMutation({
     }
 
     if (previous.lastMessageRank === lastMessageRank) {
+      if (previous.partIndex >= partIndex) {
+        throw new Error("Tried to update to a part that is already stored. Should have already returned.");
+      }
       // This is a part update, so we can patch instead of inserting a new document, cleaning up the old stored state.
       // We do not support rewinding to parts.
       if (previous.storageId !== null) {
