@@ -286,6 +286,26 @@ export const updateStorageState = internalMutation({
       throw new Error("Received null storageId for a chat with messages");
     }
 
+    if (previous.lastMessageRank === lastMessageRank) {
+      if (previous.partIndex >= partIndex) {
+        throw new Error("Tried to update to a part that is already stored. Should have already returned.");
+      }
+      // This is a part update, so we can patch instead of inserting a new document, cleaning up the old stored state.
+      // We do not support rewinding to parts.
+      if (previous.storageId !== null) {
+        await ctx.storage.delete(previous.storageId);
+      }
+      if (previous.snapshotId && previous.snapshotId !== snapshotId) {
+        await ctx.storage.delete(previous.snapshotId);
+      }
+      await ctx.db.patch(previous._id, {
+        storageId,
+        partIndex,
+        snapshotId: snapshotId ?? previous.snapshotId,
+      });
+      return;
+    }
+
     await ctx.db.insert("chatMessagesStorageState", {
       chatId: chat._id,
       storageId,

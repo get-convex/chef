@@ -632,6 +632,81 @@ describe("messages", () => {
       true,
     );
   });
+
+  test("patches existing document and cleans up storage when receiving update with same lastMessageRank", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Store first message with snapshot
+    const firstMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
+    });
+    const initialSnapshotContent = "initial snapshot";
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage],
+      snapshot: new Blob([initialSnapshotContent]),
+    });
+
+    // Get initial storage info
+    const initialStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+      sessionId,
+      chatId,
+    });
+    await assertStorageInfo(t, initialStorageInfo, {
+      expectedMessages: [firstMessage],
+      expectedSnapshotContent: initialSnapshotContent,
+      expectedLastMessageRank: 0,
+      expectedPartIndex: 0,
+      expectedSubchatIndex: 0,
+    });
+    const firstStorageState = await getChatStorageStates(t, chatId, sessionId);
+    // Should only have 2 states: initial chat record and the new message state
+    expect(firstStorageState.length).toBe(2);
+
+    // Store update with same lastMessageRank but different content
+    const updatedMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [
+        { text: "Hello, world!", type: "text" },
+        { text: "Updated message!", type: "text" },
+      ],
+    });
+    const updatedSnapshotContent = "updated snapshot";
+    await storeChat(t, chatId, sessionId, {
+      messages: [updatedMessage],
+      snapshot: new Blob([updatedSnapshotContent]),
+    });
+
+    // Verify storage states
+    const finalStorageStates = await getChatStorageStates(t, chatId, sessionId);
+    // Should only have 2 states: initial chat record and the updated message state
+    expect(finalStorageStates.length).toBe(2);
+
+    // Verify the updated state
+    const updatedStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+      sessionId,
+      chatId,
+    });
+    await assertStorageInfo(t, updatedStorageInfo, {
+      expectedMessages: [updatedMessage],
+      expectedSnapshotContent: updatedSnapshotContent,
+      expectedLastMessageRank: 0,
+      expectedPartIndex: 1,
+      expectedSubchatIndex: 0,
+    });
+
+    // Verify old storage files are deleted
+    await t.run(async (ctx) => {
+      if (initialStorageInfo?.storageId) {
+        const oldStorageBlob = await ctx.storage.get(initialStorageInfo.storageId);
+        expect(oldStorageBlob).toBeNull();
+      }
+      if (initialStorageInfo?.snapshotId) {
+        const oldSnapshotBlob = await ctx.storage.get(initialStorageInfo.snapshotId);
+        expect(oldSnapshotBlob).toBeNull();
+      }
+    });
+  });
 });
 
 describe("eraseMessageHistory", () => {
