@@ -68,6 +68,7 @@ export const deleteAllOldChatStorageStates = internalMutation({
       cursor: cursor ?? null,
     });
     for (const chat of page) {
+      console.log(`Scheduling cleanup for chat ${chat._id}`);
       await ctx.scheduler.runAfter(0, internal.cleanup.deleteOldChatStorageStates, {
         chatId: chat._id,
         forReal,
@@ -101,16 +102,19 @@ export const deleteOldChatStorageStates = internalMutation({
         numItems: storageStateCleanupBatchSize,
         cursor: cursor ?? null,
       });
-    const uniqueLastMessageRanks = new Set<number>();
+    const lastMessageRankCounts = new Map<number, number>();
     for (const storageState of page) {
-      uniqueLastMessageRanks.add(storageState.lastMessageRank);
+      lastMessageRankCounts.set(storageState.lastMessageRank, (lastMessageRankCounts.get(storageState.lastMessageRank) ?? 0) + 1);
     }
-    for (const lastMessageRank of uniqueLastMessageRanks) {
-      await ctx.scheduler.runAfter(0, internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
-        chatId,
-        lastMessageRank,
-        forReal,
-      });
+    for (const [lastMessageRank, count] of lastMessageRankCounts) {
+      if (count > 1) {
+        console.log(`Scheduling cleanup for chat ${chatId} and lastMessageRank ${lastMessageRank}`);
+        await ctx.scheduler.runAfter(0, internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
+          chatId,
+          lastMessageRank,
+          forReal,
+        });
+      }
     }
 
     if (shouldScheduleNext && !isDone) {
