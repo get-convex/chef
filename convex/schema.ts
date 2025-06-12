@@ -203,6 +203,7 @@ export default defineSchema({
    */
   debugChatApiRequestLog: defineTable({
     chatId: v.id("chats"),
+    subchatIndex: v.optional(v.number()),
     // Such a loose type doesn't feel so bad since this is debugging data, but if we try
     // to display older versions of this we need to make any fields added to CoreMessage in
     // later versions of the Vercel AI SDK optional on the read path.

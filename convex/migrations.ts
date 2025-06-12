@@ -47,3 +47,16 @@ export const addLastSubchatIndexToShares = migrations.define({
 });
 
 export const runAddLastSubchatIndexToShares = migrations.runner(internal.migrations.addLastSubchatIndexToShares);
+
+export const addSubchatIndexToDebugChatApiRequestLog = migrations.define({
+  table: "debugChatApiRequestLog",
+  migrateOne: async (ctx, doc) => {
+    if (doc.subchatIndex === undefined) {
+      await ctx.db.patch(doc._id, { subchatIndex: 0 });
+    }
+  },
+});
+
+export const runAddSubchatIndexToDebugChatApiRequestLog = migrations.runner(
+  internal.migrations.addSubchatIndexToDebugChatApiRequestLog,
+);

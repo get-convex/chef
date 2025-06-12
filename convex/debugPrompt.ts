@@ -39,6 +39,7 @@ export const storeDebugPrompt = internalMutation({
     const chat = await getChatByInitialId(ctx, chatInitialId);
     await ctx.db.insert("debugChatApiRequestLog", {
       chatId: chat._id,
+      subchatIndex: chat.lastSubchatIndex,
       responseCoreMessages,
       promptCoreMessagesStorageId,
       finishReason,

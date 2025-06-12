@@ -46,6 +46,7 @@ describe("cleanup", () => {
     const logId = await t.run(async (ctx) => {
       return await ctx.db.insert("debugChatApiRequestLog", {
         chatId,
+        subchatIndex: 0,
         responseCoreMessages: [],
         promptCoreMessagesStorageId: storageId,
         finishReason: "stop",
