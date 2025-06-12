@@ -1,6 +1,17 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { internal } from "./_generated/api";
-import { setupTest, type TestConvex } from "./test.setup";
+import { api, internal } from "./_generated/api";
+import { setupTest, testProjectInitParams, type TestConvex } from "./test.setup";
+
+async function createChatId(t: TestConvex) {
+  return await t.run(async (ctx) => {
+    return await ctx.db.insert("chats", {
+      creatorId: await ctx.db.insert("sessions", {}),
+      initialId: "test-chat",
+      timestamp: new Date().toISOString(),
+      lastSubchatIndex: 0,
+    });
+  });
+}
 
 describe("cleanup", () => {
   let t: TestConvex;
@@ -16,15 +27,7 @@ describe("cleanup", () => {
 
   async function setupTestData() {
     // Create a chat
-    const subchatIndex = 0;
-    const chatId = await t.run(async (ctx) => {
-      return await ctx.db.insert("chats", {
-        creatorId: await ctx.db.insert("sessions", {}),
-        initialId: "test-chat",
-        timestamp: new Date().toISOString(),
-        lastSubchatIndex: subchatIndex,
-      });
-    });
+    const chatId = await createChatId(t);
 
     // Create a storage file
     const storageId = await t.run(async (ctx) => {
@@ -38,7 +41,7 @@ describe("cleanup", () => {
         storageId,
         lastMessageRank: 1,
         partIndex: 0,
-        subchatIndex,
+        subchatIndex: 0,
       });
     });
 
@@ -153,14 +156,7 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
 
   test("deletes all storage states except the latest one", async () => {
     // Create a chat
-    const chatId = await t.run(async (ctx) => {
-      return await ctx.db.insert("chats", {
-        creatorId: await ctx.db.insert("sessions", {}),
-        initialId: "test-chat",
-        timestamp: new Date().toISOString(),
-        lastSubchatIndex: 0,
-      });
-    });
+    const chatId = await createChatId(t);
 
     // Create multiple storage states for the same lastMessageRank
     const storageStates = await t.run(async (ctx) => {
@@ -197,6 +193,11 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
     });
     expect(remainingStates.length).toBe(1);
     expect(remainingStates[0].partIndex).toBe(2); // Latest part index
+    // Verify the snapshot is still there
+    const snapshotFile = await t.run(async (ctx) => {
+      return await ctx.storage.getUrl(remainingStates[0].snapshotId!);
+    });
+    expect(snapshotFile).not.toBeNull();
 
     // Verify old storage files are deleted
     await t.run(async (ctx) => {
@@ -212,16 +213,57 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
     });
   });
 
+  test("does not delete snapshots that are used by the latest storage state", async () => {
+    // Create a chat
+    const chatId = await createChatId(t);
+
+    // Create a snapshot
+    const snapshotId = await t.run(async (ctx) => {
+      return await ctx.storage.store(new Blob(["content"]));
+    });
+
+    // Create multiple storage states for the same lastMessageRank
+    await t.run(async (ctx) => {
+      const states = [];
+      for (let i = 0; i < 3; i++) {
+        const storageId = await ctx.storage.store(new Blob([`content-${i}`]));
+        const state = await ctx.db.insert("chatMessagesStorageState", {
+          chatId,
+          storageId,
+          lastMessageRank: 1,
+          partIndex: i,
+          subchatIndex: 0,
+          snapshotId,
+        });
+        states.push({ state, storageId, snapshotId });
+      }
+      return states;
+    });
+
+    await t.mutation(internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
+      chatId,
+      lastMessageRank: 1,
+      forReal: true,
+    });
+
+    const remainingStates = await t.run(async (ctx) => {
+      return await ctx.db
+        .query("chatMessagesStorageState")
+        .withIndex("byChatId", (q) => q.eq("chatId", chatId))
+        .collect();
+    });
+    expect(remainingStates.length).toBe(1);
+    expect(remainingStates[0].partIndex).toBe(2); // Latest part index
+    // Verify the snapshot is still there
+    const snapshotFile = await t.run(async (ctx) => {
+      return await ctx.storage.getUrl(remainingStates[0].snapshotId!);
+    });
+    expect(snapshotFile).not.toBeNull();
+  });
+
   test("does nothing when there is only one storage state", async () => {
     // Create a chat
-    const chatId = await t.run(async (ctx) => {
-      return await ctx.db.insert("chats", {
-        creatorId: await ctx.db.insert("sessions", {}),
-        initialId: "test-chat",
-        timestamp: new Date().toISOString(),
-        lastSubchatIndex: 0,
-      });
-    });
+    const chatId = await createChatId(t);
 
     // Create a single storage state
     const storageId = await t.run(async (ctx) => {
@@ -269,14 +311,7 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
 
   test("dry run does not delete anything", async () => {
     // Create a chat
-    const chatId = await t.run(async (ctx) => {
-      return await ctx.db.insert("chats", {
-        creatorId: await ctx.db.insert("sessions", {}),
-        initialId: "test-chat",
-        timestamp: new Date().toISOString(),
-        lastSubchatIndex: 0,
-      });
-    });
+    const chatId = await createChatId(t);
 
     // Create multiple storage states
     const storageStates = await t.run(async (ctx) => {
