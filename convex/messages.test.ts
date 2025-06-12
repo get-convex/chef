@@ -709,6 +709,64 @@ describe("messages", () => {
       }
     });
   });
+
+  test("preserves previous snapshotId when new snapshotId is null", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Store first message with snapshot
+    const firstMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
+    });
+    const initialSnapshotContent = "initial snapshot";
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage],
+      snapshot: new Blob([initialSnapshotContent]),
+    });
+
+    // Get initial storage info
+    const initialStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+      sessionId,
+      chatId,
+    });
+    await assertStorageInfo(t, initialStorageInfo, {
+      expectedMessages: [firstMessage],
+      expectedSnapshotContent: initialSnapshotContent,
+      expectedLastMessageRank: 0,
+      expectedPartIndex: 0,
+      expectedSubchatIndex: 0,
+    });
+
+    // Store update with same lastMessageRank but no snapshotId
+    const updatedMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [
+        { text: "Hello, world!", type: "text" },
+        { text: "Updated message!", type: "text" },
+      ],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [updatedMessage],
+    });
+
+    // Verify storage states
+    const finalStorageStates = await getChatStorageStates(t, chatId, sessionId);
+    // Should only have 2 states: initial chat record and the updated message state
+    expect(finalStorageStates.length).toBe(2);
+
+    // Verify the updated state still has the original snapshotId
+    const updatedStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+      sessionId,
+      chatId,
+    });
+    await assertStorageInfo(t, updatedStorageInfo, {
+      expectedMessages: [updatedMessage],
+      expectedSnapshotContent: initialSnapshotContent, // Should still have the original snapshot content
+      expectedLastMessageRank: 0,
+      expectedPartIndex: 1,
+      expectedSubchatIndex: 0,
+    });
+  });
 });
 
 describe("eraseMessageHistory", () => {

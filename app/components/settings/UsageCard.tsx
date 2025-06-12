@@ -78,10 +78,10 @@ export function UsageCard() {
                 <h3>You&apos;ve used all the tokens included with your free plan.</h3>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
-                    href={`https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing`}
+                    href={`https://dashboard.convex.dev/t/${selectedTeamSlug}/settings/billing?source=chef`}
                     icon={<ExternalLinkIcon />}
                   >
-                    Upgrade to a paid plan
+                    Upgrade your plan
                   </Button>
                   <span>or add your own API key below to send more messages.</span>
                 </div>
