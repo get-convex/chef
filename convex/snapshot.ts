@@ -38,6 +38,7 @@ export const getSnapshotUrl = query({
     }
 
     // Maintain backwards compatibility with older chats that don't have snapshots in the chatMessagesStorageState table
+    // Some chats might be in the chatMessagesStorageState table but still not have a snapshotId because of a bug in sharing.
 
     const snapshotId = chat?.snapshotId;
     if (!snapshotId) {

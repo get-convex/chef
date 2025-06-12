@@ -103,6 +103,67 @@ describe("share", () => {
     expect(messages[0]).toMatchObject(firstMessage);
   });
 
+  test("cloning a chat preserves the snapshotId in both the chat and storage state", async () => {
+    const { sessionId, chatId } = await initializeChat(t);
+
+    // Create a share
+    const { code } = await t.mutation(api.share.create, { sessionId, id: chatId });
+    expect(code).toBeDefined();
+
+    // Get the original share to get its snapshotId
+    const originalShare = await t.run(async (ctx) => {
+      return ctx.db
+        .query("shares")
+        .withIndex("byCode", (q) => q.eq("code", code))
+        .first();
+    });
+    expect(originalShare).not.toBeNull();
+    if (!originalShare || !originalShare.snapshotId) {
+      throw new Error("Share not found or missing snapshotId");
+    }
+
+    // Clone the chat
+    const { id: clonedChatId } = await t.mutation(api.share.clone, {
+      sessionId,
+      shareCode: code,
+      projectInitParams: testProjectInitParams,
+    });
+    expect(clonedChatId).toBeDefined();
+
+    // Get the cloned chat from the database
+    const clonedChat = await t.run(async (ctx) => {
+      return ctx.db
+        .query("chats")
+        .withIndex("byInitialId", (q) => q.eq("initialId", clonedChatId))
+        .first();
+    });
+    expect(clonedChat).not.toBeNull();
+    if (!clonedChat) {
+      throw new Error("Cloned chat not found");
+    }
+
+    // Verify the snapshotId was preserved in the chat
+    expect(clonedChat.snapshotId).toBe(originalShare.snapshotId);
+
+    // Get the storage state for the cloned chat
+    const clonedStorageState = await t.run(async (ctx) => {
+      return ctx.db
+        .query("chatMessagesStorageState")
+        .filter((q) => q.eq(q.field("chatId"), clonedChat._id))
+        .first();
+    });
+    expect(clonedStorageState).not.toBeNull();
+    if (!clonedStorageState) {
+      throw new Error("Cloned storage state not found");
+    }
+
+    // Verify the snapshotId was preserved in the storage state
+    expect(clonedStorageState.snapshotId).toBe(originalShare.snapshotId);
+
+    // Verify the actual content of the snapshot is accessible
+    await verifyStoredContent(t, clonedChat.snapshotId, "Hello, world!");
+  });
+
   // TODO: Test that cloning messages does not leak a more recent snapshot or later messages
 
   test("sharing a chat uses the snapshot in the chatMessagesStorageState table", async () => {
