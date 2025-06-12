@@ -121,7 +121,7 @@ export default defineSchema({
     partIndex: v.number(),
     snapshotId: v.optional(v.id("_storage")),
   })
-    .index("byChatId", ["chatId", "lastMessageRank", "partIndex"])
+    .index("byChatId", ["chatId", "subchatIndex", "lastMessageRank", "partIndex"])
     .index("byStorageId", ["storageId"])
     .index("bySnapshotId", ["snapshotId"]),
 
@@ -147,7 +147,7 @@ export default defineSchema({
     .index("byCode", ["code"])
     .index("bySnapshotId", ["snapshotId"])
     .index("byChatHistoryId", ["chatHistoryId"])
-    .index("byChatId", ["chatId"]),
+    .index("byChatIdAndLastSubchatIndex", ["chatId", "lastSubchatIndex"]),
 
   // This type of share is for sharing a "project."
   // You only get one for a given project for now.

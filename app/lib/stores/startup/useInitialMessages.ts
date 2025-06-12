@@ -33,14 +33,15 @@ export function useInitialMessages(chatId: string):
           id: chatId,
           sessionId,
         });
-        const earliestRewindableMessageRank = await convex.query(api.messages.earliestRewindableMessageRank, {
-          chatId,
-          sessionId,
-        });
         if (chatInfo === null) {
           setInitialMessages(null);
           return;
         }
+        const earliestRewindableMessageRank = await convex.query(api.messages.earliestRewindableMessageRank, {
+          chatId,
+          sessionId,
+          subchatIndex: chatInfo.subchatIndex,
+        });
         setKnownInitialId(chatInfo.initialId);
         if (chatInfo.urlId) {
           setKnownUrlId(chatInfo.urlId);
@@ -50,6 +51,7 @@ export function useInitialMessages(chatId: string):
           body: JSON.stringify({
             chatId,
             sessionId,
+            subchatIndex: chatInfo.subchatIndex,
           }),
         });
         if (!initialMessagesResponse.ok) {

@@ -83,6 +83,7 @@ httpWithCors.route({
     const body = await request.json();
     const sessionId = body.sessionId;
     const chatId = body.chatId;
+    const subchatIndex = body.subchatIndex ?? 0;
     if (!sessionId) {
       throw new ConvexError("sessionId is required");
     }
@@ -92,6 +93,7 @@ httpWithCors.route({
     const storageInfo = await ctx.runQuery(internal.messages.getInitialMessagesStorageInfo, {
       sessionId,
       chatId,
+      subchatIndex,
     });
     if (!storageInfo) {
       return new Response(`Chat not found: ${chatId}`, {
@@ -185,6 +187,8 @@ http.route({
     const storageId = await ctx.runQuery(internal.messages.getMessagesByChatInitialIdBypassingAccessControl, {
       id: chatUuid,
       ensureAdmin: authHeader !== null,
+      // TODO: Add subchatIndex that is passed in the body
+      subchatIndex: 0,
     });
     if (!storageId) {
       return new Response(null, {

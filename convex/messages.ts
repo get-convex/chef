@@ -114,6 +114,7 @@ export async function getChat(ctx: QueryCtx, id: string, sessionId: Id<"sessions
     description: chat.description,
     timestamp: chat.timestamp,
     snapshotId: chat.snapshotId,
+    subchatIndex: chat.lastSubchatIndex,
   };
 }
 
@@ -130,6 +131,7 @@ export const get = query({
       description: v.optional(v.string()),
       timestamp: v.string(),
       snapshotId: v.optional(v.id("_storage")),
+      subchatIndex: v.optional(v.number()),
     }),
   ),
   handler: async (ctx, args) => {
@@ -140,7 +142,7 @@ export const get = query({
 
 export async function getLatestChatMessageStorageState(
   ctx: QueryCtx,
-  chat: { _id: Id<"chats">; lastMessageRank?: number },
+  chat: { _id: Id<"chats">; subchatIndex: number; lastMessageRank?: number },
 ) {
   const lastMessageRank = chat.lastMessageRank;
   if (lastMessageRank === undefined) {
@@ -152,7 +154,9 @@ export async function getLatestChatMessageStorageState(
   }
   return await ctx.db
     .query("chatMessagesStorageState")
-    .withIndex("byChatId", (q) => q.eq("chatId", chat._id).lte("lastMessageRank", lastMessageRank))
+    .withIndex("byChatId", (q) =>
+      q.eq("chatId", chat._id).eq("subchatIndex", chat.subchatIndex).lte("lastMessageRank", lastMessageRank),
+    )
     .order("desc")
     .first();
 }
@@ -171,6 +175,7 @@ export const getInitialMessagesStorageInfo = internalQuery({
   args: {
     sessionId: v.id("sessions"),
     chatId: v.string(),
+    subchatIndex: v.number(),
   },
   returns: v.union(v.null(), storageInfo),
   handler: async (ctx, args): Promise<StorageInfo | null> => {
@@ -179,7 +184,8 @@ export const getInitialMessagesStorageInfo = internalQuery({
     if (!chat) {
       return null;
     }
-    const doc = await getLatestChatMessageStorageState(ctx, chat);
+    const chatWithSubchatIndex = { ...chat, subchatIndex: args.subchatIndex };
+    const doc = await getLatestChatMessageStorageState(ctx, chatWithSubchatIndex);
     if (!doc) {
       return null;
     }
@@ -198,6 +204,7 @@ export const getMessagesByChatInitialIdBypassingAccessControl = internalQuery({
   args: {
     id: v.string(),
     ensureAdmin: v.optional(v.boolean()),
+    subchatIndex: v.number(),
   },
   returns: v.union(v.id("_storage"), v.null()),
   handler: async (ctx, args) => {
@@ -211,7 +218,8 @@ export const getMessagesByChatInitialIdBypassingAccessControl = internalQuery({
     if (!chat) {
       throw new ConvexError({ code: "NotFound", message: "Chat not found" });
     }
-    const storageInfo = await getLatestChatMessageStorageState(ctx, chat);
+    const chatWithSubchatIndex = { ...chat, subchatIndex: args.subchatIndex };
+    const storageInfo = await getLatestChatMessageStorageState(ctx, chatWithSubchatIndex);
     if (storageInfo === null) {
       throw new ConvexError({ code: "NotFound", message: "Chat messages storage state not found" });
     }
@@ -236,8 +244,11 @@ export const updateStorageState = internalMutation({
     if (!chat) {
       throw new ConvexError({ code: "NotFound", message: "Chat not found" });
     }
-    await deletePreviousStorageStates(ctx, { chat });
-    const previous = await getLatestChatMessageStorageState(ctx, chat);
+    await deletePreviousStorageStates(ctx, { chat, subchatIndex: args.subchatIndex });
+    const previous = await getLatestChatMessageStorageState(ctx, {
+      _id: chat._id,
+      subchatIndex: args.subchatIndex,
+    });
     if (!previous) {
       throw new Error("Chat messages storage state not found");
     }
@@ -291,6 +302,7 @@ async function deletePreviousStorageStates(
   ctx: MutationCtx,
   args: {
     chat: Doc<"chats">;
+    subchatIndex: number;
   },
 ) {
   const { chat } = args;
@@ -299,7 +311,9 @@ async function deletePreviousStorageStates(
     // Remove the storage state records for future messages on a different branch
     const storageStatesToDelete = await ctx.db
       .query("chatMessagesStorageState")
-      .withIndex("byChatId", (q) => q.eq("chatId", chat._id).gt("lastMessageRank", chatLastMessageRank))
+      .withIndex("byChatId", (q) =>
+        q.eq("chatId", chat._id).eq("subchatIndex", args.subchatIndex).gt("lastMessageRank", chatLastMessageRank),
+      )
       .collect();
     for (const storageState of storageStatesToDelete) {
       await ctx.db.delete(storageState._id);
@@ -346,6 +360,7 @@ export const earliestRewindableMessageRank = query({
   args: {
     sessionId: v.id("sessions"),
     chatId: v.string(),
+    subchatIndex: v.number(),
   },
   // Return null if there is no snapshot stored in chatMessagesStorageState (possible for older chats)
   returns: v.union(v.null(), v.number()),
@@ -355,14 +370,20 @@ export const earliestRewindableMessageRank = query({
     if (!chat) {
       throw new ConvexError({ code: "NotFound", message: "Chat not found" });
     }
-    const latestState = await getLatestChatMessageStorageState(ctx, chat);
+    const chatWithSubchatIndex = { ...chat, subchatIndex: args.subchatIndex };
+    const latestState = await getLatestChatMessageStorageState(ctx, chatWithSubchatIndex);
     if (!latestState) {
       // This is possible for older chats that were created before we started storing storage states
       return null;
     }
     const docs = await ctx.db
       .query("chatMessagesStorageState")
-      .withIndex("byChatId", (q) => q.eq("chatId", chat._id).lte("lastMessageRank", latestState.lastMessageRank))
+      .withIndex("byChatId", (q) =>
+        q
+          .eq("chatId", chat._id)
+          .eq("subchatIndex", args.subchatIndex)
+          .lte("lastMessageRank", latestState.lastMessageRank),
+      )
       .order("asc")
       .collect();
 
@@ -379,6 +400,7 @@ export const rewindChat = mutation({
   args: {
     sessionId: v.id("sessions"),
     chatId: v.string(),
+    subchatIndex: v.number(),
     lastMessageRank: v.number(),
   },
   handler: async (ctx, args): Promise<void> => {
@@ -387,7 +409,11 @@ export const rewindChat = mutation({
     if (!chat) {
       throw new ConvexError({ code: "NotFound", message: "Chat not found" });
     }
-    const latestStorageState = await getLatestChatMessageStorageState(ctx, { _id: chat._id, lastMessageRank });
+    const latestStorageState = await getLatestChatMessageStorageState(ctx, {
+      _id: chat._id,
+      subchatIndex: args.subchatIndex,
+      lastMessageRank,
+    });
     if (latestStorageState === null) {
       throw new Error(`Storage state not found for lastMessageRank ${lastMessageRank} in chat ${chatId}`);
     }
@@ -682,6 +708,7 @@ function getIdentifier(chat: Doc<"chats">): string {
   return chat.urlId ?? chat.initialId!;
 }
 
+// TODO: Figure out how we want to handle subchats here
 export const eraseMessageHistory = internalMutation({
   args: {
     shareCode: v.string(),
@@ -697,6 +724,10 @@ export const eraseMessageHistory = internalMutation({
       throw new ConvexError({ code: "NotFound", message: "Share not found" });
     }
     console.log("ChatId for share is", share.chatId);
+    const chat = await ctx.db.get(share.chatId);
+    if (chat === null) {
+      throw new ConvexError({ code: "NotFound", message: "Chat not found" });
+    }
     // Get the most recent filesystem snapshot
     const mostRecentStorageState = await ctx.db
       .query("chatMessagesStorageState")
@@ -734,7 +765,10 @@ export const eraseMessageHistory = internalMutation({
     const latestEarlyStorageState = await ctx.db
       .query("chatMessagesStorageState")
       .withIndex("byChatId", (q) =>
-        q.eq("chatId", share.chatId).eq("lastMessageRank", earliestMessageWithSnapshot.lastMessageRank),
+        q
+          .eq("chatId", share.chatId)
+          .eq("subchatIndex", chat.lastSubchatIndex)
+          .eq("lastMessageRank", earliestMessageWithSnapshot.lastMessageRank),
       )
       .order("desc")
       .first();

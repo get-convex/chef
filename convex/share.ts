@@ -18,7 +18,10 @@ export const create = mutation({
 
     const code = await generateUniqueCode(ctx.db);
 
-    const storageState = await getLatestChatMessageStorageState(ctx, chat);
+    const storageState = await getLatestChatMessageStorageState(ctx, {
+      _id: chat._id,
+      subchatIndex: chat.lastSubchatIndex,
+    });
 
     if (!storageState) {
       throw new ConvexError("Your project has never been saved.");
@@ -41,7 +44,7 @@ export const create = mutation({
 
       code,
       lastMessageRank: storageState.lastMessageRank,
-      lastSubchatIndex: storageState.subchatIndex,
+      lastSubchatIndex: chat.lastSubchatIndex,
       partIndex: storageState.partIndex,
       description: chat.description,
     });
@@ -144,7 +147,10 @@ async function cloneShow(
 
   const chatId = crypto.randomUUID();
 
-  const storageState = await getLatestChatMessageStorageState(ctx, parentChat);
+  const storageState = await getLatestChatMessageStorageState(ctx, {
+    _id: parentChat._id,
+    subchatIndex: parentChat.lastSubchatIndex,
+  });
   if (!storageState) {
     throw new ConvexError("Chat history not found");
   }

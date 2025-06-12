@@ -137,6 +137,7 @@ describe("share", () => {
     const storageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
       sessionId,
       chatId,
+      subchatIndex: 0,
     });
     expect(storageInfo).not.toBeNull();
     expect(storageInfo?.snapshotId).not.toBeNull();
@@ -200,6 +201,7 @@ describe("share", () => {
     const storageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
       sessionId,
       chatId,
+      subchatIndex: 0,
     });
     expect(storageInfo).not.toBeNull();
     expect(storageInfo?.storageId).not.toBeNull();

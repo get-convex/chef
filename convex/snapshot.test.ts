@@ -39,6 +39,7 @@ test("referenced snapshots are not deleted", async () => {
   const storageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
     sessionId,
     chatId,
+    subchatIndex: 0,
   });
   if (!storageInfo) {
     throw new Error("Storage info not found");
