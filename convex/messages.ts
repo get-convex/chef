@@ -324,7 +324,7 @@ export const updateStorageState = internalMutation({
   },
 });
 
-async function storageIdUnusedByShares(ctx: MutationCtx, chatStorageId: Id<"_storage">) {
+export async function storageIdUnusedByShares(ctx: MutationCtx, chatStorageId: Id<"_storage">) {
   const shareRef = await ctx.db
     .query("shares")
     .withIndex("byChatHistoryId", (q) => q.eq("chatHistoryId", chatStorageId))
@@ -349,7 +349,7 @@ async function deleteChatStorageIdIfUnused(ctx: MutationCtx, chatStorageId: Id<"
   }
 }
 
-async function snapshotIdUnusedByChatsAndShares(ctx: MutationCtx, snapshotId: Id<"_storage">) {
+export async function snapshotIdUnusedByChatsAndShares(ctx: MutationCtx, snapshotId: Id<"_storage">) {
   const chatRef = await ctx.db
     .query("chats")
     .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))

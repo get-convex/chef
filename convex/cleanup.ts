@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { snapshotIdUnusedByChatsAndShares, storageIdUnusedByShares } from "./messages";
 
 const delayInMs = parseFloat(process.env.DEBUG_FILE_CLEANUP_DELAY_MS ?? "500");
 const debugFileCleanupBatchSize = parseInt(process.env.DEBUG_FILE_CLEANUP_BATCH_SIZE ?? "100");
@@ -160,7 +161,8 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
       const storageState = storageStates[i];
       if (forReal) {
         if (storageState.storageId !== null) {
-          if (!deletedStorageIds.has(storageState.storageId)) {
+          const unusedByShares = await storageIdUnusedByShares(ctx, storageState.storageId);
+          if (unusedByShares && !deletedStorageIds.has(storageState.storageId)) {
             await ctx.storage.delete(storageState.storageId);
             deletedStorageIds.add(storageState.storageId);
           }
@@ -175,8 +177,9 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
         }
         // Do not remove the latest snapshotId!
         if (
-          storageState.snapshotId &&
+          storageState.snapshotId !== undefined &&
           storageState.snapshotId !== latestSnapshotId &&
+          (await snapshotIdUnusedByChatsAndShares(ctx, storageState.snapshotId)) &&
           !deletedStorageIds.has(storageState.snapshotId)
         ) {
           await ctx.storage.delete(storageState.snapshotId);
