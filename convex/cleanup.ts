@@ -162,14 +162,18 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
     const deletedStorageIds = new Set<Id<"_storage">>();
     for (let i = 0; i < storageStates.length - 1; i++) {
       const storageState = storageStates[i];
-      if (forReal) {
-        if (storageState.storageId !== null) {
-          const unusedByShares = await storageIdUnusedByShares(ctx, storageState.storageId);
-          if (unusedByShares && !deletedStorageIds.has(storageState.storageId)) {
+      if (storageState.storageId !== null) {
+        const unusedByShares = await storageIdUnusedByShares(ctx, storageState.storageId);
+        if (unusedByShares && !deletedStorageIds.has(storageState.storageId)) {
+          if (forReal) {
             await ctx.storage.delete(storageState.storageId);
             deletedStorageIds.add(storageState.storageId);
             console.log(
               `Deleted storageId ${storageState.storageId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
+            );
+          } else {
+            console.log(
+              `Would delete storageId ${storageState.storageId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
             );
           }
         }
@@ -185,20 +189,28 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
           (await snapshotIdUnusedByChatsAndShares(ctx, storageState.snapshotId)) &&
           !deletedStorageIds.has(storageState.snapshotId)
         ) {
-          await ctx.storage.delete(storageState.snapshotId);
-          console.log(
-            `Deleted snapshotId ${storageState.snapshotId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
-          );
-          deletedStorageIds.add(storageState.snapshotId);
+          if (forReal) {
+            await ctx.storage.delete(storageState.snapshotId);
+            console.log(
+              `Deleted snapshotId ${storageState.snapshotId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
+            );
+            deletedStorageIds.add(storageState.snapshotId);
+          } else {
+            console.log(
+              `Would delete snapshotId ${storageState.snapshotId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
+            );
+          }
         }
-        await ctx.db.delete(storageState._id);
-        console.log(
-          `Deleted storageState ${storageState._id} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
-        );
-      } else {
-        console.log(
-          `Would delete storageState ${storageState._id} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
-        );
+        if (forReal) {
+          await ctx.db.delete(storageState._id);
+          console.log(
+            `Deleted storageState ${storageState._id} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
+          );
+        } else {
+          console.log(
+            `Would delete storageState ${storageState._id} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
+          );
+        }
       }
     }
   },
