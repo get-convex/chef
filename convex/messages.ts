@@ -282,10 +282,16 @@ export const updateStorageState = internalMutation({
       // This is a part update, so we can patch instead of inserting a new document, cleaning up the old stored state.
       // We do not support rewinding to parts.
       if (previous.storageId !== null) {
-        await deleteChatStorageIdIfUnused(ctx, previous.storageId);
+        const unusedByShares = await storageIdUnusedByShares(ctx, previous.storageId);
+        if (unusedByShares) {
+          await ctx.storage.delete(previous.storageId);
+        }
       }
       if (previous.snapshotId && previous.snapshotId !== snapshotId && snapshotId) {
-        await deleteSnapshotIdIfUnused(ctx, previous.snapshotId);
+        const unusedByChatsAndShares = await snapshotIdUnusedByChatsAndShares(ctx, previous.snapshotId);
+        if (unusedByChatsAndShares) {
+          await ctx.storage.delete(previous.snapshotId);
+        }
       }
       await ctx.db.patch(previous._id, {
         storageId,
@@ -307,6 +313,14 @@ export const updateStorageState = internalMutation({
   },
 });
 
+async function storageIdUnusedByShares(ctx: MutationCtx, chatStorageId: Id<"_storage">) {
+  const shareRef = await ctx.db
+    .query("shares")
+    .withIndex("byChatHistoryId", (q) => q.eq("chatHistoryId", chatStorageId))
+    .first();
+  return shareRef === null;
+}
+
 async function deleteChatStorageIdIfUnused(ctx: MutationCtx, chatStorageId: Id<"_storage">) {
   const chatHistoryRef = await ctx.db
     .query("chatMessagesStorageState")
@@ -318,28 +332,31 @@ async function deleteChatStorageIdIfUnused(ctx: MutationCtx, chatStorageId: Id<"
     //  and partIndex. Newer snapshots should be patched.
     console.warn("Unexpectedly found chatHistoryRef for storageId", chatStorageId);
   }
-  const shareRef = await ctx.db
-    .query("shares")
-    .withIndex("byChatHistoryId", (q) => q.eq("chatHistoryId", chatStorageId))
-    .first();
-  if (shareRef === null && chatHistoryRef === null) {
+  const unusedByShares = await storageIdUnusedByShares(ctx, chatStorageId);
+  if (unusedByShares && chatHistoryRef === null) {
     await ctx.storage.delete(chatStorageId);
   }
 }
-async function deleteSnapshotIdIfUnused(ctx: MutationCtx, snapshotId: Id<"_storage">) {
+
+async function snapshotIdUnusedByChatsAndShares(ctx: MutationCtx, snapshotId: Id<"_storage">) {
   const chatRef = await ctx.db
     .query("chats")
     .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
     .first();
-  const chatHistoryRef = await ctx.db
-    .query("chatMessagesStorageState")
-    .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
-    .first();
   const shareRef = await ctx.db
     .query("shares")
     .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
     .first();
-  if (chatRef === null && shareRef === null && chatHistoryRef === null) {
+  return chatRef === null && shareRef === null;
+}
+
+async function deleteSnapshotIdIfUnused(ctx: MutationCtx, snapshotId: Id<"_storage">) {
+  const chatHistoryRef = await ctx.db
+    .query("chatMessagesStorageState")
+    .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
+    .first();
+  const unusedByChatsAndShares = await snapshotIdUnusedByChatsAndShares(ctx, snapshotId);
+  if (unusedByChatsAndShares && chatHistoryRef === null) {
     await ctx.storage.delete(snapshotId);
   }
 }
