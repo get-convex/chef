@@ -243,6 +243,7 @@ export const clone = mutation({
     await ctx.db.insert("chatMessagesStorageState", {
       chatId: clonedChatId,
       storageId: getShare.chatHistoryId,
+      snapshotId: getShare.snapshotId,
       lastMessageRank: getShare.lastMessageRank,
       subchatIndex: getShare.lastSubchatIndex,
       partIndex: getShare.partIndex ?? -1,

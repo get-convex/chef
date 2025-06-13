@@ -769,6 +769,89 @@ describe("messages", () => {
       expectedSubchatIndex: 0,
     });
   });
+
+  test("preserves storageId referenced by share when updating storage state with same lastMessageRank", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Store first message
+    const firstMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage],
+      snapshot: new Blob(["initial snapshot content"]),
+    });
+
+    // Get initial storage info
+    const initialStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+      sessionId,
+      chatId,
+    });
+    await assertStorageInfo(t, initialStorageInfo, {
+      expectedMessages: [firstMessage],
+      expectedSnapshotContent: "initial snapshot content",
+      expectedLastMessageRank: 0,
+      expectedPartIndex: 0,
+      expectedSubchatIndex: 0,
+    });
+
+    // Create a share that references the storage ID
+    const { code: shareCode } = await t.mutation(api.share.create, { sessionId, id: chatId });
+
+    // Store update with same lastMessageRank but different content
+    const updatedMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [
+        { text: "Hello, world!", type: "text" },
+        { text: "Updated message!", type: "text" },
+      ],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [updatedMessage],
+      snapshot: new Blob(["updated snapshot content"]),
+    });
+
+    // Verify storage states
+    const finalStorageStates = await getChatStorageStates(t, chatId, sessionId);
+    // Should only have 2 states: initial chat record and the updated message state
+    expect(finalStorageStates.length).toBe(2);
+
+    // Verify the updated state has different storage ID
+    const updatedStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+      sessionId,
+      chatId,
+    });
+    expect(updatedStorageInfo?.storageId).not.toBe(initialStorageInfo?.storageId);
+    expect(updatedStorageInfo?.snapshotId).not.toBe(initialStorageInfo?.snapshotId);
+
+    // Verify the share still references the same storage ID
+    const share = await t.run(async (ctx) => {
+      return await ctx.db
+        .query("shares")
+        .withIndex("byCode", (q) => q.eq("code", shareCode))
+        .unique();
+    });
+    console.log(initialStorageInfo);
+    expect(share?.chatHistoryId).toBe(initialStorageInfo?.storageId);
+
+    // Verify the storage blob still exists
+    await t.run(async (ctx) => {
+      if (initialStorageInfo?.storageId) {
+        const storageBlob = await ctx.storage.get(initialStorageInfo.storageId);
+        expect(storageBlob).not.toBeNull();
+      } else {
+        throw new Error("No storage ID found");
+      }
+
+      if (initialStorageInfo?.snapshotId) {
+        const snapshotBlob = await ctx.storage.get(initialStorageInfo.snapshotId);
+        expect(snapshotBlob).not.toBeNull();
+      } else {
+        throw new Error("No snapshot ID found");
+      }
+    });
+  });
 });
 
 describe("eraseMessageHistory", () => {
