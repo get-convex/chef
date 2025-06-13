@@ -327,6 +327,10 @@ async function deleteChatStorageIdIfUnused(ctx: MutationCtx, chatStorageId: Id<"
   }
 }
 async function deleteSnapshotIdIfUnused(ctx: MutationCtx, snapshotId: Id<"_storage">) {
+  const chatRef = await ctx.db
+    .query("chats")
+    .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
+    .first();
   const chatHistoryRef = await ctx.db
     .query("chatMessagesStorageState")
     .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
@@ -335,7 +339,7 @@ async function deleteSnapshotIdIfUnused(ctx: MutationCtx, snapshotId: Id<"_stora
     .query("shares")
     .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
     .first();
-  if (shareRef === null && chatHistoryRef === null) {
+  if (chatRef === null && shareRef === null && chatHistoryRef === null) {
     await ctx.storage.delete(snapshotId);
   }
 }
