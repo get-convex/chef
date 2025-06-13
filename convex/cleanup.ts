@@ -149,7 +149,7 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
   handler: async (ctx, { chatId, lastMessageRank, forReal }) => {
     const storageStates = await ctx.db
       .query("chatMessagesStorageState")
-      .withIndex("byChatId", (q) => q.eq("chatId", chatId).eq("lastMessageRank", lastMessageRank))
+      .withIndex("byChatId", (q) => q.eq("chatId", chatId).eq("subchatIndex", 0).eq("lastMessageRank", lastMessageRank))
       .order("asc")
       .collect();
     // Nothing to delete if there is only one record for the chatId and lastMessageRank
