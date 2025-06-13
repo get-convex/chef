@@ -282,10 +282,10 @@ export const updateStorageState = internalMutation({
       // This is a part update, so we can patch instead of inserting a new document, cleaning up the old stored state.
       // We do not support rewinding to parts.
       if (previous.storageId !== null) {
-        await ctx.storage.delete(previous.storageId);
+        await deleteChatStorageIdIfUnused(ctx, previous.storageId);
       }
       if (previous.snapshotId && previous.snapshotId !== snapshotId && snapshotId) {
-        await ctx.storage.delete(previous.snapshotId);
+        await deleteSnapshotIdIfUnused(ctx, previous.snapshotId);
       }
       await ctx.db.patch(previous._id, {
         storageId,
