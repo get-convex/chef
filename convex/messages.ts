@@ -307,6 +307,51 @@ export const updateStorageState = internalMutation({
   },
 });
 
+async function deleteChatStorageIdIfUnused(ctx: MutationCtx, chatStorageId: Id<"_storage">) {
+  const chatHistoryRef = await ctx.db
+    .query("chatMessagesStorageState")
+    .withIndex("byStorageId", (q) => q.eq("storageId", chatStorageId))
+    .first();
+  if (chatHistoryRef) {
+    // I don't think it's possible in the current data model to have a duplicate storageId
+    // here because there should not be duplicate rows for the same chatId, lastMessageRank,
+    //  and partIndex. Newer snapshots should be patched.
+    console.warn("Unexpectedly found chatHistoryRef for storageId", chatStorageId);
+  }
+  const shareRef = await ctx.db
+    .query("shares")
+    .withIndex("byChatHistoryId", (q) => q.eq("chatHistoryId", chatStorageId))
+    .first();
+  if (shareRef === null && chatHistoryRef === null) {
+    await ctx.storage.delete(chatStorageId);
+  }
+}
+async function deleteSnapshotIdIfUnused(ctx: MutationCtx, snapshotId: Id<"_storage">) {
+  const chatHistoryRef = await ctx.db
+    .query("chatMessagesStorageState")
+    .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
+    .first();
+  const shareRef = await ctx.db
+    .query("shares")
+    .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
+    .first();
+  if (shareRef === null && chatHistoryRef === null) {
+    await ctx.storage.delete(snapshotId);
+  }
+}
+
+async function deleteStorageState(ctx: MutationCtx, storageState: Doc<"chatMessagesStorageState">) {
+  await ctx.db.delete(storageState._id);
+  const chatStorageId = storageState.storageId;
+  if (chatStorageId) {
+    await deleteChatStorageIdIfUnused(ctx, chatStorageId);
+  }
+  const snapshotId = storageState.snapshotId;
+  if (snapshotId) {
+    await deleteSnapshotIdIfUnused(ctx, snapshotId);
+  }
+}
+
 async function deletePreviousStorageStates(
   ctx: MutationCtx,
   args: {
@@ -322,41 +367,7 @@ async function deletePreviousStorageStates(
       .withIndex("byChatId", (q) => q.eq("chatId", chat._id).gt("lastMessageRank", chatLastMessageRank))
       .collect();
     for (const storageState of storageStatesToDelete) {
-      await ctx.db.delete(storageState._id);
-      const chatStorageId = storageState.storageId;
-      if (chatStorageId) {
-        const chatHistoryRef = await ctx.db
-          .query("chatMessagesStorageState")
-          .withIndex("byStorageId", (q) => q.eq("storageId", chatStorageId))
-          .first();
-        if (chatHistoryRef) {
-          // I don't think it's possible in the current data model to have a duplicate storageId
-          // here because there should not be duplicate rows for the same chatId, lastMessageRank,
-          //  and partIndex. Newer snapshots should be patched.
-          console.warn("Unexpectedly found chatHistoryRef for storageId", chatStorageId);
-        }
-        const shareRef = await ctx.db
-          .query("shares")
-          .withIndex("byChatHistoryId", (q) => q.eq("chatHistoryId", chatStorageId))
-          .first();
-        if (shareRef === null && chatHistoryRef === null) {
-          await ctx.storage.delete(chatStorageId);
-        }
-      }
-      const snapshotId = storageState.snapshotId;
-      if (snapshotId) {
-        const chatHistoryRef = await ctx.db
-          .query("chatMessagesStorageState")
-          .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
-          .first();
-        const shareRef = await ctx.db
-          .query("shares")
-          .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
-          .first();
-        if (shareRef === null && chatHistoryRef === null) {
-          await ctx.storage.delete(snapshotId);
-        }
-      }
+      await deleteStorageState(ctx, storageState);
     }
     ctx.db.patch(chat._id, { lastMessageRank: undefined });
   }
