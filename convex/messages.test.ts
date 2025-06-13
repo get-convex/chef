@@ -792,6 +792,7 @@ describe("messages", () => {
     });
     await storeChat(t, chatId, sessionId, {
       messages: [updatedMessage],
+      snapshot: new Blob(["updated snapshot content"]),
     });
 
     // Verify storage states
@@ -805,6 +806,7 @@ describe("messages", () => {
       chatId,
     });
     expect(updatedStorageInfo?.storageId).not.toBe(initialStorageInfo?.storageId);
+    expect(updatedStorageInfo?.snapshotId).not.toBe(initialStorageInfo?.snapshotId);
 
     // Verify the share still references the same storage ID
     const share = await t.run(async (ctx) => {
@@ -821,6 +823,15 @@ describe("messages", () => {
       if (initialStorageInfo?.storageId) {
         const storageBlob = await ctx.storage.get(initialStorageInfo.storageId);
         expect(storageBlob).not.toBeNull();
+      } else {
+        throw new Error("No storage ID found");
+      }
+
+      if (initialStorageInfo?.snapshotId) {
+        const snapshotBlob = await ctx.storage.get(initialStorageInfo.snapshotId);
+        expect(snapshotBlob).not.toBeNull();
+      } else {
+        throw new Error("No snapshot ID found");
       }
     });
   });
