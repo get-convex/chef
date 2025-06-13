@@ -113,15 +113,6 @@ export const Chat = memo(
           return;
         }
 
-        const chatInfo = await convex.query(api.messages.get, {
-          id: chatId,
-          sessionId: sessionId as Id<'sessions'>,
-        });
-
-        if (!chatInfo) {
-          return;
-        }
-
         const url = new URL(window.location.href);
         url.searchParams.set('rewind', 'true');
 
@@ -129,7 +120,8 @@ export const Chat = memo(
           await convex.mutation(api.messages.rewindChat, {
             sessionId: sessionId as Id<'sessions'>,
             chatId,
-            subchatIndex: chatInfo.subchatIndex,
+            // TODO: We will pass this in once we support subchats in the UI
+            subchatIndex: 0,
             lastMessageRank: messageIndex,
           });
           // Reload the chat to show the rewound state
