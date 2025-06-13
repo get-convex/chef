@@ -7,7 +7,7 @@ import { snapshotIdUnusedByChatsAndShares, storageIdUnusedByShares } from "./mes
 const delayInMs = parseFloat(process.env.DEBUG_FILE_CLEANUP_DELAY_MS ?? "500");
 const debugFileCleanupBatchSize = parseInt(process.env.DEBUG_FILE_CLEANUP_BATCH_SIZE ?? "100");
 const chatCleanupBatchSize = parseInt(process.env.CHAT_CLEANUP_BATCH_SIZE ?? "10");
-const storageStateCleanupBatchSize = parseInt(process.env.STORAGE_STATE_CLEANUP_BATCH_SIZE ?? "100");
+const storageStateCleanupBatchSize = parseInt(process.env.STORAGE_STATE_CLEANUP_BATCH_SIZE ?? "50");
 
 export const deleteDebugFilesForInactiveChats = internalMutation({
   args: {
