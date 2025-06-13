@@ -113,6 +113,9 @@ export const deleteOldChatStorageStates = internalMutation({
     }
     // Falsely set the lastMessageRank count to 2 for the last one because it might have more in the next page.
     // 2 is arbitrary. Just needs to be greater than 1.
+    // We could just schedule the job anyway and not worry about counting here, but more than half the
+    // lastMessageRank counts are 1 from user messages and chat initialization, so we would be unnecessarily
+    // scheduling a bunch of functions that don't do anything.
     lastMessageRankCounts.set(page[page.length - 1].lastMessageRank, 2);
     for (const [lastMessageRank, count] of lastMessageRankCounts) {
       if (count > 1) {
