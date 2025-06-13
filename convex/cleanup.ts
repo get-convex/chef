@@ -168,10 +168,10 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
           if (unusedByShares && !deletedStorageIds.has(storageState.storageId)) {
             await ctx.storage.delete(storageState.storageId);
             deletedStorageIds.add(storageState.storageId);
+            console.log(
+              `Deleted storageId ${storageState.storageId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
+            );
           }
-          console.log(
-            `Deleted storageId ${storageState.storageId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
-          );
         }
         if (latestSnapshotId === undefined && storageState.snapshotId !== undefined) {
           throw new Error(
