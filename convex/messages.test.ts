@@ -787,6 +787,7 @@ describe("messages", () => {
     const initialStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
       sessionId,
       chatId,
+      subchatIndex: 0,
     });
     await assertStorageInfo(t, initialStorageInfo, {
       expectedMessages: [firstMessage],
@@ -821,6 +822,7 @@ describe("messages", () => {
     const updatedStorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
       sessionId,
       chatId,
+      subchatIndex: 0,
     });
     expect(updatedStorageInfo?.storageId).not.toBe(initialStorageInfo?.storageId);
     expect(updatedStorageInfo?.snapshotId).not.toBe(initialStorageInfo?.snapshotId);
