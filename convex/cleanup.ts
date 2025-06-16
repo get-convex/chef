@@ -179,8 +179,17 @@ export const deleteOrphanedFiles = internalMutation({
     forReal: v.boolean(),
     shouldScheduleNext: v.boolean(),
     cursor: v.optional(v.string()),
+    migrationId: v.optional(v.id("migrations")),
   },
-  handler: async (ctx, { forReal, shouldScheduleNext, cursor }) => {
+  handler: async (ctx, { forReal, shouldScheduleNext, cursor, migrationId }) => {
+    if (!migrationId) {
+      migrationId = await ctx.db.insert("migrations", {
+        name: "deleteOrphanedFiles",
+        isDone: false,
+        cursor: null,
+        processed: 0,
+      });
+    }
     const { page, isDone, continueCursor } = await ctx.db.system.query("_storage").paginate({
       numItems: storageStateCleanupBatchSize,
       cursor: cursor ?? null,
@@ -261,11 +270,24 @@ export const deleteOrphanedFiles = internalMutation({
         console.log(`Would delete storage ${storage._id}`);
       }
     }
+
+    const numProcessed = (await ctx.db.get(migrationId))?.processed ?? 0;
+    await ctx.db.patch(migrationId, {
+      processed: page.length + numProcessed,
+      cursor: continueCursor,
+      isDone: isDone,
+    });
+    if (isDone) {
+      await ctx.db.patch(migrationId, {
+        latestEnd: Date.now(),
+      });
+    }
     if (shouldScheduleNext && !isDone) {
       await ctx.scheduler.runAfter(delayInMs, internal.cleanup.deleteOrphanedFiles, {
         forReal,
         shouldScheduleNext,
         cursor: continueCursor,
+        migrationId,
       });
     }
   },

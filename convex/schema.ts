@@ -223,4 +223,15 @@ export default defineSchema({
   })
     .index("byChatId", ["chatId"])
     .index("byStorageId", ["promptCoreMessagesStorageId"]),
+  // Inspired by the migrations component, but for our migrations that we don't use the component for.
+  migrations: defineTable({
+    name: v.string(),
+    cursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+    // The number of documents processed so far.
+    processed: v.number(),
+    latestEnd: v.optional(v.number()),
+  })
+    .index("name", ["name"])
+    .index("isDone", ["isDone"]),
 });
