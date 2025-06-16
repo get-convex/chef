@@ -193,6 +193,13 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
     });
     expect(remainingStates.length).toBe(1);
     expect(remainingStates[0].partIndex).toBe(2); // Latest part index
+
+    // Delete the orphaned files
+    await t.mutation(internal.cleanup.deleteOrphanedFiles, {
+      forReal: true,
+      shouldScheduleNext: true,
+    });
+
     // Verify the snapshot is still there
     const snapshotFile = await t.run(async (ctx) => {
       return await ctx.storage.getUrl(remainingStates[0].snapshotId!);
@@ -211,6 +218,93 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
         expect(snapshotFile).toBeNull();
       }
     });
+  });
+
+  test("does not delete snapshots that are referenced in other storage states", async () => {
+    // Create a chat
+    const chatId = await createChatId(t);
+    // Create a snapshot
+    const snapshotId = await t.run(async (ctx) => {
+      return await ctx.storage.store(new Blob(["content"]));
+    });
+    const snapshotId2 = await t.run(async (ctx) => {
+      return await ctx.storage.store(new Blob([`snapshot-2`]));
+    });
+    const snapshotId3 = await t.run(async (ctx) => {
+      return await ctx.storage.store(new Blob([`snapshot-3`]));
+    });
+
+    // Create multiple storage states for the different lastMessageRanks
+
+    await t.run(async (ctx) => {
+      const storageId = await ctx.storage.store(new Blob([`content`]));
+      await ctx.db.insert("chatMessagesStorageState", {
+        chatId,
+        storageId,
+        lastMessageRank: 1,
+        partIndex: 0,
+        subchatIndex: 0,
+        snapshotId,
+      });
+      await ctx.db.insert("chatMessagesStorageState", {
+        chatId,
+        storageId,
+        lastMessageRank: 1,
+        partIndex: 1,
+        subchatIndex: 0,
+        snapshotId: snapshotId2,
+      });
+
+      await ctx.db.insert("chatMessagesStorageState", {
+        chatId,
+        storageId,
+        lastMessageRank: 2,
+        partIndex: 0,
+        subchatIndex: 0,
+        snapshotId: snapshotId2,
+      });
+      await ctx.db.insert("chatMessagesStorageState", {
+        chatId,
+        storageId: null,
+        lastMessageRank: 2,
+        partIndex: 0,
+        subchatIndex: 0,
+        snapshotId: snapshotId3,
+      });
+    });
+
+    await t.mutation(internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
+      chatId,
+      lastMessageRank: 1,
+      forReal: true,
+    });
+    await t.mutation(internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
+      chatId,
+      lastMessageRank: 2,
+      forReal: true,
+    });
+
+    // Delete the orphaned files
+    await t.mutation(internal.cleanup.deleteOrphanedFiles, {
+      forReal: true,
+      shouldScheduleNext: true,
+    });
+
+    // Verify the first snapshot is not there
+    const snapshotFile = await t.run(async (ctx) => {
+      return await ctx.storage.getUrl(snapshotId);
+    });
+    expect(snapshotFile).toBeNull();
+    // Verify the second snapshot is still there
+    const snapshotFile2 = await t.run(async (ctx) => {
+      return await ctx.storage.getUrl(snapshotId2);
+    });
+    expect(snapshotFile2).not.toBeNull();
+    // Verify the third snapshot is still there
+    const snapshotFile3 = await t.run(async (ctx) => {
+      return await ctx.storage.getUrl(snapshotId3);
+    });
+    expect(snapshotFile3).not.toBeNull();
   });
 
   test("does not delete snapshots that are used by the latest storage state", async () => {
