@@ -1,8 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
-import { snapshotIdUnusedByChatsAndShares, storageIdUnusedByShares } from "./messages";
 
 const delayInMs = parseFloat(process.env.DEBUG_FILE_CLEANUP_DELAY_MS ?? "500");
 const debugFileCleanupBatchSize = parseInt(process.env.DEBUG_FILE_CLEANUP_BATCH_SIZE ?? "100");
@@ -141,7 +139,7 @@ export const deleteOldChatStorageStates = internalMutation({
   },
 });
 
-// Delete all the storage states and files for non-latest parts of a lastMessageRank
+// Delete all the storage states for non-latest parts of a lastMessageRank
 export const deleteOldStorageStatesForLastMessageRank = internalMutation({
   args: {
     chatId: v.id("chats"),
@@ -158,51 +156,9 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
     if (storageStates.length <= 1) {
       return;
     }
-    const latestSnapshotId = storageStates[storageStates.length - 1].snapshotId;
-
-    // Delete all storage states except the last one
-    const deletedStorageIds = new Set<Id<"_storage">>();
     for (let i = 0; i < storageStates.length - 1; i++) {
       const storageState = storageStates[i];
       if (storageState.storageId !== null) {
-        const unusedByShares = await storageIdUnusedByShares(ctx, storageState.storageId);
-        if (unusedByShares && !deletedStorageIds.has(storageState.storageId)) {
-          if (forReal) {
-            await ctx.storage.delete(storageState.storageId);
-            deletedStorageIds.add(storageState.storageId);
-            console.log(
-              `Deleted storageId ${storageState.storageId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
-            );
-          } else {
-            console.log(
-              `Would delete storageId ${storageState.storageId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
-            );
-          }
-        }
-        if (latestSnapshotId === undefined && storageState.snapshotId !== undefined) {
-          throw new Error(
-            `Latest snapshot ID is undefined for chat ${chatId} and lastMessageRank ${lastMessageRank} but earlier storage state ${storageState._id} has a snapshotId`,
-          );
-        }
-        // Do not remove the latest snapshotId!
-        if (
-          storageState.snapshotId !== undefined &&
-          storageState.snapshotId !== latestSnapshotId &&
-          (await snapshotIdUnusedByChatsAndShares(ctx, storageState.snapshotId)) &&
-          !deletedStorageIds.has(storageState.snapshotId)
-        ) {
-          if (forReal) {
-            await ctx.storage.delete(storageState.snapshotId);
-            console.log(
-              `Deleted snapshotId ${storageState.snapshotId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
-            );
-            deletedStorageIds.add(storageState.snapshotId);
-          } else {
-            console.log(
-              `Would delete snapshotId ${storageState.snapshotId} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
-            );
-          }
-        }
         if (forReal) {
           await ctx.db.delete(storageState._id);
           console.log(
