@@ -17,7 +17,7 @@ export function disabledText(isPaidPlan: boolean) {
     ? 'You have exceeded your spending limits, so your deployments have been disabled. ' +
         'Please increase your spending limit on the Convex dashboard or wait until limits reset.'
     : 'You have exceeded the free plan limits, so your deployments have been disabled. ' +
-        'Please upgrade to a Pro plan or reach out to us at support@convex.dev for help.';
+        'Please upgrade your plan or reach out to us at support@convex.dev for help.';
 }
 
 export function renderTokenCount(tokens: number) {
