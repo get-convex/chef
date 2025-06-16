@@ -217,3 +217,100 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
     }
   },
 });
+
+export const deleteOrphanedFiles = internalMutation({
+  args: {
+    forReal: v.boolean(),
+    shouldScheduleNext: v.boolean(),
+    cursor: v.optional(v.string()),
+  },
+  handler: async (ctx, { forReal, shouldScheduleNext, cursor }) => {
+    const { page, isDone, continueCursor } = await ctx.db.system.query("_storage").paginate({
+      numItems: storageStateCleanupBatchSize,
+      cursor: cursor ?? null,
+    });
+    for (const storage of page) {
+      // Check the storage id is not referenced in any tables
+      const chatRef = await ctx.db
+        .query("chats")
+        .withIndex("bySnapshotId", (q) => q.eq("snapshotId", storage._id))
+        .first();
+      if (chatRef) {
+        console.log(`Skipping storage ${storage._id} because it is referenced by chat ${chatRef._id}`);
+        continue;
+      }
+      const chatHistorySnapshotRef = await ctx.db
+        .query("chatMessagesStorageState")
+        .withIndex("bySnapshotId", (q) => q.eq("snapshotId", storage._id))
+        .first();
+      if (chatHistorySnapshotRef) {
+        console.log(
+          `Skipping storage ${storage._id} because it is referenced by chat history snapshot ${chatHistorySnapshotRef._id}`,
+        );
+        continue;
+      }
+      const chatHistoryStorageRef = await ctx.db
+        .query("chatMessagesStorageState")
+        .withIndex("byStorageId", (q) => q.eq("storageId", storage._id))
+        .first();
+      if (chatHistoryStorageRef) {
+        console.log(
+          `Skipping storage ${storage._id} because it is referenced by chat history storage ${chatHistoryStorageRef._id}`,
+        );
+        continue;
+      }
+      const shareSnapshotRef = await ctx.db
+        .query("shares")
+        .withIndex("bySnapshotId", (q) => q.eq("snapshotId", storage._id))
+        .first();
+      if (shareSnapshotRef) {
+        console.log(
+          `Skipping storage ${storage._id} because it is referenced by share snapshot ${shareSnapshotRef._id}`,
+        );
+        continue;
+      }
+      const shareChatHistorySnapshotRef = await ctx.db
+        .query("shares")
+        .withIndex("byChatHistoryId", (q) => q.eq("chatHistoryId", storage._id))
+        .first();
+      if (shareChatHistorySnapshotRef) {
+        console.log(
+          `Skipping storage ${storage._id} because it is referenced by share chat history snapshot ${shareChatHistorySnapshotRef._id}`,
+        );
+        continue;
+      }
+
+      const socialShareRef = await ctx.db
+        .query("socialShares")
+        .withIndex("byThumbnailImageStorageId", (q) => q.eq("thumbnailImageStorageId", storage._id))
+        .first();
+      if (socialShareRef) {
+        console.log(`Skipping storage ${storage._id} because it is referenced by social share ${socialShareRef._id}`);
+        continue;
+      }
+      const debugChatApiRequestLogRef = await ctx.db
+        .query("debugChatApiRequestLog")
+        .withIndex("byStorageId", (q) => q.eq("promptCoreMessagesStorageId", storage._id))
+        .first();
+      if (debugChatApiRequestLogRef) {
+        console.log(
+          `Skipping storage ${storage._id} because it is referenced by debug chat api request log ${debugChatApiRequestLogRef._id}`,
+        );
+        continue;
+      }
+      if (forReal) {
+        await ctx.storage.delete(storage._id);
+        console.log(`Deleted storage ${storage._id}`);
+      } else {
+        console.log(`Would delete storage ${storage._id}`);
+      }
+    }
+    if (shouldScheduleNext && !isDone) {
+      await ctx.scheduler.runAfter(delayInMs, internal.cleanup.deleteOrphanedFiles, {
+        forReal,
+        shouldScheduleNext,
+        cursor: continueCursor,
+      });
+    }
+  },
+});

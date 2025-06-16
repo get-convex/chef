@@ -169,7 +169,8 @@ export default defineSchema({
   })
     .index("byCode", ["code"])
     .index("byChatId", ["chatId"])
-    .index("byAllowShowInGallery", ["allowShowInGallery"]),
+    .index("byAllowShowInGallery", ["allowShowInGallery"])
+    .index("byThumbnailImageStorageId", ["thumbnailImageStorageId"]),
 
   memberOpenAITokens: defineTable({
     memberId: v.id("convexMembers"),
@@ -219,5 +220,7 @@ export default defineSchema({
     //   but this debug info uses the correct provider for each call
     usage: usageRecordValidator,
     chefTokens: v.number(),
-  }).index("byChatId", ["chatId"]),
+  })
+    .index("byChatId", ["chatId"])
+    .index("byStorageId", ["promptCoreMessagesStorageId"]),
 });
