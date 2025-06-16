@@ -188,12 +188,14 @@ export const deleteOrphanedFiles = internalMutation({
         isDone: false,
         cursor: null,
         processed: 0,
+        numDeleted: 0,
       });
     }
     const { page, isDone, continueCursor } = await ctx.db.system.query("_storage").paginate({
       numItems: storageStateCleanupBatchSize,
       cursor: cursor ?? null,
     });
+    let numDeleted = 0;
     for (const storage of page) {
       // Check the storage id is not referenced in any tables
       const chatRef = await ctx.db
@@ -263,6 +265,7 @@ export const deleteOrphanedFiles = internalMutation({
         );
         continue;
       }
+      numDeleted++;
       if (forReal) {
         await ctx.storage.delete(storage._id);
         console.log(`Deleted storage ${storage._id}`);
@@ -271,11 +274,15 @@ export const deleteOrphanedFiles = internalMutation({
       }
     }
 
-    const numProcessed = (await ctx.db.get(migrationId))?.processed ?? 0;
+    const migration = await ctx.db.get(migrationId);
+    if (!migration) {
+      throw new Error(`Migration ${migrationId} not found`);
+    }
     await ctx.db.patch(migrationId, {
-      processed: page.length + numProcessed,
+      processed: page.length + migration.processed,
       cursor: continueCursor,
       isDone: isDone,
+      numDeleted: numDeleted + migration.numDeleted,
     });
     if (isDone) {
       await ctx.db.patch(migrationId, {
