@@ -421,7 +421,7 @@ export const earliestRewindableMessageRank = query({
   args: {
     sessionId: v.id("sessions"),
     chatId: v.string(),
-    subchatIndex: v.number(),
+    subchatIndex: v.optional(v.number()),
   },
   // Return null if there is no snapshot stored in chatMessagesStorageState (possible for older chats)
   returns: v.union(v.null(), v.number()),
@@ -431,7 +431,9 @@ export const earliestRewindableMessageRank = query({
     if (!chat) {
       throw new ConvexError({ code: "NotFound", message: "Chat not found" });
     }
-    const chatWithSubchatIndex = { ...chat, subchatIndex: args.subchatIndex };
+    // Old clients may not pass up a subchatIndex, so we default to 0
+    const subchatIndex = args.subchatIndex ?? 0;
+    const chatWithSubchatIndex = { ...chat, subchatIndex };
     const latestState = await getLatestChatMessageStorageState(ctx, chatWithSubchatIndex);
     if (!latestState) {
       // This is possible for older chats that were created before we started storing storage states
@@ -440,10 +442,7 @@ export const earliestRewindableMessageRank = query({
     const docs = await ctx.db
       .query("chatMessagesStorageState")
       .withIndex("byChatId", (q) =>
-        q
-          .eq("chatId", chat._id)
-          .eq("subchatIndex", args.subchatIndex)
-          .lte("lastMessageRank", latestState.lastMessageRank),
+        q.eq("chatId", chat._id).eq("subchatIndex", subchatIndex).lte("lastMessageRank", latestState.lastMessageRank),
       )
       .order("asc")
       .collect();
