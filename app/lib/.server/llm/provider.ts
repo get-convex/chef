@@ -76,13 +76,14 @@ export function getProvider(
           fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
         });
       } else {
+        const credentials = JSON.parse(getEnv('GOOGLE_VERTEX_CREDENTIALS_JSON')!);
         google = createVertex({
-          project: getEnv('GOOGLE_PROJECT_ID'),
+          project: credentials.project_id,
           location: 'us-central1',
           googleCredentials: {
-            clientEmail: getEnv('GOOGLE_CLIENT_EMAIL')!,
-            privateKeyId: getEnv('GOOGLE_PRIVATE_KEY_ID')!,
-            privateKey: getEnv('GOOGLE_PRIVATE_KEY')!,
+            clientEmail: credentials.client_email,
+            privateKeyId: credentials.private_key_id,
+            privateKey: credentials.private_key,
           },
         });
       }
