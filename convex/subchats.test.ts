@@ -2,7 +2,6 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import { createChat, setupTest, storeChat, type TestConvex } from "./test.setup";
 import type { SerializedMessage } from "./messages";
-import type { Id } from "./_generated/dataModel";
 import { describe } from "node:test";
 
 function createMessage(overrides: Partial<SerializedMessage> = {}): SerializedMessage {
@@ -19,40 +18,6 @@ function createMessage(overrides: Partial<SerializedMessage> = {}): SerializedMe
     createdAt: Date.now(),
     ...overrides,
   };
-}
-
-// Helper function to store messages for a specific subchat
-async function storeChatForSubchat(
-  t: TestConvex,
-  chatId: string,
-  sessionId: Id<"sessions">,
-  subchatIndex: number,
-  messages: SerializedMessage[],
-  snapshotContent?: string,
-) {
-  // Store messages in blob storage
-  const storageId = await t.run(async (ctx) => {
-    return ctx.storage.store(new Blob([JSON.stringify(messages)]));
-  });
-
-  // Store snapshot if provided
-  let snapshotId: Id<"_storage"> | undefined;
-  if (snapshotContent) {
-    snapshotId = await t.run(async (ctx) => {
-      return ctx.storage.store(new Blob([snapshotContent]));
-    });
-  }
-
-  // Update storage state for the subchat
-  await t.mutation(internal.messages.updateStorageState, {
-    sessionId,
-    chatId,
-    storageId,
-    lastMessageRank: messages.length - 1,
-    subchatIndex,
-    partIndex: (messages.at(-1)?.parts?.length ?? 0) - 1,
-    snapshotId,
-  });
 }
 
 describe("subchats", () => {
