@@ -1,6 +1,7 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery } from "./_generated/server";
+import { internalMutation, internalQuery, type MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 
 const delayInMs = parseFloat(process.env.DEBUG_FILE_CLEANUP_DELAY_MS ?? "500");
 const debugFileCleanupBatchSize = parseInt(process.env.DEBUG_FILE_CLEANUP_BATCH_SIZE ?? "100");
@@ -174,6 +175,82 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
   },
 });
 
+async function deleteFileIfUnreferenced(ctx: MutationCtx, storageId: Id<"_storage">, forReal: boolean) {
+  // Check the storage id is not referenced in any tables
+  const chatRef = await ctx.db
+    .query("chats")
+    .withIndex("bySnapshotId", (q) => q.eq("snapshotId", storageId))
+    .first();
+  if (chatRef) {
+    console.log(`Skipping storage ${storageId} because it is referenced by chat ${chatRef._id}`);
+    return false;
+  }
+  const chatHistorySnapshotRef = await ctx.db
+    .query("chatMessagesStorageState")
+    .withIndex("bySnapshotId", (q) => q.eq("snapshotId", storageId))
+    .first();
+  if (chatHistorySnapshotRef) {
+    console.log(
+      `Skipping storage ${storageId} because it is referenced by chat history snapshot ${chatHistorySnapshotRef._id}`,
+    );
+    return false;
+  }
+  const chatHistoryStorageRef = await ctx.db
+    .query("chatMessagesStorageState")
+    .withIndex("byStorageId", (q) => q.eq("storageId", storageId))
+    .first();
+  if (chatHistoryStorageRef) {
+    console.log(
+      `Skipping storage ${storageId} because it is referenced by chat history storage ${chatHistoryStorageRef._id}`,
+    );
+    return false;
+  }
+  const shareSnapshotRef = await ctx.db
+    .query("shares")
+    .withIndex("bySnapshotId", (q) => q.eq("snapshotId", storageId))
+    .first();
+  if (shareSnapshotRef) {
+    console.log(`Skipping storage ${storageId} because it is referenced by share snapshot ${shareSnapshotRef._id}`);
+    return false;
+  }
+  const shareChatHistorySnapshotRef = await ctx.db
+    .query("shares")
+    .withIndex("byChatHistoryId", (q) => q.eq("chatHistoryId", storageId))
+    .first();
+  if (shareChatHistorySnapshotRef) {
+    console.log(
+      `Skipping storage ${storageId} because it is referenced by share chat history snapshot ${shareChatHistorySnapshotRef._id}`,
+    );
+    return false;
+  }
+
+  const socialShareRef = await ctx.db
+    .query("socialShares")
+    .withIndex("byThumbnailImageStorageId", (q) => q.eq("thumbnailImageStorageId", storageId))
+    .first();
+  if (socialShareRef) {
+    console.log(`Skipping storage ${storageId} because it is referenced by social share ${socialShareRef._id}`);
+    return false;
+  }
+  const debugChatApiRequestLogRef = await ctx.db
+    .query("debugChatApiRequestLog")
+    .withIndex("byStorageId", (q) => q.eq("promptCoreMessagesStorageId", storageId))
+    .first();
+  if (debugChatApiRequestLogRef) {
+    console.log(
+      `Skipping storage ${storageId} because it is referenced by debug chat api request log ${debugChatApiRequestLogRef._id}`,
+    );
+    return false;
+  }
+  if (forReal) {
+    await ctx.storage.delete(storageId);
+    console.log(`Deleted storage ${storageId}`);
+  } else {
+    console.log(`Would delete storage ${storageId}`);
+  }
+  return true;
+}
+
 export const deleteOrphanedFiles = internalMutation({
   args: {
     forReal: v.boolean(),
@@ -198,80 +275,8 @@ export const deleteOrphanedFiles = internalMutation({
     });
     let numDeleted = 0;
     for (const storage of page) {
-      // Check the storage id is not referenced in any tables
-      const chatRef = await ctx.db
-        .query("chats")
-        .withIndex("bySnapshotId", (q) => q.eq("snapshotId", storage._id))
-        .first();
-      if (chatRef) {
-        console.log(`Skipping storage ${storage._id} because it is referenced by chat ${chatRef._id}`);
-        continue;
-      }
-      const chatHistorySnapshotRef = await ctx.db
-        .query("chatMessagesStorageState")
-        .withIndex("bySnapshotId", (q) => q.eq("snapshotId", storage._id))
-        .first();
-      if (chatHistorySnapshotRef) {
-        console.log(
-          `Skipping storage ${storage._id} because it is referenced by chat history snapshot ${chatHistorySnapshotRef._id}`,
-        );
-        continue;
-      }
-      const chatHistoryStorageRef = await ctx.db
-        .query("chatMessagesStorageState")
-        .withIndex("byStorageId", (q) => q.eq("storageId", storage._id))
-        .first();
-      if (chatHistoryStorageRef) {
-        console.log(
-          `Skipping storage ${storage._id} because it is referenced by chat history storage ${chatHistoryStorageRef._id}`,
-        );
-        continue;
-      }
-      const shareSnapshotRef = await ctx.db
-        .query("shares")
-        .withIndex("bySnapshotId", (q) => q.eq("snapshotId", storage._id))
-        .first();
-      if (shareSnapshotRef) {
-        console.log(
-          `Skipping storage ${storage._id} because it is referenced by share snapshot ${shareSnapshotRef._id}`,
-        );
-        continue;
-      }
-      const shareChatHistorySnapshotRef = await ctx.db
-        .query("shares")
-        .withIndex("byChatHistoryId", (q) => q.eq("chatHistoryId", storage._id))
-        .first();
-      if (shareChatHistorySnapshotRef) {
-        console.log(
-          `Skipping storage ${storage._id} because it is referenced by share chat history snapshot ${shareChatHistorySnapshotRef._id}`,
-        );
-        continue;
-      }
-
-      const socialShareRef = await ctx.db
-        .query("socialShares")
-        .withIndex("byThumbnailImageStorageId", (q) => q.eq("thumbnailImageStorageId", storage._id))
-        .first();
-      if (socialShareRef) {
-        console.log(`Skipping storage ${storage._id} because it is referenced by social share ${socialShareRef._id}`);
-        continue;
-      }
-      const debugChatApiRequestLogRef = await ctx.db
-        .query("debugChatApiRequestLog")
-        .withIndex("byStorageId", (q) => q.eq("promptCoreMessagesStorageId", storage._id))
-        .first();
-      if (debugChatApiRequestLogRef) {
-        console.log(
-          `Skipping storage ${storage._id} because it is referenced by debug chat api request log ${debugChatApiRequestLogRef._id}`,
-        );
-        continue;
-      }
-      numDeleted++;
-      if (forReal) {
-        await ctx.storage.delete(storage._id);
-        console.log(`Deleted storage ${storage._id}`);
-      } else {
-        console.log(`Would delete storage ${storage._id}`);
+      if (await deleteFileIfUnreferenced(ctx, storage._id, forReal)) {
+        numDeleted++;
       }
     }
 
