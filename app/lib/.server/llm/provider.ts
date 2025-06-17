@@ -3,6 +3,7 @@ import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createVertex } from '@ai-sdk/google-vertex/edge';
 import { createOpenAI } from '@ai-sdk/openai';
 import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { captureException } from '@sentry/remix';
@@ -68,13 +69,27 @@ export function getProvider(
   switch (modelProvider) {
     case 'Google': {
       model = modelForProvider(modelProvider, modelChoice);
-      const google = createGoogleGenerativeAI({
-        apiKey: userApiKey || getEnv('GOOGLE_API_KEY'),
-        fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
-      });
+      let google;
+      if (userApiKey) {
+        google = createGoogleGenerativeAI({
+          apiKey: userApiKey || getEnv('GOOGLE_API_KEY'),
+          fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
+        });
+      } else {
+        google = createVertex({
+          project: getEnv('GOOGLE_PROJECT_ID'),
+          location: 'us-central1',
+          googleCredentials: {
+            clientEmail: getEnv('GOOGLE_CLIENT_EMAIL')!,
+            privateKeyId: getEnv('GOOGLE_PRIVATE_KEY_ID')!,
+            privateKey: getEnv('GOOGLE_PRIVATE_KEY')!,
+          },
+        });
+      }
       provider = {
-        model: google(model),
-        maxTokens: 20000,
+        // We have to use 05-06 when using Vertex because the latest model is not available yet
+        model: google(userApiKey ? model : 'gemini-2.5-pro-preview-05-06'),
+        maxTokens: 24576,
       };
       break;
     }
