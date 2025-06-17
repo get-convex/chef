@@ -225,12 +225,12 @@ export const createAdminShare = internalMutation({
       .unique();
     if (existing) {
       console.log(`Already have a share for chat ${chatId}: Go to https://chef.show/${existing.code}`);
-      return;
+      return existing._id;
     }
 
     const randomCode = await generateUniqueCode(ctx.db);
     const code = `support-${randomCode}`;
-    await ctx.db.insert("socialShares", {
+    const id = await ctx.db.insert("socialShares", {
       chatId,
       code,
       shared: "shared",
@@ -239,5 +239,6 @@ export const createAdminShare = internalMutation({
       allowShowInGallery: false,
     });
     console.log(`Created admin share for chat ${chatId}. Go to https://chef.show/${code}`);
+    return id;
   },
 });

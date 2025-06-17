@@ -7,24 +7,10 @@ import {
   type TestConvex,
   storeChat,
   verifyStoredContent,
+  initializeChat,
 } from "./test.setup";
 import type { SerializedMessage } from "./messages";
 import { describe } from "node:test";
-
-async function initializeChat(t: TestConvex, initialMessage?: SerializedMessage) {
-  const { sessionId, chatId } = await createChat(t);
-  const firstMessage: SerializedMessage = {
-    id: "1",
-    role: "user",
-    parts: [{ text: "Hello, world!", type: "text" }],
-    createdAt: Date.now(),
-  };
-  await storeChat(t, chatId, sessionId, {
-    messages: [initialMessage ?? firstMessage],
-    snapshot: new Blob(["Hello, world!"]),
-  });
-  return { sessionId, chatId };
-}
 
 describe("share", () => {
   let t: TestConvex;

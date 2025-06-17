@@ -113,3 +113,18 @@ export async function verifyStoredMessages(
     },
   );
 }
+
+export async function initializeChat(t: TestConvex, initialMessage?: SerializedMessage) {
+  const { sessionId, chatId } = await createChat(t);
+  const firstMessage: SerializedMessage = {
+    id: "1",
+    role: "user",
+    parts: [{ text: "Hello, world!", type: "text" }],
+    createdAt: Date.now(),
+  };
+  await storeChat(t, chatId, sessionId, {
+    messages: [initialMessage ?? firstMessage],
+    snapshot: new Blob(["Hello, world!"]),
+  });
+  return { sessionId, chatId };
+}
