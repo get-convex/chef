@@ -305,7 +305,11 @@ export const updateStorageState = internalMutation({
           .withIndex("bySnapshotId", (q) => q.eq("snapshotId", previous.snapshotId))
           .collect();
         // Only the document we're updating references this snapshotId, so it's safe to delete.
-        if (unusedByChatsAndShares && storageStatesWithSameSnapshotId.length === 1) {
+        if (
+          unusedByChatsAndShares &&
+          storageStatesWithSameSnapshotId.length === 1 &&
+          storageStatesWithSameSnapshotId[0]._id === previous._id
+        ) {
           await ctx.storage.delete(previous.snapshotId);
         }
       }
