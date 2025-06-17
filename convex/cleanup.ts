@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import { internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 const delayInMs = parseFloat(process.env.DEBUG_FILE_CLEANUP_DELAY_MS ?? "500");
@@ -185,6 +185,7 @@ export const deleteOrphanedFiles = internalMutation({
     if (!migrationId) {
       migrationId = await ctx.db.insert("migrations", {
         name: "deleteOrphanedFiles",
+        forReal,
         isDone: false,
         cursor: null,
         processed: 0,
@@ -296,6 +297,64 @@ export const deleteOrphanedFiles = internalMutation({
         cursor: continueCursor,
         migrationId,
       });
+    }
+  },
+});
+
+// Helper to double check that all the files referenced are still in storage after calling `deleteOrphanedFiles`
+export const getReferencedFiles = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const storageStates = await ctx.db.query("chatMessagesStorageState").collect();
+    for (const storageState of storageStates) {
+      if (storageState.storageId !== null) {
+        const url = await ctx.storage.getUrl(storageState.storageId);
+        if (!url) {
+          throw new Error(
+            `Storage ${storageState.storageId} not found, associated with chatMessagesStorageState ${storageState._id}`,
+          );
+        }
+      }
+      if (storageState.snapshotId) {
+        const url = await ctx.storage.getUrl(storageState.snapshotId);
+        if (!url) {
+          throw new Error(
+            `Storage ${storageState.snapshotId} not found, associated with chatMessagesStorageState ${storageState._id}`,
+          );
+        }
+      }
+    }
+    const shares = await ctx.db.query("shares").collect();
+    for (const share of shares) {
+      if (share.snapshotId) {
+        const url = await ctx.storage.getUrl(share.snapshotId);
+        if (!url) {
+          throw new Error(`Storage ${share.snapshotId} not found, associated with share ${share._id}`);
+        }
+      }
+    }
+
+    const socialShares = await ctx.db.query("socialShares").collect();
+    for (const socialShare of socialShares) {
+      if (socialShare.thumbnailImageStorageId) {
+        const url = await ctx.storage.getUrl(socialShare.thumbnailImageStorageId);
+        if (!url) {
+          throw new Error(
+            `Storage ${socialShare.thumbnailImageStorageId} not found, associated with social share ${socialShare._id}`,
+          );
+        }
+      }
+    }
+    const debugChatApiRequestLogs = await ctx.db.query("debugChatApiRequestLog").collect();
+    for (const debugChatApiRequestLog of debugChatApiRequestLogs) {
+      if (debugChatApiRequestLog.promptCoreMessagesStorageId) {
+        const url = await ctx.storage.getUrl(debugChatApiRequestLog.promptCoreMessagesStorageId);
+        if (!url) {
+          throw new Error(
+            `Storage ${debugChatApiRequestLog.promptCoreMessagesStorageId} not found, associated with debug chat api request log ${debugChatApiRequestLog._id}`,
+          );
+        }
+      }
     }
   },
 });
