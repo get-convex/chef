@@ -633,6 +633,61 @@ describe("messages", () => {
     );
   });
 
+  test("snapshotId should not be deleted if it is referenced by earlier chatMessagesStorageStates", async () => {
+    const { sessionId, chatId } = await createChat(t);
+    const snapshotId1 = await t.run(async (ctx) => {
+      return await ctx.storage.store(new Blob(["initial snapshot content"]));
+    });
+    const snapshotId2 = await t.run(async (ctx) => {
+      return await ctx.storage.store(new Blob(["second snapshot content"]));
+    });
+    const storageId1 = await t.run(async (ctx) => {
+      return await ctx.storage.store(new Blob(["initial storage content"]));
+    });
+    const storageId2 = await t.run(async (ctx) => {
+      return await ctx.storage.store(new Blob(["second storage content"]));
+    });
+    const storageId3 = await t.run(async (ctx) => {
+      return await ctx.storage.store(new Blob(["third storage content"]));
+    });
+    await t.mutation(internal.messages.updateStorageState, {
+      sessionId,
+      chatId,
+      storageId: storageId1,
+      lastMessageRank: 0,
+      partIndex: 0,
+      subchatIndex: 0,
+      snapshotId: snapshotId1,
+    });
+    await t.mutation(internal.messages.updateStorageState, {
+      sessionId,
+      chatId,
+      storageId: storageId2,
+      lastMessageRank: 1,
+      partIndex: 0,
+      subchatIndex: 0,
+      snapshotId: snapshotId1,
+    });
+    // This update SHOULD NOT delete `snapshotId1` because it is referenced by the previous storage state.
+    await t.mutation(internal.messages.updateStorageState, {
+      sessionId,
+      chatId,
+      storageId: storageId3,
+      lastMessageRank: 1,
+      partIndex: 1,
+      subchatIndex: 0,
+      snapshotId: snapshotId2,
+    });
+    const snapshot1 = await t.run(async (ctx) => {
+      return await ctx.storage.getUrl(snapshotId1);
+    });
+    const snapshot2 = await t.run(async (ctx) => {
+      return await ctx.storage.getUrl(snapshotId2);
+    });
+    expect(snapshot1).not.toBeNull();
+    expect(snapshot2).not.toBeNull();
+  });
+
   test("patches existing document and cleans up storage when receiving update with same lastMessageRank", async () => {
     const { sessionId, chatId } = await createChat(t);
 

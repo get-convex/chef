@@ -300,7 +300,14 @@ export const updateStorageState = internalMutation({
       }
       if (previous.snapshotId && previous.snapshotId !== snapshotId && snapshotId) {
         const unusedByChatsAndShares = await snapshotIdUnusedByChatsAndShares(ctx, previous.snapshotId);
-        if (unusedByChatsAndShares) {
+        const storageStatesWithSameSnapshotId = await ctx.db
+          .query("chatMessagesStorageState")
+          .withIndex("bySnapshotId", (q) => q.eq("snapshotId", previous.snapshotId))
+          .collect();
+        const otherStorageStatesWithSameSnapshotId = storageStatesWithSameSnapshotId.filter(
+          (state) => state.lastMessageRank !== lastMessageRank,
+        );
+        if (unusedByChatsAndShares && otherStorageStatesWithSameSnapshotId.length === 0) {
           await ctx.storage.delete(previous.snapshotId);
         }
       }
