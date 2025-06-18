@@ -1,5 +1,6 @@
 import { Migrations } from "@convex-dev/migrations";
 import { components, internal } from "./_generated/api.js";
+import { deleteOldChatStorageStatesForChat } from "./messages.js";
 
 export const migrations = new Migrations(components.migrations);
 export const run = migrations.runner();
@@ -60,3 +61,12 @@ export const addSubchatIndexToDebugChatApiRequestLog = migrations.define({
 export const runAddSubchatIndexToDebugChatApiRequestLog = migrations.runner(
   internal.migrations.addSubchatIndexToDebugChatApiRequestLog,
 );
+
+export const deleteOldChatStorageStates = migrations.define({
+  table: "chats",
+  migrateOne: async (ctx, doc) => {
+    await deleteOldChatStorageStatesForChat(ctx, doc._id, 0);
+  },
+});
+
+export const runDeleteOldChatStorageStates = migrations.runner(internal.migrations.deleteOldChatStorageStates);
