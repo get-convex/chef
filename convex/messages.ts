@@ -284,9 +284,7 @@ export const updateStorageState = internalMutation({
       return;
     }
 
-    // If a new subchat has been created, we may also not have any messages yet, so we only care about
-    // this case if there have been no new subchats created yet.
-    if (previous.storageId !== null && storageId === null && chat.lastSubchatIndex === 0) {
+    if (previous.storageId !== null && storageId === null) {
       throw new Error("Received null storageId for a chat with messages");
     }
 
