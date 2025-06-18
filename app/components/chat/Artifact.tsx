@@ -9,6 +9,7 @@ import { workbenchStore } from '~/lib/stores/workbench.client';
 import { type PartId } from '~/lib/stores/artifacts';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
+import { summarize } from '~/utils/summarize';
 import { captureException } from '@sentry/remix';
 import type { RelativePath } from 'chef-agent/utils/workDir';
 import { getAbsolutePath } from 'chef-agent/utils/workDir';
@@ -146,9 +147,13 @@ const ActionList = memo(function ActionList({ actions }: ActionListProps) {
         {actions.map((action, index) => {
           const { status, type } = action;
           if (type !== 'file') {
-            captureException(
-              `Action is not a file: ${type} status: ${status} toolName: ${action?.toolName} content: ${action?.content?.slice(0, 1000)}`,
-            );
+            // This happens a ton, it's just telling us that our TypeScript types are wrong, we have an action that
+            // surprises us.
+            if (Math.random() < 0.001) {
+              captureException(
+                `Action is not a file (so our typescript types are wrong): ${JSON.stringify(summarize(action))}`,
+              );
+            }
             return null;
           }
           const message = action.isEdit ? 'Edit' : 'Create';
