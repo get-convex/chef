@@ -136,8 +136,8 @@ export default defineSchema({
 
     chatHistoryId: v.id("_storage"),
 
-    // Shares are created at one point in time, so this makes sure
-    // people using the link don't see newer messages.
+    // Keeps track of the lastMessageRank, partIndex, and subchatIndex of the chat at the time the share was created.
+    // These fields aren't used but they are useful hints for how big the chat is and where the snapshot came from.
     lastMessageRank: v.number(),
     lastSubchatIndex: v.number(),
     partIndex: v.optional(v.number()),
