@@ -119,7 +119,7 @@ export const getShareDescription = query({
   },
 });
 
-async function cloneShow(
+export async function cloneShow(
   ctx: MutationCtx,
   {
     showCode,
@@ -179,6 +179,7 @@ async function cloneShow(
     lastMessageRank: storageState.lastMessageRank,
     subchatIndex: storageState.subchatIndex,
     partIndex: storageState.partIndex,
+    snapshotId: storageState.snapshotId,
   });
 
   await startProvisionConvexProjectHelper(ctx, {
