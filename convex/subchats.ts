@@ -1,7 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
-import { getChatByIdOrUrlIdEnsuringAccess, getLatestChatMessageStorageState } from "./messages";
+import { CHAT_NOT_FOUND_ERROR, getChatByIdOrUrlIdEnsuringAccess, getLatestChatMessageStorageState } from "./messages";
 
 export const get = query({
   args: {
@@ -13,7 +13,7 @@ export const get = query({
     const { chatId, sessionId } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
-      throw new ConvexError({ code: "NotFound", message: "Chat not found" });
+      throw CHAT_NOT_FOUND_ERROR;
     }
 
     let subchats: Doc<"chatMessagesStorageState">[] = [];
@@ -24,7 +24,7 @@ export const get = query({
         .order("desc")
         .first();
       if (subchat === null) {
-        break;
+        continue;
       }
       subchats.push(subchat);
     }
@@ -46,13 +46,20 @@ export const create = mutation({
     const { chatId, sessionId } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
-      throw new ConvexError({ code: "NotFound", message: "Chat not found" });
+      throw CHAT_NOT_FOUND_ERROR;
     }
     const latestStorageState = await getLatestChatMessageStorageState(ctx, {
       _id: chat._id,
       subchatIndex: chat.lastSubchatIndex,
     });
     const newSubchatIndex = chat.lastSubchatIndex + 1;
+    if (newSubchatIndex > 200) {
+      throw new ConvexError({
+        code: "TooManySubchats",
+        message:
+          "You have reached the maximum number of subchats. You must continue the conversation in the current subchat.",
+      });
+    }
     await ctx.db.insert("chatMessagesStorageState", {
       chatId: chat._id,
       storageId: null,
