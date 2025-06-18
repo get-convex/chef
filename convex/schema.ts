@@ -131,10 +131,10 @@ export default defineSchema({
   // into another user's account.
   shares: defineTable({
     chatId: v.id("chats"),
-    snapshotId: v.optional(v.id("_storage")),
+    snapshotId: v.id("_storage"),
     code: v.string(),
 
-    chatHistoryId: v.optional(v.union(v.id("_storage"), v.null())),
+    chatHistoryId: v.id("_storage"),
 
     // Shares are created at one point in time, so this makes sure
     // people using the link don't see newer messages.
