@@ -15,7 +15,6 @@ export interface InitialMessages {
   loadedChatId: string;
   serialized: SerializedMessage[];
   deserialized: Message[];
-  earliestRewindableMessageRank?: number;
 }
 
 export function useInitialMessages(chatId: string):
@@ -37,11 +36,6 @@ export function useInitialMessages(chatId: string):
           setInitialMessages(null);
           return;
         }
-        const earliestRewindableMessageRank = await convex.query(api.messages.earliestRewindableMessageRank, {
-          chatId,
-          sessionId,
-          subchatIndex: chatInfo.subchatIndex,
-        });
         setKnownInitialId(chatInfo.initialId);
         if (chatInfo.urlId) {
           setKnownUrlId(chatInfo.urlId);
@@ -95,7 +89,6 @@ export function useInitialMessages(chatId: string):
           loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
           serialized: transformedMessages,
           deserialized: deserializedMessages,
-          earliestRewindableMessageRank: earliestRewindableMessageRank ?? undefined,
         });
         description.set(chatInfo.description);
       } catch (error) {

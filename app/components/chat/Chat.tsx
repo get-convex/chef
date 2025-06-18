@@ -84,7 +84,6 @@ interface ChatProps {
 
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
-  earliestRewindableMessageRank?: number;
 }
 
 const retryState = atom({
@@ -92,15 +91,7 @@ const retryState = atom({
   nextRetry: Date.now(),
 });
 export const Chat = memo(
-  ({
-    initialMessages,
-    partCache,
-    storeMessageHistory,
-    initializeChat,
-    isReload,
-    hadSuccessfulDeploy,
-    earliestRewindableMessageRank,
-  }: ChatProps) => {
+  ({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy }: ChatProps) => {
     const convex = useConvex();
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
     const actionAlert = useStore(workbenchStore.alert);
@@ -627,7 +618,6 @@ export const Chat = memo(
           modelSelection={modelSelection}
           setModelSelection={handleModelSelectionChange}
           onRewindToMessage={rewindToMessage}
-          earliestRewindableMessageRank={earliestRewindableMessageRank}
         />
         <UsageDebugView />
       </>
