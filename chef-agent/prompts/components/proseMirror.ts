@@ -22,7 +22,7 @@ Example usage, see [below](#usage) for more details:
 
 \`\`\`tsx
 function CollaborativeEditor() {
-  const sync = useBlockNoteSync(api.prosemirrorSync, 'some-id');
+  const sync = useBlockNoteSync(api.prosemirrorSync, 'some-id', { BlockNoteEditor });
   return sync.isLoading ? (
     <p>Loading...</p>
   ) : sync.editor ? (
@@ -178,9 +178,10 @@ import '@blocknote/core/fonts/inter.css';
 import { BlockNoteView } from '@blocknote/mantine';
 import '@blocknote/mantine/style.css';
 import { api } from '../convex/_generated/api';
+import { BlockNoteEditor } from '@blocknote/core';
 
 function MyComponent({ id }: { id: string }) {
-  const sync = useBlockNoteSync(api.example, id);
+  const sync = useBlockNoteSync(api.example, id, { BlockNoteEditor });
   return sync.isLoading ? (
     <p>Loading...</p>
   ) : sync.editor ? (
@@ -223,22 +224,40 @@ import type { SyncApi } from '../client';
 import { type UseSyncOptions, useTiptapSync } from '../tiptap';
 import { type Block, BlockNoteEditor, type BlockNoteEditorOptions, nodeToBlock } from '@blocknote/core';
 
-export type BlockNoteSyncOptions = UseSyncOptions & {
+export type BlockNoteSyncOptions<
+  Editor extends BlockNoteEditorInterface = BlockNoteEditor,
+> = UseSyncOptions & {
   /**
    * If you pass options into the editor, you should pass them here, to ensure
    * the initialContent is parsed with the correct schema.
    */
   editorOptions?: Partial<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Omit<BlockNoteEditorOptions<any, any, any>, 'initialContent'>
+    Omit<BlockNoteEditorOptions<any, any, any>, "initialContent">
   >;
+  /**
+   * The BlockNoteEditor from your installed version of BlockNote.
+   * If you see an error like:
+   * 
+   * Property 'options' is protected but type 'BlockNoteEditor<BSchema, ISchema, SSchema>' is not a class derived from 'BlockNoteEditor<BSchema, ISchema, SSchema>'.
+   * 
+   * You can pass your own BlockNoteEditor version here.
+   * This is a workaround for the types of your editor not matching the editor
+   * version used by prosemirror-sync.
+   */
+  BlockNoteEditor?: BlockNoteEditorCreator<Editor>;
 };
 
-export function useBlockNoteSync(syncApi: SyncApi, id: string, opts?: BlockNoteSyncOptions) {
+export function useBlockNoteSync<
+  Editor extends BlockNoteEditorInterface = BlockNoteEditor,
+>(syncApi: SyncApi, id: string, opts?: BlockNoteSyncOptions<Editor>) {
   const sync = useTiptapSync(syncApi, id, opts);
+  const Editor =
+    opts?.BlockNoteEditor ??
+    (BlockNoteEditor as unknown as BlockNoteEditorCreator<Editor>);
   const editor = useMemo(() => {
     if (sync.initialContent === null) return null;
-    const editor = BlockNoteEditor.create({
+    const editor = Editor.create({
       ...opts?.editorOptions,
       _headless: true,
     });
@@ -254,11 +273,14 @@ export function useBlockNoteSync(syncApi: SyncApi, id: string, opts?: BlockNoteS
         return false;
       });
     }
-    return BlockNoteEditor.create({
+    return Editor.create({
       ...opts?.editorOptions,
       _tiptapOptions: {
         ...opts?.editorOptions?._tiptapOptions,
-        extensions: [...(opts?.editorOptions?._tiptapOptions?.extensions ?? []), sync.extension],
+        extensions: [
+          ...(opts?.editorOptions?._tiptapOptions?.extensions ?? []),
+          sync.extension,
+        ],
       },
       initialContent: blocks.length > 0 ? blocks : undefined,
     });
