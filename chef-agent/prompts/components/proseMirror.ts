@@ -221,8 +221,22 @@ Here is the source code for the \`useBlockNoteSync\` hook.
 \`\`\`ts
 import { useMemo } from 'react';
 import type { SyncApi } from '../client';
-import { type UseSyncOptions, useTiptapSync } from '../tiptap';
-import { type Block, BlockNoteEditor, type BlockNoteEditorOptions, nodeToBlock } from '@blocknote/core';
+import { type UseSyncOptions, useTiptapSync } from "../tiptap";
+import {
+  type Block,
+  BlockNoteEditor,
+  type BlockNoteEditorOptions,
+  nodeToBlock,
+} from "@blocknote/core";
+import { Schema } from "prosemirror-model";
+
+interface BlockNoteEditorInterface {
+  readonly pmSchema: Schema;
+}
+interface BlockNoteEditorCreator<Editor extends BlockNoteEditorInterface> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  create: (options: any) => Editor;
+}
 
 export type BlockNoteSyncOptions<
   Editor extends BlockNoteEditorInterface = BlockNoteEditor,
