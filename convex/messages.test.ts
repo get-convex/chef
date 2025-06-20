@@ -8,12 +8,7 @@ import {
   verifyStoredMessages,
   type TestConvex,
 } from "./test.setup";
-import {
-  getChatByIdOrUrlIdEnsuringAccess,
-  NUM_REWINDABLE_MESSAGES,
-  type SerializedMessage,
-  type StorageInfo,
-} from "./messages";
+import { getChatByIdOrUrlIdEnsuringAccess, type SerializedMessage, type StorageInfo } from "./messages";
 import type { Id } from "./_generated/dataModel";
 
 function getChatStorageStates(t: TestConvex, chatId: string, sessionId: Id<"sessions">) {
@@ -664,7 +659,6 @@ describe("messages", () => {
       subchatIndex: 0,
       snapshotId: snapshotId1,
     });
-    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
     await t.mutation(internal.messages.updateStorageState, {
       sessionId,
       chatId,
@@ -674,7 +668,6 @@ describe("messages", () => {
       subchatIndex: 0,
       snapshotId: snapshotId1,
     });
-    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
     // This update SHOULD NOT delete `snapshotId1` because it is referenced by the previous storage state.
     await t.mutation(internal.messages.updateStorageState, {
       sessionId,
@@ -685,7 +678,6 @@ describe("messages", () => {
       subchatIndex: 0,
       snapshotId: snapshotId2,
     });
-    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
     const snapshot1 = await t.run(async (ctx) => {
       return await ctx.storage.getUrl(snapshotId1);
     });
@@ -1112,115 +1104,5 @@ describe("eraseMessageHistory", () => {
         dryRun: false,
       }),
     ).rejects.toThrow("No filesystem snapshot found for chat");
-  });
-});
-
-async function createStorageStates(t: TestConvex, chatId: string, sessionId: Id<"sessions">, numStates: number) {
-  const storageStates: Array<{ rank: number; storageId: Id<"_storage">; snapshotId: Id<"_storage"> }> = [];
-  for (let i = 0; i < numStates; i++) {
-    const storageId = await t.run(async (ctx) => {
-      return await ctx.storage.store(new Blob([`storage content ${i}`]));
-    });
-    const snapshotId = await t.run(async (ctx) => {
-      return await ctx.storage.store(new Blob([`snapshot content ${i}`]));
-    });
-
-    await t.mutation(internal.messages.updateStorageState, {
-      sessionId,
-      chatId,
-      snapshotId,
-      storageId,
-      lastMessageRank: i,
-      subchatIndex: 0,
-      partIndex: 0,
-    });
-    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
-    storageStates.push({ rank: i, storageId, snapshotId });
-  }
-  return storageStates;
-}
-
-describe("deleteStorageStatesPastRewindThreshold", () => {
-  let t: TestConvex;
-  beforeEach(async () => {
-    vi.useFakeTimers();
-    t = setupTest();
-  });
-
-  afterEach(async () => {
-    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
-    vi.useRealTimers();
-  });
-
-  test("deletes storage states past NUM_REWINDABLE_MESSAGES threshold", async () => {
-    const { sessionId, chatId } = await createChat(t);
-
-    // Create many storage states with different lastMessageRank values
-    // We'll create 30 storage states (0-29) to test the threshold
-    const storageStates = await createStorageStates(t, chatId, sessionId, 10 + NUM_REWINDABLE_MESSAGES);
-
-    // Verify that storage states with lastMessageRank <= (29 - 20) = 9 are deleted
-    // So ranks 0-9 should be deleted, ranks 10-29 should remain
-    const finalStorageStates = await getChatStorageStates(t, chatId, sessionId);
-
-    // Should have 20 remaining storage states (ranks 10-29)
-    expect(finalStorageStates.length).toBe(NUM_REWINDABLE_MESSAGES);
-
-    // Verify the remaining storage states are the correct ones
-    const remainingRanks = finalStorageStates
-      .filter((state) => state.lastMessageRank !== -1) // Exclude the initial chat record
-      .map((state) => state.lastMessageRank)
-      .sort((a, b) => a - b);
-
-    expect(remainingRanks).toEqual(Array.from({ length: NUM_REWINDABLE_MESSAGES }, (_, i) => i + 10));
-
-    // Verify that the storage blobs for deleted states are also deleted
-    await t.run(async (ctx) => {
-      // Check that storage blobs for ranks 0-9 are deleted
-      for (let i = 0; i < 10; i++) {
-        const storageBlob = await ctx.storage.get(storageStates[i].storageId);
-        expect(storageBlob).toBeNull();
-        const snapshotBlob = await ctx.storage.get(storageStates[i].snapshotId);
-        expect(snapshotBlob).toBeNull();
-      }
-
-      // Check that storage blobs for ranks 10-29 are still present
-      for (let i = 10; i < 30; i++) {
-        const storageBlob = await ctx.storage.get(storageStates[i].storageId);
-        expect(storageBlob).not.toBeNull();
-        const snapshotBlob = await ctx.storage.get(storageStates[i].snapshotId);
-        expect(snapshotBlob).not.toBeNull();
-      }
-    });
-  });
-
-  test("does not delete storage states when below threshold", async () => {
-    const { sessionId, chatId } = await createChat(t);
-
-    // Create only 10 storage states (0-9), which is below the threshold of 20
-    const storageStates = await createStorageStates(t, chatId, sessionId, 10);
-
-    // Call the function to delete old storage states
-    await t.mutation(internal.messages.deleteStorageStatesPastRewindThreshold, {
-      chatId: await t.run(async (ctx) => {
-        const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
-        return chat!._id;
-      }),
-      subchatIndex: 0,
-    });
-
-    // Verify that no storage states are deleted since we're below the threshold
-    const finalStorageStates = await getChatStorageStates(t, chatId, sessionId);
-    expect(finalStorageStates.length).toBe(11); // Should still have all 10 + 1 for the initial chat record
-
-    // Verify all storage blobs are still present
-    await t.run(async (ctx) => {
-      for (let i = 0; i < 10; i++) {
-        const storageBlob = await ctx.storage.get(storageStates[i].storageId);
-        expect(storageBlob).not.toBeNull();
-        const snapshotBlob = await ctx.storage.get(storageStates[i].snapshotId);
-        expect(snapshotBlob).not.toBeNull();
-      }
-    });
   });
 });

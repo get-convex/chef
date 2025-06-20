@@ -178,7 +178,7 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
     });
 
     // Run the cleanup function
-    await t.mutation(internal.cleanup.deleteNonLatestStorageStatesForLastMessageRank, {
+    await t.mutation(internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
       chatId,
       lastMessageRank: 1,
       forReal: true,
@@ -273,12 +273,12 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
       });
     });
 
-    await t.mutation(internal.cleanup.deleteNonLatestStorageStatesForLastMessageRank, {
+    await t.mutation(internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
       chatId,
       lastMessageRank: 1,
       forReal: true,
     });
-    await t.mutation(internal.cleanup.deleteNonLatestStorageStatesForLastMessageRank, {
+    await t.mutation(internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
       chatId,
       lastMessageRank: 2,
       forReal: true,
@@ -334,7 +334,7 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
       return states;
     });
 
-    await t.mutation(internal.cleanup.deleteNonLatestStorageStatesForLastMessageRank, {
+    await t.mutation(internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
       chatId,
       lastMessageRank: 1,
       forReal: true,
@@ -378,7 +378,7 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
     });
 
     // Run the cleanup function
-    await t.mutation(internal.cleanup.deleteNonLatestStorageStatesForLastMessageRank, {
+    await t.mutation(internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
       chatId,
       lastMessageRank: 1,
       forReal: true,
@@ -427,7 +427,7 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
     });
 
     // Run the cleanup function with dry run
-    await t.mutation(internal.cleanup.deleteNonLatestStorageStatesForLastMessageRank, {
+    await t.mutation(internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
       chatId,
       lastMessageRank: 1,
       forReal: false,

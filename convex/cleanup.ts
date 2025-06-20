@@ -56,7 +56,7 @@ export const deleteDebugFilesForInactiveChats = internalMutation({
 
 // Paginates over the chats table and schedules a function to delete all old storage states for each chat.
 // Schedules itself to keep iterating over chats table.
-export const deleteAllNonLatestLastMessageRankStorageStates = internalMutation({
+export const deleteAllOldChatStorageStates = internalMutation({
   args: {
     forReal: v.boolean(),
     cursor: v.optional(v.string()),
@@ -70,14 +70,14 @@ export const deleteAllNonLatestLastMessageRankStorageStates = internalMutation({
     });
     for (const chat of page) {
       console.log(`Scheduling cleanup for chat ${chat._id}`);
-      await ctx.scheduler.runAfter(0, internal.cleanup.deleteNonLatestLastMessageRankStorageStates, {
+      await ctx.scheduler.runAfter(0, internal.cleanup.deleteOldChatStorageStates, {
         chatId: chat._id,
         forReal,
         shouldScheduleNext,
       });
     }
     if (shouldScheduleNext && !isDone) {
-      await ctx.scheduler.runAfter(delayInMs, internal.cleanup.deleteAllNonLatestLastMessageRankStorageStates, {
+      await ctx.scheduler.runAfter(delayInMs, internal.cleanup.deleteAllOldChatStorageStates, {
         forReal,
         cursor: continueCursor,
         shouldScheduleNext,
@@ -87,7 +87,8 @@ export const deleteAllNonLatestLastMessageRankStorageStates = internalMutation({
 });
 
 // Paginate over chat storage states, scheduling deletion of old storage states for each lastMessageRank
-export const deleteNonLatestLastMessageRankStorageStates = internalMutation({
+// TODO: Delete all storage states and files that are older than numRewindableMessages
+export const deleteOldChatStorageStates = internalMutation({
   args: {
     chatId: v.id("chats"),
     forReal: v.boolean(),
@@ -119,7 +120,7 @@ export const deleteNonLatestLastMessageRankStorageStates = internalMutation({
       for (const [lastMessageRank, count] of lastMessageRankCounts) {
         if (count > 1) {
           console.log(`Scheduling cleanup for chat ${chatId} and lastMessageRank ${lastMessageRank}`);
-          await ctx.scheduler.runAfter(0, internal.cleanup.deleteNonLatestStorageStatesForLastMessageRank, {
+          await ctx.scheduler.runAfter(0, internal.cleanup.deleteOldStorageStatesForLastMessageRank, {
             chatId,
             lastMessageRank,
             forReal,
@@ -129,7 +130,7 @@ export const deleteNonLatestLastMessageRankStorageStates = internalMutation({
     }
 
     if (shouldScheduleNext && !isDone) {
-      await ctx.scheduler.runAfter(delayInMs, internal.cleanup.deleteNonLatestLastMessageRankStorageStates, {
+      await ctx.scheduler.runAfter(delayInMs, internal.cleanup.deleteOldChatStorageStates, {
         chatId,
         forReal,
         cursor: continueCursor,
@@ -140,7 +141,7 @@ export const deleteNonLatestLastMessageRankStorageStates = internalMutation({
 });
 
 // Delete all the storage states for non-latest parts of a lastMessageRank
-export const deleteNonLatestStorageStatesForLastMessageRank = internalMutation({
+export const deleteOldStorageStatesForLastMessageRank = internalMutation({
   args: {
     chatId: v.id("chats"),
     lastMessageRank: v.number(),

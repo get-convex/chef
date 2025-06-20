@@ -16,10 +16,6 @@ import { ensureEnvVar, startProvisionConvexProjectHelper } from "./convexProject
 import { internal } from "./_generated/api";
 import { assertIsConvexAdmin } from "./admin";
 
-export const NUM_REWINDABLE_MESSAGES = process.env.NUM_REWINDABLE_MESSAGES
-  ? parseInt(process.env.NUM_REWINDABLE_MESSAGES)
-  : 30;
-
 export type SerializedMessage = Omit<AIMessage, "createdAt" | "content"> & {
   createdAt: number | undefined;
   content?: string;
@@ -233,47 +229,6 @@ export const getMessagesByChatInitialIdBypassingAccessControl = internalQuery({
   },
 });
 
-export async function deleteOldChatStorageStatesForChat(ctx: MutationCtx, chatId: Id<"chats">, subchatIndex: number) {
-  const latestStorageState = await ctx.db
-    .query("chatMessagesStorageState")
-    .withIndex("byChatId", (q) => q.eq("chatId", chatId).eq("subchatIndex", subchatIndex))
-    .order("desc")
-    .first();
-  if (!latestStorageState) {
-    return;
-  }
-  // Delete all the storage states that are unreferenced and past the rewind threshold
-  const storageStatesToDelete = await ctx.db
-    .query("chatMessagesStorageState")
-    .withIndex("byChatId", (q) =>
-      q
-        .eq("chatId", chatId)
-        .eq("subchatIndex", subchatIndex)
-        .lte("lastMessageRank", latestStorageState.lastMessageRank - NUM_REWINDABLE_MESSAGES),
-    )
-    .collect();
-  for (const storageState of storageStatesToDelete) {
-    await ctx.db.delete(storageState._id);
-    // Delete files if unused
-    if (storageState.storageId) {
-      await deleteChatStorageIdIfUnused(ctx, storageState.storageId);
-    }
-    if (storageState.snapshotId) {
-      await deleteSnapshotIdIfUnused(ctx, storageState.snapshotId);
-    }
-  }
-}
-
-export const deleteStorageStatesPastRewindThreshold = internalMutation({
-  args: {
-    chatId: v.id("chats"),
-    subchatIndex: v.number(),
-  },
-  handler: async (ctx, { chatId, subchatIndex }) => {
-    await deleteOldChatStorageStatesForChat(ctx, chatId, subchatIndex);
-  },
-});
-
 export const updateStorageState = internalMutation({
   args: {
     sessionId: v.id("sessions"),
@@ -291,7 +246,7 @@ export const updateStorageState = internalMutation({
     if (!chat) {
       throw CHAT_NOT_FOUND_ERROR;
     }
-    await deleteFutureStorageStatesIfRewind(ctx, { chat, subchatIndex: args.subchatIndex });
+    await deletePreviousStorageStates(ctx, { chat, subchatIndex: args.subchatIndex });
     const previous = await getLatestChatMessageStorageState(ctx, {
       _id: chat._id,
       subchatIndex: args.subchatIndex,
@@ -333,10 +288,6 @@ export const updateStorageState = internalMutation({
       throw new Error("Received null storageId for a chat with messages");
     }
 
-    ctx.scheduler.runAfter(0, internal.messages.deleteStorageStatesPastRewindThreshold, {
-      chatId: chat._id,
-      subchatIndex: args.subchatIndex,
-    });
     if (previous.lastMessageRank === lastMessageRank) {
       if (previous.partIndex >= partIndex) {
         throw new Error("Tried to update to a part that is already stored. Should have already returned.");
@@ -392,7 +343,7 @@ export async function storageIdUnusedByShares(ctx: MutationCtx, chatStorageId: I
   return shareRef === null;
 }
 
-export async function deleteChatStorageIdIfUnused(ctx: MutationCtx, chatStorageId: Id<"_storage">) {
+async function deleteChatStorageIdIfUnused(ctx: MutationCtx, chatStorageId: Id<"_storage">) {
   const chatHistoryRef = await ctx.db
     .query("chatMessagesStorageState")
     .withIndex("byStorageId", (q) => q.eq("storageId", chatStorageId))
@@ -421,7 +372,7 @@ export async function snapshotIdUnusedByChatsAndShares(ctx: MutationCtx, snapsho
   return chatRef === null && shareRef === null;
 }
 
-export async function deleteSnapshotIdIfUnused(ctx: MutationCtx, snapshotId: Id<"_storage">) {
+async function deleteSnapshotIdIfUnused(ctx: MutationCtx, snapshotId: Id<"_storage">) {
   const chatHistoryRef = await ctx.db
     .query("chatMessagesStorageState")
     .withIndex("bySnapshotId", (q) => q.eq("snapshotId", snapshotId))
@@ -444,7 +395,7 @@ async function deleteStorageState(ctx: MutationCtx, storageState: Doc<"chatMessa
   }
 }
 
-async function deleteFutureStorageStatesIfRewind(
+async function deletePreviousStorageStates(
   ctx: MutationCtx,
   args: {
     chat: Doc<"chats">;

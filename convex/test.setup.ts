@@ -4,7 +4,7 @@ import { api } from "./_generated/api";
 import type { SerializedMessage } from "./messages";
 import type { Id } from "./_generated/dataModel";
 import type { GenericMutationCtx } from "convex/server";
-import { expect, vi } from "vitest";
+import { expect } from "vitest";
 
 // TODO -- for some reason, parameterizing on the generated `DataModel` does not work
 export type TestConvex = TestConvexForDataModel<any>;
@@ -83,8 +83,6 @@ export async function storeChat(
       throw new Error(`Failed to store chat: ${response.statusText}`);
     }
   }
-  vi.useFakeTimers();
-  await t.finishAllScheduledFunctions(() => vi.runAllTimers());
   return response;
 }
 
