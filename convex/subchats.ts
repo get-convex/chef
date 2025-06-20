@@ -41,7 +41,7 @@ export const create = mutation({
     sessionId: v.id("sessions"),
     chatId: v.string(),
   },
-  returns: v.null(),
+  returns: v.number(),
   handler: async (ctx, args) => {
     const { chatId, sessionId } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
@@ -71,5 +71,6 @@ export const create = mutation({
     await ctx.db.patch(chat._id, {
       lastSubchatIndex: newSubchatIndex,
     });
+    return newSubchatIndex;
   },
 });

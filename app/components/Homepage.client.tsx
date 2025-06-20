@@ -29,16 +29,17 @@ export function Homepage() {
 
 const ChatWrapper = ({ initialId }: { initialId: string }) => {
   const partCache = useRef<PartCache>(new Map());
-  const { storeMessageHistory, initializeChat } = useConvexChatHomepage(initialId);
+  const { storeMessageHistory, initializeChat, subchats, initialMessages } = useConvexChatHomepage(initialId);
   return (
     <Chat
-      initialMessages={emptyList}
+      initialMessages={initialMessages ?? emptyList}
       partCache={partCache.current}
       storeMessageHistory={storeMessageHistory}
       initializeChat={initializeChat}
       isReload={false}
       hadSuccessfulDeploy={false}
       earliestRewindableMessageRank={0}
+      subchats={subchats}
     />
   );
 };

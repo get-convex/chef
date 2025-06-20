@@ -23,6 +23,8 @@ import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 import { chooseExperience } from '~/utils/experienceChooser';
 import { AnimatePresence, motion } from 'framer-motion';
+import { subchatIndexStore } from '../ExistingChat.client';
+import { useStore } from '@nanostores/react';
 
 interface BaseChatProps {
   // Refs
@@ -58,6 +60,11 @@ interface BaseChatProps {
   // Rewind functionality
   onRewindToMessage?: (index: number) => void;
   earliestRewindableMessageRank?: number;
+
+  // Subchat navigation props
+  currentSubchatIndex?: number;
+  totalSubchats?: number;
+  subchats?: { subchatIndex: number; description?: string }[];
 }
 
 export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
@@ -82,6 +89,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       setModelSelection,
       onRewindToMessage,
       earliestRewindableMessageRank,
+      totalSubchats,
+      subchats,
     },
     ref,
   ) => {
@@ -90,12 +99,36 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const isStreaming = streamStatus === 'streaming' || streamStatus === 'submitted';
     const recommendedExperience = chooseExperience(navigator.userAgent, window.crossOriginIsolated);
     const [chatEnabled, setChatEnabled] = useState(recommendedExperience === 'the-real-thing');
+    const currentSubchatIndex = useStore(subchatIndexStore) ?? 0;
     useEffect(() => {
       const hasDismissedMobileWarning = localStorage.getItem('hasDismissedMobileWarning') === 'true';
       if (hasDismissedMobileWarning) {
         setChatEnabled(true);
       }
     }, []);
+
+    const canNavigatePrev = !!(subchats && subchats.length > 1 && currentSubchatIndex > 0);
+    const canNavigateNext = !!(subchats && subchats.length > 1 && currentSubchatIndex < subchats.length - 1);
+
+    const handleNavigateToSubchat = useCallback(
+      (direction: 'prev' | 'next') => {
+        if (!subchats || subchats.length <= 1) return;
+
+        let newIndex: number;
+
+        if (direction === 'prev' && currentSubchatIndex > 0) {
+          newIndex = currentSubchatIndex - 1;
+        } else if (direction === 'next' && currentSubchatIndex < subchats.length - 1) {
+          newIndex = currentSubchatIndex + 1;
+        } else {
+          return;
+        }
+
+        console.log('handleNavigateToSubchat', direction, newIndex);
+        subchatIndexStore.set(newIndex);
+      },
+      [subchats, currentSubchatIndex],
+    );
 
     const chatId = useChatId();
     const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -105,7 +138,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         sessionId,
         convexSiteUrl: getConvexSiteUrl(),
       });
-    }, [chatId, sessionId]);
+    }, [chatId, sessionId, subchats]);
+
+    console.log('subchats in component', subchats);
 
     const lastUserMessage = messages.findLast((message) => message.role === 'user');
     const resendMessage = useCallback(async () => {
@@ -147,14 +182,87 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 ref={scrollRef}
               >
                 {chatStarted ? (
-                  <Messages
-                    ref={messageRef}
-                    className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
-                    messages={messages}
-                    isStreaming={isStreaming}
-                    onRewindToMessage={onRewindToMessage}
-                    earliestRewindableMessageRank={earliestRewindableMessageRank}
-                  />
+                  <>
+                    {/* Subchat Navigation Bar */}
+                    {/* {totalSubchats && totalSubchats > 1 && ( */}
+                    {true && (
+                      <div className="sticky top-0 z-10 mx-auto w-full max-w-chat mb-4 pt-4">
+                        <div className="flex items-center justify-center gap-4 rounded-lg border border-content-secondary/20 bg-background-secondary/50 px-4 py-2 backdrop-blur-sm">
+                          <button
+                            onClick={() => handleNavigateToSubchat('prev')}
+                            disabled={!canNavigatePrev}
+                            className={classNames(
+                              'flex items-center justify-center rounded-md p-2 transition-all duration-200',
+                              {
+                                'text-content-primary hover:bg-background-tertiary hover:text-content-primary':
+                                  canNavigatePrev,
+                                'text-content-tertiary cursor-not-allowed': !canNavigatePrev,
+                              },
+                            )}
+                            aria-label="Previous subchat"
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M15 18l-6-6 6-6" />
+                            </svg>
+                          </button>
+
+                          <div className="flex items-center gap-2 text-sm font-medium text-content-secondary">
+                            <span>Subchat</span>
+                            <span className="text-content-primary">{currentSubchatIndex + 1}</span>
+                            <span>of</span>
+                            <span className="text-content-primary">
+                              {Math.max(currentSubchatIndex + 1, subchats?.length ?? 1)}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => handleNavigateToSubchat('next')}
+                            disabled={!canNavigateNext}
+                            className={classNames(
+                              'flex items-center justify-center rounded-md p-2 transition-all duration-200',
+                              {
+                                'text-content-primary hover:bg-background-tertiary hover:text-content-primary':
+                                  canNavigateNext,
+                                'text-content-tertiary cursor-not-allowed': !canNavigateNext,
+                              },
+                            )}
+                            aria-label="Next subchat"
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M9 18l6-6-6-6" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <Messages
+                      ref={messageRef}
+                      className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
+                      messages={messages}
+                      isStreaming={isStreaming}
+                      onRewindToMessage={onRewindToMessage}
+                      earliestRewindableMessageRank={earliestRewindableMessageRank}
+                    />
+                  </>
                 ) : null}
                 <div
                   className={classNames('flex flex-col w-full max-w-chat mx-auto z-prompt relative', {

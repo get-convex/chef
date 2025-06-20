@@ -1,15 +1,15 @@
 import { selectedTeamSlugStore, waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
 
-import { useConvex } from 'convex/react';
-import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
-import { useCallback } from 'react';
+import { useConvex, useQuery } from 'convex/react';
+import { getConvexAuthToken, useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { useCallback, useState } from 'react';
 import { api } from '@convex/_generated/api';
 import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { openSignInWindow } from '~/components/ChefSignInPage';
 import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
 import { toast } from 'sonner';
 
-export function useHomepageInitializeChat(chatId: string) {
+export function useHomepageInitializeChat(chatId: string, setChatInitialized: (chatInitialized: boolean) => void) {
   const convex = useConvex();
   const chefAuthState = useChefAuth();
   const isFullyLoggedIn = chefAuthState.kind === 'fullyLoggedIn';
@@ -42,6 +42,7 @@ export function useHomepageInitializeChat(chatId: string) {
       sessionId,
       projectInitParams,
     });
+    setChatInitialized(true);
 
     // Wait for the WebContainer to have its snapshot loaded before sending a message.
     await waitForBootStepCompleted(ContainerBootState.LOADING_SNAPSHOT);

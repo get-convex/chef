@@ -60,6 +60,11 @@ export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId:
   const title = action && toolTitle(parsed);
   const icon = action && statusIcon(action.status, parsed);
 
+  // Early return if artifact doesn't exist
+  if (!artifact) {
+    return null;
+  }
+
   if (!action) {
     return null;
   }

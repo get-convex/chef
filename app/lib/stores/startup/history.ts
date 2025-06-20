@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import { useConvex, type ConvexReactClient } from 'convex/react';
+import { useConvex, useQuery, type ConvexReactClient } from 'convex/react';
 import { atom } from 'nanostores';
 import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from '~/lib/stores/fileUpdateCounter';
@@ -15,6 +15,7 @@ import {
   waitForNewMessages,
 } from './messages';
 import { createScopedLogger } from 'chef-agent/utils/logger';
+import { api } from '@convex/_generated/api';
 
 const logger = createScopedLogger('history');
 
@@ -95,6 +96,7 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
   }, []);
   useEffect(() => {
     const run = async () => {
+      console.log('useBackupSyncState useEffect run');
       const sessionId = await waitForConvexSessionId('useBackupSyncState');
       void chatSyncWorker({ chatId, sessionId, convex });
     };
@@ -123,6 +125,7 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
   while (true) {
     const currentState = await waitForInitialized();
     const completeMessageInfo = lastCompleteMessageInfoStore.get();
+    console.log('completeMessageInfo', completeMessageInfo);
     if (completeMessageInfo === null) {
       logger.error('Complete message info not initialized');
       continue;

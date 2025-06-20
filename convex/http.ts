@@ -84,6 +84,7 @@ httpWithCors.route({
     const sessionId = body.sessionId;
     const chatId = body.chatId;
     const subchatIndex = body.subchatIndex ?? 0;
+    console.log('subchatIndex', subchatIndex);
     if (!sessionId) {
       throw new ConvexError("sessionId is required");
     }

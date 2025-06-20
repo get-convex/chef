@@ -36,6 +36,11 @@ import { captureException } from '@sentry/remix';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftIcon, DocumentArrowUpIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { PlusCircleIcon } from '@heroicons/react/20/solid';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@convex/_generated/api';
+import { useChatId } from '~/lib/stores/chatId';
+import { subchatIndexStore } from '../ExistingChat.client';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
@@ -111,6 +116,8 @@ export const MessageInput = memo(function MessageInput({
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chefAuthState = useChefAuth();
   const selectedTeamSlug = useSelectedTeamSlug();
+  const chatId = useChatId();
+  const createSubchat = useMutation(api.subchats.create);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -272,6 +279,20 @@ export const MessageInput = memo(function MessageInput({
           {input.length > PROMPT_LENGTH_WARNING_THRESHOLD && <CharacterWarning />}
           <div className="ml-auto flex items-center gap-1">
             {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
+            {chefAuthState.kind === 'fullyLoggedIn' && sessionId && (
+              <Button
+                variant="neutral"
+                tip={'Add a new feature'}
+                disabled={disabled}
+                inline
+                onClick={async () => {
+                  const subchatIndex = await createSubchat({ chatId, sessionId });
+                  subchatIndexStore.set(subchatIndex);
+                }}
+              >
+                <div className="text-lg">{<PlusCircleIcon className="size-4" />}</div>
+              </Button>
+            )}
             <MenuComponent
               buttonProps={{
                 variant: 'neutral',

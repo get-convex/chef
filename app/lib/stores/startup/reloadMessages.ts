@@ -4,6 +4,8 @@ import { makePartId } from 'chef-agent/partId';
 import { toast } from 'sonner';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { processMessage, type PartCache } from '~/lib/hooks/useMessageParser';
+import { subchatIndexStore } from '~/components/ExistingChat.client';
+import { useStore } from '@nanostores/react';
 
 export type ReloadedMessages = {
   partCache: PartCache;
@@ -11,6 +13,7 @@ export type ReloadedMessages = {
 
 export function useReloadMessages(initialMessages: Message[] | undefined): ReloadedMessages | undefined {
   const [reloadState, setReloadState] = useState<ReloadedMessages | undefined>(undefined);
+  const subchatIndex = useStore(subchatIndexStore);
   useEffect(() => {
     if (initialMessages === undefined) {
       return;
@@ -35,6 +38,6 @@ export function useReloadMessages(initialMessages: Message[] | undefined): Reloa
       }
     };
     void reload();
-  }, [initialMessages]);
+  }, [initialMessages, subchatIndex]);
   return reloadState;
 }

@@ -7,6 +7,7 @@ import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { description as descriptionStore } from '~/lib/stores/description';
 import { compressWithLz4 } from '~/lib/compression';
+import { subchatIndexStore } from '~/components/ExistingChat.client';
 
 type CompleteMessageInfo = {
   messageIndex: number;
@@ -35,11 +36,13 @@ export async function prepareMessageHistory(args: {
   const { messageIndex, partIndex, allMessages } = completeMessageInfo;
   const siteUrl = getConvexSiteUrl();
   const url = new URL(`${siteUrl}/store_chat`);
+  const subchatIndex = subchatIndexStore.get();
 
   url.searchParams.set('chatId', chatId);
   url.searchParams.set('sessionId', sessionId);
   url.searchParams.set('lastMessageRank', messageIndex.toString());
   url.searchParams.set('partIndex', partIndex.toString());
+  url.searchParams.set('lastSubchatIndex', subchatIndex?.toString() ?? '0');
   if (messageIndex === persistedMessageInfo.messageIndex && partIndex === persistedMessageInfo.partIndex) {
     // No changes
     return { url, update: null };

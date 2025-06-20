@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useConvex } from 'convex/react';
-import { waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { useConvex, useQuery } from 'convex/react';
+import { useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
 import type { SerializedMessage } from '@convex/messages';
 import type { Message } from '@ai-sdk/react';
@@ -10,25 +10,44 @@ import { description } from '~/lib/stores/description';
 import { toast } from 'sonner';
 import * as lz4 from 'lz4-wasm';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
+import { subchatIndexStore } from '~/components/ExistingChat.client';
+import { useStore } from '@nanostores/react';
 
 export interface InitialMessages {
   loadedChatId: string;
   serialized: SerializedMessage[];
   deserialized: Message[];
   earliestRewindableMessageRank?: number;
+  subchats?: { subchatIndex: number; description?: string }[];
 }
 
-export function useInitialMessages(chatId: string):
+export function useInitialMessages(chatId: string | undefined):
   | InitialMessages
   | null // not found
   | undefined {
   const convex = useConvex();
   const [initialMessages, setInitialMessages] = useState<InitialMessages | null | undefined>();
+  const sessionIdOrNullOrLoading = useConvexSessionIdOrNullOrLoading();
+  const subchatIndex = useStore(subchatIndexStore);
+  const subchats = useQuery(
+    api.subchats.get,
+    sessionIdOrNullOrLoading && chatId
+      ? {
+          chatId,
+          sessionId: sessionIdOrNullOrLoading,
+        }
+      : 'skip',
+  );
+
   useEffect(() => {
     const loadInitialMessages = async () => {
       const sessionId = await waitForConvexSessionId('loadInitialMessages');
       try {
         const siteUrl = getConvexSiteUrl();
+        if (!chatId) {
+          setInitialMessages(undefined);
+          return;
+        }
         const chatInfo = await convex.query(api.messages.get, {
           id: chatId,
           sessionId,
@@ -36,6 +55,13 @@ export function useInitialMessages(chatId: string):
         if (chatInfo === null) {
           setInitialMessages(null);
           return;
+        }
+        if (!subchats) {
+          setInitialMessages(undefined);
+          return;
+        }
+        if (subchatIndex === null) {
+          subchatIndexStore.set(chatInfo.subchatIndex);
         }
         const earliestRewindableMessageRank = await convex.query(api.messages.earliestRewindableMessageRank, {
           chatId,
@@ -51,11 +77,21 @@ export function useInitialMessages(chatId: string):
           body: JSON.stringify({
             chatId,
             sessionId,
-            subchatIndex: chatInfo.subchatIndex,
+            subchatIndex: subchatIndex ?? chatInfo.subchatIndex,
           }),
         });
         if (!initialMessagesResponse.ok) {
           throw new Error('Failed to fetch initial messages');
+        }
+
+        if (initialMessagesResponse.status === 204) {
+          setInitialMessages({
+            loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
+            serialized: [],
+            deserialized: [],
+            subchats,
+          });
+          return;
         }
         const content = await initialMessagesResponse.arrayBuffer();
         const initialMessages = await decompressMessages(new Uint8Array(content));
@@ -91,11 +127,13 @@ export function useInitialMessages(chatId: string):
         });
 
         const deserializedMessages = transformedMessages.map(deserializeMessageForConvex);
+        console.log('deserializedMessages', deserializedMessages);
         setInitialMessages({
           loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
           serialized: transformedMessages,
           deserialized: deserializedMessages,
           earliestRewindableMessageRank: earliestRewindableMessageRank ?? undefined,
+          subchats,
         });
         description.set(chatInfo.description);
       } catch (error) {
@@ -104,7 +142,7 @@ export function useInitialMessages(chatId: string):
       }
     };
     void loadInitialMessages();
-  }, [convex, chatId]);
+  }, [convex, chatId, subchats, subchatIndex]);
 
   return initialMessages;
 }
