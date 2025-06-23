@@ -38,7 +38,6 @@ const ChatWrapper = ({ initialId }: { initialId: string }) => {
       initializeChat={initializeChat}
       isReload={false}
       hadSuccessfulDeploy={false}
-      earliestRewindableMessageRank={0}
       subchats={subchats}
     />
   );

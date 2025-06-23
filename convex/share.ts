@@ -173,14 +173,22 @@ export async function cloneShow(
   };
   const clonedChatId = await ctx.db.insert("chats", clonedChat);
 
-  await ctx.db.insert("chatMessagesStorageState", {
-    chatId: clonedChatId,
-    storageId: storageState.storageId,
-    lastMessageRank: storageState.lastMessageRank,
-    subchatIndex: storageState.subchatIndex,
-    partIndex: storageState.partIndex,
-    snapshotId: storageState.snapshotId,
-  });
+  for (let i = 0; i < parentChat.lastSubchatIndex + 1; i++) {
+    const storageState = await getLatestChatMessageStorageState(ctx, {
+      _id: parentChat._id,
+      subchatIndex: i,
+    });
+    if (storageState) {
+      await ctx.db.insert("chatMessagesStorageState", {
+        chatId: clonedChatId,
+        storageId: storageState.storageId,
+        lastMessageRank: storageState.lastMessageRank,
+        subchatIndex: storageState.subchatIndex,
+        partIndex: storageState.partIndex,
+        snapshotId: storageState.snapshotId,
+      });
+    }
+  }
 
   await startProvisionConvexProjectHelper(ctx, {
     sessionId,
@@ -240,6 +248,23 @@ export const clone = mutation({
         code: "NotFound",
         message: "The original chat history was not found. It may have been deleted.",
       });
+    }
+    // We clone all of the subchats except the last one, which is the current subchat
+    for (let i = 0; i < getShare.lastSubchatIndex; i++) {
+      const storageState = await getLatestChatMessageStorageState(ctx, {
+        _id: parentChat._id,
+        subchatIndex: i,
+      });
+      if (storageState) {
+        await ctx.db.insert("chatMessagesStorageState", {
+          chatId: clonedChatId,
+          storageId: storageState.storageId,
+          lastMessageRank: storageState.lastMessageRank,
+          subchatIndex: storageState.subchatIndex,
+          partIndex: storageState.partIndex,
+          snapshotId: storageState.snapshotId,
+        });
+      }
     }
     await ctx.db.insert("chatMessagesStorageState", {
       chatId: clonedChatId,

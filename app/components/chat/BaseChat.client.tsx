@@ -59,7 +59,6 @@ interface BaseChatProps {
 
   // Rewind functionality
   onRewindToMessage?: (index: number) => void;
-  earliestRewindableMessageRank?: number;
 
   // Subchat navigation props
   currentSubchatIndex?: number;
@@ -88,7 +87,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       modelSelection,
       setModelSelection,
       onRewindToMessage,
-      earliestRewindableMessageRank,
       totalSubchats,
       subchats,
     },
@@ -260,8 +258,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       messages={messages}
                       isStreaming={isStreaming}
                       onRewindToMessage={onRewindToMessage}
-                      earliestRewindableMessageRank={earliestRewindableMessageRank}
-                    />
+                      />
                   </>
                 ) : null}
                 <div

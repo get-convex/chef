@@ -12,6 +12,7 @@ import { PersonIcon } from '@radix-ui/react-icons';
 import { ResetIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
+import { useEarliestRewindableMessageRank } from '~/lib/hooks/useEarliestRewindableMessageRank';
 
 interface MessagesProps {
   id?: string;
@@ -19,18 +20,10 @@ interface MessagesProps {
   isStreaming?: boolean;
   messages?: Message[];
   onRewindToMessage?: (index: number) => void;
-  earliestRewindableMessageRank?: number;
 }
 
 export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messages(
-  {
-    id,
-    isStreaming = false,
-    messages = [],
-    className,
-    onRewindToMessage,
-    earliestRewindableMessageRank,
-  }: MessagesProps,
+  { id, isStreaming = false, messages = [], className, onRewindToMessage }: MessagesProps,
   ref: ForwardedRef<HTMLDivElement> | undefined,
 ) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,6 +35,8 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
     [onRewindToMessage],
   );
   const profile = useStore(profileStore);
+  const earliestRewindableMessageRank = useEarliestRewindableMessageRank();
+
   return (
     <div id={id} className={className} ref={ref}>
       {isModalOpen && selectedMessageIndex !== null && (
@@ -122,6 +117,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                 )}
                 {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
                 {earliestRewindableMessageRank !== undefined &&
+                  earliestRewindableMessageRank !== null &&
                   !isUserMessage &&
                   index >= earliestRewindableMessageRank &&
                   index !== messages.length - 1 && (

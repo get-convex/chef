@@ -447,7 +447,7 @@ export const earliestRewindableMessageRank = query({
         q.eq("chatId", chat._id).eq("subchatIndex", subchatIndex).lte("lastMessageRank", latestState.lastMessageRank),
       )
       .order("asc")
-      .collect();
+      .take(10);
 
     const docWithSnapshot = docs.find((doc) => doc.snapshotId !== undefined && doc.snapshotId !== null);
 

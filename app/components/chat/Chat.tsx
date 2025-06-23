@@ -84,7 +84,6 @@ interface ChatProps {
 
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
-  earliestRewindableMessageRank?: number;
   subchats?: { subchatIndex: number; description?: string }[];
 }
 
@@ -100,7 +99,6 @@ export const Chat = memo(
     initializeChat,
     isReload,
     hadSuccessfulDeploy,
-    earliestRewindableMessageRank,
     subchats,
   }: ChatProps) => {
     const convex = useConvex();
@@ -635,7 +633,6 @@ export const Chat = memo(
           modelSelection={modelSelection}
           setModelSelection={handleModelSelectionChange}
           onRewindToMessage={rewindToMessage}
-          earliestRewindableMessageRank={earliestRewindableMessageRank}
           subchats={subchats}
         />
         <UsageDebugView />

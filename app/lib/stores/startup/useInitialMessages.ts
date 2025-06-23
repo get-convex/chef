@@ -17,7 +17,6 @@ export interface InitialMessages {
   loadedChatId: string;
   serialized: SerializedMessage[];
   deserialized: Message[];
-  earliestRewindableMessageRank?: number;
   subchats?: { subchatIndex: number; description?: string }[];
 }
 
@@ -63,11 +62,6 @@ export function useInitialMessages(chatId: string | undefined):
         if (subchatIndex === null) {
           subchatIndexStore.set(chatInfo.subchatIndex);
         }
-        const earliestRewindableMessageRank = await convex.query(api.messages.earliestRewindableMessageRank, {
-          chatId,
-          sessionId,
-          subchatIndex: chatInfo.subchatIndex,
-        });
         setKnownInitialId(chatInfo.initialId);
         if (chatInfo.urlId) {
           setKnownUrlId(chatInfo.urlId);
@@ -132,7 +126,6 @@ export function useInitialMessages(chatId: string | undefined):
           loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
           serialized: transformedMessages,
           deserialized: deserializedMessages,
-          earliestRewindableMessageRank: earliestRewindableMessageRank ?? undefined,
           subchats,
         });
         description.set(chatInfo.description);
