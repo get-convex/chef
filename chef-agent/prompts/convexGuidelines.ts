@@ -919,11 +919,11 @@ Convex Components are like mini self-contained Convex backends, and installing t
 Each component is installed as its own independent library from NPM. You also need to add a \`convex.config.ts\` file that includes the component.
 ALWAYS prefer using a component for a feature than writing the code yourself, unless the component is not yet supported.
 ALWAYS use the \`lookupDocs\` tool to lookup documentation for a component before trying to use the \`npmInstall\` tool to install the relevant dependencies.
-You DO NOT need to deploy a component to use it. You can use it after you've installed it. ${options.enablePresence ? multiComponent : ''}
+You DO NOT need to deploy a component to use it. You can use it after you've installed it. ${multiComponent}
 
 Convex has the following components:
 - \`proseMirror\`: A collaborative text editor component.
-${options.enablePresence ? presenceComponent : ''}
+${presenceComponent}
 
 Convex has but does not support the following components in Chef: 
 DO NOT use the \`lookupDocs\` tool to lookup documentation for these or install them.

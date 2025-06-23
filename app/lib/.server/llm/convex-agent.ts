@@ -54,7 +54,6 @@ export async function convexAgent(args: {
   featureFlags: {
     enablePreciseEdits: boolean;
     smallFiles: boolean;
-    enablePresence: boolean;
   };
 }) {
   const {
@@ -89,12 +88,11 @@ export async function convexAgent(args: {
     usingGoogle: modelProvider == 'Google',
     resendProxyEnabled: getEnv('RESEND_PROXY_ENABLED') == '1',
     smallFiles: featureFlags.smallFiles,
-    enablePresence: featureFlags.enablePresence,
   };
   const tools: ConvexToolSet = {
     deploy: deployTool,
     npmInstall: npmInstallTool,
-    lookupDocs: lookupDocsTool(opts.enablePresence),
+    lookupDocs: lookupDocsTool(),
   };
   if (opts.enablePreciseEdits) {
     tools.view = viewTool;
@@ -230,7 +228,6 @@ async function onFinishHandler({
   featureFlags: {
     enablePreciseEdits: boolean;
     smallFiles: boolean;
-    enablePresence: boolean;
   };
 }) {
   const { providerMetadata } = result;
@@ -254,7 +251,6 @@ async function onFinishHandler({
     span.setAttribute('usage.totalTokens', usage.totalTokens);
     span.setAttribute('featureFlags.smallFiles', featureFlags.smallFiles);
     span.setAttribute('featureFlags.enablePreciseEdits', featureFlags.enablePreciseEdits);
-    span.setAttribute('featureFlags.enablePresence', featureFlags.enablePresence);
     span.setAttribute('collapsedMessages', collapsedMessages);
     span.setAttribute('model', providerModel);
     if (providerMetadata) {

@@ -24,7 +24,6 @@ export interface SystemPromptOptions {
   usingGoogle: boolean;
   resendProxyEnabled: boolean;
   smallFiles: boolean;
-  enablePresence: boolean;
 }
 
 export interface BoltArtifactData {

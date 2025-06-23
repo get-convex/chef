@@ -132,7 +132,6 @@ export const Chat = memo(
       useGeminiAuto,
       useClaude4Auto,
       enablePreciseEdits,
-      enablePresence,
     } = useLaunchDarkly();
 
     const title = useStore(description);
@@ -357,7 +356,6 @@ export const Chat = memo(
           featureFlags: {
             enablePreciseEdits,
             smallFiles,
-            enablePresence,
           },
         };
       },
