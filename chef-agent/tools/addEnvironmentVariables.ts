@@ -1,4 +1,4 @@
-import { Tool } from 'ai';
+import type { Tool } from 'ai';
 import { z } from 'zod';
 
 export const addEnvironmentVariablesParameters = z.object({

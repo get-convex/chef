@@ -14,6 +14,7 @@ const flagDefaults: {
   notionClonePrompt: boolean;
   useClaude4Auto: boolean;
   enablePreciseEdits: boolean;
+  enableEnvironmentVariables: boolean;
 } = {
   maintenanceMode: false,
   showUsageAnnotations: false,
@@ -27,6 +28,7 @@ const flagDefaults: {
   notionClonePrompt: false,
   useClaude4Auto: false,
   enablePreciseEdits: false,
+  enableEnvironmentVariables: false,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {

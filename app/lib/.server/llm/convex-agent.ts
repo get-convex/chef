@@ -55,6 +55,7 @@ export async function convexAgent(args: {
   featureFlags: {
     enablePreciseEdits: boolean;
     smallFiles: boolean;
+    enableEnvironmentVariables: boolean;
   };
 }) {
   const {
@@ -94,8 +95,10 @@ export async function convexAgent(args: {
     deploy: deployTool,
     npmInstall: npmInstallTool,
     lookupDocs: lookupDocsTool(),
-    addEnvironmentVariables: addEnvironmentVariablesTool(),
   };
+  if (featureFlags.enableEnvironmentVariables) {
+    tools.addEnvironmentVariables = addEnvironmentVariablesTool();
+  }
   if (opts.enablePreciseEdits) {
     tools.view = viewTool;
     tools.edit = editTool;
@@ -230,6 +233,7 @@ async function onFinishHandler({
   featureFlags: {
     enablePreciseEdits: boolean;
     smallFiles: boolean;
+    enableEnvironmentVariables: boolean;
   };
 }) {
   const { providerMetadata } = result;
@@ -253,6 +257,7 @@ async function onFinishHandler({
     span.setAttribute('usage.totalTokens', usage.totalTokens);
     span.setAttribute('featureFlags.smallFiles', featureFlags.smallFiles);
     span.setAttribute('featureFlags.enablePreciseEdits', featureFlags.enablePreciseEdits);
+    span.setAttribute('featureFlags.enableEnvironmentVariables', featureFlags.enableEnvironmentVariables);
     span.setAttribute('collapsedMessages', collapsedMessages);
     span.setAttribute('model', providerModel);
     if (providerMetadata) {

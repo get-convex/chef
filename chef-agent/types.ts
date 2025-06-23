@@ -82,7 +82,7 @@ export type ConvexToolSet = {
   deploy: Tool<EmptyArgs, string>;
   npmInstall: Tool<typeof npmInstallToolParameters, string>;
   lookupDocs: Tool<typeof lookupDocsParameters, string>;
-  addEnvironmentVariables: Tool<typeof addEnvironmentVariablesParameters, void>;
+  addEnvironmentVariables?: Tool<typeof addEnvironmentVariablesParameters, void>;
   view?: Tool<typeof viewParameters, string>;
   edit?: Tool<typeof editToolParameters, string>;
 };
