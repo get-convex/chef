@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { makePartId } from 'chef-agent/partId';
 import { toast } from 'sonner';
 import { workbenchStore } from '~/lib/stores/workbench.client';
-import { processMessage, type PartCache } from '~/lib/hooks/useMessageParser';
+import { messageParser, processMessage, type PartCache } from '~/lib/hooks/useMessageParser';
 import { subchatIndexStore } from '~/components/ExistingChat.client';
 import { useStore } from '@nanostores/react';
 
@@ -32,6 +32,7 @@ export function useReloadMessages(initialMessages: Message[] | undefined): Reloa
           processMessage(message, partCache);
         }
         setReloadState({ partCache });
+        messageParser.reset();
       } catch (error) {
         toast.error('Failed to load previous chat messages from Convex.');
         console.error('Error reloading messages:', error);

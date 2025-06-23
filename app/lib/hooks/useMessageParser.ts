@@ -6,7 +6,7 @@ import { makePartId, type PartId } from 'chef-agent/partId';
 import type { BoltAction } from 'chef-agent/types';
 import { EXCLUDED_FILE_PATHS } from 'chef-agent/constants';
 
-const messageParser = new StreamingMessageParser({
+export const messageParser = new StreamingMessageParser({
   callbacks: {
     onArtifactOpen: (data) => {
       workbenchStore.showWorkbench.set(true);

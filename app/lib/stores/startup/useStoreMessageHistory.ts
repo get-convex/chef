@@ -31,49 +31,13 @@ export function useStoreMessageHistory() {
       return;
     }
 
-    // This is the point where we need to fix the messages before they are stored.
-    const messagesToStore = messages.map(serializeMessageForStorage);
-
     lastCompleteMessageInfoStore.set({
       messageIndex: lastCompleteMessageInfo.messageIndex,
       partIndex: lastCompleteMessageInfo.partIndex,
-      allMessages: messagesToStore,
+      allMessages: messages,
       hasNextPart: lastCompleteMessageInfo.hasNextPart,
     });
   }, []);
-}
-
-/**
- * This function ensures that for any given message, if it has textual content,
- * that content is represented as a 'text' part within the 'parts' array.
- * This is crucial for correct storage and later retrieval, as the UI rendering
- * logic for multi-part messages relies on the `parts` array exclusively.
- * @param message The message from the AI SDK state.
- * @returns A message object ready for serialization.
- */
-function serializeMessageForStorage(message: Message): Message {
-  if (message.role === 'assistant' && message.content) {
-    const newParts: Message['parts'] = [];
-
-    // Add the text content as the first part.
-    newParts.push({ type: 'text', text: message.content });
-
-    // Add any existing non-text parts (like tool calls).
-    if (message.parts) {
-      message.parts.forEach((part) => {
-        if (part.type !== 'text') {
-          newParts.push(part);
-        }
-      });
-    }
-
-    return {
-      ...message,
-      parts: newParts,
-    };
-  }
-
-  return message;
 }
 
 function getPreceedingPart(
@@ -126,10 +90,7 @@ export function getLastCompletePart(
     return null;
   }
   const lastMessage = messages[lastPartIndices.messageIndex];
-  if (lastMessage === null || lastMessage.parts === undefined) {
-    throw new Error('Last message is null or has no parts');
-  }
-  const lastPart = lastMessage.parts[lastPartIndices.partIndex];
+  const lastPart = lastMessage.parts![lastPartIndices.partIndex];
   if (lastPart === null) {
     throw new Error('Last part is null');
   }
