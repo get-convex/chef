@@ -11,7 +11,6 @@ import { api } from '@convex/_generated/api';
 import { useQuery } from 'convex/react';
 
 export function useConvexChatHomepage(chatId: string) {
-  console.log('useConvexChatHomepage', chatId);
   useTeamsInitializer();
   useProjectInitializer(chatId);
   const [chatInitialized, setChatInitialized] = useState(false);
@@ -31,9 +30,6 @@ export function useConvexChatHomepage(chatId: string) {
       : 'skip',
   );
 
-  console.log('subchats in homepage', subchats);
-  console.log('initial meesages in homepage', initialMessages);
-
   return {
     initializeChat,
     storeMessageHistory,
@@ -50,7 +46,6 @@ export function useConvexChatExisting(chatId: string) {
   useBackupSyncState(chatId, initialMessages?.deserialized);
   const storeMessageHistory = useStoreMessageHistory();
   useExistingChatContainerSetup(initialMessages?.loadedChatId);
-  console.log('subchats in existing', initialMessages?.subchats);
   return {
     initialMessages: !initialMessages ? initialMessages : initialMessages?.deserialized,
     initializeChat,

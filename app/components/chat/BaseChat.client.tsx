@@ -122,7 +122,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           return;
         }
 
-        console.log('handleNavigateToSubchat', direction, newIndex);
         subchatIndexStore.set(newIndex);
       },
       [subchats, currentSubchatIndex],
@@ -137,8 +136,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         convexSiteUrl: getConvexSiteUrl(),
       });
     }, [chatId, sessionId, subchats]);
-
-    console.log('subchats in component', subchats);
 
     const lastUserMessage = messages.findLast((message) => message.role === 'user');
     const resendMessage = useCallback(async () => {
