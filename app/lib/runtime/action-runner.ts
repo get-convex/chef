@@ -24,7 +24,7 @@ import { outputLabels, type OutputLabels } from '~/lib/runtime/deployToolOutputL
 import type { ConvexToolName } from '~/lib/common/types';
 import { lookupDocsParameters, docs, type DocKey } from 'chef-agent/tools/lookupDocs';
 import { addEnvironmentVariablesParameters } from 'chef-agent/tools/addEnvironmentVariables';
-import { openDashboardToPath } from '../stores/dashboardPath';
+import { openDashboardToPath } from '~/lib/stores/dashboardPath';
 
 const logger = createScopedLogger('ActionRunner');
 
