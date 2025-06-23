@@ -1,6 +1,7 @@
 import { useStore } from '@nanostores/react';
 import { memo, useEffect, useRef } from 'react';
 import { convexProjectStore } from '~/lib/stores/convexProject';
+import { dashboardPathStore } from '~/lib/stores/dashboardPath';
 import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 
@@ -9,6 +10,7 @@ export const Dashboard = memo(function Dashboard() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const convexProject = useStore(convexProjectStore);
+  const currentDashboardPath = useStore(dashboardPathStore);
 
   if (!convexProject) {
     throw new Error('No Convex project connected');
@@ -16,8 +18,8 @@ export const Dashboard = memo(function Dashboard() {
 
   const { deploymentUrl, token, deploymentName } = convexProject;
 
-  const actualUrl = 'https://dashboard-embedded.convex.dev/data';
-  const shownUrl = `https://dashboard.convex.dev/d/${deploymentName}/`;
+  const actualUrl = `https://dashboard-embedded.convex.dev/${currentDashboardPath}`;
+  const shownUrl = `https://dashboard.convex.dev/d/${deploymentName}/${currentDashboardPath}`;
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

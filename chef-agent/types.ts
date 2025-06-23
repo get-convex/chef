@@ -1,11 +1,12 @@
 import type { ToolInvocation } from 'ai';
 import type { AbsolutePath, RelativePath } from './utils/workDir.js';
-import type { Tool, ToolCallUnion } from 'ai';
+import type { Tool } from 'ai';
 import type { npmInstallToolParameters } from './tools/npmInstall.js';
 import type { editToolParameters } from './tools/edit.js';
 import type { viewParameters } from './tools/view.js';
 import type { lookupDocsParameters } from './tools/lookupDocs.js';
 import type { z } from 'zod';
+import type { addEnvironmentVariablesParameters } from './tools/addEnvironmentVariables.js';
 
 export type ConvexProject = {
   token: string;
@@ -81,6 +82,7 @@ export type ConvexToolSet = {
   deploy: Tool<EmptyArgs, string>;
   npmInstall: Tool<typeof npmInstallToolParameters, string>;
   lookupDocs: Tool<typeof lookupDocsParameters, string>;
+  addEnvironmentVariables: Tool<typeof addEnvironmentVariablesParameters, void>;
   view?: Tool<typeof viewParameters, string>;
   edit?: Tool<typeof editToolParameters, string>;
 };

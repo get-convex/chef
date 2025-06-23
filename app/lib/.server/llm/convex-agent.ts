@@ -33,6 +33,7 @@ import { getProvider, type ModelProvider } from '~/lib/.server/llm/provider';
 import { getEnv } from '~/lib/.server/env';
 import { calculateChefTokens, usageFromGeneration } from '~/lib/common/usage';
 import { lookupDocsTool } from 'chef-agent/tools/lookupDocs';
+import { addEnvironmentVariablesTool } from 'chef-agent/tools/addEnvironmentVariables';
 
 type Messages = Message[];
 
@@ -93,6 +94,7 @@ export async function convexAgent(args: {
     deploy: deployTool,
     npmInstall: npmInstallTool,
     lookupDocs: lookupDocsTool(),
+    addEnvironmentVariables: addEnvironmentVariablesTool(),
   };
   if (opts.enablePreciseEdits) {
     tools.view = viewTool;
