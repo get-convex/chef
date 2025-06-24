@@ -406,12 +406,20 @@ async function deletePreviousStorageStates(
   const chatLastMessageRank = chat.lastMessageRank;
   if (chatLastMessageRank !== undefined) {
     // Remove the storage state records for future messages on a different branch
-    const storageStatesToDelete = await ctx.db
+    let storageStatesToDelete = await ctx.db
       .query("chatMessagesStorageState")
       .withIndex("byChatId", (q) =>
         q.eq("chatId", chat._id).eq("subchatIndex", args.subchatIndex).gt("lastMessageRank", chatLastMessageRank),
       )
       .collect();
+    // If we rewinded to a previous subchat, we delete all the storage states for the future subchats
+    if (args.subchatIndex < chat.lastSubchatIndex) {
+      const futureSubchatStorageStates = await ctx.db
+        .query("chatMessagesStorageState")
+        .withIndex("byChatId", (q) => q.eq("chatId", chat._id).gt("subchatIndex", args.subchatIndex))
+        .collect();
+      storageStatesToDelete.push(...futureSubchatStorageStates);
+    }
     for (const storageState of storageStatesToDelete) {
       await deleteStorageState(ctx, storageState);
     }
@@ -496,7 +504,7 @@ export const rewindChat = mutation({
       throw new ConvexError({ code: "NoMessagesSaved", message: "Cannot rewind to a chat with no messages saved" });
     }
 
-    if (!lastMessageRank) {
+    if (lastMessageRank === undefined) {
       ctx.db.patch(chat._id, { lastSubchatIndex: args.subchatIndex, lastMessageRank: undefined });
       return;
     }
