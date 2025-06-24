@@ -98,7 +98,6 @@ export const Chat = memo(
     const sessionId = useConvexSessionIdOrNullOrLoading();
 
     const rewindToMessage = async (subchatIndex?: number, messageIndex?: number) => {
-      console.log('Rewinding to message', subchatIndex, messageIndex);
       if (sessionId && typeof sessionId === 'string') {
         const chatId = chatIdStore.get();
         if (!chatId) {
