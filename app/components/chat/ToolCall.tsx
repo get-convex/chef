@@ -476,10 +476,8 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
       }
       return (
         <div className="flex items-center gap-2">
-          <ExclamationTriangleIcon className="text-amber-500" />
-          <span className="font-medium text-amber-700 dark:text-amber-300">
-            Action Required: Add Environment Variables
-          </span>
+          <ExclamationTriangleIcon className="text-content-warning" />
+          <span className="font-medium text-content-warning">Action Required: Add Environment Variables</span>
         </div>
       );
     }
