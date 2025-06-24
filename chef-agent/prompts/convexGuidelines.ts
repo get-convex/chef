@@ -923,7 +923,7 @@ You DO NOT need to deploy a component to use it. You can use it after you've ins
 
 Convex has the following components:
 - \`proseMirror\`: A collaborative text editor component.
-${presenceComponent}
+- \`presence\`: A component for managing presence functionality, i.e., a live-updating list of users in a "room" including their status for when they were last online.
 
 Convex has but does not support the following components in Chef: 
 DO NOT use the \`lookupDocs\` tool to lookup documentation for these or install them.
@@ -948,7 +948,3 @@ Chef does not have documentation for them. Tell the user that they are unsupport
 - Action cache
 `;
 }
-
-
-
-const presenceComponent = `- \`presence\`: A component for managing presence functionality, i.e., a live-updating list of users in a "room" including their status for when they were last online.`;
