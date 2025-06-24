@@ -57,6 +57,7 @@ export async function convexAgent(args: {
     enablePreciseEdits: boolean;
     smallFiles: boolean;
     enableEnvironmentVariables: boolean;
+    enableResend: boolean;
   };
 }) {
   const {
@@ -91,6 +92,7 @@ export async function convexAgent(args: {
     usingGoogle: modelProvider == 'Google',
     resendProxyEnabled: getEnv('RESEND_PROXY_ENABLED') == '1',
     smallFiles: featureFlags.smallFiles,
+    enableResend: featureFlags.enableResend,
   };
   const tools: ConvexToolSet = {
     deploy: deployTool,
@@ -236,6 +238,7 @@ async function onFinishHandler({
     enablePreciseEdits: boolean;
     smallFiles: boolean;
     enableEnvironmentVariables: boolean;
+    enableResend: boolean;
   };
 }) {
   const { providerMetadata } = result;
