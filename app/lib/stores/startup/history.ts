@@ -125,7 +125,6 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
   while (true) {
     const currentState = await waitForInitialized();
     const completeMessageInfo = lastCompleteMessageInfoStore.get();
-    console.log('completeMessageInfo', completeMessageInfo);
     if (completeMessageInfo === null) {
       logger.error('Complete message info not initialized');
       continue;

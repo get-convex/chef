@@ -31,6 +31,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
 }
 
 export const subchatIndexStore = atom<number | null>(null);
+export const subchatLoadedStore = atom<boolean>(false);
 
 function ExistingChatWrapper({ chatId }: { chatId: string }) {
   const sessionId = useStore(sessionIdStore);

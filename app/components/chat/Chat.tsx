@@ -46,6 +46,7 @@ import { UsageDebugView } from '~/components/debug/UsageDebugView';
 import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 import { useUsage } from '~/lib/stores/usage';
 import { hasAnyApiKeySet, hasApiKeySet } from '~/lib/common/apiKey';
+import { subchatLoadedStore } from '../ExistingChat.client';
 
 const logger = createScopedLogger('Chat');
 
@@ -55,6 +56,7 @@ const processSampledMessages = createSampler(
   (options: {
     messages: Message[];
     initialMessages: Message[];
+    loaded: boolean;
     parseMessages: (messages: Message[]) => void;
     streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
     storeMessageHistory: (
@@ -62,10 +64,10 @@ const processSampledMessages = createSampler(
       streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
     ) => Promise<void>;
   }) => {
-    const { messages, initialMessages, parseMessages, storeMessageHistory, streamStatus } = options;
+    const { messages, initialMessages, parseMessages, storeMessageHistory, streamStatus, loaded } = options;
     parseMessages(messages);
 
-    if (messages.length > initialMessages.length) {
+    if (messages.length > initialMessages.length && loaded) {
       storeMessageHistory(messages, streamStatus).catch((error) => toast.error(error.message));
     }
   },
@@ -105,6 +107,7 @@ export const Chat = memo(
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0 || (!!subchats && subchats.length > 1));
     const actionAlert = useStore(workbenchStore.alert);
     const sessionId = useConvexSessionIdOrNullOrLoading();
+    const loaded = useStore(subchatLoadedStore);
 
     const rewindToMessage = async (messageIndex: number) => {
       if (sessionId && typeof sessionId === 'string') {
@@ -417,7 +420,6 @@ export const Chat = memo(
     // Reset chat messages when initialMessages changes (e.g., when switching subchats)
     useEffect(() => {
       setMessages(initialMessages);
-      console.log('resetting messages: ', initialMessages);
     }, [initialMessages, subchats]);
 
     setChefDebugProperty('messages', messages);
@@ -438,8 +440,9 @@ export const Chat = memo(
         parseMessages,
         storeMessageHistory,
         streamStatus: status,
+        loaded,
       });
-    }, [initialMessages, messages, parseMessages, status, storeMessageHistory]);
+    }, [initialMessages, messages, parseMessages, status, storeMessageHistory, loaded]);
 
     const abort = () => {
       stop();

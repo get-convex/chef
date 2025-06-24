@@ -23,7 +23,7 @@ import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 import { chooseExperience } from '~/utils/experienceChooser';
 import { AnimatePresence, motion } from 'framer-motion';
-import { subchatIndexStore } from '../ExistingChat.client';
+import { subchatIndexStore, subchatLoadedStore } from '../ExistingChat.client';
 import { useStore } from '@nanostores/react';
 
 interface BaseChatProps {
@@ -122,6 +122,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           return;
         }
 
+        subchatLoadedStore.set(false);
         subchatIndexStore.set(newIndex);
       },
       [subchats, currentSubchatIndex],

@@ -10,7 +10,7 @@ import { description } from '~/lib/stores/description';
 import { toast } from 'sonner';
 import * as lz4 from 'lz4-wasm';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
-import { subchatIndexStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
 import { useStore } from '@nanostores/react';
 
 export interface InitialMessages {
@@ -60,6 +60,7 @@ export function useInitialMessages(chatId: string | undefined):
           return;
         }
         if (subchatIndex === null) {
+          subchatLoadedStore.set(false);
           subchatIndexStore.set(chatInfo.subchatIndex);
         }
         setKnownInitialId(chatInfo.initialId);
@@ -85,6 +86,7 @@ export function useInitialMessages(chatId: string | undefined):
             deserialized: [],
             subchats,
           });
+          subchatLoadedStore.set(true);
           return;
         }
         const content = await initialMessagesResponse.arrayBuffer();
@@ -121,13 +123,13 @@ export function useInitialMessages(chatId: string | undefined):
         });
 
         const deserializedMessages = transformedMessages.map(deserializeMessageForConvex);
-        console.log('deserializedMessages', deserializedMessages);
         setInitialMessages({
           loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
           serialized: transformedMessages,
           deserialized: deserializedMessages,
           subchats,
         });
+        subchatLoadedStore.set(true);
         description.set(chatInfo.description);
       } catch (error) {
         toast.error('Failed to load chat messages from Convex. Try reloading the page.');

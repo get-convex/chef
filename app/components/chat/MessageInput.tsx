@@ -40,7 +40,7 @@ import { PlusCircleIcon } from '@heroicons/react/20/solid';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useChatId } from '~/lib/stores/chatId';
-import { subchatIndexStore } from '../ExistingChat.client';
+import { subchatIndexStore, subchatLoadedStore } from '../ExistingChat.client';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
@@ -287,6 +287,7 @@ export const MessageInput = memo(function MessageInput({
                 inline
                 onClick={async () => {
                   const subchatIndex = await createSubchat({ chatId, sessionId });
+                  subchatLoadedStore.set(false);
                   subchatIndexStore.set(subchatIndex);
                 }}
               >
