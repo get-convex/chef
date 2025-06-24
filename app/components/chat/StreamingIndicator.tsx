@@ -25,6 +25,7 @@ type StreamStatus = 'streaming' | 'submitted' | 'ready' | 'error';
 interface StreamingIndicatorProps {
   streamStatus: StreamStatus;
   numMessages: number;
+  numSubchats: number;
   toolStatus?: ToolStatus;
   currentError?: Error;
   resendMessage: () => void;
@@ -97,7 +98,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
     };
   }, [streamStatus]);
 
-  if (streamStatus === 'ready' && props.numMessages === 0) {
+  if (streamStatus === 'ready' && props.numMessages === 0 && props.numSubchats === 1) {
     return null;
   }
 
@@ -151,8 +152,10 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
         }
         break;
       case 'ready':
-        icon = <CheckIcon />;
-        message = STATUS_MESSAGES.generated;
+        if (props.numMessages > 0) {
+          icon = <CheckIcon />;
+          message = STATUS_MESSAGES.generated;
+        }
         break;
     }
   }

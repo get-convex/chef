@@ -25,6 +25,7 @@ import { chooseExperience } from '~/utils/experienceChooser';
 import { AnimatePresence, motion } from 'framer-motion';
 import { subchatIndexStore, subchatLoadedStore } from '../ExistingChat.client';
 import { useStore } from '@nanostores/react';
+import { SubchatBar } from './SubchatBar';
 
 interface BaseChatProps {
   // Refs
@@ -87,7 +88,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       modelSelection,
       setModelSelection,
       onRewindToMessage,
-      totalSubchats,
       subchats,
     },
     ref,
@@ -98,6 +98,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const recommendedExperience = chooseExperience(navigator.userAgent, window.crossOriginIsolated);
     const [chatEnabled, setChatEnabled] = useState(recommendedExperience === 'the-real-thing');
     const currentSubchatIndex = useStore(subchatIndexStore) ?? 0;
+    const subchatLoaded = useStore(subchatLoadedStore);
+
     useEffect(() => {
       const hasDismissedMobileWarning = localStorage.getItem('hasDismissedMobileWarning') === 'true';
       if (hasDismissedMobileWarning) {
@@ -179,75 +181,18 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               >
                 {chatStarted ? (
                   <>
-                    {/* Subchat Navigation Bar */}
-                    {/* {totalSubchats && totalSubchats > 1 && ( */}
                     {true && (
-                      <div className="sticky top-0 z-10 mx-auto w-full max-w-chat mb-4 pt-4">
-                        <div className="flex items-center justify-center gap-4 rounded-lg border border-content-secondary/20 bg-background-secondary/50 px-4 py-2 backdrop-blur-sm">
-                          <button
-                            onClick={() => handleNavigateToSubchat('prev')}
-                            disabled={!canNavigatePrev}
-                            className={classNames(
-                              'flex items-center justify-center rounded-md p-2 transition-all duration-200',
-                              {
-                                'text-content-primary hover:bg-background-tertiary hover:text-content-primary':
-                                  canNavigatePrev,
-                                'text-content-tertiary cursor-not-allowed': !canNavigatePrev,
-                              },
-                            )}
-                            aria-label="Previous subchat"
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M15 18l-6-6 6-6" />
-                            </svg>
-                          </button>
-
-                          <div className="flex items-center gap-2 text-sm font-medium text-content-secondary">
-                            <span>Subchat</span>
-                            <span className="text-content-primary">{currentSubchatIndex + 1}</span>
-                            <span>of</span>
-                            <span className="text-content-primary">
-                              {Math.max(currentSubchatIndex + 1, subchats?.length ?? 1)}
-                            </span>
-                          </div>
-
-                          <button
-                            onClick={() => handleNavigateToSubchat('next')}
-                            disabled={!canNavigateNext}
-                            className={classNames(
-                              'flex items-center justify-center rounded-md p-2 transition-all duration-200',
-                              {
-                                'text-content-primary hover:bg-background-tertiary hover:text-content-primary':
-                                  canNavigateNext,
-                                'text-content-tertiary cursor-not-allowed': !canNavigateNext,
-                              },
-                            )}
-                            aria-label="Next subchat"
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M9 18l6-6-6-6" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
+                      <SubchatBar
+                        subchats={subchats}
+                        currentSubchatIndex={currentSubchatIndex}
+                        canNavigatePrev={canNavigatePrev}
+                        canNavigateNext={canNavigateNext}
+                        isStreaming={isStreaming}
+                        disableChatMessage={disableChatMessage !== null || messages.length === 0}
+                        sessionId={sessionId ?? null}
+                        chatId={chatId}
+                        onNavigateToSubchat={handleNavigateToSubchat}
+                      />
                     )}
 
                     <Messages
@@ -256,7 +201,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       messages={messages}
                       isStreaming={isStreaming}
                       onRewindToMessage={onRewindToMessage}
-                      />
+                    />
                   </>
                 ) : null}
                 <div
@@ -284,28 +229,31 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       />
                     </div>
                   )}
-                  {/* StreamingIndicator is now a normal block above the input */}
-                  {!disableChatMessage && (
-                    <StreamingIndicator
-                      streamStatus={streamStatus}
-                      numMessages={messages?.length ?? 0}
-                      toolStatus={toolStatus}
-                      currentError={currentError}
-                      resendMessage={resendMessage}
-                      modelSelection={modelSelection}
-                    />
-                  )}
-                  {chatEnabled && (
-                    <MessageInput
-                      chatStarted={chatStarted}
-                      isStreaming={isStreaming}
-                      sendMessageInProgress={sendMessageInProgress}
-                      disabled={disableChatMessage !== null || maintenanceMode}
-                      modelSelection={modelSelection}
-                      setModelSelection={setModelSelection}
-                      onStop={onStop}
-                      onSend={onSend}
-                    />
+                  {chatEnabled && (!subchats || currentSubchatIndex === subchats.length - 1 || !subchatLoaded) && (
+                    <>
+                      {/* StreamingIndicator is now a normal block above the input */}
+                      {!disableChatMessage && (
+                        <StreamingIndicator
+                          streamStatus={streamStatus}
+                          numMessages={messages?.length ?? 0}
+                          numSubchats={subchats?.length ?? 1}
+                          toolStatus={toolStatus}
+                          currentError={currentError}
+                          resendMessage={resendMessage}
+                          modelSelection={modelSelection}
+                        />
+                      )}
+                      <MessageInput
+                        chatStarted={chatStarted}
+                        isStreaming={isStreaming}
+                        sendMessageInProgress={sendMessageInProgress}
+                        disabled={disableChatMessage !== null || maintenanceMode}
+                        modelSelection={modelSelection}
+                        setModelSelection={setModelSelection}
+                        onStop={onStop}
+                        onSend={onSend}
+                      />
+                    </>
                   )}
                   <AnimatePresence>
                     {disableChatMessage && (
