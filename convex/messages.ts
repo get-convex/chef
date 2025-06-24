@@ -433,8 +433,9 @@ export const earliestRewindableMessageRank = query({
     if (!chat) {
       throw CHAT_NOT_FOUND_ERROR;
     }
-    // Old clients may not pass up a subchatIndex, so we default to 0
-    const subchatIndex = args.subchatIndex ?? 0;
+    // We use the latest subchatIndex for the chat because we are only guaranteed to have
+    // storage states for individual messages in the latest subchat
+    const subchatIndex = args.subchatIndex ?? chat.lastSubchatIndex;
     const chatWithSubchatIndex = { ...chat, subchatIndex };
     const latestState = await getLatestChatMessageStorageState(ctx, chatWithSubchatIndex);
     if (!latestState) {
@@ -462,15 +463,26 @@ export const rewindChat = mutation({
   args: {
     sessionId: v.id("sessions"),
     chatId: v.string(),
-    // TODO: Make this required
-    subchatIndex: v.optional(v.number()),
-    lastMessageRank: v.number(),
+    subchatIndex: v.number(),
+    lastMessageRank: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<void> => {
     const { chatId, sessionId, lastMessageRank } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
       throw CHAT_NOT_FOUND_ERROR;
+    }
+    if (lastMessageRank && args.subchatIndex !== chat.lastSubchatIndex) {
+      throw new ConvexError({
+        code: "InvalidState",
+        message: "Cannot rewind to a specific message in a subchat that is not the latest subchat",
+      });
+    }
+    if (lastMessageRank === undefined && args.subchatIndex === chat.lastSubchatIndex) {
+      throw new ConvexError({
+        code: "InvalidState",
+        message: "Cannot rewind to a specific message in the latest subchat without a lastMessageRank",
+      });
     }
     const latestStorageState = await getLatestChatMessageStorageState(ctx, {
       _id: chat._id,
@@ -482,6 +494,11 @@ export const rewindChat = mutation({
     }
     if (latestStorageState.storageId === null) {
       throw new ConvexError({ code: "NoMessagesSaved", message: "Cannot rewind to a chat with no messages saved" });
+    }
+
+    if (!lastMessageRank) {
+      ctx.db.patch(chat._id, { lastSubchatIndex: args.subchatIndex, lastMessageRank: undefined });
+      return;
     }
 
     if (chat.lastMessageRank !== undefined && chat.lastMessageRank < lastMessageRank) {

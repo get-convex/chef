@@ -1,10 +1,11 @@
 import { Button } from '@ui/Button';
-import { ArrowLeftIcon, ArrowRightIcon, PlusIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, ArrowRightIcon, PlusIcon, ResetIcon } from '@radix-ui/react-icons';
 import { api } from '@convex/_generated/api';
 import { useMutation } from 'convex/react';
 import { subchatIndexStore, subchatLoadedStore } from '../ExistingChat.client';
 import { classNames } from '~/utils/classNames';
 import type { Id } from '@convex/_generated/dataModel';
+import { useCallback } from 'react';
 
 interface SubchatBarProps {
   subchats?: { subchatIndex: number; description?: string }[];
@@ -16,6 +17,7 @@ interface SubchatBarProps {
   sessionId: Id<'sessions'> | null;
   chatId: string;
   onNavigateToSubchat: (direction: 'prev' | 'next') => void;
+  onRewind?: (subchatIndex?: number, messageIndex?: number) => void;
 }
 
 export function SubchatBar({
@@ -28,8 +30,15 @@ export function SubchatBar({
   sessionId,
   chatId,
   onNavigateToSubchat,
+  onRewind,
 }: SubchatBarProps) {
   const createSubchat = useMutation(api.subchats.create);
+  const handleRewind = useCallback(
+    (subchatIndex?: number) => {
+      onRewind?.(subchatIndex, undefined);
+    },
+    [onRewind],
+  );
 
   return (
     <div className="sticky top-0 z-10 mx-auto w-full max-w-chat mb-4 pt-4">
@@ -69,8 +78,20 @@ export function SubchatBar({
           <span className="text-content-primary">{Math.max(currentSubchatIndex + 1, subchats?.length ?? 1)}</span>
         </div>
 
-        {/* Right: Add feature button */}
-        <div>
+        {/* Right: Rewind and Add buttons */}
+        <div className="flex items-center gap-2">
+          <Button
+            size="xs"
+            variant="neutral"
+            className={classNames('flex rounded-lg bg-background-secondary border')}
+            icon={<ResetIcon className="my-[1px]" />}
+            inline
+            tip="Rewind to latest version"
+            onClick={() => {
+              console.log('Rewinding to latest version');
+              handleRewind(currentSubchatIndex);
+            }}
+          />
           {sessionId ? (
             <Button
               size="xs"
