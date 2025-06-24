@@ -13,7 +13,6 @@ import {
   Pencil1Icon,
   ExternalLinkIcon,
   ExclamationTriangleIcon,
-  ArrowRightIcon,
 } from '@radix-ui/react-icons';
 import type { ActionState } from '~/lib/runtime/action-runner';
 import { workbenchStore, type ArtifactState } from '~/lib/stores/workbench.client';
