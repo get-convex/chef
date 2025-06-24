@@ -56,7 +56,7 @@ interface BaseChatProps {
   clearAlert: () => void;
 
   // Rewind functionality
-  onRewindToMessage?: (index: number) => void;
+  onRewindToMessage?: (subchatIndex?: number, messageIndex?: number) => void;
 }
 
 export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(

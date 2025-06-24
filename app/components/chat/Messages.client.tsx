@@ -19,7 +19,7 @@ interface MessagesProps {
   className?: string;
   isStreaming?: boolean;
   messages?: Message[];
-  onRewindToMessage?: (index: number) => void;
+  onRewindToMessage?: (subchatIndex?: number, messageIndex?: number) => void;
 }
 
 export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messages(
@@ -28,9 +28,12 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
 ) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMessageIndex, setSelectedMessageIndex] = useState<number | null>(null);
+  const [selectedSubchatIndex, setSelectedSubchatIndex] = useState<number | undefined>(undefined);
+  // TODO: Get the current subchat index from a hook
+  const currentSubchatIndex = 0;
   const handleRewindToMessage = useCallback(
-    (index: number) => {
-      onRewindToMessage?.(index);
+    (subchatIndex?: number, messageIndex?: number) => {
+      onRewindToMessage?.(subchatIndex, messageIndex);
     },
     [onRewindToMessage],
   );
@@ -71,7 +74,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                 variant="danger"
                 onClick={() => {
                   setIsModalOpen(false);
-                  handleRewindToMessage(selectedMessageIndex);
+                  handleRewindToMessage(selectedSubchatIndex, selectedMessageIndex);
                 }}
               >
                 Rewind
@@ -126,6 +129,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                       onClick={() => {
                         setIsModalOpen(true);
                         setSelectedMessageIndex(index);
+                        setSelectedSubchatIndex(currentSubchatIndex === null ? undefined : currentSubchatIndex);
                       }}
                       variant="neutral"
                       size="xs"

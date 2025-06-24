@@ -4,7 +4,7 @@ import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { chatIdStore } from '~/lib/stores/chatId';
 import type { Id } from '@convex/_generated/dataModel';
 
-export function useEarliestRewindableMessageRank(subchatIndex: number = 0): number | null | undefined {
+export function useEarliestRewindableMessageRank(): number | null | undefined {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chatId = chatIdStore.get();
 
@@ -14,7 +14,6 @@ export function useEarliestRewindableMessageRank(subchatIndex: number = 0): numb
       ? {
           sessionId: sessionId as Id<'sessions'>,
           chatId,
-          subchatIndex,
         }
       : 'skip',
   );
