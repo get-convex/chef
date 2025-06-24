@@ -12,6 +12,8 @@ import {
   FileIcon,
   Pencil1Icon,
   ExternalLinkIcon,
+  ExclamationTriangleIcon,
+  ArrowRightIcon,
 } from '@radix-ui/react-icons';
 import type { ActionState } from '~/lib/runtime/action-runner';
 import { workbenchStore, type ArtifactState } from '~/lib/stores/workbench.client';
@@ -475,7 +477,10 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
       }
       return (
         <div className="flex items-center gap-2">
-          <span>User action required: Add environment variables to Convex</span>
+          <ExclamationTriangleIcon className="text-amber-500" />
+          <span className="font-medium text-amber-700 dark:text-amber-300">
+            Action Required: Add Environment Variables
+          </span>
         </div>
       );
     }
@@ -684,7 +689,7 @@ function AddEnvironmentVariablesTool({ invocation }: { invocation: ConvexToolInv
     <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
       <div className="space-y-2 p-4">
         <div className="flex  gap-2">
-          <span>Please add these environment variables in the Convex dashboard:</span>
+          <span>Configure these environment variables in the Convex dashboard:</span>
           <button
             className="flex items-center rounded-md bg-transparent p-1 text-content-primary hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive"
             title="Open dashboard to add environment variables"

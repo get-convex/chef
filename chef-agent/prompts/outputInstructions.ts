@@ -194,6 +194,12 @@ function toolsInstructions(options: SystemPromptOptions) {
       lookup documentation for a component before using the \`npmInstall\` tool to install dependencies.
     </lookupDocs_tool>
 
+    <addEnvironmentVariables_tool>
+      You can prompt the user to add environment variables to their Convex deployment using the \`addEnvironmentVariables\`
+      tool, which will open the dashboard to the "Environment Variables" tab with the environment variable names prepopulated.
+      The user needs to fill in the values for the environment variables and then click "Save".
+    </addEnvironmentVariables_tool>
+
     ${options.enablePreciseEdits ? preciseToolInstructions(options) : ''}
   </tools>
   `;
