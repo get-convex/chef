@@ -41,7 +41,6 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
           displayModelAndUsage({
             model: parsedAnnotations.modelForToolCall.final,
             usageAnnotation: parsedAnnotations.usageForToolCall.final ?? undefined,
-            success: true,
             showUsageAnnotations,
           })}
 
@@ -77,7 +76,6 @@ function AssistantMessagePart({
           displayModelAndUsage({
             model: parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId],
             usageAnnotation: parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId] ?? undefined,
-            success: part.toolInvocation.state === 'result' && !part.toolInvocation.result.startsWith('Error: '),
             showUsageAnnotations,
           })}
 
@@ -101,12 +99,10 @@ function AssistantMessagePart({
 function displayModelAndUsage({
   model,
   usageAnnotation,
-  success,
   showUsageAnnotations,
 }: {
   model: { provider: ProviderType; model: string | undefined } | undefined;
   usageAnnotation: UsageAnnotation | undefined;
-  success: boolean;
   showUsageAnnotations: boolean;
 }) {
   const modelDisplay = displayModel(model ?? { provider: 'Unknown', model: undefined });
@@ -116,7 +112,7 @@ function displayModelAndUsage({
   // probably be re-worked to use Chef tokens.
 
   const usageDisplay = usageAnnotation
-    ? displayUsage(usageAnnotation, success, model?.provider ?? 'Unknown', showUsageAnnotations)
+    ? displayUsage(usageAnnotation, model?.provider ?? 'Unknown', showUsageAnnotations)
     : null;
   if (modelDisplay && usageDisplay) {
     return (
@@ -139,25 +135,12 @@ function displayChefTokenNumber(num: number) {
   return num.toString();
 }
 
-function displayUsage(
-  usageAnnotation: UsageAnnotation,
-  success: boolean,
-  provider: ProviderType,
-  showUsageAnnotations: boolean,
-) {
+function displayUsage(usageAnnotation: UsageAnnotation, provider: ProviderType, showUsageAnnotations: boolean) {
   const usage: Usage = usageFromGeneration({
     usage: usageAnnotation,
     providerMetadata: usageAnnotation.providerMetadata,
   });
   const { chefTokens, breakdown } = calculateChefTokens(usage, provider);
-  if (!success) {
-    return (
-      <div className="text-xs text-content-secondary">
-        Chef Tokens: 0 (failed tool call)
-        {showUsageAnnotations ? `, ${displayBreakdownForSingleAnnotation(breakdown)}` : ''}
-      </div>
-    );
-  }
   return (
     <div className="text-xs text-content-secondary">
       Chef Tokens: {displayChefTokenNumber(chefTokens)}
