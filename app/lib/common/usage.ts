@@ -38,11 +38,7 @@ export function getFailedToolCalls(message: Message): Set<string> {
     if (part.type !== 'tool-invocation') {
       continue;
     }
-    if (
-      part.toolInvocation.state === 'result' &&
-      part.toolInvocation.result.startsWith('Error:') &&
-      part.toolInvocation.toolName !== 'deploy'
-    ) {
+    if (part.toolInvocation.state === 'result' && part.toolInvocation.result.startsWith('Error:')) {
       failedToolCalls.add(part.toolInvocation.toolCallId);
     }
   }
