@@ -383,7 +383,7 @@ async function deleteSnapshotIdIfUnused(ctx: MutationCtx, snapshotId: Id<"_stora
   }
 }
 
-async function deleteStorageState(ctx: MutationCtx, storageState: Doc<"chatMessagesStorageState">) {
+export async function deleteStorageState(ctx: MutationCtx, storageState: Doc<"chatMessagesStorageState">) {
   await ctx.db.delete(storageState._id);
   const chatStorageId = storageState.storageId;
   if (chatStorageId) {

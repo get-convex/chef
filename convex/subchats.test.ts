@@ -20,6 +20,22 @@ function createMessage(overrides: Partial<SerializedMessage> = {}): SerializedMe
   };
 }
 
+function getChatStorageStates(t: TestConvex, chatId: string) {
+  return t.run(async (ctx) => {
+    const chat = await ctx.db
+      .query("chats")
+      .withIndex("byInitialId", (q) => q.eq("initialId", chatId))
+      .first();
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+    return ctx.db
+      .query("chatMessagesStorageState")
+      .withIndex("byChatId", (q) => q.eq("chatId", chat._id))
+      .collect();
+  });
+}
+
 describe("subchats", () => {
   let t: TestConvex;
   beforeEach(() => {
@@ -139,5 +155,81 @@ describe("subchats", () => {
     expect(subchat1StorageInfo).not.toBeNull();
     expect(subchat1StorageInfo?.lastMessageRank).toBe(1);
     expect(subchat1StorageInfo?.subchatIndex).toBe(1);
+  });
+
+  test("creating new subchat deletes all storage states from previous subchat except latest", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Store 3 messages in subchat 0
+    const firstMessage: SerializedMessage = createMessage({
+      id: "msg1",
+      role: "user",
+      parts: [{ text: "First message", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage],
+      snapshot: new Blob(["first snapshot"]),
+    });
+
+    const secondMessage: SerializedMessage = createMessage({
+      id: "msg2",
+      role: "assistant",
+      parts: [{ text: "Second message", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage, secondMessage],
+      snapshot: new Blob(["second snapshot"]),
+    });
+
+    // Store third message in subchat 0 (creates third storage state)
+    const thirdMessage: SerializedMessage = createMessage({
+      id: "msg3",
+      role: "user",
+      parts: [{ text: "Third message", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage, secondMessage, thirdMessage],
+      snapshot: new Blob(["third snapshot"]),
+    });
+
+    // Verify we have 4 storage states before creating new subchat (initial chat state + 3 message states)
+    const storageStatesBeforeNewSubchat = await getChatStorageStates(t, chatId);
+    expect(storageStatesBeforeNewSubchat).toHaveLength(4);
+
+    // All should be for subchat 0
+    const subchat0StatesBefore = storageStatesBeforeNewSubchat.filter((s) => s.subchatIndex === 0);
+    expect(subchat0StatesBefore).toHaveLength(4);
+
+    // Store the latest storage state ID for verification
+    const latestStorageState = subchat0StatesBefore.find((s) => s.lastMessageRank === 2);
+    expect(latestStorageState).toBeDefined();
+
+    // Create new subchat
+    await t.mutation(api.subchats.create, {
+      chatId,
+      sessionId,
+    });
+
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+
+    // Verify storage states after creating new subchat
+    const storageStatesAfterNewSubchat = await getChatStorageStates(t, chatId);
+    expect(storageStatesAfterNewSubchat).toHaveLength(2);
+
+    // Verify we have 1 state for subchat 0 and 1 for subchat 1
+    const subchat0StatesAfter = storageStatesAfterNewSubchat.filter((s) => s.subchatIndex === 0);
+    const subchat1StatesAfter = storageStatesAfterNewSubchat.filter((s) => s.subchatIndex === 1);
+
+    expect(subchat0StatesAfter).toHaveLength(1);
+    expect(subchat1StatesAfter).toHaveLength(1);
+
+    // Verify the remaining subchat 0 message state is the latest one (with lastMessageRank 2)
+    const remainingLatestState = subchat0StatesAfter.find((s) => s.lastMessageRank === 2);
+    expect(remainingLatestState).toBeDefined();
+    expect(remainingLatestState?._id).toBe(latestStorageState?._id);
+
+    // Verify that the intermediate storage states (lastMessageRank 0 and 1) were deleted
+    const intermediateStates = subchat0StatesAfter.filter((s) => s.lastMessageRank === 0 || s.lastMessageRank === 1);
+    expect(intermediateStates).toHaveLength(0);
   });
 });
