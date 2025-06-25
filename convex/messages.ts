@@ -412,14 +412,14 @@ async function deletePreviousStorageStates(
         q.eq("chatId", chat._id).eq("subchatIndex", args.subchatIndex).gt("lastMessageRank", chatLastMessageRank),
       )
       .collect();
+
     // If we rewinded to a previous subchat, we delete all the storage states for the future subchats
-    if (args.subchatIndex < chat.lastSubchatIndex) {
-      const futureSubchatStorageStates = await ctx.db
-        .query("chatMessagesStorageState")
-        .withIndex("byChatId", (q) => q.eq("chatId", chat._id).gt("subchatIndex", args.subchatIndex))
-        .collect();
-      storageStatesToDelete.push(...futureSubchatStorageStates);
-    }
+    const futureSubchatStorageStates = await ctx.db
+      .query("chatMessagesStorageState")
+      .withIndex("byChatId", (q) => q.eq("chatId", chat._id).gt("subchatIndex", args.subchatIndex))
+      .collect();
+    storageStatesToDelete.push(...futureSubchatStorageStates);
+
     for (const storageState of storageStatesToDelete) {
       await deleteStorageState(ctx, storageState);
     }
@@ -471,11 +471,12 @@ export const rewindChat = mutation({
   args: {
     sessionId: v.id("sessions"),
     chatId: v.string(),
-    subchatIndex: v.number(),
+    subchatIndex: v.optional(v.number()),
     lastMessageRank: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<void> => {
     const { chatId, sessionId, lastMessageRank } = args;
+    const subchatIndex = args.subchatIndex ?? 0;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
       throw CHAT_NOT_FOUND_ERROR;
@@ -494,7 +495,7 @@ export const rewindChat = mutation({
     }
     const latestStorageState = await getLatestChatMessageStorageState(ctx, {
       _id: chat._id,
-      subchatIndex: args.subchatIndex,
+      subchatIndex,
       lastMessageRank,
     });
     if (latestStorageState === null) {
@@ -504,12 +505,7 @@ export const rewindChat = mutation({
       throw new ConvexError({ code: "NoMessagesSaved", message: "Cannot rewind to a chat with no messages saved" });
     }
 
-    if (lastMessageRank === undefined) {
-      ctx.db.patch(chat._id, { lastSubchatIndex: args.subchatIndex, lastMessageRank: undefined });
-      return;
-    }
-
-    if (chat.lastMessageRank !== undefined && chat.lastMessageRank < lastMessageRank) {
+    if (chat.lastMessageRank !== undefined && lastMessageRank !== undefined && chat.lastMessageRank < lastMessageRank) {
       throw new ConvexError({
         code: "RewindToFuture",
         message: "Cannot rewind to a future message",
@@ -519,7 +515,7 @@ export const rewindChat = mutation({
         },
       });
     }
-    ctx.db.patch(chat._id, { lastMessageRank: latestStorageState.lastMessageRank });
+    ctx.db.patch(chat._id, { lastSubchatIndex: subchatIndex, lastMessageRank: latestStorageState.lastMessageRank });
   },
 });
 
