@@ -36,6 +36,7 @@ describe("share", () => {
 
     // Create a second subchat
     await t.mutation(api.subchats.create, { chatId, sessionId });
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
 
     // Add messages to the second subchat
     const subchat1Message: SerializedMessage = {
@@ -59,6 +60,7 @@ describe("share", () => {
 
     // Create a second subchat
     await t.mutation(api.subchats.create, { chatId, sessionId });
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
 
     // Add messages to the second subchat
     const subchat1Message: SerializedMessage = {
@@ -96,6 +98,7 @@ describe("share", () => {
 
     // Create a second subchat
     await t.mutation(api.subchats.create, { chatId, sessionId });
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
 
     // Add messages to the second subchat
     const subchat1Message: SerializedMessage = {
@@ -151,6 +154,7 @@ describe("share", () => {
 
     // Create a second subchat
     await t.mutation(api.subchats.create, { chatId, sessionId });
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
 
     // Add messages to the second subchat
     const subchat1Message: SerializedMessage = {
@@ -238,6 +242,7 @@ describe("share", () => {
 
     // Create a second subchat
     await t.mutation(api.subchats.create, { chatId, sessionId });
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
 
     // Add messages to the second subchat
     const subchat1Message: SerializedMessage = {
@@ -345,6 +350,7 @@ describe("share", () => {
 
     // Create a second subchat with different snapshot
     await t.mutation(api.subchats.create, { chatId, sessionId });
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
 
     const subchat1Message: SerializedMessage = {
       id: "subchat1-msg1",
@@ -434,6 +440,7 @@ describe("share", () => {
 
     // Create a second subchat also without snapshot
     await t.mutation(api.subchats.create, { chatId, sessionId });
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
 
     const subchat1Message: SerializedMessage = {
       id: "subchat1-msg1",
