@@ -494,7 +494,7 @@ export const rewindChat = mutation({
     }
     const latestStorageState = await getLatestChatMessageStorageState(ctx, {
       _id: chat._id,
-      subchatIndex: args.subchatIndex ?? 0,
+      subchatIndex: args.subchatIndex,
       lastMessageRank,
     });
     if (latestStorageState === null) {
@@ -519,7 +519,7 @@ export const rewindChat = mutation({
         },
       });
     }
-    ctx.db.patch(chat._id, { lastMessageRank });
+    ctx.db.patch(chat._id, { lastMessageRank: latestStorageState.lastMessageRank });
   },
 });
 
