@@ -129,7 +129,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                       onClick={() => {
                         setIsModalOpen(true);
                         setSelectedMessageIndex(index);
-                        setSelectedSubchatIndex(currentSubchatIndex === null ? undefined : currentSubchatIndex);
+                        setSelectedSubchatIndex(currentSubchatIndex);
                       }}
                       variant="neutral"
                       size="xs"
