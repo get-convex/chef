@@ -224,7 +224,8 @@ function preciseToolInstructions(_options: SystemPromptOptions) {
       - The text to replace must be less than 1024 characters
       - The new text must be less than 1024 characters
       - The text to replace must appear exactly once in the file
-      - You must know the file's current contents before using it
+      - You must know the file's current contents before using it. Use the view tool if the file is not in the current context.
+      - If the file edit toolcall fails, ALWAYS use the view tool to see the current contents of the file and then try again.
 
       Here are examples of correct edit tool usage:
 
