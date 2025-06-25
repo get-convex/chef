@@ -194,6 +194,12 @@ function toolsInstructions(options: SystemPromptOptions) {
       lookup documentation for a component before using the \`npmInstall\` tool to install dependencies.
     </lookupDocs_tool>
 
+    <addEnvironmentVariables_tool>
+      You can prompt the user to add environment variables to their Convex deployment using the \`addEnvironmentVariables\`
+      tool, which will open the dashboard to the "Environment Variables" tab with the environment variable names prepopulated.
+      The user needs to fill in the values for the environment variables and then click "Save".
+    </addEnvironmentVariables_tool>
+
     ${options.enablePreciseEdits ? preciseToolInstructions(options) : ''}
   </tools>
   `;
@@ -218,7 +224,8 @@ function preciseToolInstructions(_options: SystemPromptOptions) {
       - The text to replace must be less than 1024 characters
       - The new text must be less than 1024 characters
       - The text to replace must appear exactly once in the file
-      - You must know the file's current contents before using it
+      - You must know the file's current contents before using it. Use the view tool if the file is not in the current context.
+      - If the file edit toolcall fails, ALWAYS use the view tool to see the current contents of the file and then try again.
 
       Here are examples of correct edit tool usage:
 

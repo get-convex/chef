@@ -1,6 +1,7 @@
 import type { ToolCallUnion } from 'ai';
 import type { npmInstallToolParameters } from 'chef-agent/tools/npmInstall';
 import type { editToolParameters } from 'chef-agent/tools/edit';
+import type { addEnvironmentVariablesParameters } from 'chef-agent/tools/addEnvironmentVariables';
 import type { viewParameters } from 'chef-agent/tools/view';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import type { lookupDocsParameters } from 'chef-agent/tools/lookupDocs';
@@ -34,6 +35,11 @@ type ConvexToolResult =
   | {
       toolName: 'lookupDocs';
       args: typeof lookupDocsParameters;
+      result: string;
+    }
+  | {
+      toolName: 'addEnvironmentVariables';
+      args: typeof addEnvironmentVariablesParameters;
       result: string;
     };
 

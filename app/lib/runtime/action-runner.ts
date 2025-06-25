@@ -23,6 +23,8 @@ import { streamOutput } from '~/utils/process';
 import { outputLabels, type OutputLabels } from '~/lib/runtime/deployToolOutputLabels';
 import type { ConvexToolName } from '~/lib/common/types';
 import { lookupDocsParameters, docs, type DocKey } from 'chef-agent/tools/lookupDocs';
+import { addEnvironmentVariablesParameters } from 'chef-agent/tools/addEnvironmentVariables';
+import { openDashboardToPath } from '~/lib/stores/dashboardPath';
 
 const logger = createScopedLogger('ActionRunner');
 
@@ -501,6 +503,21 @@ export class ActionRunner {
             result += '\n\nDev server started successfully!';
           }
 
+          break;
+        }
+        case 'addEnvironmentVariables': {
+          const args = addEnvironmentVariablesParameters.parse(parsed.args);
+          const envVarNames = args.envVarNames;
+          if (envVarNames.length === 0) {
+            result = 'Error: No environment variables to add. Please provide a list of environment variable names.';
+            break;
+          }
+          let path = `settings/environment-variables?var=${envVarNames[0]}`;
+          for (const envVarName of envVarNames.slice(1)) {
+            path += `&var=${envVarName}`;
+          }
+          openDashboardToPath(path);
+          result = `Opened dashboard to add environment variables: ${envVarNames.join(', ')}\nPlease add the values in the dashboard.`;
           break;
         }
         default: {

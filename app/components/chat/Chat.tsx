@@ -110,7 +110,6 @@ export const Chat = memo(
     const loaded = useStore(subchatLoadedStore);
 
     const rewindToMessage = async (subchatIndex?: number, messageIndex?: number) => {
-      console.log('Rewinding to message', subchatIndex, messageIndex);
       if (sessionId && typeof sessionId === 'string') {
         const chatId = chatIdStore.get();
         if (!chatId) {
@@ -147,7 +146,7 @@ export const Chat = memo(
       useGeminiAuto,
       useClaude4Auto,
       enablePreciseEdits,
-      enablePresence,
+      enableEnvironmentVariables,
     } = useLaunchDarkly();
 
     const title = useStore(description);
@@ -372,7 +371,7 @@ export const Chat = memo(
           featureFlags: {
             enablePreciseEdits,
             smallFiles,
-            enablePresence,
+            enableEnvironmentVariables,
           },
         };
       },

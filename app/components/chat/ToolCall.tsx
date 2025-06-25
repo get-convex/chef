@@ -11,6 +11,8 @@ import {
   CheckIcon,
   FileIcon,
   Pencil1Icon,
+  ExternalLinkIcon,
+  ExclamationTriangleIcon,
 } from '@radix-ui/react-icons';
 import type { ActionState } from '~/lib/runtime/action-runner';
 import { workbenchStore, type ArtifactState } from '~/lib/stores/workbench.client';
@@ -36,6 +38,8 @@ import { outputLabels } from '~/lib/runtime/deployToolOutputLabels';
 import { getRelativePath } from 'chef-agent/utils/workDir';
 import { lookupDocsParameters } from 'chef-agent/tools/lookupDocs';
 import { Markdown } from '~/components/chat/Markdown';
+import { addEnvironmentVariablesParameters } from 'chef-agent/tools/addEnvironmentVariables';
+import { openDashboardToPath } from '~/lib/stores/dashboardPath';
 
 export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId: PartId; toolCallId: string }) {
   const userToggledAction = useRef(false);
@@ -153,6 +157,9 @@ const ToolUseContents = memo(function ToolUseContents({
     }
     case 'lookupDocs': {
       return <LookupDocsTool invocation={invocation} />;
+    }
+    case 'addEnvironmentVariables': {
+      return <AddEnvironmentVariablesTool invocation={invocation} />;
     }
     default: {
       // Fallback for other tool types
@@ -467,6 +474,18 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         </div>
       );
     }
+    case 'addEnvironmentVariables': {
+      const args = loggingSafeParse(addEnvironmentVariablesParameters, invocation.args);
+      if (!args.success) {
+        return 'Adding environment variables...';
+      }
+      return (
+        <div className="flex items-center gap-2">
+          <ExclamationTriangleIcon className="text-content-warning" />
+          <span className="font-medium text-content-warning">Action Required: Add Environment Variables</span>
+        </div>
+      );
+    }
     default: {
       return (invocation as any).toolName;
     }
@@ -644,6 +663,50 @@ function LookupDocsTool({ invocation }: { invocation: ConvexToolInvocation }) {
     <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
       <div className="max-h-[400px] overflow-auto p-4">
         <Markdown html>{invocation.result}</Markdown>
+      </div>
+    </div>
+  );
+}
+
+function AddEnvironmentVariablesTool({ invocation }: { invocation: ConvexToolInvocation }) {
+  if (invocation.toolName !== 'addEnvironmentVariables') {
+    throw new Error('AddEnvironmentVariablesTool can only be used for the addEnvironmentVariables tool');
+  }
+  if (invocation.state === 'partial-call' || invocation.state === 'call') {
+    return null;
+  }
+  const args = loggingSafeParse(addEnvironmentVariablesParameters, invocation.args);
+  if (!args.success) {
+    return null;
+  }
+  if (invocation.result.startsWith('Error:') || !args.success) {
+    return (
+      <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+        <pre>{invocation.result}</pre>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+      <div className="space-y-2 p-4">
+        <div className="flex  gap-2">
+          <span>Configure these environment variables in the Convex dashboard:</span>
+          <button
+            className="flex items-center rounded-md bg-transparent p-1 text-content-primary hover:bg-bolt-elements-item-backgroundActive hover:text-bolt-elements-item-contentActive"
+            title="Open dashboard to add environment variables"
+            onClick={() => {
+              openDashboardToPath('settings/environment-variables');
+            }}
+          >
+            <ExternalLinkIcon />
+          </button>
+        </div>
+        <ul className="list-disc pl-4">
+          {args.data.envVarNames.map((name: string) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ul>
       </div>
     </div>
   );
