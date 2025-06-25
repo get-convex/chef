@@ -101,9 +101,11 @@ export const cleanupOldSubchatStorageStates = internalMutation({
     if (!chat) {
       throw CHAT_NOT_FOUND_ERROR;
     }
+
+    // Delete all storage states for the previous subchat
     const oldSubchatStorageStates = await ctx.db
       .query("chatMessagesStorageState")
-      .withIndex("byChatId", (q) => q.eq("chatId", chat._id).lt("subchatIndex", newSubchatIndex))
+      .withIndex("byChatId", (q) => q.eq("chatId", chat._id).eq("subchatIndex", newSubchatIndex - 1))
       .collect();
     for (const storageState of oldSubchatStorageStates) {
       // Don't delete the latest storage state because this is the one we will rewind
