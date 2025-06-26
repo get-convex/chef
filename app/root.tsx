@@ -1,4 +1,4 @@
-import { captureRemixErrorBoundaryError } from '@sentry/remix';
+import { captureRemixErrorBoundaryError, captureMessage } from '@sentry/remix';
 import { useStore } from '@nanostores/react';
 import type { LinksFunction } from '@vercel/remix';
 import { json } from '@vercel/remix';
@@ -92,7 +92,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         CONVEX_URL,
         // TODO: There's a potential issue in the convex client where the warning triggers
         // even though in flight requests have completed
-        { unsavedChangesWarning: false },
+        {
+          unsavedChangesWarning: false,
+          onServerDisconnectError: (message) => captureMessage(message),
+        },
       ),
   );
 

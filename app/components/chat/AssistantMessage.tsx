@@ -90,6 +90,10 @@ function AssistantMessagePart({
     return <Markdown html>{part.text}</Markdown>;
   }
 
+  if (part.type === 'step-start') {
+    return null;
+  }
+
   captureMessage('Unknown part type ' + part.type);
   return null;
 }

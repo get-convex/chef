@@ -70,7 +70,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     featureFlags: {
       enablePreciseEdits: boolean;
       smallFiles: boolean;
-      enablePresence?: boolean;
+      enableEnvironmentVariables?: boolean;
     };
   };
   const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug, recordRawPromptsForDebugging } =
@@ -173,8 +173,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       featureFlags: {
         enablePreciseEdits: body.featureFlags.enablePreciseEdits,
         smallFiles: body.featureFlags.smallFiles,
-        // Default to false for backwards compatibility
-        enablePresence: body.featureFlags.enablePresence ?? false,
+        enableEnvironmentVariables: body.featureFlags.enableEnvironmentVariables ?? false,
       },
     });
 

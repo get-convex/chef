@@ -12,36 +12,34 @@ import { PersonIcon } from '@radix-ui/react-icons';
 import { ResetIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
+import { useEarliestRewindableMessageRank } from '~/lib/hooks/useEarliestRewindableMessageRank';
 
 interface MessagesProps {
   id?: string;
   className?: string;
   isStreaming?: boolean;
   messages?: Message[];
-  onRewindToMessage?: (index: number) => void;
-  earliestRewindableMessageRank?: number;
+  onRewindToMessage?: (subchatIndex?: number, messageIndex?: number) => void;
 }
 
 export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messages(
-  {
-    id,
-    isStreaming = false,
-    messages = [],
-    className,
-    onRewindToMessage,
-    earliestRewindableMessageRank,
-  }: MessagesProps,
+  { id, isStreaming = false, messages = [], className, onRewindToMessage }: MessagesProps,
   ref: ForwardedRef<HTMLDivElement> | undefined,
 ) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMessageIndex, setSelectedMessageIndex] = useState<number | null>(null);
+  const [selectedSubchatIndex, setSelectedSubchatIndex] = useState<number | undefined>(undefined);
+  // TODO: Get the current subchat index from a hook
+  const currentSubchatIndex = 0;
   const handleRewindToMessage = useCallback(
-    (index: number) => {
-      onRewindToMessage?.(index);
+    (subchatIndex?: number, messageIndex?: number) => {
+      onRewindToMessage?.(subchatIndex, messageIndex);
     },
     [onRewindToMessage],
   );
   const profile = useStore(profileStore);
+  const earliestRewindableMessageRank = useEarliestRewindableMessageRank();
+
   return (
     <div id={id} className={className} ref={ref}>
       {isModalOpen && selectedMessageIndex !== null && (
@@ -76,7 +74,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                 variant="danger"
                 onClick={() => {
                   setIsModalOpen(false);
-                  handleRewindToMessage(selectedMessageIndex);
+                  handleRewindToMessage(selectedSubchatIndex, selectedMessageIndex);
                 }}
               >
                 Rewind
@@ -122,6 +120,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                 )}
                 {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
                 {earliestRewindableMessageRank !== undefined &&
+                  earliestRewindableMessageRank !== null &&
                   !isUserMessage &&
                   index >= earliestRewindableMessageRank &&
                   index !== messages.length - 1 && (
@@ -130,6 +129,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                       onClick={() => {
                         setIsModalOpen(true);
                         setSelectedMessageIndex(index);
+                        setSelectedSubchatIndex(currentSubchatIndex);
                       }}
                       variant="neutral"
                       size="xs"

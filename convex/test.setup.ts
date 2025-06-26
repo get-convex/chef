@@ -47,6 +47,7 @@ export async function storeChat(
     messages?: SerializedMessage[];
     snapshot?: Blob;
     doNotUpdateMessages?: boolean;
+    subchatIndex?: number;
   },
   expectedError = false,
 ): Promise<Response> {
@@ -60,8 +61,10 @@ export async function storeChat(
   }
 
   const url = new URL("/store_chat", "http://localhost:3000");
+  const subchatIndex = args.subchatIndex ?? 0;
   url.searchParams.set("sessionId", sessionId);
   url.searchParams.set("chatId", chatId);
+  url.searchParams.set("lastSubchatIndex", subchatIndex.toString());
   if (args.messages) {
     url.searchParams.set("lastMessageRank", (args.messages.length - 1).toString());
     url.searchParams.set("partIndex", ((args.messages.at(-1)?.parts?.length ?? 0) - 1).toString());

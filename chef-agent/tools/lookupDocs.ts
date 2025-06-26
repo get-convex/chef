@@ -11,9 +11,9 @@ export const lookupDocsParameters = z.object({
     ),
 });
 
-export function lookupDocsTool(enablePresence: boolean): Tool {
+export function lookupDocsTool(): Tool {
   return {
-    description: `Lookup documentation for a list of features. Valid features to lookup are: \`proseMirror\`${enablePresence ? ' and `presence`' : ''}`,
+    description: `Lookup documentation for a list of features. Valid features to lookup are: \`proseMirror\` and \`presence\``,
     parameters: lookupDocsParameters,
   };
 }

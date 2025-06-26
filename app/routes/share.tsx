@@ -1,4 +1,4 @@
-import { captureRemixErrorBoundaryError } from '@sentry/remix';
+import { captureMessage, captureRemixErrorBoundaryError } from '@sentry/remix';
 import { useStore } from '@nanostores/react';
 import type { LinksFunction } from '@vercel/remix';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteError } from '@remix-run/react';
@@ -68,7 +68,9 @@ const CONVEX_URL = import.meta.env.VITE_CONVEX_URL || globalThis.process.env.CON
 if (!CONVEX_URL) {
   throw new Error(`Missing CONVEX_URL: ${CONVEX_URL}`);
 }
-const convex = new ConvexReactClient(CONVEX_URL);
+const convex = new ConvexReactClient(CONVEX_URL, {
+  onServerDisconnectError: (message) => captureMessage(message),
+});
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const theme = useStore(themeStore);

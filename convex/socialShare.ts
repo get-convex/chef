@@ -46,6 +46,7 @@ export const share = mutation({
         allowShowInGallery,
         referralCode,
       });
+      return code;
     } else {
       await ctx.db.replace(existing._id, {
         ...existing,
@@ -54,6 +55,7 @@ export const share = mutation({
         allowShowInGallery,
         referralCode,
       });
+      return existing.code;
     }
   },
 });

@@ -84,7 +84,6 @@ interface ChatProps {
 
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
-  earliestRewindableMessageRank?: number;
 }
 
 const retryState = atom({
@@ -92,24 +91,19 @@ const retryState = atom({
   nextRetry: Date.now(),
 });
 export const Chat = memo(
-  ({
-    initialMessages,
-    partCache,
-    storeMessageHistory,
-    initializeChat,
-    isReload,
-    hadSuccessfulDeploy,
-    earliestRewindableMessageRank,
-  }: ChatProps) => {
+  ({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy }: ChatProps) => {
     const convex = useConvex();
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
     const actionAlert = useStore(workbenchStore.alert);
     const sessionId = useConvexSessionIdOrNullOrLoading();
 
-    const rewindToMessage = async (messageIndex: number) => {
+    const rewindToMessage = async (subchatIndex?: number, messageIndex?: number) => {
       if (sessionId && typeof sessionId === 'string') {
         const chatId = chatIdStore.get();
         if (!chatId) {
+          return;
+        }
+        if (!subchatIndex) {
           return;
         }
 
@@ -120,8 +114,7 @@ export const Chat = memo(
           await convex.mutation(api.messages.rewindChat, {
             sessionId: sessionId as Id<'sessions'>,
             chatId,
-            // TODO: We will pass this in once we support subchats in the UI
-            subchatIndex: 0,
+            subchatIndex,
             lastMessageRank: messageIndex,
           });
           // Reload the chat to show the rewound state
@@ -141,7 +134,7 @@ export const Chat = memo(
       useGeminiAuto,
       useClaude4Auto,
       enablePreciseEdits,
-      enablePresence,
+      enableEnvironmentVariables,
     } = useLaunchDarkly();
 
     const title = useStore(description);
@@ -366,7 +359,7 @@ export const Chat = memo(
           featureFlags: {
             enablePreciseEdits,
             smallFiles,
-            enablePresence,
+            enableEnvironmentVariables,
           },
         };
       },
@@ -627,7 +620,6 @@ export const Chat = memo(
           modelSelection={modelSelection}
           setModelSelection={handleModelSelectionChange}
           onRewindToMessage={rewindToMessage}
-          earliestRewindableMessageRank={earliestRewindableMessageRank}
         />
         <UsageDebugView />
       </>
