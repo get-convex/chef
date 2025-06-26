@@ -372,7 +372,6 @@ async function getUsageBreakdown(messages: Message[]) {
     const { totalRawUsage, totalUsageBilledFor } = await calculateTotalUsage({
       startUsage: null,
       usageAnnotationsForToolCalls: parsedAnnotations.usageForToolCall,
-      failedToolCalls,
     });
     const provider = parsedAnnotations.modelForToolCall.final?.provider ?? 'Anthropic';
     const { chefTokens, breakdown } = calculateChefTokens(totalUsageBilledFor, provider);
@@ -380,7 +379,6 @@ async function getUsageBreakdown(messages: Message[]) {
       messageIdx: idx,
       parts: getPartInfos({
         message,
-        failedToolCalls,
         usageAnnotationsForToolCalls: parsedAnnotations.usageForToolCall,
         providerAnnotationsForToolCalls: parsedAnnotations.modelForToolCall,
       }),
@@ -410,12 +408,10 @@ async function getUsageBreakdown(messages: Message[]) {
 
 function getPartInfos({
   message,
-  failedToolCalls,
   usageAnnotationsForToolCalls,
   providerAnnotationsForToolCalls,
 }: {
   message: Message;
-  failedToolCalls: Set<string>;
   usageAnnotationsForToolCalls: Record<string, UsageAnnotation | null>;
   providerAnnotationsForToolCalls: Record<string, { provider: ProviderType; model: string | undefined }>;
 }) {
@@ -440,14 +436,13 @@ function getPartInfos({
       });
     } else if (part.type === 'tool-invocation') {
       const provider = providerAnnotationsForToolCalls[part.toolInvocation.toolCallId]?.provider ?? 'Anthropic';
-      const isFailedToolCall = failedToolCalls.has(part.toolInvocation.toolCallId);
       const rawUsageForPart = usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]
         ? usageFromGeneration({
             usage: usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]!,
             providerMetadata: usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]?.providerMetadata,
           })
         : initializeUsage();
-      const billedUsageForPart = isFailedToolCall ? initializeUsage() : rawUsageForPart;
+      const billedUsageForPart = rawUsageForPart;
       const { chefTokens, breakdown } = calculateChefTokens(billedUsageForPart, provider);
       partInfos.push({
         partIdx: idx,
