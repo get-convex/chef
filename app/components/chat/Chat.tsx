@@ -103,7 +103,7 @@ export const Chat = memo(
         if (!chatId) {
           return;
         }
-        if (!subchatIndex) {
+        if (subchatIndex === undefined) {
           return;
         }
 
