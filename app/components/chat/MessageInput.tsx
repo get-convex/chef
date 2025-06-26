@@ -36,9 +36,6 @@ import { captureException } from '@sentry/remix';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftIcon, DocumentArrowUpIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
-import { useMutation, useQuery } from 'convex/react';
-import { api } from '@convex/_generated/api';
-import { useChatId } from '~/lib/stores/chatId';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 

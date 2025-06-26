@@ -15,6 +15,7 @@ const flagDefaults: {
   useClaude4Auto: boolean;
   enablePreciseEdits: boolean;
   enableEnvironmentVariables: boolean;
+  newChatFeature: boolean;
 } = {
   maintenanceMode: false,
   showUsageAnnotations: false,
@@ -29,6 +30,7 @@ const flagDefaults: {
   useClaude4Auto: false,
   enablePreciseEdits: false,
   enableEnvironmentVariables: false,
+  newChatFeature: false,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {

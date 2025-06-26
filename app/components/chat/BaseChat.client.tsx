@@ -98,7 +98,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const recommendedExperience = chooseExperience(navigator.userAgent, window.crossOriginIsolated);
     const [chatEnabled, setChatEnabled] = useState(recommendedExperience === 'the-real-thing');
     const currentSubchatIndex = useStore(subchatIndexStore) ?? 0;
-    const subchatLoaded = useStore(subchatLoadedStore);
+    const { newChatFeature } = useLaunchDarkly();
 
     useEffect(() => {
       const hasDismissedMobileWarning = localStorage.getItem('hasDismissedMobileWarning') === 'true';
@@ -181,7 +181,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               >
                 {chatStarted ? (
                   <>
-                    {true && (
+                    {newChatFeature && (
                       <SubchatBar
                         subchats={subchats}
                         currentSubchatIndex={currentSubchatIndex}
