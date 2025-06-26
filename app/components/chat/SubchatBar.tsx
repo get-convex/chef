@@ -116,8 +116,8 @@ export function SubchatBar({
           <div className="flex flex-col gap-2">
             <h2>Create new subchat</h2>
             <p className="text-sm text-content-primary">
-              This will create a new subchat branch from the current point. You can always navigate back to previous
-              subchats using the navigation buttons.
+              This will create a new chat branch from the current point. You can always navigate back to previous chats
+              using the navigation buttons.
             </p>
             <p className="text-sm text-content-primary">Are you sure you want to continue?</p>
             <div className="flex justify-end gap-2">
@@ -200,7 +200,7 @@ export function SubchatBar({
               icon={<ResetIcon className="my-px" />}
               inline
               tip="Rewind to this version"
-              disabled={currentSubchatIndex === 0}
+              disabled={currentSubchatIndex < 0}
               onClick={() => {
                 setIsRewindModalOpen(true);
               }}
