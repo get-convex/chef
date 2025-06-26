@@ -20,11 +20,12 @@ interface MessagesProps {
   className?: string;
   isStreaming?: boolean;
   messages?: Message[];
+  lastSubchatIndex?: number;
   onRewindToMessage?: (subchatIndex?: number, messageIndex?: number) => void;
 }
 
 export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messages(
-  { id, isStreaming = false, messages = [], className, onRewindToMessage }: MessagesProps,
+  { id, isStreaming = false, messages = [], className, onRewindToMessage, lastSubchatIndex }: MessagesProps,
   ref: ForwardedRef<HTMLDivElement> | undefined,
 ) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -123,7 +124,10 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                   earliestRewindableMessageRank !== null &&
                   !isUserMessage &&
                   index >= earliestRewindableMessageRank &&
-                  index !== messages.length - 1 && (
+                  index !== messages.length - 1 && 
+                  currentSubchatIndex !== null &&
+                  lastSubchatIndex !== undefined &&
+                  currentSubchatIndex === lastSubchatIndex && (
                     <Button
                       className="absolute bottom-[-5px] right-[-5px] bg-bolt-elements-background-depth-2 hover:bg-bolt-elements-background-depth-3"
                       onClick={() => {

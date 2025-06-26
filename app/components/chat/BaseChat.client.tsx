@@ -192,6 +192,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         sessionId={sessionId ?? null}
                         chatId={chatId}
                         onNavigateToSubchat={handleNavigateToSubchat}
+                        onRewind={onRewindToMessage}
                       />
                     )}
 
@@ -229,7 +230,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       />
                     </div>
                   )}
-                  {chatEnabled && (!subchats || currentSubchatIndex === subchats.length - 1 || !subchatLoaded) && (
+                  {chatEnabled && (!subchats || currentSubchatIndex >= subchats.length - 1) && (
                     <>
                       {/* StreamingIndicator is now a normal block above the input */}
                       {!disableChatMessage && (

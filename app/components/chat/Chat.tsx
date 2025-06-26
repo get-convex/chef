@@ -115,7 +115,7 @@ export const Chat = memo(
         if (!chatId) {
           return;
         }
-        if (!subchatIndex) {
+        if (subchatIndex === undefined) {
           return;
         }
 
@@ -163,7 +163,7 @@ export const Chat = memo(
         isReload,
         shouldDeployConvexFunctions: hadSuccessfulDeploy || (!!subchats && subchats.length > 1),
       }),
-      [isReload, hadSuccessfulDeploy],
+      [isReload, hadSuccessfulDeploy, subchats],
     );
 
     useEffect(() => {
