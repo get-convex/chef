@@ -427,7 +427,7 @@ export const Chat = memo(
     // Reset chat messages when initialMessages changes (e.g., when switching subchats)
     useEffect(() => {
       setMessages(initialMessages);
-    }, [initialMessages]);
+    }, [initialMessages, setMessages]);
 
     setChefDebugProperty('messages', messages);
 
@@ -450,7 +450,7 @@ export const Chat = memo(
         loaded,
         onLatestSubchat: onLatestSubchat ?? false,
       });
-    }, [initialMessages, messages, parseMessages, status, storeMessageHistory, loaded]);
+    }, [initialMessages, messages, parseMessages, status, storeMessageHistory, loaded, onLatestSubchat]);
 
     const abort = () => {
       stop();

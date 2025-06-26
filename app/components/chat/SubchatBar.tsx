@@ -1,13 +1,12 @@
 import { Button } from '@ui/Button';
-import { ArrowLeftIcon, ArrowRightIcon, PlusIcon, ResetIcon, ChevronDownIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, ArrowRightIcon, PlusIcon, ResetIcon } from '@radix-ui/react-icons';
 import { api } from '@convex/_generated/api';
 import { useMutation } from 'convex/react';
-import { subchatIndexStore, subchatLoadedStore } from '../ExistingChat.client';
+import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
 import { classNames } from '~/utils/classNames';
 import type { Id } from '@convex/_generated/dataModel';
 import { useCallback, useState } from 'react';
 import { Modal } from '@ui/Modal';
-import { Combobox } from '@ui/Combobox';
 
 interface SubchatBarProps {
   subchats?: { subchatIndex: number; description?: string }[];
@@ -37,13 +36,17 @@ export function SubchatBar({
 
   const handleNavigateToSubchat = useCallback(
     (index: number) => {
-      if (!subchats || subchats.length <= 1) return;
-      if (index < 0 || index >= subchats.length) return;
+      if (!subchats || subchats.length <= 1) {
+        return;
+      }
+      if (index < 0 || index >= subchats.length) {
+        return;
+      }
 
       subchatLoadedStore.set(false);
       subchatIndexStore.set(index);
     },
-    [subchats, currentSubchatIndex],
+    [subchats],
   );
 
   const handleRewind = useCallback(
@@ -54,14 +57,16 @@ export function SubchatBar({
   );
 
   const handleCreateSubchat = useCallback(async () => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      return;
+    }
     const subchatIndex = await createSubchat({ chatId, sessionId });
     subchatLoadedStore.set(false);
     subchatIndexStore.set(subchatIndex);
   }, [createSubchat, chatId, sessionId]);
 
   return (
-    <div className="sticky top-0 z-10 mx-auto w-full max-w-chat mb-4 pt-4">
+    <div className="sticky top-0 z-10 mx-auto mb-4 w-full max-w-chat pt-4">
       {isRewindModalOpen && (
         <Modal
           onClose={() => {
@@ -144,7 +149,7 @@ export function SubchatBar({
             size="xs"
             variant="neutral"
             className={classNames('rounded-r-none border-0 border-border-transparent dark:border-border-transparent')}
-            icon={<ArrowLeftIcon className="my-[1px]" />}
+            icon={<ArrowLeftIcon className="my-px" />}
             inline
             tip="Previous Chat"
             disabled={!canNavigatePrev || isStreaming}
@@ -156,7 +161,7 @@ export function SubchatBar({
             size="xs"
             variant="neutral"
             className={classNames('rounded-l-none border-0 border-border-transparent dark:border-border-transparent')}
-            icon={<ArrowRightIcon className="my-[1px]" />}
+            icon={<ArrowRightIcon className="my-px" />}
             inline
             tip="Next Subchat"
             disabled={!canNavigateNext || isStreaming}
@@ -179,7 +184,7 @@ export function SubchatBar({
               size="xs"
               variant="neutral"
               className={classNames('flex rounded-lg bg-background-secondary border')}
-              icon={<PlusIcon className="my-[1px]" />}
+              icon={<PlusIcon className="my-px" />}
               disabled={disableChatMessage || isStreaming}
               inline
               tip="New Chat"
@@ -192,7 +197,7 @@ export function SubchatBar({
               size="xs"
               variant="neutral"
               className={classNames('flex rounded-lg bg-background-secondary border')}
-              icon={<ResetIcon className="my-[1px]" />}
+              icon={<ResetIcon className="my-px" />}
               inline
               tip="Rewind to this version"
               disabled={currentSubchatIndex === 0}

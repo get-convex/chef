@@ -23,7 +23,7 @@ import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 import { chooseExperience } from '~/utils/experienceChooser';
 import { AnimatePresence, motion } from 'framer-motion';
-import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore } from '~/components/ExistingChat.client';
 import { useStore } from '@nanostores/react';
 import { SubchatBar } from './SubchatBar';
 
@@ -115,7 +115,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         sessionId,
         convexSiteUrl: getConvexSiteUrl(),
       });
-    }, [chatId, sessionId, subchats]);
+    }, [chatId, sessionId]);
 
     const lastUserMessage = messages.findLast((message) => message.role === 'user');
     const resendMessage = useCallback(async () => {

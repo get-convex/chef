@@ -13,7 +13,7 @@ import { ResetIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
 import { useEarliestRewindableMessageRank } from '~/lib/hooks/useEarliestRewindableMessageRank';
-import { subchatIndexStore } from '../ExistingChat.client';
+import { subchatIndexStore } from '~/components/ExistingChat.client';
 
 interface MessagesProps {
   id?: string;

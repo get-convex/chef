@@ -1,8 +1,8 @@
 import { selectedTeamSlugStore, waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
 
-import { useConvex, useQuery } from 'convex/react';
-import { getConvexAuthToken, useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
-import { useCallback, useState } from 'react';
+import { useConvex } from 'convex/react';
+import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { useCallback } from 'react';
 import { api } from '@convex/_generated/api';
 import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { openSignInWindow } from '~/components/ChefSignInPage';
@@ -46,7 +46,7 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
 
     // Wait for the WebContainer to have its snapshot loaded before sending a message.
     await waitForBootStepCompleted(ContainerBootState.LOADING_SNAPSHOT);
-  }, [convex, chatId, isFullyLoggedIn]);
+  }, [convex, chatId, isFullyLoggedIn, setChatInitialized]);
 }
 
 export function useExistingInitializeChat(chatId: string) {

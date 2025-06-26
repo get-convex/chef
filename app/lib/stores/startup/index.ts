@@ -6,7 +6,7 @@ import { useTeamsInitializer } from './useTeamsInitializer';
 import { useExistingChatContainerSetup, useNewChatContainerSetup } from './useContainerSetup';
 import { useBackupSyncState } from './history';
 import { useState } from 'react';
-import { useConvexSessionIdOrNullOrLoading } from '../sessionId';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
 import { useQuery } from 'convex/react';
 
