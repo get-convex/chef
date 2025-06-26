@@ -97,10 +97,13 @@ export const Chat = memo(
     const actionAlert = useStore(workbenchStore.alert);
     const sessionId = useConvexSessionIdOrNullOrLoading();
 
-    const rewindToMessage = async (messageIndex: number) => {
+    const rewindToMessage = async (subchatIndex?: number, messageIndex?: number) => {
       if (sessionId && typeof sessionId === 'string') {
         const chatId = chatIdStore.get();
         if (!chatId) {
+          return;
+        }
+        if (subchatIndex === undefined) {
           return;
         }
 
@@ -111,8 +114,7 @@ export const Chat = memo(
           await convex.mutation(api.messages.rewindChat, {
             sessionId: sessionId as Id<'sessions'>,
             chatId,
-            // TODO: We will pass this in once we support subchats in the UI
-            subchatIndex: 0,
+            subchatIndex,
             lastMessageRank: messageIndex,
           });
           // Reload the chat to show the rewound state

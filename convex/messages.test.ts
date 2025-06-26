@@ -616,6 +616,105 @@ describe("messages", () => {
     });
   });
 
+  test("rewinding to a previous subchat deletes all storage states for future subchats", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Store initial message in subchat 0
+    const subchat0Message: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "Hello from subchat 0!", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat0Message],
+      snapshot: new Blob(["subchat 0 snapshot"]),
+      subchatIndex: 0,
+    });
+
+    // Create subchat 1
+    await t.mutation(api.subchats.create, { chatId, sessionId });
+    const subchat1Message: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "Hello from subchat 1!", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat1Message],
+      snapshot: new Blob(["subchat 1 snapshot"]),
+      subchatIndex: 1,
+    });
+
+    // Create subchat 2
+    await t.mutation(api.subchats.create, { chatId, sessionId });
+    const subchat2Message: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "Hello from subchat 2!", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat2Message],
+      snapshot: new Blob(["subchat 2 snapshot"]),
+      subchatIndex: 2,
+    });
+
+    // Verify we have 2 storage states for all subchats (initial chat record + 1 message)
+    const allStorageStates = await getChatStorageStates(t, chatId, sessionId);
+    expect(allStorageStates.filter((s) => s.subchatIndex === 0).length).toBe(2);
+    expect(allStorageStates.filter((s) => s.subchatIndex === 1).length).toBe(2);
+    expect(allStorageStates.filter((s) => s.subchatIndex === 2).length).toBe(2);
+
+    // Rewind to subchat 0
+    await t.mutation(api.messages.rewindChat, {
+      sessionId,
+      chatId,
+      subchatIndex: 0,
+      lastMessageRank: 0,
+    });
+
+    // Send a new message after rewinding - this will trigger cleanup of future subchat storage states
+    const newMessage: SerializedMessage = createMessage({
+      role: "user",
+      parts: [{ text: "New message after rewind!", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat0Message, newMessage],
+      snapshot: new Blob(["new snapshot after rewind"]),
+      subchatIndex: 0,
+    });
+
+    // Verify that storage states for subchats 1 and 2 are deleted
+    const remainingStorageStates = await getChatStorageStates(t, chatId, sessionId);
+    expect(remainingStorageStates.filter((s) => s.subchatIndex === 0).length).toBe(3);
+    expect(remainingStorageStates.filter((s) => s.subchatIndex === 1).length).toBe(0);
+    expect(remainingStorageStates.filter((s) => s.subchatIndex === 2).length).toBe(0);
+
+    // Verify subchat 0 data is still accessible with the new message
+    const subchat0StorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+      sessionId,
+      chatId,
+      subchatIndex: 0,
+    });
+    await assertStorageInfo(t, subchat0StorageInfo, {
+      expectedMessages: [subchat0Message, newMessage],
+      expectedSnapshotContent: "new snapshot after rewind",
+      expectedLastMessageRank: 1,
+      expectedPartIndex: 0,
+      expectedSubchatIndex: 0,
+    });
+
+    // Verify subchats 1 and 2 data is no longer accessible
+    const subchat1StorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+      sessionId,
+      chatId,
+      subchatIndex: 1,
+    });
+    expect(subchat1StorageInfo).toBeNull();
+
+    const subchat2StorageInfo = await t.query(internal.messages.getInitialMessagesStorageInfo, {
+      sessionId,
+      chatId,
+      subchatIndex: 2,
+    });
+    expect(subchat2StorageInfo).toBeNull();
+  });
+
   test("storageId cannot be null if there exist previous storageId for the chat", async () => {
     const { sessionId, chatId } = await createChat(t);
     await storeChat(t, chatId, sessionId, {

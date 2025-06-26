@@ -23,8 +23,9 @@ export function workDirRelative(absPath: string) {
     return '';
   }
   const withSlash = `${WORK_DIR}/`;
+  // The agent often sends relative paths instead of absolute paths, so we should just return that.
   if (!absPath.startsWith(withSlash)) {
-    throw new Error(`Path is not relative to the work directory: ${absPath}`);
+    return absPath;
   }
   return absPath.slice(withSlash.length);
 }

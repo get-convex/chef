@@ -21,7 +21,8 @@ export function cleanupAssistantMessages(messages: Message[]) {
   processedMessages = processedMessages.filter(
     (message) =>
       message.content.trim() !== '' ||
-      (message.parts && message.parts.filter((part) => part.type === 'text').length > 0),
+      (message.parts &&
+        message.parts.filter((part) => part.type === 'text' || part.type === 'tool-invocation').length > 0),
   );
   return convertToCoreMessages(processedMessages).filter((message) => message.content.length > 0);
 }

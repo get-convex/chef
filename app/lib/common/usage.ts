@@ -48,20 +48,15 @@ export function getFailedToolCalls(message: Message): Set<string> {
 export function calculateTotalUsage(args: {
   startUsage: Usage | null;
   usageAnnotationsForToolCalls: Record<string, UsageAnnotation | null>;
-  failedToolCalls: Set<string>;
 }): { totalRawUsage: Usage; totalUsageBilledFor: Usage } {
-  const { startUsage, usageAnnotationsForToolCalls, failedToolCalls } = args;
+  const { startUsage, usageAnnotationsForToolCalls } = args;
   const totalRawUsage = startUsage ? JSON.parse(JSON.stringify(startUsage)) : initializeUsage();
   const totalUsageBilledFor = startUsage ? JSON.parse(JSON.stringify(startUsage)) : initializeUsage();
-  for (const [toolCallId, payload] of Object.entries(usageAnnotationsForToolCalls)) {
+  for (const payload of Object.values(usageAnnotationsForToolCalls)) {
     if (!payload) {
       continue;
     }
     addUsage(totalRawUsage, payload);
-    if (toolCallId && failedToolCalls.has(toolCallId)) {
-      console.warn('Skipping usage for failed tool call', toolCallId);
-      continue;
-    }
     addUsage(totalUsageBilledFor, payload);
   }
   return {
@@ -75,14 +70,12 @@ export async function calculateTotalBilledUsageForMessage(
   finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
 ): Promise<Usage> {
   const { usageForToolCall } = parseAnnotations(lastMessage?.annotations ?? []);
-  const failedToolCalls: Set<string> = lastMessage ? getFailedToolCalls(lastMessage) : new Set();
   // If there's an annotation for the final part, start with an empty usage, otherwise, create a
   // usage object from the passed in final generation.
   const startUsage = usageForToolCall.final ? initializeUsage() : usageFromGeneration(finalGeneration);
   const { totalUsageBilledFor } = calculateTotalUsage({
     startUsage,
     usageAnnotationsForToolCalls: usageForToolCall,
-    failedToolCalls,
   });
   return totalUsageBilledFor;
 }
