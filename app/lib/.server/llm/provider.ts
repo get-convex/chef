@@ -88,8 +88,7 @@ export function getProvider(
         });
       }
       provider = {
-        // We have to use 05-06 when using Vertex because the latest model is not available yet
-        model: google(userApiKey ? model : 'gemini-2.5-pro-preview-05-06'),
+        model: google(model),
         maxTokens: 24576,
       };
       break;
