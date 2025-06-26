@@ -240,6 +240,7 @@ export const updateStorageState = internalMutation({
     snapshotId: v.optional(v.union(v.id("_storage"), v.null())),
   },
   handler: async (ctx, args): Promise<void> => {
+    console.log("args.subchatIndex", args.subchatIndex);
     const { chatId, storageId, lastMessageRank, partIndex, snapshotId, sessionId } = args;
     const messageHistoryStorageId = storageId;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });

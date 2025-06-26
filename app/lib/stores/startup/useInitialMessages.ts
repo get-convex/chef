@@ -59,7 +59,7 @@ export function useInitialMessages(chatId: string | undefined):
           setInitialMessages(undefined);
           return;
         }
-        if (subchatIndex === null) {
+        if (subchatIndex === undefined) {
           subchatLoadedStore.set(false);
           subchatIndexStore.set(chatInfo.subchatIndex);
         }

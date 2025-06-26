@@ -46,7 +46,7 @@ import { UsageDebugView } from '~/components/debug/UsageDebugView';
 import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 import { useUsage } from '~/lib/stores/usage';
 import { hasAnyApiKeySet, hasApiKeySet } from '~/lib/common/apiKey';
-import { subchatLoadedStore } from '../ExistingChat.client';
+import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
 
 const logger = createScopedLogger('Chat');
 
@@ -57,6 +57,7 @@ const processSampledMessages = createSampler(
     messages: Message[];
     initialMessages: Message[];
     loaded: boolean;
+    onLatestSubchat: boolean;
     parseMessages: (messages: Message[]) => void;
     streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
     storeMessageHistory: (
@@ -64,10 +65,11 @@ const processSampledMessages = createSampler(
       streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
     ) => Promise<void>;
   }) => {
-    const { messages, initialMessages, parseMessages, storeMessageHistory, streamStatus, loaded } = options;
+    const { messages, initialMessages, parseMessages, storeMessageHistory, streamStatus, loaded, onLatestSubchat } =
+      options;
     parseMessages(messages);
 
-    if (messages.length > initialMessages.length && loaded) {
+    if (messages.length > initialMessages.length && loaded && onLatestSubchat) {
       storeMessageHistory(messages, streamStatus).catch((error) => toast.error(error.message));
     }
   },
@@ -108,6 +110,9 @@ export const Chat = memo(
     const actionAlert = useStore(workbenchStore.alert);
     const sessionId = useConvexSessionIdOrNullOrLoading();
     const loaded = useStore(subchatLoadedStore);
+    const currentSubchatIndex = useStore(subchatIndexStore);
+    const onLatestSubchat =
+      currentSubchatIndex !== undefined && subchats !== undefined && currentSubchatIndex === subchats.length - 1;
 
     const rewindToMessage = async (subchatIndex?: number, messageIndex?: number) => {
       if (sessionId && typeof sessionId === 'string') {
@@ -422,7 +427,7 @@ export const Chat = memo(
     // Reset chat messages when initialMessages changes (e.g., when switching subchats)
     useEffect(() => {
       setMessages(initialMessages);
-    }, [initialMessages, subchats]);
+    }, [initialMessages]);
 
     setChefDebugProperty('messages', messages);
 
@@ -443,6 +448,7 @@ export const Chat = memo(
         storeMessageHistory,
         streamStatus: status,
         loaded,
+        onLatestSubchat: onLatestSubchat ?? false,
       });
     }, [initialMessages, messages, parseMessages, status, storeMessageHistory, loaded]);
 

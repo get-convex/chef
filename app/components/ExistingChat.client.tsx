@@ -30,7 +30,7 @@ export function ExistingChat({ chatId }: { chatId: string }) {
   );
 }
 
-export const subchatIndexStore = atom<number | null>(null);
+export const subchatIndexStore = atom<number | undefined>(undefined);
 export const subchatLoadedStore = atom<boolean>(false);
 
 function ExistingChatWrapper({ chatId }: { chatId: string }) {

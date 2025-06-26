@@ -124,8 +124,8 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                   earliestRewindableMessageRank !== null &&
                   !isUserMessage &&
                   index >= earliestRewindableMessageRank &&
-                  index !== messages.length - 1 && 
-                  currentSubchatIndex !== null &&
+                  index !== messages.length - 1 &&
+                  currentSubchatIndex !== undefined &&
                   lastSubchatIndex !== undefined &&
                   currentSubchatIndex === lastSubchatIndex && (
                     <Button
@@ -133,7 +133,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                       onClick={() => {
                         setIsModalOpen(true);
                         setSelectedMessageIndex(index);
-                        setSelectedSubchatIndex(currentSubchatIndex === null ? undefined : currentSubchatIndex);
+                        setSelectedSubchatIndex(currentSubchatIndex);
                       }}
                       variant="neutral"
                       size="xs"
