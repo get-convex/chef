@@ -107,29 +107,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       }
     }, []);
 
-    const canNavigatePrev = !!(subchats && subchats.length > 1 && currentSubchatIndex > 0);
-    const canNavigateNext = !!(subchats && subchats.length > 1 && currentSubchatIndex < subchats.length - 1);
-
-    const handleNavigateToSubchat = useCallback(
-      (direction: 'prev' | 'next') => {
-        if (!subchats || subchats.length <= 1) return;
-
-        let newIndex: number;
-
-        if (direction === 'prev' && currentSubchatIndex > 0) {
-          newIndex = currentSubchatIndex - 1;
-        } else if (direction === 'next' && currentSubchatIndex < subchats.length - 1) {
-          newIndex = currentSubchatIndex + 1;
-        } else {
-          return;
-        }
-
-        subchatLoadedStore.set(false);
-        subchatIndexStore.set(newIndex);
-      },
-      [subchats, currentSubchatIndex],
-    );
-
     const chatId = useChatId();
     const sessionId = useConvexSessionIdOrNullOrLoading();
     const dataForEvals = useMemo(() => {
@@ -185,13 +162,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       <SubchatBar
                         subchats={subchats}
                         currentSubchatIndex={currentSubchatIndex}
-                        canNavigatePrev={canNavigatePrev}
-                        canNavigateNext={canNavigateNext}
                         isStreaming={isStreaming}
                         disableChatMessage={disableChatMessage !== null || messages.length === 0}
                         sessionId={sessionId ?? null}
                         chatId={chatId}
-                        onNavigateToSubchat={handleNavigateToSubchat}
                         onRewind={onRewindToMessage}
                       />
                     )}

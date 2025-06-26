@@ -1,7 +1,7 @@
 import type { Message } from 'ai';
-import { useConvex, type ConvexReactClient } from 'convex/react';
+import { useConvex, useQuery, type ConvexReactClient } from 'convex/react';
 import { atom } from 'nanostores';
-import { waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from '~/lib/stores/fileUpdateCounter';
 import { buildUncompressedSnapshot } from '~/lib/snapshot.client';
 import type { Id } from '@convex/_generated/dataModel';
@@ -15,6 +15,9 @@ import {
   waitForNewMessages,
 } from './messages';
 import { createScopedLogger } from 'chef-agent/utils/logger';
+import { useStore } from '@nanostores/react';
+import { subchatIndexStore } from '~/components/ExistingChat.client';
+import { api } from '@convex/_generated/api';
 
 const logger = createScopedLogger('history');
 
@@ -46,6 +49,17 @@ type InitialBackupSyncState = {
 
 export function useBackupSyncState(chatId: string, initialMessages?: Message[]) {
   const convex = useConvex();
+  const subchatIndex = useStore(subchatIndexStore);
+  const sessionId = useConvexSessionIdOrNullOrLoading();
+  const chatInfo = useQuery(
+    api.messages.get,
+    sessionId
+      ? {
+          id: chatId,
+          sessionId,
+        }
+      : 'skip',
+  );
   useEffect(() => {
     if (initialMessages !== undefined) {
       const lastMessage = initialMessages[initialMessages.length - 1];
@@ -96,10 +110,16 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
   useEffect(() => {
     const run = async () => {
       const sessionId = await waitForConvexSessionId('useBackupSyncState');
-      void chatSyncWorker({ chatId, sessionId, convex });
+      void chatSyncWorker({
+        chatId,
+        sessionId,
+        convex,
+        currentSubchatIndex: subchatIndex,
+        latestSubchatIndex: chatInfo?.subchatIndex,
+      });
     };
     void run();
-  }, [chatId, convex]);
+  }, [chatId, convex, subchatIndex, chatInfo]);
 }
 
 /**
@@ -110,10 +130,24 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
  * changes to `lastCompleteMessageInfoStore` and `fileUpdateCounter` respectively
  * to know when to sync.
  */
-async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>; convex: ConvexReactClient }) {
+async function chatSyncWorker(args: {
+  chatId: string;
+  sessionId: Id<'sessions'>;
+  convex: ConvexReactClient;
+  currentSubchatIndex: number | undefined;
+  latestSubchatIndex: number | undefined;
+}) {
   const { chatId, sessionId, convex } = args;
   const currentState = chatSyncState.get();
   if (currentState.started) {
+    return;
+  }
+  if (args.currentSubchatIndex === undefined || args.latestSubchatIndex === undefined) {
+    return;
+  }
+  // We only need to sync if we're on the latest subchat. Otherwise, we shouldn't be sending
+  // updates to the server.
+  if (args.currentSubchatIndex !== args.latestSubchatIndex) {
     return;
   }
   chatSyncState.set({

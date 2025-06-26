@@ -1,5 +1,5 @@
 import { Button } from '@ui/Button';
-import { ArrowLeftIcon, ArrowRightIcon, PlusIcon, ResetIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, ArrowRightIcon, PlusIcon, ResetIcon, ChevronDownIcon } from '@radix-ui/react-icons';
 import { api } from '@convex/_generated/api';
 import { useMutation } from 'convex/react';
 import { subchatIndexStore, subchatLoadedStore } from '../ExistingChat.client';
@@ -7,35 +7,44 @@ import { classNames } from '~/utils/classNames';
 import type { Id } from '@convex/_generated/dataModel';
 import { useCallback, useState } from 'react';
 import { Modal } from '@ui/Modal';
+import { Combobox } from '@ui/Combobox';
 
 interface SubchatBarProps {
   subchats?: { subchatIndex: number; description?: string }[];
   currentSubchatIndex: number;
-  canNavigatePrev: boolean;
-  canNavigateNext: boolean;
   isStreaming: boolean;
   disableChatMessage: boolean;
   sessionId: Id<'sessions'> | null;
   chatId: string;
-  onNavigateToSubchat: (direction: 'prev' | 'next') => void;
   onRewind?: (subchatIndex?: number, messageIndex?: number) => void;
 }
 
 export function SubchatBar({
   subchats,
   currentSubchatIndex,
-  canNavigatePrev,
-  canNavigateNext,
   isStreaming,
   disableChatMessage,
   sessionId,
   chatId,
-  onNavigateToSubchat,
   onRewind,
 }: SubchatBarProps) {
   const createSubchat = useMutation(api.subchats.create);
   const [isRewindModalOpen, setIsRewindModalOpen] = useState(false);
   const [isAddChatModalOpen, setIsAddChatModalOpen] = useState(false);
+
+  const canNavigatePrev = subchats && subchats.length > 1 && currentSubchatIndex > 0;
+  const canNavigateNext = subchats && subchats.length > 1 && currentSubchatIndex < subchats.length - 1;
+
+  const handleNavigateToSubchat = useCallback(
+    (index: number) => {
+      if (!subchats || subchats.length <= 1) return;
+      if (index < 0 || index >= subchats.length) return;
+
+      subchatLoadedStore.set(false);
+      subchatIndexStore.set(index);
+    },
+    [subchats, currentSubchatIndex],
+  );
 
   const handleRewind = useCallback(
     (subchatIndex?: number) => {
@@ -140,7 +149,7 @@ export function SubchatBar({
             tip="Previous Chat"
             disabled={!canNavigatePrev || isStreaming}
             onClick={() => {
-              onNavigateToSubchat('prev');
+              handleNavigateToSubchat(currentSubchatIndex - 1);
             }}
           />
           <Button
@@ -152,7 +161,7 @@ export function SubchatBar({
             tip="Next Subchat"
             disabled={!canNavigateNext || isStreaming}
             onClick={() => {
-              onNavigateToSubchat('next');
+              handleNavigateToSubchat(currentSubchatIndex + 1);
             }}
           />
         </div>
