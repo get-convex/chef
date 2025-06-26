@@ -157,7 +157,6 @@ export function SubchatBar({
           />
         </div>
 
-        {/* Center: Subchat info */}
         <div className="flex items-center gap-2 text-sm font-medium text-content-secondary">
           <span>Subchat</span>
           <span className="text-content-primary">{currentSubchatIndex + 1}</span>
@@ -165,9 +164,7 @@ export function SubchatBar({
           <span className="text-content-primary">{Math.max(currentSubchatIndex + 1, subchats?.length ?? 1)}</span>
         </div>
 
-        {/* Right: Rewind or Add button */}
         <div className="flex items-center gap-2">
-          {/* Show New Subchat button only if on the latest subchat */}
           {currentSubchatIndex === (subchats?.length ?? 1) - 1 && sessionId ? (
             <Button
               size="xs"
@@ -182,7 +179,6 @@ export function SubchatBar({
               }}
             />
           ) : (
-            /* Show Rewind button if not on the latest subchat */
             <Button
               size="xs"
               variant="neutral"

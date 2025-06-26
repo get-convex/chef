@@ -30,7 +30,6 @@ export function useStoreMessageHistory() {
     ) {
       return;
     }
-
     lastCompleteMessageInfoStore.set({
       messageIndex: lastCompleteMessageInfo.messageIndex,
       partIndex: lastCompleteMessageInfo.partIndex,
