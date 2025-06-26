@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
-import { createChat, setupTest, storeChat, type TestConvex } from "./test.setup";
+import { createChat, createSubchat, setupTest, storeChat, type TestConvex } from "./test.setup";
 import type { SerializedMessage } from "./messages";
 import { describe } from "node:test";
+import { aw } from "vitest/dist/chunks/reporters.nr4dxCkA.js";
 
 function createMessage(overrides: Partial<SerializedMessage> = {}): SerializedMessage {
   return {
@@ -82,10 +83,7 @@ describe("subchats", () => {
     });
 
     // Create a new subchat
-    await t.mutation(api.subchats.create, {
-      chatId,
-      sessionId,
-    });
+    await createSubchat(t, chatId, sessionId);
 
     // Confirm that the subchat was created
     const subchats = await t.query(api.subchats.get, {
@@ -205,10 +203,7 @@ describe("subchats", () => {
     expect(latestStorageState).toBeDefined();
 
     // Create new subchat
-    await t.mutation(api.subchats.create, {
-      chatId,
-      sessionId,
-    });
+    await createSubchat(t, chatId, sessionId);
 
     await t.finishAllScheduledFunctions(() => vi.runAllTimers());
 

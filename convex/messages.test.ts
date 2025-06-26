@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import {
   createChat,
+  createSubchat,
   setupTest,
   storeChat,
   verifyStoredContent,
@@ -631,7 +632,7 @@ describe("messages", () => {
     });
 
     // Create subchat 1
-    await t.mutation(api.subchats.create, { chatId, sessionId });
+    await createSubchat(t, chatId, sessionId);
     const subchat1Message: SerializedMessage = createMessage({
       role: "user",
       parts: [{ text: "Hello from subchat 1!", type: "text" }],
@@ -643,7 +644,7 @@ describe("messages", () => {
     });
 
     // Create subchat 2
-    await t.mutation(api.subchats.create, { chatId, sessionId });
+    await createSubchat(t, chatId, sessionId);
     const subchat2Message: SerializedMessage = createMessage({
       role: "user",
       parts: [{ text: "Hello from subchat 2!", type: "text" }],
@@ -656,8 +657,8 @@ describe("messages", () => {
 
     // Verify we have 2 storage states for all subchats (initial chat record + 1 message)
     const allStorageStates = await getChatStorageStates(t, chatId, sessionId);
-    expect(allStorageStates.filter((s) => s.subchatIndex === 0).length).toBe(2);
-    expect(allStorageStates.filter((s) => s.subchatIndex === 1).length).toBe(2);
+    expect(allStorageStates.filter((s) => s.subchatIndex === 0).length).toBe(1);
+    expect(allStorageStates.filter((s) => s.subchatIndex === 1).length).toBe(1);
     expect(allStorageStates.filter((s) => s.subchatIndex === 2).length).toBe(2);
 
     // Rewind to subchat 0
@@ -681,7 +682,7 @@ describe("messages", () => {
 
     // Verify that storage states for subchats 1 and 2 are deleted
     const remainingStorageStates = await getChatStorageStates(t, chatId, sessionId);
-    expect(remainingStorageStates.filter((s) => s.subchatIndex === 0).length).toBe(3);
+    expect(remainingStorageStates.filter((s) => s.subchatIndex === 0).length).toBe(2);
     expect(remainingStorageStates.filter((s) => s.subchatIndex === 1).length).toBe(0);
     expect(remainingStorageStates.filter((s) => s.subchatIndex === 2).length).toBe(0);
 

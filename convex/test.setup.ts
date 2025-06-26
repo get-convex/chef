@@ -4,7 +4,7 @@ import { api } from "./_generated/api";
 import type { SerializedMessage } from "./messages";
 import type { Id } from "./_generated/dataModel";
 import type { GenericMutationCtx } from "convex/server";
-import { expect } from "vitest";
+import { expect, vi } from "vitest";
 
 // TODO -- for some reason, parameterizing on the generated `DataModel` does not work
 export type TestConvex = TestConvexForDataModel<any>;
@@ -130,4 +130,9 @@ export async function initializeChat(t: TestConvex, initialMessage?: SerializedM
     snapshot: new Blob(["Hello, world!"]),
   });
   return { sessionId, chatId };
+}
+
+export async function createSubchat(t: TestConvex, chatId: string, sessionId: Id<"sessions">) {
+  await t.mutation(api.subchats.create, { chatId, sessionId });
+  await t.finishAllScheduledFunctions(() => vi.runAllTimers());
 }
