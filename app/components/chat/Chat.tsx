@@ -426,8 +426,12 @@ export const Chat = memo(
 
     // Reset chat messages when initialMessages changes (e.g., when switching subchats)
     useEffect(() => {
+      // On the first message, we don't want to reset the messages
+      if (subchats && subchats.length === 1 && initialMessages.length === 0) {
+        return;
+      }
       setMessages(initialMessages);
-    }, [initialMessages, setMessages]);
+    }, [initialMessages, setMessages, subchats, loaded]);
 
     setChefDebugProperty('messages', messages);
 

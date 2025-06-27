@@ -227,6 +227,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         setModelSelection={setModelSelection}
                         onStop={onStop}
                         onSend={onSend}
+                        numMessages={messages?.length}
                       />
                     </>
                   )}
