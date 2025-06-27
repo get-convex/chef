@@ -3,7 +3,6 @@ import { api, internal } from "./_generated/api";
 import { createChat, createSubchat, setupTest, storeChat, type TestConvex } from "./test.setup";
 import type { SerializedMessage } from "./messages";
 import { describe } from "node:test";
-import { aw } from "vitest/dist/chunks/reporters.nr4dxCkA.js";
 
 function createMessage(overrides: Partial<SerializedMessage> = {}): SerializedMessage {
   return {
