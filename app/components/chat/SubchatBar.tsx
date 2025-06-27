@@ -118,9 +118,9 @@ export function SubchatBar({
               This will create a new chat with fresh context. This can be useful for starting work on a new feature of
               your app, or fixing a bug unrelated to your recent changes. You can always navigate back to previous chats
               using{' '}
-              <ArrowLeftIcon className="inline h-5 w-5 rounded border border-content-secondary/20 bg-background-secondary p-0.5" />{' '}
-              <ArrowRightIcon className="inline h-5 w-5 rounded border border-content-secondary/20 bg-background-secondary p-0.5" />{' '}
-              to view your chat history, but you won't be able to send more messages in previous chats.
+              <ArrowLeftIcon className="inline size-5 rounded border border-content-secondary/20 bg-background-secondary p-0.5" />{' '}
+              <ArrowRightIcon className="inline size-5 rounded border border-content-secondary/20 bg-background-secondary p-0.5" />{' '}
+              to view your chat history, but you won&apos;t be able to send more messages in previous chats.
             </p>
             <p className="text-sm text-content-primary">Are you sure you want to continue?</p>
             <div className="flex justify-end gap-2">
@@ -139,7 +139,7 @@ export function SubchatBar({
                   handleCreateSubchat();
                 }}
               >
-                Create Subchat
+                Create Chat
               </Button>
             </div>
           </div>
@@ -154,7 +154,7 @@ export function SubchatBar({
             className={classNames('rounded-r-none border-0 border-border-transparent dark:border-border-transparent')}
             icon={<ArrowLeftIcon className="my-px" />}
             inline
-            tip={isStreaming ? 'Navigation disabled while generating response' : 'Previous Chat'}
+            tip={isStreaming ? 'Navigation disabled while generating a response' : 'Previous Chat'}
             disabled={!canNavigatePrev || isStreaming}
             onClick={() => {
               handleNavigateToSubchat(currentSubchatIndex - 1);
@@ -166,7 +166,7 @@ export function SubchatBar({
             className={classNames('rounded-l-none border-0 border-border-transparent dark:border-border-transparent')}
             icon={<ArrowRightIcon className="my-px" />}
             inline
-            tip={isStreaming ? 'Navigation disabled while generating response' : 'Next Chat'}
+            tip={isStreaming ? 'Navigation disabled while generating a response' : 'Next Chat'}
             disabled={!canNavigateNext || isStreaming}
             onClick={() => {
               handleNavigateToSubchat(currentSubchatIndex + 1);
@@ -190,7 +190,7 @@ export function SubchatBar({
               icon={<PlusIcon className="my-px" />}
               disabled={disableChatMessage || isStreaming}
               inline
-              tip={isStreaming ? 'New chats disabled while generating response' : 'New Chat'}
+              tip={isStreaming ? 'New chats disabled while generating a response' : 'New Chat'}
               onClick={() => {
                 setIsAddChatModalOpen(true);
               }}
