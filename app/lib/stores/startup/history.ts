@@ -18,7 +18,7 @@ import { createScopedLogger } from 'chef-agent/utils/logger';
 import { useStore } from '@nanostores/react';
 import { subchatIndexStore } from '~/components/ExistingChat.client';
 import { api } from '@convex/_generated/api';
-import { workbenchStore } from '../workbench.client';
+import { workbenchStore } from '~/lib/stores/workbench.client';
 
 const logger = createScopedLogger('history');
 
