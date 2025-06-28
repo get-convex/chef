@@ -18,6 +18,7 @@ import { createScopedLogger } from 'chef-agent/utils/logger';
 import { useStore } from '@nanostores/react';
 import { subchatIndexStore } from '~/components/ExistingChat.client';
 import { api } from '@convex/_generated/api';
+import { workbenchStore } from '../workbench.client';
 
 const logger = createScopedLogger('history');
 
@@ -110,6 +111,10 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
   useEffect(() => {
     const run = async () => {
       const sessionId = await waitForConvexSessionId('useBackupSyncState');
+      // Open the workbench by default if you have more than one subchat
+      if (chatInfo && chatInfo.subchatIndex > 0) {
+        workbenchStore.showWorkbench.set(true);
+      }
       void chatSyncWorker({
         chatId,
         sessionId,
