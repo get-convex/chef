@@ -157,7 +157,7 @@ describe("subchats", () => {
   test("creating new subchat deletes all storage states from previous subchat except latest", async () => {
     const { sessionId, chatId } = await createChat(t);
 
-    // Store 3 messages in subchat 0
+    // Setup subchat 0 with multiple messages
     const firstMessage: SerializedMessage = createMessage({
       id: "msg1",
       role: "user",
@@ -178,7 +178,6 @@ describe("subchats", () => {
       snapshot: new Blob(["second snapshot"]),
     });
 
-    // Store third message in subchat 0 (creates third storage state)
     const thirdMessage: SerializedMessage = createMessage({
       id: "msg3",
       role: "user",
@@ -189,41 +188,80 @@ describe("subchats", () => {
       snapshot: new Blob(["third snapshot"]),
     });
 
-    // Verify we have 4 storage states before creating new subchat (initial chat state + 3 message states)
+    // Verify subchat 0 has multiple messages
     const storageStatesBeforeNewSubchat = await getChatStorageStates(t, chatId);
     expect(storageStatesBeforeNewSubchat).toHaveLength(4);
 
-    // All should be for subchat 0
     const subchat0StatesBefore = storageStatesBeforeNewSubchat.filter((s) => s.subchatIndex === 0);
     expect(subchat0StatesBefore).toHaveLength(4);
 
-    // Store the latest storage state ID for verification
-    const latestStorageState = subchat0StatesBefore.find((s) => s.lastMessageRank === 2);
-    expect(latestStorageState).toBeDefined();
+    const latestSubchat0State = subchat0StatesBefore.find((s) => s.lastMessageRank === 2);
+    expect(latestSubchat0State).toBeDefined();
 
-    // Create new subchat
+    // Create subchat 1 and add messages
     await createSubchat(t, chatId, sessionId);
 
     await t.finishAllScheduledFunctions(() => vi.runAllTimers());
 
-    // Verify storage states after creating new subchat
-    const storageStatesAfterNewSubchat = await getChatStorageStates(t, chatId);
-    expect(storageStatesAfterNewSubchat).toHaveLength(2);
+    const subchat1Message1: SerializedMessage = createMessage({
+      id: "subchat1-msg1",
+      role: "user",
+      parts: [{ text: "First message in subchat 1", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat1Message1],
+      snapshot: new Blob(["subchat 1 first snapshot"]),
+      subchatIndex: 1,
+    });
 
-    // Verify we have 1 state for subchat 0 and 1 for subchat 1
-    const subchat0StatesAfter = storageStatesAfterNewSubchat.filter((s) => s.subchatIndex === 0);
-    const subchat1StatesAfter = storageStatesAfterNewSubchat.filter((s) => s.subchatIndex === 1);
+    const subchat1Message2: SerializedMessage = createMessage({
+      id: "subchat1-msg2",
+      role: "assistant",
+      parts: [{ text: "Second message in subchat 1", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat1Message1, subchat1Message2],
+      snapshot: new Blob(["subchat 1 second snapshot"]),
+      subchatIndex: 1,
+    });
+
+    // Verify subchat 1 has multiple messages
+    const storageStatesBeforeSubchat2 = await getChatStorageStates(t, chatId);
+    const subchat1StatesBefore = storageStatesBeforeSubchat2.filter((s) => s.subchatIndex === 1);
+    expect(subchat1StatesBefore).toHaveLength(3);
+
+    const latestSubchat1State = subchat1StatesBefore.find((s) => s.lastMessageRank === 1);
+    expect(latestSubchat1State).toBeDefined();
+
+    // Create subchat 2 - should clean up previous subchat intermediate states
+    await createSubchat(t, chatId, sessionId);
+
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+
+    // Verify cleanup: only latest state from each subchat remains
+    const storageStatesAfterSubchat2 = await getChatStorageStates(t, chatId);
+    expect(storageStatesAfterSubchat2).toHaveLength(3);
+
+    const subchat0StatesAfter = storageStatesAfterSubchat2.filter((s) => s.subchatIndex === 0);
+    const subchat1StatesAfter = storageStatesAfterSubchat2.filter((s) => s.subchatIndex === 1);
+    const subchat2StatesAfter = storageStatesAfterSubchat2.filter((s) => s.subchatIndex === 2);
 
     expect(subchat0StatesAfter).toHaveLength(1);
     expect(subchat1StatesAfter).toHaveLength(1);
+    expect(subchat2StatesAfter).toHaveLength(1);
 
-    // Verify the remaining subchat 0 message state is the latest one (with lastMessageRank 2)
-    const remainingLatestState = subchat0StatesAfter.find((s) => s.lastMessageRank === 2);
-    expect(remainingLatestState).toBeDefined();
-    expect(remainingLatestState?._id).toBe(latestStorageState?._id);
+    const remainingSubchat0State = subchat0StatesAfter.find((s) => s.lastMessageRank === 2);
+    expect(remainingSubchat0State).toBeDefined();
+    expect(remainingSubchat0State?._id).toBe(latestSubchat0State?._id);
 
-    // Verify that the intermediate storage states (lastMessageRank 0 and 1) were deleted
-    const intermediateStates = subchat0StatesAfter.filter((s) => s.lastMessageRank === 0 || s.lastMessageRank === 1);
-    expect(intermediateStates).toHaveLength(0);
+    const remainingSubchat1State = subchat1StatesAfter.find((s) => s.lastMessageRank === 1);
+    expect(remainingSubchat1State).toBeDefined();
+    expect(remainingSubchat1State?._id).toBe(latestSubchat1State?._id);
+
+    const subchat1IntermediateStates = subchat1StatesAfter.filter((s) => s.lastMessageRank === 0);
+    expect(subchat1IntermediateStates).toHaveLength(0);
+
+    const subchat2InitialState = subchat2StatesAfter.find((s) => s.lastMessageRank === -1);
+    expect(subchat2InitialState).toBeDefined();
   });
 });
