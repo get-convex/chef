@@ -23,9 +23,10 @@ import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 import { chooseExperience } from '~/utils/experienceChooser';
 import { AnimatePresence, motion } from 'framer-motion';
-import { subchatIndexStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
 import { useStore } from '@nanostores/react';
 import { SubchatBar } from './SubchatBar';
+import { SubchatLimitNudge } from './SubchatLimitNudge';
 
 interface BaseChatProps {
   // Refs
@@ -99,6 +100,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const [chatEnabled, setChatEnabled] = useState(recommendedExperience === 'the-real-thing');
     const currentSubchatIndex = useStore(subchatIndexStore) ?? 0;
     const { newChatFeature } = useLaunchDarkly();
+    const [messageCount, setMessageCount] = useState(0);
+    const shouldShowNudge = messageCount > 1;
+    const subchatLoaded = useStore(subchatLoadedStore);
 
     useEffect(() => {
       const hasDismissedMobileWarning = localStorage.getItem('hasDismissedMobileWarning') === 'true';
@@ -176,6 +180,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       messages={messages}
                       isStreaming={isStreaming}
                       onRewindToMessage={onRewindToMessage}
+                      onMessageCountChange={setMessageCount}
                     />
                   </>
                 ) : null}
@@ -206,8 +211,15 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   )}
                   {chatEnabled && (!subchats || currentSubchatIndex >= subchats.length - 1) && (
                     <>
+                      {/* Show nudge when message limit is reached */}
+                      {shouldShowNudge && sessionId && (
+                        <div className="mb-4">
+                          <SubchatLimitNudge sessionId={sessionId} chatId={chatId} messageCount={messageCount} />
+                        </div>
+                      )}
+
                       {/* StreamingIndicator is now a normal block above the input */}
-                      {!disableChatMessage && (
+                      {!disableChatMessage && !shouldShowNudge && (
                         <StreamingIndicator
                           streamStatus={streamStatus}
                           numMessages={messages?.length ?? 0}
@@ -218,17 +230,20 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           modelSelection={modelSelection}
                         />
                       )}
-                      <MessageInput
-                        chatStarted={chatStarted}
-                        isStreaming={isStreaming}
-                        sendMessageInProgress={sendMessageInProgress}
-                        disabled={disableChatMessage !== null || maintenanceMode}
-                        modelSelection={modelSelection}
-                        setModelSelection={setModelSelection}
-                        onStop={onStop}
-                        onSend={onSend}
-                        numMessages={messages?.length}
-                      />
+
+                      {!shouldShowNudge && (
+                        <MessageInput
+                          chatStarted={chatStarted}
+                          isStreaming={isStreaming}
+                          sendMessageInProgress={sendMessageInProgress}
+                          disabled={disableChatMessage !== null || maintenanceMode}
+                          modelSelection={modelSelection}
+                          setModelSelection={setModelSelection}
+                          onStop={onStop}
+                          onSend={onSend}
+                          numMessages={messages?.length}
+                        />
+                      )}
                     </>
                   )}
                   <AnimatePresence>

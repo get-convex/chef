@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import { Fragment, useCallback, useState } from 'react';
+import { Fragment, useCallback, useState, useEffect } from 'react';
 import { classNames } from '~/utils/classNames';
 import { AssistantMessage } from './AssistantMessage';
 import { UserMessage } from './UserMessage';
@@ -22,10 +22,19 @@ interface MessagesProps {
   messages?: Message[];
   lastSubchatIndex?: number;
   onRewindToMessage?: (subchatIndex?: number, messageIndex?: number) => void;
+  onMessageCountChange?: (count: number) => void;
 }
 
 export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messages(
-  { id, isStreaming = false, messages = [], className, onRewindToMessage, lastSubchatIndex }: MessagesProps,
+  {
+    id,
+    isStreaming = false,
+    messages = [],
+    className,
+    onRewindToMessage,
+    lastSubchatIndex,
+    onMessageCountChange,
+  }: MessagesProps,
   ref: ForwardedRef<HTMLDivElement> | undefined,
 ) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,6 +49,13 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
   );
   const profile = useStore(profileStore);
   const earliestRewindableMessageRank = useEarliestRewindableMessageRank();
+
+  // Track message count changes and notify parent
+  useEffect(() => {
+    if (onMessageCountChange) {
+      onMessageCountChange(messages.length);
+    }
+  }, [messages.length, onMessageCountChange]);
 
   return (
     <div id={id} className={className} ref={ref}>
@@ -147,6 +163,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
             );
           })
         : null}
+
       {isStreaming && (
         <div className="flex w-full justify-center text-content-secondary">
           <SpinnerThreeDots className="size-9" />
