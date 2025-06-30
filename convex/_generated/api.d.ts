@@ -30,6 +30,7 @@ import type * as share from "../share.js";
 import type * as snapshot from "../snapshot.js";
 import type * as socialShare from "../socialShare.js";
 import type * as subchats from "../subchats.js";
+import type * as summarize from "../summarize.js";
 
 import type {
   ApiFromModules,
@@ -68,6 +69,7 @@ declare const fullApi: ApiFromModules<{
   snapshot: typeof snapshot;
   socialShare: typeof socialShare;
   subchats: typeof subchats;
+  summarize: typeof summarize;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

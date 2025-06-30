@@ -239,7 +239,8 @@ export const updateStorageState = internalMutation({
     partIndex: v.number(),
     snapshotId: v.optional(v.union(v.id("_storage"), v.null())),
   },
-  handler: async (ctx, args): Promise<void> => {
+  returns: v.union(v.id("chatMessagesStorageState"), v.null()),
+  handler: async (ctx, args) => {
     const { chatId, storageId, lastMessageRank, partIndex, snapshotId, sessionId } = args;
     const messageHistoryStorageId = storageId;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
@@ -323,7 +324,7 @@ export const updateStorageState = internalMutation({
       return;
     }
 
-    await ctx.db.insert("chatMessagesStorageState", {
+    const id = await ctx.db.insert("chatMessagesStorageState", {
       chatId: chat._id,
       storageId,
       lastMessageRank,
@@ -331,7 +332,11 @@ export const updateStorageState = internalMutation({
       partIndex,
       // Should we be using null here to distinguish between not having a snapshot and records written before we also recorded snapshots here?
       snapshotId: snapshotId ?? previous.snapshotId,
+      description: previous.description,
     });
+    if (previous.description === undefined) {
+      return id;
+    }
   },
 });
 
