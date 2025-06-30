@@ -43,7 +43,7 @@ export function SubchatLimitNudge({ sessionId, chatId, messageCount }: SubchatLi
             </p>
             <p className="text-sm text-content-primary">
               This will create a fresh chat with clean context while preserving your current work. You can navigate back
-              to view previous messages using{' '}
+              to view previous messages using the{' '}
               <ArrowLeftIcon className="inline size-5 rounded border border-content-secondary/20 bg-background-secondary p-0.5" />{' '}
               <ArrowRightIcon className="inline size-5 rounded border border-content-secondary/20 bg-background-secondary p-0.5" />{' '}
               buttons.
@@ -78,10 +78,10 @@ export function SubchatLimitNudge({ sessionId, chatId, messageCount }: SubchatLi
           </div>
           <div className="flex-1 space-y-3">
             <div>
-              <h3 className="font-medium text-orange-800 dark:text-orange-200">Consider starting a new chat</h3>
+              <h3 className="font-medium text-orange-800 dark:text-orange-200">Create a new chat</h3>
               <p className="mt-1 text-sm text-orange-700 dark:text-orange-300">
-                Your conversation has reached {messageCount} messages. For better performance and focus, we recommend
-                creating a new chat while keeping your current work intact.
+                Your conversation has reached {messageCount} messages. For better performance, we recommend creating a
+                new chat. This will preserve your current work, but provide you with a clean context.
               </p>
             </div>
             <Button
