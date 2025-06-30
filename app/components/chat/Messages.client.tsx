@@ -84,69 +84,94 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
           </div>
         </Modal>
       )}
-      {messages.length > 0
-        ? messages.map((message, index) => {
-            const { role, content, annotations } = message;
-            const isUserMessage = role === 'user';
-            const isHidden = annotations?.includes('hidden');
+      {messages.length > 0 ? (
+        messages.map((message, index) => {
+          const { role, content, annotations } = message;
+          const isUserMessage = role === 'user';
+          const isHidden = annotations?.includes('hidden');
 
-            if (isHidden) {
-              return <Fragment key={index} />;
-            }
+          if (isHidden) {
+            return <Fragment key={index} />;
+          }
 
-            return (
-              <div
-                key={index}
-                className={classNames(
-                  'flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)] relative border border-neutral-200 dark:border-neutral-700',
-                  {
-                    'bg-bolt-elements-messages-background': isUserMessage,
-                  },
-                )}
-              >
-                {isUserMessage && (
-                  <div className="flex size-[40px] shrink-0 items-center justify-center self-start overflow-hidden rounded-full bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-500">
-                    {profile?.avatar ? (
-                      <img
-                        src={profile.avatar}
-                        alt={profile?.username || 'User'}
-                        className="size-full object-cover"
-                        loading="eager"
-                        decoding="sync"
-                      />
-                    ) : (
-                      <PersonIcon className="size-4" />
-                    )}
-                  </div>
-                )}
-                {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
-                {earliestRewindableMessageRank !== undefined &&
-                  earliestRewindableMessageRank !== null &&
-                  !isUserMessage &&
-                  index >= earliestRewindableMessageRank &&
-                  index !== messages.length - 1 &&
-                  currentSubchatIndex !== undefined &&
-                  lastSubchatIndex !== undefined &&
-                  currentSubchatIndex === lastSubchatIndex && (
-                    <Button
-                      className="absolute bottom-[-5px] right-[-5px] bg-bolt-elements-background-depth-2 hover:bg-bolt-elements-background-depth-3"
-                      onClick={() => {
-                        setIsModalOpen(true);
-                        setSelectedMessageIndex(index);
-                        setSelectedSubchatIndex(currentSubchatIndex);
-                      }}
-                      variant="neutral"
-                      size="xs"
-                      tip="Rewind to this message"
-                      title="Rewind to here"
-                    >
-                      <ResetIcon className="size-4 text-content-primary" />
-                    </Button>
+          return (
+            <div
+              key={index}
+              className={classNames(
+                'flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)] relative border border-neutral-200 dark:border-neutral-700',
+                {
+                  'bg-bolt-elements-messages-background': isUserMessage,
+                },
+              )}
+            >
+              {isUserMessage && (
+                <div className="flex size-[40px] shrink-0 items-center justify-center self-start overflow-hidden rounded-full bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-500">
+                  {profile?.avatar ? (
+                    <img
+                      src={profile.avatar}
+                      alt={profile?.username || 'User'}
+                      className="size-full object-cover"
+                      loading="eager"
+                      decoding="sync"
+                    />
+                  ) : (
+                    <PersonIcon className="size-4" />
                   )}
-              </div>
-            );
-          })
-        : null}
+                </div>
+              )}
+              {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
+              {earliestRewindableMessageRank !== undefined &&
+                earliestRewindableMessageRank !== null &&
+                !isUserMessage &&
+                index >= earliestRewindableMessageRank &&
+                index !== messages.length - 1 &&
+                currentSubchatIndex !== undefined &&
+                lastSubchatIndex !== undefined &&
+                currentSubchatIndex === lastSubchatIndex && (
+                  <Button
+                    className="absolute bottom-[-5px] right-[-5px] bg-bolt-elements-background-depth-2 hover:bg-bolt-elements-background-depth-3"
+                    onClick={() => {
+                      setIsModalOpen(true);
+                      setSelectedMessageIndex(index);
+                      setSelectedSubchatIndex(currentSubchatIndex);
+                    }}
+                    variant="neutral"
+                    size="xs"
+                    tip="Rewind to this message"
+                    title="Rewind to here"
+                  >
+                    <ResetIcon className="size-4 text-content-primary" />
+                  </Button>
+                )}
+            </div>
+          );
+        })
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+          <div className="mb-6 rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 p-4">
+            <svg
+              className="size-12 text-blue-600 dark:text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+          </div>
+          <h3 className="mb-2 text-xl font-semibold text-content-primary">
+            Ready to cook up a new feature or fix a bug?
+          </h3>
+          <p className="max-w-md text-content-secondary">
+            This is a fresh start! Send a message below to start on your next task.
+          </p>
+        </div>
+      )}
       {isStreaming && (
         <div className="flex w-full justify-center text-content-secondary">
           <SpinnerThreeDots className="size-9" />
