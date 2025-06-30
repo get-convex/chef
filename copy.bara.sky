@@ -7,7 +7,7 @@ PARTNER_URL = "https://github.com/get-convex/chef-%s"
 # 2) Disable GitHub actions in the project settings (Settings > Action > General > Disable actions) to avoid running the CI twice.
 # 3) Add the partner to the PARTNERS variable below
 # 4) Install copybara if you haven't https://github.com/get-convex/convex/blob/main/ops/release.md#install-copybara
-# 5) Manually run once `copybara copy.bara.sky push_${PARTNER} main --init-history --force --git-committer-email "team@convex.dev" --git-committer-name "Convex, Inc."`. May take a while.
+# 5) Manually run once (FROM A LINUX MACHINE - case sensitivity) `copybara copy.bara.sky push_${PARTNER} main --init-history --force --git-committer-email "team@convex.dev" --git-committer-name "Convex, Inc."`. May take a while.
 # 6) Submit/land your PR that updates the PARTNERS variable - to auto-keep things up to date.
 PARTNERS = ["testcustomer", "vly", "lovable", "macaly"]
 
