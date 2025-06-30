@@ -146,9 +146,8 @@ httpWithCors.route({
     });
     if (firstMessage && maybeStorageStateId && lastSubchatIndex) {
       await ctx.scheduler.runAfter(0, internal.summarize.firstMessage, {
-        chatId: maybeStorageStateId,
+        chatMessageId: maybeStorageStateId,
         message: firstMessage,
-        subchatIndex: parseInt(lastSubchatIndex),
       });
     }
     return new Response(null, {

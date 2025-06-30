@@ -175,11 +175,13 @@ export function SubchatBar({
         </div>
         <div className="flex items-center gap-2 text-sm font-medium text-content-secondary">
           {subchats && subchats.length > currentSubchatIndex && subchats[currentSubchatIndex].description ? (
-            <span className="text-content-primary max-w-xs truncate" title={subchats[currentSubchatIndex].description}>
+            <span className="max-w-xs truncate text-content-primary" title={subchats[currentSubchatIndex].description}>
               {subchats[currentSubchatIndex].description}
             </span>
           ) : (
-            <span className="text-content-primary">Feature #{currentSubchatIndex}</span>
+            <span className="text-content-primary">
+              {currentSubchatIndex === 0 ? 'Initial chat' : `Feature #${currentSubchatIndex}`}
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2">

@@ -3,20 +3,24 @@ import { internalAction, internalMutation } from "./_generated/server";
 import { OpenAI } from "openai";
 import { internal } from "./_generated/api";
 
+const SUMMARIZE_SYSTEM_PROMPT = `You are a helpful assistant that summarizes users prompts into 5 words
+or less. These summaries should be a short description of the feature/bug a user is trying to work on.
+You should not include any punctuation in your summaries. Always capitalize the first letter of your summary.
+The rest of the summary should be lowercase.`;
+
 export const firstMessage = internalAction({
-  args: { chatId: v.id("chatMessagesStorageState"), message: v.string(), subchatIndex: v.number() },
+  args: { chatMessageId: v.id("chatMessagesStorageState"), message: v.string() },
   handler: async (ctx, args) => {
-    const { chatId, message, subchatIndex } = args;
+    const { chatMessageId, message } = args;
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1-mini",
       messages: [
         {
           role: "system",
-          content:
-            "You are a helpful assistant that summarizes users prompts into 4 words or less. These summaries should be a short description of the feautre/bug a user is trying to work on.",
+          content: SUMMARIZE_SYSTEM_PROMPT,
         },
         { role: "user", content: message },
       ],
@@ -26,18 +30,17 @@ export const firstMessage = internalAction({
     }
     const summary = response.choices[0].message.content;
     await ctx.runMutation(internal.summarize.saveMessageSummary, {
-      chatId,
-      subchatIndex,
+      chatMessageId,
       summary,
     });
   },
 });
 
 export const saveMessageSummary = internalMutation({
-  args: { chatId: v.id("chatMessagesStorageState"), subchatIndex: v.number(), summary: v.string() },
+  args: { chatMessageId: v.id("chatMessagesStorageState"), summary: v.string() },
   handler: async (ctx, args) => {
-    const { chatId, subchatIndex, summary } = args;
-    await ctx.db.patch(chatId, {
+    const { chatMessageId, summary } = args;
+    await ctx.db.patch(chatMessageId, {
       description: summary,
     });
   },
