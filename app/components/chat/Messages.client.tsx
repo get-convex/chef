@@ -148,7 +148,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
           );
         })
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+        <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
           <div className="mb-6 flex size-[64px] shrink-0 items-center justify-center rounded-full bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-500">
             <ChatBubbleIcon className="size-8" />
           </div>
