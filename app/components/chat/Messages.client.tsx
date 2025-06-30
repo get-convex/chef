@@ -10,6 +10,7 @@ import type { ForwardedRef } from 'react';
 import { SpinnerThreeDots } from '~/components/ui/SpinnerThreeDots';
 import { PersonIcon } from '@radix-ui/react-icons';
 import { ResetIcon } from '@radix-ui/react-icons';
+import { ChatBubbleIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
 import { useEarliestRewindableMessageRank } from '~/lib/hooks/useEarliestRewindableMessageRank';
@@ -100,69 +101,79 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
           </div>
         </Modal>
       )}
-      {messages.length > 0
-        ? messages.map((message, index) => {
-            const { role, content, annotations } = message;
-            const isUserMessage = role === 'user';
-            const isHidden = annotations?.includes('hidden');
+      {messages.length > 0 ? (
+        messages.map((message, index) => {
+          const { role, content, annotations } = message;
+          const isUserMessage = role === 'user';
+          const isHidden = annotations?.includes('hidden');
 
-            if (isHidden) {
-              return <Fragment key={index} />;
-            }
+          if (isHidden) {
+            return <Fragment key={index} />;
+          }
 
-            return (
-              <div
-                key={index}
-                className={classNames(
-                  'flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)] relative border border-neutral-200 dark:border-neutral-700',
-                  {
-                    'bg-bolt-elements-messages-background': isUserMessage,
-                  },
-                )}
-              >
-                {isUserMessage && (
-                  <div className="flex size-[40px] shrink-0 items-center justify-center self-start overflow-hidden rounded-full bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-500">
-                    {profile?.avatar ? (
-                      <img
-                        src={profile.avatar}
-                        alt={profile?.username || 'User'}
-                        className="size-full object-cover"
-                        loading="eager"
-                        decoding="sync"
-                      />
-                    ) : (
-                      <PersonIcon className="size-4" />
-                    )}
-                  </div>
-                )}
-                {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
-                {earliestRewindableMessageRank !== undefined &&
-                  earliestRewindableMessageRank !== null &&
-                  !isUserMessage &&
-                  index >= earliestRewindableMessageRank &&
-                  index !== messages.length - 1 &&
-                  currentSubchatIndex !== undefined &&
-                  lastSubchatIndex !== undefined &&
-                  currentSubchatIndex === lastSubchatIndex && (
-                    <Button
-                      className="absolute bottom-[-5px] right-[-5px] bg-bolt-elements-background-depth-2 hover:bg-bolt-elements-background-depth-3"
-                      onClick={() => {
-                        setIsModalOpen(true);
-                        setSelectedMessageIndex(index);
-                        setSelectedSubchatIndex(currentSubchatIndex);
-                      }}
-                      variant="neutral"
-                      size="xs"
-                      tip="Rewind to this message"
-                      title="Rewind to here"
-                    >
-                      <ResetIcon className="size-4 text-content-primary" />
-                    </Button>
+          return (
+            <div
+              key={index}
+              className={classNames(
+                'flex gap-4 p-4 w-full rounded-[calc(0.75rem-1px)] relative border border-neutral-200 dark:border-neutral-700',
+                {
+                  'bg-bolt-elements-messages-background': isUserMessage,
+                },
+              )}
+            >
+              {isUserMessage && (
+                <div className="flex size-[40px] shrink-0 items-center justify-center self-start overflow-hidden rounded-full bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-500">
+                  {profile?.avatar ? (
+                    <img
+                      src={profile.avatar}
+                      alt={profile?.username || 'User'}
+                      className="size-full object-cover"
+                      loading="eager"
+                      decoding="sync"
+                    />
+                  ) : (
+                    <PersonIcon className="size-4" />
                   )}
-              </div>
-            );
-          })
-        : null}
+                </div>
+              )}
+              {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
+              {earliestRewindableMessageRank !== undefined &&
+                earliestRewindableMessageRank !== null &&
+                !isUserMessage &&
+                index >= earliestRewindableMessageRank &&
+                index !== messages.length - 1 &&
+                currentSubchatIndex !== undefined &&
+                lastSubchatIndex !== undefined &&
+                currentSubchatIndex === lastSubchatIndex && (
+                  <Button
+                    className="absolute bottom-[-5px] right-[-5px] bg-bolt-elements-background-depth-2 hover:bg-bolt-elements-background-depth-3"
+                    onClick={() => {
+                      setIsModalOpen(true);
+                      setSelectedMessageIndex(index);
+                      setSelectedSubchatIndex(currentSubchatIndex);
+                    }}
+                    variant="neutral"
+                    size="xs"
+                    tip="Rewind to this message"
+                    title="Rewind to here"
+                  >
+                    <ResetIcon className="size-4 text-content-primary" />
+                  </Button>
+                )}
+            </div>
+          );
+        })
+      ) : (
+        <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+          <div className="mb-6 flex size-[64px] shrink-0 items-center justify-center rounded-full bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-500">
+            <ChatBubbleIcon className="size-8" />
+          </div>
+          <h3 className="mb-2 text-xl font-semibold text-content-primary">
+            Ready to cook up a new feature or fix a bug?
+          </h3>
+          <p className="max-w-md text-content-secondary">Send a message below to start on your next task!</p>
+        </div>
+      )}
 
       {isStreaming && (
         <div className="flex w-full justify-center text-content-secondary">
