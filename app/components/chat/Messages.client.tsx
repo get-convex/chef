@@ -10,6 +10,7 @@ import type { ForwardedRef } from 'react';
 import { SpinnerThreeDots } from '~/components/ui/SpinnerThreeDots';
 import { PersonIcon } from '@radix-ui/react-icons';
 import { ResetIcon } from '@radix-ui/react-icons';
+import { ChatBubbleIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
 import { useEarliestRewindableMessageRank } from '~/lib/hooks/useEarliestRewindableMessageRank';
@@ -148,21 +149,8 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
         })
       ) : (
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-          <div className="mb-6 rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 p-4">
-            <svg
-              className="size-12 text-blue-600 dark:text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
+          <div className="mb-6 flex size-[64px] shrink-0 items-center justify-center rounded-full bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-500">
+            <ChatBubbleIcon className="size-8" />
           </div>
           <h3 className="mb-2 text-xl font-semibold text-content-primary">
             Ready to cook up a new feature or fix a bug?
