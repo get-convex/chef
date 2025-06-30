@@ -155,9 +155,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
           <h3 className="mb-2 text-xl font-semibold text-content-primary">
             Ready to cook up a new feature or fix a bug?
           </h3>
-          <p className="max-w-md text-content-secondary">
-            This is a fresh start! Send a message below to start on your next task.
-          </p>
+          <p className="max-w-md text-content-secondary">Send a message below to start on your next task!</p>
         </div>
       )}
       {isStreaming && (
