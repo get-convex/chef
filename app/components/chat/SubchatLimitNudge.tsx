@@ -4,9 +4,7 @@ import { api } from '@convex/_generated/api';
 import { useMutation } from 'convex/react';
 import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
 import type { Id } from '@convex/_generated/dataModel';
-import { useCallback, useState } from 'react';
-import { Modal } from '@ui/Modal';
-import { ArrowLeftIcon, ArrowRightIcon } from '@radix-ui/react-icons';
+import { useCallback } from 'react';
 
 interface SubchatLimitNudgeProps {
   sessionId: Id<'sessions'> | null;

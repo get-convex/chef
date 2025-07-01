@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import { Fragment, useCallback, useState, useEffect } from 'react';
+import { Fragment, useCallback, useState } from 'react';
 import { classNames } from '~/utils/classNames';
 import { AssistantMessage } from './AssistantMessage';
 import { UserMessage } from './UserMessage';
