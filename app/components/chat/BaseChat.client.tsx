@@ -176,6 +176,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       messages={messages}
                       isStreaming={isStreaming}
                       onRewindToMessage={onRewindToMessage}
+                      subchatsLength={subchats?.length}
                     />
                   </>
                 ) : null}

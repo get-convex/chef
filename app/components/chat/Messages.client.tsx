@@ -21,12 +21,12 @@ interface MessagesProps {
   className?: string;
   isStreaming?: boolean;
   messages?: Message[];
-  lastSubchatIndex?: number;
+  subchatsLength?: number;
   onRewindToMessage?: (subchatIndex?: number, messageIndex?: number) => void;
 }
 
 export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messages(
-  { id, isStreaming = false, messages = [], className, onRewindToMessage, lastSubchatIndex }: MessagesProps,
+  { id, isStreaming = false, messages = [], className, onRewindToMessage, subchatsLength }: MessagesProps,
   ref: ForwardedRef<HTMLDivElement> | undefined,
 ) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,6 +41,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
   );
   const profile = useStore(profileStore);
   const earliestRewindableMessageRank = useEarliestRewindableMessageRank();
+  const lastSubchatIndex = subchatsLength ? subchatsLength - 1 : undefined;
 
   return (
     <div id={id} className={className} ref={ref}>
@@ -121,6 +122,16 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                 </div>
               )}
               {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
+              <div>
+                {earliestRewindableMessageRank !== undefined &&
+                  earliestRewindableMessageRank !== null &&
+                  !isUserMessage &&
+                  index >= earliestRewindableMessageRank &&
+                  index !== messages.length - 1 &&
+                  currentSubchatIndex !== undefined &&
+                  lastSubchatIndex !== undefined &&
+                  currentSubchatIndex === lastSubchatIndex}
+              </div>
               {earliestRewindableMessageRank !== undefined &&
                 earliestRewindableMessageRank !== null &&
                 !isUserMessage &&
