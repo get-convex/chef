@@ -23,12 +23,10 @@ import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 import { chooseExperience } from '~/utils/experienceChooser';
 import { AnimatePresence, motion } from 'framer-motion';
-import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore } from '~/components/ExistingChat.client';
 import { useStore } from '@nanostores/react';
 import { SubchatBar } from './SubchatBar';
 import { SubchatLimitNudge } from './SubchatLimitNudge';
-
-const MIN_MESSAGES_FOR_NUDGE = 1;
 
 interface BaseChatProps {
   // Refs
@@ -101,9 +99,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const recommendedExperience = chooseExperience(navigator.userAgent, window.crossOriginIsolated);
     const [chatEnabled, setChatEnabled] = useState(recommendedExperience === 'the-real-thing');
     const currentSubchatIndex = useStore(subchatIndexStore) ?? 0;
-    const { newChatFeature } = useLaunchDarkly();
-    const shouldShowNudge = newChatFeature && messages.length > MIN_MESSAGES_FOR_NUDGE;
-    const subchatLoaded = useStore(subchatLoadedStore);
+    const { newChatFeature, minMessagesForNudge } = useLaunchDarkly();
+    const shouldShowNudge = newChatFeature && messages.length > minMessagesForNudge;
 
     useEffect(() => {
       const hasDismissedMobileWarning = localStorage.getItem('hasDismissedMobileWarning') === 'true';

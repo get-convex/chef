@@ -16,6 +16,7 @@ const flagDefaults: {
   enablePreciseEdits: boolean;
   enableEnvironmentVariables: boolean;
   newChatFeature: boolean;
+  minMessagesForNudge: number;
 } = {
   maintenanceMode: false,
   showUsageAnnotations: false,
@@ -31,6 +32,7 @@ const flagDefaults: {
   enablePreciseEdits: false,
   enableEnvironmentVariables: false,
   newChatFeature: false,
+  minMessagesForNudge: 40,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {
