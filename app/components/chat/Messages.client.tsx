@@ -23,19 +23,10 @@ interface MessagesProps {
   messages?: Message[];
   subchatsLength?: number;
   onRewindToMessage?: (subchatIndex?: number, messageIndex?: number) => void;
-  onMessageCountChange?: (count: number) => void;
 }
 
 export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messages(
-  {
-    id,
-    isStreaming = false,
-    messages = [],
-    className,
-    onRewindToMessage,
-    subchatsLength,
-    onMessageCountChange,
-  }: MessagesProps,
+  { id, isStreaming = false, messages = [], className, onRewindToMessage, subchatsLength }: MessagesProps,
   ref: ForwardedRef<HTMLDivElement> | undefined,
 ) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,13 +42,6 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
   const profile = useStore(profileStore);
   const earliestRewindableMessageRank = useEarliestRewindableMessageRank();
   const lastSubchatIndex = subchatsLength ? subchatsLength - 1 : undefined;
-
-  // Track message count changes and notify parent
-  useEffect(() => {
-    if (onMessageCountChange) {
-      onMessageCountChange(messages.length);
-    }
-  }, [messages.length, onMessageCountChange]);
 
   return (
     <div id={id} className={className} ref={ref}>
