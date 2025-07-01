@@ -62,7 +62,10 @@ export function useInitialMessages(chatId: string | undefined):
         if (subchatIndex === undefined) {
           subchatLoadedStore.set(false);
           subchatIndexStore.set(chatInfo.subchatIndex);
+          // Exit early to let the effect run again with the new subchatIndex
+          return;
         }
+
         setKnownInitialId(chatInfo.initialId);
         if (chatInfo.urlId) {
           setKnownUrlId(chatInfo.urlId);

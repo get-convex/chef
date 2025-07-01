@@ -515,7 +515,14 @@ export const rewindChat = mutation({
         },
       });
     }
-    ctx.db.patch(chat._id, { lastSubchatIndex: subchatIndex, lastMessageRank: latestStorageState.lastMessageRank });
+    await ctx.db.patch(chat._id, {
+      lastSubchatIndex: subchatIndex,
+      lastMessageRank: latestStorageState.lastMessageRank,
+    });
+    await deletePreviousStorageStates(ctx, {
+      chat: { ...chat, lastMessageRank: latestStorageState.lastMessageRank, lastSubchatIndex: subchatIndex },
+      subchatIndex,
+    });
   },
 });
 
