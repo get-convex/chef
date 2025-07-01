@@ -144,7 +144,7 @@ httpWithCors.route({
       storageId: messageStorageId,
       snapshotId: snapshotStorageId,
     });
-    if (firstMessage && maybeStorageStateId && lastSubchatIndex) {
+    if (firstMessage && maybeStorageStateId) {
       await ctx.scheduler.runAfter(0, internal.summarize.firstMessage, {
         chatMessageId: maybeStorageStateId,
         message: firstMessage,
