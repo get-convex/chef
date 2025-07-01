@@ -28,7 +28,7 @@ import { useStore } from '@nanostores/react';
 import { SubchatBar } from './SubchatBar';
 import { SubchatLimitNudge } from './SubchatLimitNudge';
 
-const MIN_MESSAGES_FOR_NUDGE = 40;
+const MIN_MESSAGES_FOR_NUDGE = 1;
 
 interface BaseChatProps {
   // Refs
@@ -209,9 +209,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       />
                     </div>
                   )}
-                  {chatEnabled && (!subchats || currentSubchatIndex >= subchats.length - 1) && subchatLoaded && (
+                  {chatEnabled && (!subchats || currentSubchatIndex >= subchats.length - 1) && (
                     <>
-                      {/* Show nudge when message limit is reached */}
                       {shouldShowNudge && sessionId && (
                         <div className="mb-4">
                           <SubchatLimitNudge sessionId={sessionId} chatId={chatId} messageCount={messages.length} />
