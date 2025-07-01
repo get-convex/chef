@@ -421,6 +421,7 @@ async function deletePreviousStorageStates(
     storageStatesToDelete.push(...futureSubchatStorageStates);
 
     for (const storageState of storageStatesToDelete) {
+      console.log("deleting storage state", storageState._id, "with subchatIndex", storageState.subchatIndex);
       await deleteStorageState(ctx, storageState);
     }
     ctx.db.patch(chat._id, { lastMessageRank: undefined });
@@ -515,7 +516,15 @@ export const rewindChat = mutation({
         },
       });
     }
-    ctx.db.patch(chat._id, { lastSubchatIndex: subchatIndex, lastMessageRank: latestStorageState.lastMessageRank });
+    await ctx.db.patch(chat._id, {
+      lastSubchatIndex: subchatIndex,
+      lastMessageRank: latestStorageState.lastMessageRank,
+    });
+    await deletePreviousStorageStates(ctx, {
+      chat: { ...chat, lastMessageRank: latestStorageState.lastMessageRank, lastSubchatIndex: subchatIndex },
+      subchatIndex,
+    });
+    console.log("rewound chat", chatId, "to subchat", subchatIndex, "to message", latestStorageState.lastMessageRank);
   },
 });
 

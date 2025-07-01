@@ -359,8 +359,9 @@ describe("messages", () => {
 
     // Should still have higher lastMessageRank state in the table
     const allChatMessagesStorageStates = await getChatStorageStates(t, chatId, sessionId);
-    // Initialize chat record, first message with snapshot, and second message with updated snapshot
-    expect(allChatMessagesStorageStates.length).toBe(3);
+    // Initialize chat record and first message with snapshot. The second message was deleted
+    // because it was rewound to the first message.
+    expect(allChatMessagesStorageStates.length).toBe(2);
   });
 
   test("sending message after rewind deletes future records when no share exists", async () => {
@@ -669,20 +670,9 @@ describe("messages", () => {
       lastMessageRank: 0,
     });
 
-    // Send a new message after rewinding - this will trigger cleanup of future subchat storage states
-    const newMessage: SerializedMessage = createMessage({
-      role: "user",
-      parts: [{ text: "New message after rewind!", type: "text" }],
-    });
-    await storeChat(t, chatId, sessionId, {
-      messages: [subchat0Message, newMessage],
-      snapshot: new Blob(["new snapshot after rewind"]),
-      subchatIndex: 0,
-    });
-
     // Verify that storage states for subchats 1 and 2 are deleted
     const remainingStorageStates = await getChatStorageStates(t, chatId, sessionId);
-    expect(remainingStorageStates.filter((s) => s.subchatIndex === 0).length).toBe(2);
+    expect(remainingStorageStates.filter((s) => s.subchatIndex === 0).length).toBe(1);
     expect(remainingStorageStates.filter((s) => s.subchatIndex === 1).length).toBe(0);
     expect(remainingStorageStates.filter((s) => s.subchatIndex === 2).length).toBe(0);
 
@@ -693,9 +683,9 @@ describe("messages", () => {
       subchatIndex: 0,
     });
     await assertStorageInfo(t, subchat0StorageInfo, {
-      expectedMessages: [subchat0Message, newMessage],
-      expectedSnapshotContent: "new snapshot after rewind",
-      expectedLastMessageRank: 1,
+      expectedMessages: [subchat0Message],
+      expectedSnapshotContent: "subchat 0 snapshot",
+      expectedLastMessageRank: 0,
       expectedPartIndex: 0,
       expectedSubchatIndex: 0,
     });
