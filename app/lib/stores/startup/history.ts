@@ -66,21 +66,20 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
       const lastMessage = initialMessages[initialMessages.length - 1];
       const lastMessagePartIndex = (lastMessage?.parts?.length ?? 0) - 1;
       const currentSyncState = chatSyncState.get();
-      if (currentSyncState.persistedMessageInfo === null) {
-        chatSyncState.set({
-          ...currentSyncState,
-          persistedMessageInfo: {
-            messageIndex: initialMessages.length - 1,
-            partIndex: lastMessagePartIndex,
-          },
-        });
-        lastCompleteMessageInfoStore.set({
+      // Always update persistedMessageInfo when initialMessages change (e.g., when switching subchats)
+      chatSyncState.set({
+        ...currentSyncState,
+        persistedMessageInfo: {
           messageIndex: initialMessages.length - 1,
           partIndex: lastMessagePartIndex,
-          allMessages: initialMessages,
-          hasNextPart: false,
-        });
-      }
+        },
+      });
+      lastCompleteMessageInfoStore.set({
+        messageIndex: initialMessages.length - 1,
+        partIndex: lastMessagePartIndex,
+        allMessages: initialMessages,
+        hasNextPart: false,
+      });
     }
   }, [initialMessages]);
   useEffect(() => {
