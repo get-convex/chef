@@ -28,6 +28,8 @@ import { useStore } from '@nanostores/react';
 import { SubchatBar } from './SubchatBar';
 import { SubchatLimitNudge } from './SubchatLimitNudge';
 
+const MIN_MESSAGES_FOR_NUDGE = 40;
+
 interface BaseChatProps {
   // Refs
   messageRef: RefCallback<HTMLDivElement> | undefined;
@@ -100,8 +102,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const [chatEnabled, setChatEnabled] = useState(recommendedExperience === 'the-real-thing');
     const currentSubchatIndex = useStore(subchatIndexStore) ?? 0;
     const { newChatFeature } = useLaunchDarkly();
-    const [messageCount, setMessageCount] = useState(0);
-    const shouldShowNudge = messageCount > 1;
+    const shouldShowNudge = newChatFeature && messages.length > MIN_MESSAGES_FOR_NUDGE;
     const subchatLoaded = useStore(subchatLoadedStore);
 
     useEffect(() => {
@@ -180,7 +181,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       messages={messages}
                       isStreaming={isStreaming}
                       onRewindToMessage={onRewindToMessage}
-                      onMessageCountChange={setMessageCount}
                     />
                   </>
                 ) : null}
@@ -209,12 +209,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       />
                     </div>
                   )}
-                  {chatEnabled && (!subchats || currentSubchatIndex >= subchats.length - 1) && (
+                  {chatEnabled && (!subchats || currentSubchatIndex >= subchats.length - 1) && subchatLoaded && (
                     <>
                       {/* Show nudge when message limit is reached */}
                       {shouldShowNudge && sessionId && (
                         <div className="mb-4">
-                          <SubchatLimitNudge sessionId={sessionId} chatId={chatId} messageCount={messageCount} />
+                          <SubchatLimitNudge sessionId={sessionId} chatId={chatId} messageCount={messages.length} />
                         </div>
                       )}
 
