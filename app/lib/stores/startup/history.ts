@@ -157,6 +157,7 @@ async function chatSyncWorker(args: {
   chatSyncState.set({
     ...currentState,
     started: true,
+    savedFileUpdateCounter: currentState.savedFileUpdateCounter ?? getFileUpdateCounter(),
   });
   while (true) {
     const currentState = await waitForInitialized();
