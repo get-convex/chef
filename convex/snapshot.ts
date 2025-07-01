@@ -25,14 +25,13 @@ export const getSnapshotUrl = query({
   args: {
     sessionId: v.id("sessions"),
     chatId: v.string(),
-    subchatIndex: v.optional(v.number()),
   },
-  handler: async (ctx, { sessionId, chatId, subchatIndex }) => {
+  handler: async (ctx, { sessionId, chatId }) => {
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
       throw new Error("Chat not found");
     }
-    const chatWithSubchatIndex = { ...chat, subchatIndex: subchatIndex ?? 0 };
+    const chatWithSubchatIndex = { ...chat, subchatIndex: chat.lastSubchatIndex };
     const latestChatStorageState = await getLatestChatMessageStorageState(ctx, chatWithSubchatIndex);
     if (latestChatStorageState?.snapshotId) {
       const url = await ctx.storage.getUrl(latestChatStorageState.snapshotId);

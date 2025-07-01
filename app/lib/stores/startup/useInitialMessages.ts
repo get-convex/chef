@@ -59,8 +59,6 @@ export function useInitialMessages(chatId: string | undefined):
           setInitialMessages(undefined);
           return;
         }
-
-        // Only initialize subchatIndex once per chat
         if (subchatIndex === undefined) {
           subchatLoadedStore.set(false);
           subchatIndexStore.set(chatInfo.subchatIndex);
