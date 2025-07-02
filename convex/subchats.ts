@@ -14,7 +14,7 @@ export const get = query({
     sessionId: v.id("sessions"),
     chatId: v.string(),
   },
-  returns: v.array(v.object({ subchatIndex: v.number(), description: v.optional(v.string()) })),
+  returns: v.array(v.object({ subchatIndex: v.number(), description: v.optional(v.string()), updatedAt: v.number() })),
   handler: async (ctx, args) => {
     const { chatId, sessionId } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
@@ -38,6 +38,7 @@ export const get = query({
     return subchats.map((subchat) => ({
       subchatIndex: subchat.subchatIndex,
       description: subchat.description,
+      updatedAt: subchat._creationTime,
     }));
   },
 });

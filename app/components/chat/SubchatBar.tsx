@@ -5,9 +5,12 @@ import { classNames } from '~/utils/classNames';
 import type { Id } from '@convex/_generated/dataModel';
 import { useCallback, useState } from 'react';
 import { Modal } from '@ui/Modal';
+import { Combobox } from '@ui/Combobox';
+import { cn } from '@ui/cn';
+import { TimestampDistance } from '../ui/TimestampDistance';
 
 interface SubchatBarProps {
-  subchats?: { subchatIndex: number; description?: string }[];
+  subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
   currentSubchatIndex: number;
   isStreaming: boolean;
   disableChatMessage: boolean;
@@ -52,6 +55,24 @@ export function SubchatBar({
     },
     [onRewind],
   );
+
+  const getSubchatDisplayName = useCallback(
+    (subchat: { subchatIndex: number; description?: string }, arrayIndex: number) => {
+      if (subchat.description) {
+        return subchat.description;
+      }
+      return arrayIndex === 0 ? 'Initial chat' : `Feature #${arrayIndex}`;
+    },
+    [],
+  );
+
+  const subchatOptions =
+    subchats?.map((subchat, arrayIndex) => ({
+      label: getSubchatDisplayName(subchat, arrayIndex),
+      value: subchat.subchatIndex,
+      subchat,
+      arrayIndex,
+    })) ?? [];
 
   return (
     <div className="sticky top-0 z-[2] mx-auto mb-4 w-full max-w-chat pt-4">
@@ -134,39 +155,69 @@ export function SubchatBar({
         </Modal>
       )}
 
-      <div className="flex items-center justify-between rounded-lg border border-content-secondary/20 bg-background-secondary/90 px-4 py-2 backdrop-blur-sm">
-        <div className={classNames('flex rounded-lg bg-background-secondary border')}>
-          <Button
-            size="xs"
-            variant="neutral"
-            className={classNames('rounded-r-none border-0 border-border-transparent dark:border-border-transparent')}
-            icon={<ArrowLeftIcon className="my-px" />}
-            inline
-            tip={isStreaming ? 'Navigation disabled while generating a response' : 'Previous Chat'}
-            disabled={!canNavigatePrev || isStreaming}
-            onClick={() => {
-              handleNavigateToSubchat(currentSubchatIndex - 1);
-            }}
-          />
-          <Button
-            size="xs"
-            variant="neutral"
-            className={classNames('rounded-l-none border-0 border-border-transparent dark:border-border-transparent')}
-            icon={<ArrowRightIcon className="my-px" />}
-            inline
-            tip={isStreaming ? 'Navigation disabled while generating a response' : 'Next Chat'}
-            disabled={!canNavigateNext || isStreaming}
-            onClick={() => {
-              handleNavigateToSubchat(currentSubchatIndex + 1);
-            }}
-          />
-        </div>
+      <div className="flex items-center justify-between rounded-lg border border-content-secondary/20 bg-background-secondary/90 px-4 py-2 backdrop-blur-sm gap-2">
+        <div className="flex items-center gap-2 grow min-w-0">
+          <div className={classNames('flex rounded-lg bg-background-secondary border')}>
+            <Button
+              size="xs"
+              variant="neutral"
+              className={classNames('rounded-r-none border-0 border-border-transparent dark:border-border-transparent')}
+              icon={<ArrowLeftIcon className="my-px" />}
+              inline
+              tip={isStreaming ? 'Navigation disabled while generating a response' : 'Previous Chat'}
+              disabled={!canNavigatePrev || isStreaming}
+              onClick={() => {
+                handleNavigateToSubchat(currentSubchatIndex - 1);
+              }}
+            />
+            <Button
+              size="xs"
+              variant="neutral"
+              className={classNames('rounded-l-none border-0 border-border-transparent dark:border-border-transparent')}
+              icon={<ArrowRightIcon className="my-px" />}
+              inline
+              tip={isStreaming ? 'Navigation disabled while generating a response' : 'Next Chat'}
+              disabled={!canNavigateNext || isStreaming}
+              onClick={() => {
+                handleNavigateToSubchat(currentSubchatIndex + 1);
+              }}
+            />
+          </div>
 
-        <div className="flex items-center gap-2 text-sm font-medium text-content-secondary">
-          <span>Subchat</span>
-          <span className="text-content-primary">{currentSubchatIndex + 1}</span>
-          <span>of</span>
-          <span className="text-content-primary">{Math.max(currentSubchatIndex + 1, subchats?.length ?? 1)}</span>
+          <Combobox
+            searchPlaceholder="Search chats..."
+            label="Select chat"
+            labelHidden
+            className="max-w-full"
+            buttonClasses="w-full"
+            optionsWidth="fit"
+            innerButtonClasses="border-none"
+            options={subchatOptions.reverse()}
+            selectedOption={currentSubchatIndex}
+            setSelectedOption={(subchatIndex) => {
+              if (subchatIndex !== null && !isStreaming) {
+                handleNavigateToSubchat(subchatIndex);
+              }
+            }}
+            Option={({ value, inButton }) => {
+              const option = subchatOptions.find((opt) => opt.value === value);
+              if (!option) return null;
+
+              const { subchat, arrayIndex } = option;
+              const displayName = getSubchatDisplayName(subchat, arrayIndex);
+
+              return (
+                <div className="flex flex-col gap-1 max-w-96 truncate">
+                  <div className={cn("text-sm truncate", inButton && "font-bold")}>{displayName}</div>
+                  {!inButton && (
+                    <div className="text-left">
+                      <TimestampDistance date={new Date(subchat.updatedAt)} />
+                    </div>
+                  )}
+                </div>
+              );
+            }}
+          />
         </div>
 
         <div className="flex items-center gap-2">

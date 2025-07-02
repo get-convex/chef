@@ -88,7 +88,7 @@ interface ChatProps {
 
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
-  subchats?: { subchatIndex: number; description?: string }[];
+  subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
 }
 
 const retryState = atom({

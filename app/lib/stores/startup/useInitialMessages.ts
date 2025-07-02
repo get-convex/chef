@@ -17,7 +17,7 @@ export interface InitialMessages {
   loadedChatId: string;
   serialized: SerializedMessage[];
   deserialized: Message[];
-  subchats?: { subchatIndex: number; description?: string }[];
+  subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
 }
 
 export function useInitialMessages(chatId: string | undefined):

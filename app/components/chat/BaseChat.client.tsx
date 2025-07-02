@@ -67,7 +67,7 @@ interface BaseChatProps {
   // Subchat navigation props
   currentSubchatIndex?: number;
   totalSubchats?: number;
-  subchats?: { subchatIndex: number; description?: string }[];
+  subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
 }
 
 export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
