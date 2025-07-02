@@ -1,31 +1,17 @@
 import { Button } from '@ui/Button';
 import { PlusIcon } from '@radix-ui/react-icons';
-import { api } from '@convex/_generated/api';
-import { useMutation } from 'convex/react';
-import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
 import type { Id } from '@convex/_generated/dataModel';
-import { useCallback } from 'react';
 
 interface SubchatLimitNudgeProps {
   sessionId: Id<'sessions'> | null;
   chatId: string;
   messageCount: number;
+  handleCreateSubchat: () => void;
 }
 
-export function SubchatLimitNudge({ sessionId, chatId, messageCount }: SubchatLimitNudgeProps) {
-  const createSubchat = useMutation(api.subchats.create);
-
-  const handleCreateSubchat = useCallback(async () => {
-    if (!sessionId) {
-      return;
-    }
-    const subchatIndex = await createSubchat({ chatId, sessionId });
-    subchatLoadedStore.set(false);
-    subchatIndexStore.set(subchatIndex);
-  }, [createSubchat, chatId, sessionId]);
-
+export function SubchatLimitNudge({ sessionId, messageCount, handleCreateSubchat }: SubchatLimitNudgeProps) {
   return (
-    <div className="mx-auto w-full max-w-chat rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950/50">
+    <div className="mx-auto w-full max-w-chat rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
       <div className="flex items-start gap-3">
         <div className="flex-1 space-y-3">
           <div>

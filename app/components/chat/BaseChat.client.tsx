@@ -23,10 +23,12 @@ import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 import { chooseExperience } from '~/utils/experienceChooser';
 import { AnimatePresence, motion } from 'framer-motion';
-import { subchatIndexStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
 import { useStore } from '@nanostores/react';
 import { SubchatBar } from './SubchatBar';
 import { SubchatLimitNudge } from './SubchatLimitNudge';
+import { useMutation } from 'convex/react';
+import { api } from '@convex/_generated/api';
 
 interface BaseChatProps {
   // Refs
@@ -101,6 +103,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const currentSubchatIndex = useStore(subchatIndexStore) ?? 0;
     const { newChatFeature, minMessagesForNudge } = useLaunchDarkly();
     const shouldShowNudge = newChatFeature && messages.length > minMessagesForNudge;
+    const createSubchat = useMutation(api.subchats.create);
 
     useEffect(() => {
       const hasDismissedMobileWarning = localStorage.getItem('hasDismissedMobileWarning') === 'true';
@@ -118,6 +121,16 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         convexSiteUrl: getConvexSiteUrl(),
       });
     }, [chatId, sessionId]);
+
+    const handleCreateSubchat = useCallback(async () => {
+      if (!sessionId) {
+        return;
+      }
+      const subchatIndex = await createSubchat({ chatId, sessionId });
+      subchatLoadedStore.set(false);
+      subchatIndexStore.set(subchatIndex);
+      messageInputStore.set('');
+    }, [createSubchat, chatId, sessionId]);
 
     const lastUserMessage = messages.findLast((message) => message.role === 'user');
     const resendMessage = useCallback(async () => {
@@ -169,6 +182,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         sessionId={sessionId ?? null}
                         chatId={chatId}
                         onRewind={onRewindToMessage}
+                        handleCreateSubchat={handleCreateSubchat}
                       />
                     )}
 
@@ -211,7 +225,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     <>
                       {shouldShowNudge && sessionId && (
                         <div className="mb-4">
-                          <SubchatLimitNudge sessionId={sessionId} chatId={chatId} messageCount={messages.length} />
+                          <SubchatLimitNudge
+                            sessionId={sessionId}
+                            chatId={chatId}
+                            messageCount={messages.length}
+                            handleCreateSubchat={handleCreateSubchat}
+                          />
                         </div>
                       )}
 

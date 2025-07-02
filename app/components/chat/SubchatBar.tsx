@@ -15,6 +15,7 @@ interface SubchatBarProps {
   disableChatMessage: boolean;
   sessionId: Id<'sessions'> | null;
   chatId: string;
+  handleCreateSubchat: () => void;
   onRewind?: (subchatIndex?: number, messageIndex?: number) => void;
 }
 
@@ -26,6 +27,7 @@ export function SubchatBar({
   sessionId,
   chatId,
   onRewind,
+  handleCreateSubchat,
 }: SubchatBarProps) {
   const createSubchat = useMutation(api.subchats.create);
   const [isRewindModalOpen, setIsRewindModalOpen] = useState(false);
@@ -56,17 +58,8 @@ export function SubchatBar({
     [onRewind],
   );
 
-  const handleCreateSubchat = useCallback(async () => {
-    if (!sessionId) {
-      return;
-    }
-    const subchatIndex = await createSubchat({ chatId, sessionId });
-    subchatLoadedStore.set(false);
-    subchatIndexStore.set(subchatIndex);
-  }, [createSubchat, chatId, sessionId]);
-
   return (
-    <div className="sticky top-0 z-10 mx-auto mb-4 w-full max-w-chat pt-4">
+    <div className="sticky top-0 z-[2] mx-auto mb-4 w-full max-w-chat pt-4">
       {isRewindModalOpen && (
         <Modal
           onClose={() => {
