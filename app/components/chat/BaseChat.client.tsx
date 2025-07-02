@@ -180,7 +180,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         isStreaming={isStreaming}
                         disableChatMessage={disableChatMessage !== null || messages.length === 0}
                         sessionId={sessionId ?? null}
-                        chatId={chatId}
                         onRewind={onRewindToMessage}
                         handleCreateSubchat={handleCreateSubchat}
                       />
