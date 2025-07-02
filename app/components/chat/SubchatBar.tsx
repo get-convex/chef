@@ -1,7 +1,5 @@
 import { Button } from '@ui/Button';
 import { ArrowLeftIcon, ArrowRightIcon, PlusIcon, ResetIcon } from '@radix-ui/react-icons';
-import { api } from '@convex/_generated/api';
-import { useMutation } from 'convex/react';
 import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
 import { classNames } from '~/utils/classNames';
 import type { Id } from '@convex/_generated/dataModel';
@@ -14,7 +12,6 @@ interface SubchatBarProps {
   isStreaming: boolean;
   disableChatMessage: boolean;
   sessionId: Id<'sessions'> | null;
-  chatId: string;
   handleCreateSubchat: () => void;
   onRewind?: (subchatIndex?: number, messageIndex?: number) => void;
 }
@@ -25,11 +22,9 @@ export function SubchatBar({
   isStreaming,
   disableChatMessage,
   sessionId,
-  chatId,
   onRewind,
   handleCreateSubchat,
 }: SubchatBarProps) {
-  const createSubchat = useMutation(api.subchats.create);
   const [isRewindModalOpen, setIsRewindModalOpen] = useState(false);
   const [isAddChatModalOpen, setIsAddChatModalOpen] = useState(false);
 
@@ -65,12 +60,12 @@ export function SubchatBar({
           onClose={() => {
             setIsRewindModalOpen(false);
           }}
-          title={<div className="sr-only">Rewind to subchat</div>}
+          title={<div className="sr-only">Rewind to previous chat</div>}
         >
           <div className="flex flex-col gap-2">
-            <h2>Rewind to previous version</h2>
+            <h2>Rewind to previous chat</h2>
             <p className="text-sm text-content-primary">
-              This will undo all changes after this subchat. Your current work will be lost and cannot be recovered.
+              This will undo all changes after this chat. Your current work will be lost and cannot be recovered.
             </p>
             <p className="text-sm text-content-primary">
               Your Convex data will be unaffected, so you may need to either clear or migrate your data in order to use
@@ -195,7 +190,7 @@ export function SubchatBar({
               className={classNames('flex rounded-lg bg-background-secondary border')}
               icon={<ResetIcon className="my-px" />}
               inline
-              tip="Rewind to this version"
+              tip="Rewind to this chat"
               disabled={currentSubchatIndex < 0}
               onClick={() => {
                 setIsRewindModalOpen(true);
