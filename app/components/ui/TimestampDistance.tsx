@@ -1,11 +1,11 @@
-import { formatDistanceToNow } from "date-fns";
-import { cn } from "@ui/cn";
-import { Tooltip } from "@ui/Tooltip";
+import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@ui/cn';
+import { Tooltip } from '@ui/Tooltip';
 
 export function TimestampDistance({
-  prefix = "",
+  prefix = '',
   date,
-  className = "",
+  className = '',
 }: {
   prefix?: string;
 
@@ -14,10 +14,10 @@ export function TimestampDistance({
 }) {
   return (
     <Tooltip tip={date.toLocaleString()}>
-      <div className={cn("text-xs text-content-secondary", className)}>
+      <div className={cn('text-xs text-content-secondary', className)}>
         {`${prefix} ${formatDistanceToNow(date, {
           addSuffix: true,
-        }).replace("about ", "")}`}
+        }).replace('about ', '')}`}
       </div>
     </Tooltip>
   );

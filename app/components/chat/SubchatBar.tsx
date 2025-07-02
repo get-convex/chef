@@ -7,7 +7,7 @@ import { useCallback, useState } from 'react';
 import { Modal } from '@ui/Modal';
 import { Combobox } from '@ui/Combobox';
 import { cn } from '@ui/cn';
-import { TimestampDistance } from '../ui/TimestampDistance';
+import { TimestampDistance } from '~/components/ui/TimestampDistance';
 
 interface SubchatBarProps {
   subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
@@ -155,8 +155,8 @@ export function SubchatBar({
         </Modal>
       )}
 
-      <div className="flex items-center justify-between rounded-lg border border-content-secondary/20 bg-background-secondary/90 px-4 py-2 backdrop-blur-sm gap-2">
-        <div className="flex items-center gap-2 grow min-w-0">
+      <div className="flex items-center justify-between gap-2 rounded-lg border border-content-secondary/20 bg-background-secondary/90 px-4 py-2 backdrop-blur-sm">
+        <div className="flex min-w-0 grow items-center gap-2">
           <div className={classNames('flex rounded-lg bg-background-secondary border')}>
             <Button
               size="xs"
@@ -201,14 +201,16 @@ export function SubchatBar({
             }}
             Option={({ value, inButton }) => {
               const option = subchatOptions.find((opt) => opt.value === value);
-              if (!option) return null;
+              if (!option) {
+                return null;
+              }
 
               const { subchat, arrayIndex } = option;
               const displayName = getSubchatDisplayName(subchat, arrayIndex);
 
               return (
-                <div className="flex flex-col gap-1 max-w-96 truncate">
-                  <div className={cn("text-sm truncate", inButton && "font-bold")}>{displayName}</div>
+                <div className="flex max-w-96 flex-col gap-1 truncate">
+                  <div className={cn('text-sm truncate', inButton && 'font-bold')}>{displayName}</div>
                   {!inButton && (
                     <div className="text-left">
                       <TimestampDistance date={new Date(subchat.updatedAt)} />
