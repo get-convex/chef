@@ -97,6 +97,7 @@ export function ShareButton() {
       });
 
       if (result.code) {
+        console.log('result', result.code);
         setSnapshotCode(result.code);
       }
     } catch (error) {

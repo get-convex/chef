@@ -134,7 +134,7 @@ export default defineSchema({
     snapshotId: v.id("_storage"),
     code: v.string(),
 
-    chatHistoryId: v.id("_storage"),
+    chatHistoryId: v.union(v.id("_storage"), v.null()),
 
     // Keeps track of the lastMessageRank, partIndex, and subchatIndex of the chat at the time the share was created.
     // These fields aren't used but they are useful hints for how big the chat is and where the snapshot came from.
