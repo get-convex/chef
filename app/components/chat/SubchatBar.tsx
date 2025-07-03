@@ -5,6 +5,7 @@ import { classNames } from '~/utils/classNames';
 import type { Id } from '@convex/_generated/dataModel';
 import { useCallback, useState } from 'react';
 import { Modal } from '@ui/Modal';
+import { useAreFilesSaving } from '~/lib/stores/fileUpdateCounter';
 
 interface SubchatBarProps {
   subchats?: { subchatIndex: number; description?: string }[];
@@ -27,6 +28,7 @@ export function SubchatBar({
 }: SubchatBarProps) {
   const [isRewindModalOpen, setIsRewindModalOpen] = useState(false);
   const [isAddChatModalOpen, setIsAddChatModalOpen] = useState(false);
+  const areFilesSaving = useAreFilesSaving();
 
   const canNavigatePrev = subchats && subchats.length > 1 && currentSubchatIndex > 0;
   const canNavigateNext = subchats && subchats.length > 1 && currentSubchatIndex < subchats.length - 1;
@@ -143,7 +145,7 @@ export function SubchatBar({
             icon={<ArrowLeftIcon className="my-px" />}
             inline
             tip={isStreaming ? 'Navigation disabled while generating a response' : 'Previous Chat'}
-            disabled={!canNavigatePrev || isStreaming}
+            disabled={!canNavigatePrev || isStreaming || areFilesSaving}
             onClick={() => {
               handleNavigateToSubchat(currentSubchatIndex - 1);
             }}
@@ -155,7 +157,7 @@ export function SubchatBar({
             icon={<ArrowRightIcon className="my-px" />}
             inline
             tip={isStreaming ? 'Navigation disabled while generating a response' : 'Next Chat'}
-            disabled={!canNavigateNext || isStreaming}
+            disabled={!canNavigateNext || isStreaming || areFilesSaving}
             onClick={() => {
               handleNavigateToSubchat(currentSubchatIndex + 1);
             }}
@@ -176,7 +178,7 @@ export function SubchatBar({
               variant="neutral"
               className={classNames('flex rounded-lg bg-background-secondary border')}
               icon={<PlusIcon className="my-px" />}
-              disabled={disableChatMessage || isStreaming}
+              disabled={disableChatMessage || isStreaming || areFilesSaving}
               inline
               tip={isStreaming ? 'New chats disabled while generating a response' : 'New Chat'}
               onClick={() => {

@@ -1,6 +1,7 @@
 import { Button } from '@ui/Button';
 import { PlusIcon } from '@radix-ui/react-icons';
 import type { Id } from '@convex/_generated/dataModel';
+import { useAreFilesSaving } from '~/lib/stores/fileUpdateCounter';
 
 interface SubchatLimitNudgeProps {
   sessionId: Id<'sessions'> | null;
@@ -10,6 +11,8 @@ interface SubchatLimitNudgeProps {
 }
 
 export function SubchatLimitNudge({ sessionId, messageCount, handleCreateSubchat }: SubchatLimitNudgeProps) {
+  const areFilesSaving = useAreFilesSaving();
+
   return (
     <div className="mx-auto w-full max-w-chat rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
       <div className="flex items-start gap-3">
@@ -26,7 +29,7 @@ export function SubchatLimitNudge({ sessionId, messageCount, handleCreateSubchat
             size="sm"
             className="bg-orange-600 text-white hover:bg-orange-700"
             icon={<PlusIcon />}
-            disabled={!sessionId}
+            disabled={!sessionId || areFilesSaving}
             onClick={handleCreateSubchat}
           >
             Start New Chat
