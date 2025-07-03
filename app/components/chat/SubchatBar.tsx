@@ -190,7 +190,7 @@ export function SubchatBar({
             labelHidden
             className="max-w-full"
             buttonClasses="w-full"
-            innerButtonClasses="border-none"
+            innerButtonClasses="border-none bg-transparent"
             disabled={isStreaming}
             optionsWidth="fit"
             options={subchatOptions.reverse()}
@@ -201,17 +201,28 @@ export function SubchatBar({
               }
             }}
             Option={({ value, inButton }) => {
-              const option = subchatOptions.find((opt) => opt.value === value);
+              let option = subchatOptions.find((opt) => opt.value === value);
+              // We optimistically add the current subchat if it hasn't been persisted yet
+              if (!option && value === currentSubchatIndex) {
+                option = {
+                  label: value === 0 ? 'Initial chat' : `Feature #${value}`,
+                  value: currentSubchatIndex,
+                  subchat: {
+                    subchatIndex: currentSubchatIndex,
+                    updatedAt: Date.now(),
+                  },
+                  arrayIndex: currentSubchatIndex,
+                };
+              }
               if (!option) {
                 return null;
               }
 
-              const { subchat, arrayIndex } = option;
-              const displayName = getSubchatDisplayName(subchat, arrayIndex);
+              const { subchat} = option;
 
               return (
                 <div className="flex max-w-96 flex-col gap-1 truncate">
-                  <div className={cn('text-sm truncate', inButton && 'font-bold')}>{displayName}</div>
+                  <div className="text-sm truncate">{option.label}</div>
                   {!inButton && (
                     <div className="text-left">
                       <TimestampDistance date={new Date(subchat.updatedAt)} />
