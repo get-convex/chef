@@ -43,6 +43,9 @@ export async function prepareMessageHistory(args: {
   url.searchParams.set('lastMessageRank', messageIndex.toString());
   url.searchParams.set('partIndex', partIndex.toString());
   url.searchParams.set('lastSubchatIndex', subchatIndex?.toString() ?? '0');
+  if (allMessages.length > 0) {
+    url.searchParams.set('firstMessage', allMessages[0].content);
+  }
   if (messageIndex === persistedMessageInfo.messageIndex && partIndex === persistedMessageInfo.partIndex) {
     // No changes
     return { url, update: null };

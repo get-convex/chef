@@ -232,7 +232,6 @@ export function SubchatBar({
             }}
           />
         </div>
-
         <div className="flex items-center gap-2">
           {currentSubchatIndex >= (subchats?.length ?? 1) - 1 && sessionId ? (
             <Button
