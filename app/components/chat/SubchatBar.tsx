@@ -6,7 +6,6 @@ import type { Id } from '@convex/_generated/dataModel';
 import { useCallback, useState } from 'react';
 import { Modal } from '@ui/Modal';
 import { Combobox } from '@ui/Combobox';
-import { cn } from '@ui/cn';
 import { TimestampDistance } from '~/components/ui/TimestampDistance';
 
 interface SubchatBarProps {
@@ -218,11 +217,11 @@ export function SubchatBar({
                 return null;
               }
 
-              const { subchat} = option;
+              const { subchat } = option;
 
               return (
                 <div className="flex max-w-96 flex-col gap-1 truncate">
-                  <div className="text-sm truncate">{option.label}</div>
+                  <div className="truncate text-sm">{option.label}</div>
                   {!inButton && (
                     <div className="text-left">
                       <TimestampDistance date={new Date(subchat.updatedAt)} />
