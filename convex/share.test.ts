@@ -32,6 +32,28 @@ describe("share", () => {
     await expect(t.mutation(api.share.create, { sessionId, id: "test" })).rejects.toThrow("Chat history not found");
   });
 
+  test("sharing a chat works if there is an empty subchat after the first one", async () => {
+    const { sessionId, chatId } = await initializeChat(t);
+
+    const subchat0Message: SerializedMessage = {
+      id: "subchat0-msg1",
+      role: "user",
+      parts: [{ text: "Hello from subchat 0!", type: "text" }],
+      createdAt: Date.now(),
+    };
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat0Message],
+      snapshot: new Blob(["subchat 0 snapshot"]),
+      subchatIndex: 0,
+    });
+
+    // Create a second subchat
+    await createSubchat(t, chatId, sessionId);
+
+    const code = await t.mutation(api.share.create, { sessionId, id: chatId });
+    expect(code).toBeDefined();
+  });
+
   test("sharing a chat works if there is a snapshot + message", async () => {
     const { sessionId, chatId } = await initializeChat(t);
 
