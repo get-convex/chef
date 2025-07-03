@@ -16,6 +16,7 @@ import { generateId } from 'ai';
 import { ConvexToolSet, SystemPromptOptions } from 'chef-agent/types';
 import { npmInstallTool, npmInstallToolParameters } from 'chef-agent/tools/npmInstall';
 import { lookupDocsTool } from 'chef-agent/tools/lookupDocs';
+import { getConvexDeploymentNameTool } from 'chef-agent/tools/getConvexDeploymentName';
 import { cleanupAssistantMessages } from 'chef-agent/cleanupAssistantMessages';
 import { generalSystemPrompt } from 'chef-agent/prompts/system';
 import { makePartId } from 'chef-agent/partId';
@@ -284,6 +285,10 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
               toolCallResult = await npmInstall(repoDir, packages);
               break;
             }
+            case 'getConvexDeploymentName': {
+              toolCallResult = backend.project.deploymentName;
+              break;
+            }
             default:
               throw new Error(`Unknown tool call: ${JSON.stringify(toolCall)}`);
           }
@@ -402,6 +407,7 @@ async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, c
           deploy: deployTool,
           npmInstall: npmInstallTool,
           lookupDocs: lookupDocsTool(),
+          getConvexDeploymentName: getConvexDeploymentNameTool,
         };
         if (opts.enablePreciseEdits) {
           tools.view = viewTool;
