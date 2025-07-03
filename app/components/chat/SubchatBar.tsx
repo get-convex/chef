@@ -190,8 +190,9 @@ export function SubchatBar({
             labelHidden
             className="max-w-full"
             buttonClasses="w-full"
-            optionsWidth="fit"
             innerButtonClasses="border-none"
+            disabled={isStreaming}
+            optionsWidth="fit"
             options={subchatOptions.reverse()}
             selectedOption={currentSubchatIndex}
             setSelectedOption={(subchatIndex) => {
