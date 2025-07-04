@@ -15,11 +15,11 @@ export function useConvexChatHomepage(chatId: string) {
   useProjectInitializer(chatId);
   const [chatInitialized, setChatInitialized] = useState(false);
   const initializeChat = useHomepageInitializeChat(chatId, setChatInitialized);
-  useBackupSyncState(chatId, []);
   const storeMessageHistory = useStoreMessageHistory();
   useNewChatContainerSetup();
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const initialMessages = useInitialMessages(chatInitialized ? chatId : undefined);
+  useBackupSyncState(chatId, initialMessages?.loadedSubchatIndex, initialMessages?.deserialized);
   const subchats = useQuery(
     api.subchats.get,
     !!sessionId && chatInitialized
@@ -43,7 +43,7 @@ export function useConvexChatExisting(chatId: string) {
   useProjectInitializer(chatId);
   const initializeChat = useExistingInitializeChat(chatId);
   const initialMessages = useInitialMessages(chatId);
-  useBackupSyncState(chatId, initialMessages?.deserialized);
+  useBackupSyncState(chatId, initialMessages?.loadedSubchatIndex, initialMessages?.deserialized);
   const storeMessageHistory = useStoreMessageHistory();
   useExistingChatContainerSetup(initialMessages?.loadedChatId);
   return {

@@ -17,6 +17,7 @@ export interface InitialMessages {
   loadedChatId: string;
   serialized: SerializedMessage[];
   deserialized: Message[];
+  loadedSubchatIndex: number;
   subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
 }
 
@@ -70,12 +71,13 @@ export function useInitialMessages(chatId: string | undefined):
         if (chatInfo.urlId) {
           setKnownUrlId(chatInfo.urlId);
         }
+        const subchatIndexToFetch = subchatIndex ?? chatInfo.subchatIndex;
         const initialMessagesResponse = await fetch(`${siteUrl}/initial_messages`, {
           method: 'POST',
           body: JSON.stringify({
             chatId,
             sessionId,
-            subchatIndex: subchatIndex ?? chatInfo.subchatIndex,
+            subchatIndex: subchatIndexToFetch,
           }),
         });
         if (!initialMessagesResponse.ok) {
@@ -87,6 +89,7 @@ export function useInitialMessages(chatId: string | undefined):
             loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
             serialized: [],
             deserialized: [],
+            loadedSubchatIndex: subchatIndexToFetch,
             subchats,
           });
           subchatLoadedStore.set(true);
@@ -130,6 +133,7 @@ export function useInitialMessages(chatId: string | undefined):
           loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
           serialized: transformedMessages,
           deserialized: deserializedMessages,
+          loadedSubchatIndex: subchatIndexToFetch,
           subchats,
         });
         subchatLoadedStore.set(true);
