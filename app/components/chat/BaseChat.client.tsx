@@ -194,6 +194,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -20 }}
                           transition={{ duration: 0.3, ease: 'easeInOut' }}
+                          className="mx-auto flex w-full max-w-chat flex-1 flex-col"
                         >
                           <Messages
                             ref={messageRef}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useConvex, useQuery } from 'convex/react';
-import { useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { useConvex } from 'convex/react';
+import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
 import type { SerializedMessage } from '@convex/messages';
 import type { Message } from '@ai-sdk/react';
@@ -18,7 +18,6 @@ export interface InitialMessages {
   serialized: SerializedMessage[];
   deserialized: Message[];
   loadedSubchatIndex: number;
-  subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
 }
 
 export function useInitialMessages(chatId: string | undefined):
@@ -27,17 +26,7 @@ export function useInitialMessages(chatId: string | undefined):
   | undefined {
   const convex = useConvex();
   const [initialMessages, setInitialMessages] = useState<InitialMessages | null | undefined>();
-  const sessionIdOrNullOrLoading = useConvexSessionIdOrNullOrLoading();
   const subchatIndex = useStore(subchatIndexStore);
-  const subchats = useQuery(
-    api.subchats.get,
-    sessionIdOrNullOrLoading && chatId
-      ? {
-          chatId,
-          sessionId: sessionIdOrNullOrLoading,
-        }
-      : 'skip',
-  );
 
   useEffect(() => {
     const loadInitialMessages = async () => {
@@ -54,10 +43,6 @@ export function useInitialMessages(chatId: string | undefined):
         });
         if (chatInfo === null) {
           setInitialMessages(null);
-          return;
-        }
-        if (!subchats) {
-          setInitialMessages(undefined);
           return;
         }
         if (subchatIndex === undefined) {
@@ -89,7 +74,6 @@ export function useInitialMessages(chatId: string | undefined):
             serialized: [],
             deserialized: [],
             loadedSubchatIndex: subchatIndexToFetch,
-            subchats,
           });
           return;
         }
@@ -132,7 +116,6 @@ export function useInitialMessages(chatId: string | undefined):
           serialized: transformedMessages,
           deserialized: deserializedMessages,
           loadedSubchatIndex: subchatIndexToFetch,
-          subchats,
         });
         description.set(chatInfo.description);
       } catch (error) {
@@ -141,7 +124,7 @@ export function useInitialMessages(chatId: string | undefined):
       }
     };
     void loadInitialMessages();
-  }, [convex, chatId, subchats, subchatIndex]);
+  }, [convex, chatId, subchatIndex]);
 
   return initialMessages;
 }

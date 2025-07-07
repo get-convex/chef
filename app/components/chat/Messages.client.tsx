@@ -42,6 +42,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
   const profile = useStore(profileStore);
   const earliestRewindableMessageRank = useEarliestRewindableMessageRank();
   const lastSubchatIndex = subchatsLength ? subchatsLength - 1 : undefined;
+  console.log('Messages', messages);
 
   return (
     <div id={id} className={className} ref={ref}>

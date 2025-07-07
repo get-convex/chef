@@ -46,6 +46,7 @@ import { UsageDebugView } from '~/components/debug/UsageDebugView';
 import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 import { useUsage } from '~/lib/stores/usage';
 import { hasAnyApiKeySet, hasApiKeySet } from '~/lib/common/apiKey';
+import { chatSyncState } from '~/lib/stores/startup/history';
 
 const logger = createScopedLogger('Chat');
 
@@ -84,7 +85,6 @@ interface ChatProps {
 
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
-  subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
 }
 
 const retryState = atom({
@@ -92,19 +92,21 @@ const retryState = atom({
   nextRetry: Date.now(),
 });
 export const Chat = memo(
-  ({
-    initialMessages,
-    partCache,
-    storeMessageHistory,
-    initializeChat,
-    isReload,
-    hadSuccessfulDeploy,
-    subchats,
-  }: ChatProps) => {
+  ({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy }: ChatProps) => {
     const convex = useConvex();
+    const sessionId = useConvexSessionIdOrNullOrLoading();
+    const subchats = useQuery(
+      api.subchats.get,
+      sessionId
+        ? {
+            chatId: chatIdStore.get(),
+            sessionId,
+          }
+        : 'skip',
+    );
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0 || (!!subchats && subchats.length > 1));
     const actionAlert = useStore(workbenchStore.alert);
-    const sessionId = useConvexSessionIdOrNullOrLoading();
+    const syncState = useStore(chatSyncState);
 
     const rewindToMessage = async (subchatIndex?: number, messageIndex?: number) => {
       if (sessionId && typeof sessionId === 'string') {
@@ -416,14 +418,12 @@ export const Chat = memo(
       },
     });
 
-    // Reset chat messages when initialMessages changes (e.g., when switching subchats)
+    // Reset chat messages when the loaded subchat index changes. We don't want to reset the
+    // messages if `initialMessages` changes without a subchat index change.
     useEffect(() => {
-      // On the first message, we don't want to reset the messages
-      if (subchats && subchats.length === 1 && initialMessages.length === 0) {
-        return;
-      }
       setMessages(initialMessages);
-    }, [initialMessages, setMessages, subchats]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [setMessages, syncState.subchatIndex]);
 
     setChefDebugProperty('messages', messages);
 
