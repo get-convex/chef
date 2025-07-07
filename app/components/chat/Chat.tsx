@@ -433,8 +433,8 @@ export const Chat = memo(
     setChefDebugProperty('parsedMessages', parsedMessages);
 
     useEffect(() => {
-      chatStore.setKey('started', initialMessages.length > 0 || (!!subchats && subchats.length > 1));
-    }, [initialMessages.length, subchats]);
+      chatStore.setKey('started', messages.length > 0 || (!!subchats && subchats.length > 1));
+    }, [messages.length, subchats]);
 
     useEffect(() => {
       processSampledMessages({
