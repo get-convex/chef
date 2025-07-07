@@ -187,7 +187,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     )}
 
                     <AnimatePresence mode="wait">
-                      {isSubchatLoaded ? (
+                      {isSubchatLoaded && (
                         <motion.div
                           key="messages"
                           initial={{ opacity: 0, y: 20 }}
@@ -198,101 +198,14 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         >
                           <Messages
                             ref={messageRef}
-                            className="flex w-full flex-col gap-4"
+                            className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
                             messages={messages}
                             isStreaming={isStreaming}
                             onRewindToMessage={onRewindToMessage}
                             subchatsLength={subchats?.length}
                           />
                         </motion.div>
-                      ) : (
-                        <motion.div
-                          key="skeleton"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
-                        >
-                          {/* Loading indicator */}
-                          <div className="flex items-center justify-center gap-3 py-8">
-                            <div className="relative">
-                              <div className="size-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500 dark:border-gray-600 dark:border-t-blue-400"></div>
-                            </div>
-                            <span className="animate-pulse text-sm font-medium text-gray-600 dark:text-gray-400">
-                              Loading chat...
-                            </span>
-                          </div>
-
-                          {/* Loading skeleton for messages */}
-                          <div className="flex flex-col gap-4">
-                            {/* Skeleton for user message */}
-                            <div className="flex justify-end">
-                              <div className="max-w-[80%] rounded-2xl bg-gray-100/60 p-4 dark:bg-gray-800/40">
-                                <div className="mb-2 h-3 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"></div>
-                                <div
-                                  className="h-3 w-3/4 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"
-                                  style={{ animationDelay: '0.1s' }}
-                                ></div>
-                              </div>
-                            </div>
-
-                            {/* Skeleton for assistant message */}
-                            <div className="flex justify-start">
-                              <div className="max-w-[80%] rounded-2xl bg-gray-100/60 p-4 dark:bg-gray-800/40">
-                                <div
-                                  className="mb-2 h-3 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"
-                                  style={{ animationDelay: '0.2s' }}
-                                ></div>
-                                <div
-                                  className="mb-2 h-3 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"
-                                  style={{ animationDelay: '0.3s' }}
-                                ></div>
-                                <div
-                                  className="h-3 w-2/3 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"
-                                  style={{ animationDelay: '0.4s' }}
-                                ></div>
-                              </div>
-                            </div>
-
-                            {/* Skeleton for another user message */}
-                            <div className="flex justify-end">
-                              <div className="max-w-[80%] rounded-2xl bg-gray-100/60 p-4 dark:bg-gray-800/40">
-                                <div
-                                  className="mb-2 h-3 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"
-                                  style={{ animationDelay: '0.5s' }}
-                                ></div>
-                                <div
-                                  className="h-3 w-5/6 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"
-                                  style={{ animationDelay: '0.6s' }}
-                                ></div>
-                              </div>
-                            </div>
-
-                            {/* Skeleton for another assistant message */}
-                            <div className="flex justify-start">
-                              <div className="max-w-[80%] rounded-2xl bg-gray-100/60 p-4 dark:bg-gray-800/40">
-                                <div
-                                  className="mb-2 h-3 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"
-                                  style={{ animationDelay: '0.7s' }}
-                                ></div>
-                                <div
-                                  className="mb-2 h-3 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"
-                                  style={{ animationDelay: '0.8s' }}
-                                ></div>
-                                <div
-                                  className="mb-2 h-3 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"
-                                  style={{ animationDelay: '0.9s' }}
-                                ></div>
-                                <div
-                                  className="h-3 w-1/2 animate-pulse rounded bg-gray-200/80 dark:bg-gray-700/60"
-                                  style={{ animationDelay: '1.0s' }}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
+                      ) }
                     </AnimatePresence>
                   </>
                 ) : null}

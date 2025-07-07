@@ -7,6 +7,7 @@ import { Modal } from '@ui/Modal';
 import { Combobox } from '@ui/Combobox';
 import { TimestampDistance } from '~/components/ui/TimestampDistance';
 import { subchatIndexStore } from '~/lib/stores/subchats';
+import { Spinner } from '@ui/Spinner';
 
 interface SubchatBarProps {
   subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
@@ -245,12 +246,7 @@ export function SubchatBar({
             }}
           />
 
-          {/* Subtle loading indicator */}
-          {!isSubchatLoaded && (
-            <div className="flex items-center">
-              <div className="size-3 animate-spin rounded-full border border-gray-300 border-t-blue-500 opacity-70 dark:border-gray-600 dark:border-t-blue-400"></div>
-            </div>
-          )}
+          {!isSubchatLoaded && <Spinner />}
         </div>
         <div className="flex items-center gap-2">
           {currentSubchatIndex >= (subchats?.length ?? 1) - 1 && sessionId ? (
