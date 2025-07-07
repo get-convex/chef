@@ -217,6 +217,7 @@ async function chatSyncWorker(args: {
       sessionId,
       completeMessageInfo,
       persistedMessageInfo: currentState.persistedMessageInfo,
+      subchatIndex: currentState.subchatIndex,
     });
     const { url, update } = messageHistoryResult;
     if (update !== null) {

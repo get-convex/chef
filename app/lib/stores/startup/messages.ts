@@ -37,13 +37,12 @@ export async function prepareMessageHistory(args: {
   const { messageIndex, partIndex, allMessages } = completeMessageInfo;
   const siteUrl = getConvexSiteUrl();
   const url = new URL(`${siteUrl}/store_chat`);
-  const subchatIndex = subchatIndexStore.get();
 
   url.searchParams.set('chatId', chatId);
   url.searchParams.set('sessionId', sessionId);
   url.searchParams.set('lastMessageRank', messageIndex.toString());
   url.searchParams.set('partIndex', partIndex.toString());
-  url.searchParams.set('lastSubchatIndex', subchatIndex?.toString() ?? '0');
+  url.searchParams.set('lastSubchatIndex', args.subchatIndex.toString());
   if (allMessages.length > 0) {
     url.searchParams.set('firstMessage', allMessages[0].content);
   }
