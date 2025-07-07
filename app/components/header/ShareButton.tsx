@@ -34,7 +34,6 @@ export function ShareButton() {
   const [isThumbnailModalOpen, setIsThumbnailModalOpen] = useState(false);
   const [snapshotStatus, setSnapshotStatus] = useState<SnapshotStatus>('idle');
   const [shareStatus, setShareStatus] = useState<ShareStatus>('idle');
-  const [snapshotCode, setSnapshotCode] = useState<string | null>(null);
   const [snapshotUrl, setSnapshotUrl] = useState('');
   const [shareUrl, setShareUrl] = useState('');
 
