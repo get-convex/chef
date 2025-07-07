@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react';
 import { atom } from 'nanostores';
-import { chatSyncState } from './startup/history';
+import { chatSyncState } from './startup/chatSyncState';
 
 export const subchatIndexStore = atom<number | undefined>(undefined);
 export const subchatLoadedStore = atom<boolean>(false);

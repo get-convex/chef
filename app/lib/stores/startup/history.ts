@@ -1,6 +1,5 @@
 import type { Message } from 'ai';
 import { useConvex, useQuery, type ConvexReactClient } from 'convex/react';
-import { atom } from 'nanostores';
 import { useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from '~/lib/stores/fileUpdateCounter';
 import { buildUncompressedSnapshot } from '~/lib/snapshot.client';
@@ -19,37 +18,11 @@ import { useStore } from '@nanostores/react';
 import { subchatIndexStore, waitForSubchatIndexChanged } from '~/lib/stores/subchats';
 import { api } from '@convex/_generated/api';
 import { workbenchStore } from '~/lib/stores/workbench.client';
+import { chatSyncState, type BackupSyncState, type InitialBackupSyncState } from './chatSyncState';
 
 const logger = createScopedLogger('history');
 
 const BACKUP_DEBOUNCE_MS = 1000;
-
-export const chatSyncState = atom<BackupSyncState>({
-  lastSync: 0,
-  numFailures: 0,
-  started: false,
-  persistedMessageInfo: null,
-  savedFileUpdateCounter: null,
-  subchatIndex: 0,
-});
-
-type BackupSyncState = {
-  lastSync: number;
-  numFailures: number;
-  started: boolean;
-  persistedMessageInfo: { messageIndex: number; partIndex: number } | null;
-  savedFileUpdateCounter: number | null;
-  subchatIndex: number;
-};
-
-type InitialBackupSyncState = {
-  lastSync: number;
-  numFailures: number;
-  started: boolean;
-  persistedMessageInfo: { messageIndex: number; partIndex: number };
-  savedFileUpdateCounter: number;
-  subchatIndex: number;
-};
 
 export function useBackupSyncState(chatId: string, loadedSubchatIndex?: number, initialMessages?: Message[]) {
   const convex = useConvex();

@@ -46,7 +46,7 @@ import { UsageDebugView } from '~/components/debug/UsageDebugView';
 import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 import { useUsage } from '~/lib/stores/usage';
 import { hasAnyApiKeySet, hasApiKeySet } from '~/lib/common/apiKey';
-import { chatSyncState } from '~/lib/stores/startup/history';
+import { chatSyncState } from '~/lib/stores/startup/chatSyncState';
 
 const logger = createScopedLogger('Chat');
 
