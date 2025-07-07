@@ -172,7 +172,9 @@ export function SubchatBar({
                   ? 'Navigation disabled while generating a response'
                   : !isSubchatLoaded
                     ? 'Loading...'
-                    : 'Previous Chat'
+                    : areFilesSaving
+                      ? 'Saving...'
+                      : 'Previous Chat'
               }
               disabled={!canNavigatePrev || isStreaming || !isSubchatLoaded || areFilesSaving}
               onClick={() => {
@@ -190,7 +192,9 @@ export function SubchatBar({
                   ? 'Navigation disabled while generating a response'
                   : !isSubchatLoaded
                     ? 'Loading...'
-                    : 'Next Chat'
+                    : areFilesSaving
+                      ? 'Saving...'
+                      : 'Next Chat'
               }
               disabled={!canNavigateNext || isStreaming || !isSubchatLoaded || areFilesSaving}
               onClick={() => {
@@ -265,7 +269,9 @@ export function SubchatBar({
                   ? 'New chats disabled while generating a response'
                   : !isSubchatLoaded
                     ? 'Loading...'
-                    : 'New Chat'
+                    : areFilesSaving
+                      ? 'Saving...'
+                      : 'New Chat'
               }
               onClick={() => {
                 setIsAddChatModalOpen(true);
