@@ -194,7 +194,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -20 }}
                           transition={{ duration: 0.3, ease: 'easeInOut' }}
-                          className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
                         >
                           <Messages
                             ref={messageRef}
@@ -205,7 +204,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                             subchatsLength={subchats?.length}
                           />
                         </motion.div>
-                      ) }
+                      )}
                     </AnimatePresence>
                   </>
                 ) : null}
