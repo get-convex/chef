@@ -164,7 +164,13 @@ export function SubchatBar({
               className={classNames('rounded-r-none border-0 border-border-transparent dark:border-border-transparent')}
               icon={<ArrowLeftIcon className="my-px" />}
               inline
-              tip={isStreaming ? 'Navigation disabled while generating a response' : !isSubchatLoaded ? 'Loading...' : 'Previous Chat'}
+              tip={
+                isStreaming
+                  ? 'Navigation disabled while generating a response'
+                  : !isSubchatLoaded
+                    ? 'Loading...'
+                    : 'Previous Chat'
+              }
               disabled={!canNavigatePrev || isStreaming || !isSubchatLoaded}
               onClick={() => {
                 handleNavigateToSubchat(currentSubchatIndex - 1);
@@ -176,7 +182,13 @@ export function SubchatBar({
               className={classNames('rounded-l-none border-0 border-border-transparent dark:border-border-transparent')}
               icon={<ArrowRightIcon className="my-px" />}
               inline
-              tip={isStreaming ? 'Navigation disabled while generating a response' : !isSubchatLoaded ? 'Loading...' : 'Next Chat'}
+              tip={
+                isStreaming
+                  ? 'Navigation disabled while generating a response'
+                  : !isSubchatLoaded
+                    ? 'Loading...'
+                    : 'Next Chat'
+              }
               disabled={!canNavigateNext || isStreaming || !isSubchatLoaded}
               onClick={() => {
                 handleNavigateToSubchat(currentSubchatIndex + 1);
@@ -232,11 +244,11 @@ export function SubchatBar({
               );
             }}
           />
-          
+
           {/* Subtle loading indicator */}
           {!isSubchatLoaded && (
             <div className="flex items-center">
-              <div className="w-3 h-3 border border-gray-300 dark:border-gray-600 rounded-full animate-spin border-t-blue-500 dark:border-t-blue-400 opacity-70"></div>
+              <div className="size-3 animate-spin rounded-full border border-gray-300 border-t-blue-500 opacity-70 dark:border-gray-600 dark:border-t-blue-400"></div>
             </div>
           )}
         </div>
@@ -249,7 +261,13 @@ export function SubchatBar({
               icon={<PlusIcon className="my-px" />}
               disabled={disableChatMessage || isStreaming || !isSubchatLoaded}
               inline
-              tip={isStreaming ? 'New chats disabled while generating a response' : !isSubchatLoaded ? 'Loading...' : 'New Chat'}
+              tip={
+                isStreaming
+                  ? 'New chats disabled while generating a response'
+                  : !isSubchatLoaded
+                    ? 'Loading...'
+                    : 'New Chat'
+              }
               onClick={() => {
                 setIsAddChatModalOpen(true);
               }}
