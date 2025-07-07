@@ -268,6 +268,11 @@ export const clone = mutation({
         });
       }
     }
+    const storageState = await getLatestChatMessageStorageState(ctx, {
+      _id: parentChat._id,
+      subchatIndex: getShare.lastSubchatIndex,
+      lastMessageRank: getShare.lastMessageRank,
+    });
     await ctx.db.insert("chatMessagesStorageState", {
       chatId: clonedChatId,
       storageId: getShare.chatHistoryId,
@@ -275,7 +280,7 @@ export const clone = mutation({
       lastMessageRank: getShare.lastMessageRank,
       subchatIndex: getShare.lastSubchatIndex,
       partIndex: getShare.partIndex ?? -1,
-      description: getShare.description,
+      description: storageState?.description,
     });
 
     await startProvisionConvexProjectHelper(ctx, {
