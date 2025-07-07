@@ -186,8 +186,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       />
                     )}
 
-                    <AnimatePresence mode="wait">
-                      {isSubchatLoaded && (
+                    {isSubchatLoaded && (
+                      <AnimatePresence>
                         <motion.div
                           key="messages"
                           initial={{ opacity: 0, y: 20 }}
@@ -205,8 +205,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                             subchatsLength={subchats?.length}
                           />
                         </motion.div>
-                      )}
-                    </AnimatePresence>
+                      </AnimatePresence>
+                    )}
                   </>
                 ) : null}
                 <div
