@@ -590,7 +590,7 @@ export class WorkbenchStore {
       description.value ?? 'project',
       args.convexProject?.deploymentName ?? null,
     );
-    const readmePath = hasReadme ? `CHEF_README_${timestampHash}.md` : 'README.md';
+    const readmePath = hasReadme ? `CHEF_README.md` : 'README.md';
     zip.file(readmePath, readmeContent);
     if (!hasSetupMjs) {
       zip.file('setup.mjs', setupMjsContent);
