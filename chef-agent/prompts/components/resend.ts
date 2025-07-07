@@ -24,9 +24,11 @@ npm install @convex-dev/resend
 \`\`\`
 
 ## Get Started
-
-Create a [Resend](https://resend.com) account and grab an API key. 
-Use the addEnvironmentVariables tool to add \`RESEND_API_KEY\` to your deployment.
+First, you'll need to get a Resend account [here](https://resend.com).
+You'll need a registered domain to send emails from. 
+Set one up in the Resend dashboard [here](https://resend.com/domains).
+Grab an API key [here](https://resend.com/api-keys)
+Use the addEnvironmentVariables tool to add \`RESEND_API_KEY\` and \`RESEND_DOMAIN\` to your deployment.
 
 Next, add the component to your Convex app via \`convex/convex.config.ts\`:
 
@@ -53,7 +55,7 @@ export const sendTestEmail = internalMutation({
   handler: async (ctx) => {
     await resend.sendEmail(
       ctx,
-      "Me <test@mydomain.com>",
+      "Me <test@\${process.env.RESEND_DOMAIN}>",
       "Resend <delivered@resend.dev>",
       "Hi there",
       "This is a test email"
@@ -62,11 +64,11 @@ export const sendTestEmail = internalMutation({
 });
 \`\`\`
 
-Then, calling \`sendTestEmail\` from anywhere in your app will send this test email.
+Then, calling \`sendTestEmail\` from anywhere in your app will send this test email. 
+You must configure it to send emails from the \`RESEND_DOMAIN\` environment variable, otherwise you will see an unverified domain error.
 
 If you want to send emails to real addresses, you need to disable \`testMode\`.
 You can do this in \`ResendOptions\`, [as detailed below](#resend-component-options-and-going-into-production).
-
 
 While the setup we have so far will reliably send emails, you don't have any feedback
 on anything delivering, bouncing, or triggering spam complaints. For that, we need
@@ -93,10 +95,14 @@ http.route({
 export default http;
 \`\`\`
 
-If our Convex project is happy-leopard-123, we now have a Resend webhook for
-our project running at \`https://happy-leopard-123.convex.site/resend-webhook\`.
 
-So navigate to the Resend dashboard and create a new webhook at that URL. Make sure
+If you include the http endpoint, you MUST give the users instructions on how to create the resend webhook. The webhook setup is required.
+
+If our Convex deployment is happy-leopard-123, we now have an API for a Resend webhook at
+\`https://happy-leopard-123.convex.site/resend-webhook\`.
+Use the getConvexDeploymentName tool to get the deployment name and print the correct URL for the user to copy and paste.
+
+Navigate to the Resend dashboard and create a new webhook at that URL. Make sure
 to enable all the \`email.*\` events; the other event types will be ignored.
 
 Finally, copy the webhook secret out of the Resend dashboard and
