@@ -197,56 +197,57 @@ export function SubchatBar({
             />
           </div>
 
-          <Combobox
-            searchPlaceholder="Search chats..."
-            label="Select chat"
-            labelHidden
-            className="max-w-full"
-            buttonClasses="w-full"
-            innerButtonClasses="border-none bg-transparent"
-            disabled={isStreaming || !isSubchatLoaded}
-            optionsWidth="fit"
-            options={subchatOptions.reverse()}
-            selectedOption={currentSubchatIndex}
-            setSelectedOption={(subchatIndex) => {
-              if (subchatIndex !== null && !isStreaming && isSubchatLoaded) {
-                handleNavigateToSubchat(subchatIndex);
-              }
-            }}
-            Option={({ value, inButton }) => {
-              let option = subchatOptions.find((opt) => opt.value === value);
-              // We optimistically add the current subchat if it hasn't been persisted yet
-              if (!option && value === currentSubchatIndex) {
-                option = {
-                  label: value === 0 ? 'Initial chat' : `Feature #${value}`,
-                  value: currentSubchatIndex,
-                  subchat: {
-                    subchatIndex: currentSubchatIndex,
-                    updatedAt: Date.now(),
-                  },
-                  arrayIndex: currentSubchatIndex,
-                };
-              }
-              if (!option) {
-                return null;
-              }
+          <div className="flex items-center gap-2">
+            <Combobox
+              searchPlaceholder="Search chats..."
+              label="Select chat"
+              labelHidden
+              className="max-w-full"
+              buttonClasses="w-full"
+              innerButtonClasses="border-none bg-transparent"
+              disabled={isStreaming || !isSubchatLoaded}
+              optionsWidth="fit"
+              options={subchatOptions.reverse()}
+              selectedOption={currentSubchatIndex}
+              setSelectedOption={(subchatIndex) => {
+                if (subchatIndex !== null && !isStreaming && isSubchatLoaded) {
+                  handleNavigateToSubchat(subchatIndex);
+                }
+              }}
+              Option={({ value, inButton }) => {
+                let option = subchatOptions.find((opt) => opt.value === value);
+                // We optimistically add the current subchat if it hasn't been persisted yet
+                if (!option && value === currentSubchatIndex) {
+                  option = {
+                    label: value === 0 ? 'Initial chat' : `Feature #${value}`,
+                    value: currentSubchatIndex,
+                    subchat: {
+                      subchatIndex: currentSubchatIndex,
+                      updatedAt: Date.now(),
+                    },
+                    arrayIndex: currentSubchatIndex,
+                  };
+                }
+                if (!option) {
+                  return null;
+                }
 
-              const { subchat } = option;
+                const { subchat } = option;
 
-              return (
-                <div className="flex max-w-96 flex-col gap-1 truncate">
-                  <div className="truncate text-sm">{option.label}</div>
-                  {!inButton && (
-                    <div className="text-left">
-                      <TimestampDistance date={new Date(subchat.updatedAt)} />
-                    </div>
-                  )}
-                </div>
-              );
-            }}
-          />
-
-          {!isSubchatLoaded && <Spinner />}
+                return (
+                  <div className="flex max-w-96 flex-col gap-1 truncate">
+                    <div className="truncate text-sm">{option.label}</div>
+                    {!inButton && (
+                      <div className="text-left">
+                        <TimestampDistance date={new Date(subchat.updatedAt)} />
+                      </div>
+                    )}
+                  </div>
+                );
+              }}
+            />
+            {!isSubchatLoaded && <Spinner />}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {currentSubchatIndex >= (subchats?.length ?? 1) - 1 && sessionId ? (
