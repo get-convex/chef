@@ -93,7 +93,15 @@ const retryState = atom({
   nextRetry: Date.now(),
 });
 export const Chat = memo(
-  ({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy, subchats }: ChatProps) => {
+  ({
+    initialMessages,
+    partCache,
+    storeMessageHistory,
+    initializeChat,
+    isReload,
+    hadSuccessfulDeploy,
+    subchats,
+  }: ChatProps) => {
     const convex = useConvex();
     const sessionId = useConvexSessionIdOrNullOrLoading();
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0 || (!!subchats && subchats.length > 1));
