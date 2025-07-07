@@ -23,12 +23,12 @@ import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 import { chooseExperience } from '~/utils/experienceChooser';
 import { AnimatePresence, motion } from 'framer-motion';
-import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
 import { useStore } from '@nanostores/react';
 import { SubchatBar } from './SubchatBar';
 import { SubchatLimitNudge } from './SubchatLimitNudge';
 import { useMutation } from 'convex/react';
 import { api } from '@convex/_generated/api';
+import { subchatIndexStore, useIsSubchatLoaded } from '~/lib/stores/subchats';
 
 interface BaseChatProps {
   // Refs
@@ -67,7 +67,7 @@ interface BaseChatProps {
   // Subchat navigation props
   currentSubchatIndex?: number;
   totalSubchats?: number;
-  subchats?: { subchatIndex: number; description?: string }[];
+  subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
 }
 
 export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
@@ -104,6 +104,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const { newChatFeature, minMessagesForNudge } = useLaunchDarkly();
     const shouldShowNudge = newChatFeature && messages.length > minMessagesForNudge;
     const createSubchat = useMutation(api.subchats.create);
+    const isSubchatLoaded = useIsSubchatLoaded();
 
     useEffect(() => {
       const hasDismissedMobileWarning = localStorage.getItem('hasDismissedMobileWarning') === 'true';
@@ -127,7 +128,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         return;
       }
       const subchatIndex = await createSubchat({ chatId, sessionId });
-      subchatLoadedStore.set(false);
       subchatIndexStore.set(subchatIndex);
       messageInputStore.set('');
     }, [createSubchat, chatId, sessionId]);
@@ -182,17 +182,31 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         sessionId={sessionId ?? null}
                         onRewind={onRewindToMessage}
                         handleCreateSubchat={handleCreateSubchat}
+                        isSubchatLoaded={isSubchatLoaded}
                       />
                     )}
 
-                    <Messages
-                      ref={messageRef}
-                      className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
-                      messages={messages}
-                      isStreaming={isStreaming}
-                      onRewindToMessage={onRewindToMessage}
-                      subchatsLength={subchats?.length}
-                    />
+                    {isSubchatLoaded && (
+                      <AnimatePresence>
+                        <motion.div
+                          key="messages"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ duration: 0.3, ease: 'easeInOut' }}
+                          className="mx-auto flex w-full max-w-chat flex-1 flex-col"
+                        >
+                          <Messages
+                            ref={messageRef}
+                            className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
+                            messages={messages}
+                            isStreaming={isStreaming}
+                            onRewindToMessage={onRewindToMessage}
+                            subchatsLength={subchats?.length}
+                          />
+                        </motion.div>
+                      </AnimatePresence>
+                    )}
                   </>
                 ) : null}
                 <div
@@ -220,7 +234,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       />
                     </div>
                   )}
-                  {chatEnabled && (!subchats || currentSubchatIndex >= subchats.length - 1) && (
+                  {chatEnabled && (!subchats || (currentSubchatIndex >= subchats.length - 1 && isSubchatLoaded)) && (
                     <>
                       {shouldShowNudge && sessionId && (
                         <div className="mb-4">

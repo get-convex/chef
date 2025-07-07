@@ -392,6 +392,10 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       }
       break;
     }
+    case 'getConvexDeploymentName': {
+      toolCall = `retrieved the Convex deployment name`;
+      break;
+    }
     default:
       throw new Error(`Unknown tool name: ${toolInvocation.toolName}`);
   }

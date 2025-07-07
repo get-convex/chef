@@ -16,7 +16,7 @@ import {
 } from './messages';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { useStore } from '@nanostores/react';
-import { subchatIndexStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore, waitForSubchatIndexChanged } from '~/lib/stores/subchats';
 import { api } from '@convex/_generated/api';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 
@@ -30,6 +30,7 @@ export const chatSyncState = atom<BackupSyncState>({
   started: false,
   persistedMessageInfo: null,
   savedFileUpdateCounter: null,
+  subchatIndex: 0,
 });
 
 type BackupSyncState = {
@@ -38,6 +39,7 @@ type BackupSyncState = {
   started: boolean;
   persistedMessageInfo: { messageIndex: number; partIndex: number } | null;
   savedFileUpdateCounter: number | null;
+  subchatIndex: number;
 };
 
 type InitialBackupSyncState = {
@@ -46,9 +48,10 @@ type InitialBackupSyncState = {
   started: boolean;
   persistedMessageInfo: { messageIndex: number; partIndex: number };
   savedFileUpdateCounter: number;
+  subchatIndex: number;
 };
 
-export function useBackupSyncState(chatId: string, initialMessages?: Message[]) {
+export function useBackupSyncState(chatId: string, loadedSubchatIndex?: number, initialMessages?: Message[]) {
   const convex = useConvex();
   const subchatIndex = useStore(subchatIndexStore);
   const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -66,22 +69,28 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
       const lastMessage = initialMessages[initialMessages.length - 1];
       const lastMessagePartIndex = (lastMessage?.parts?.length ?? 0) - 1;
       const currentSyncState = chatSyncState.get();
-      // Always update persistedMessageInfo when initialMessages change (e.g., when switching subchats)
-      chatSyncState.set({
-        ...currentSyncState,
-        persistedMessageInfo: {
+      // Update the persistedMessageInfo when initialMessages is null or the subchat index changes
+      if (
+        loadedSubchatIndex !== undefined &&
+        (currentSyncState.persistedMessageInfo === null || loadedSubchatIndex !== currentSyncState.subchatIndex)
+      ) {
+        chatSyncState.set({
+          ...currentSyncState,
+          persistedMessageInfo: {
+            messageIndex: initialMessages.length - 1,
+            partIndex: lastMessagePartIndex,
+          },
+          subchatIndex: loadedSubchatIndex,
+        });
+        lastCompleteMessageInfoStore.set({
           messageIndex: initialMessages.length - 1,
           partIndex: lastMessagePartIndex,
-        },
-      });
-      lastCompleteMessageInfoStore.set({
-        messageIndex: initialMessages.length - 1,
-        partIndex: lastMessagePartIndex,
-        allMessages: initialMessages,
-        hasNextPart: false,
-      });
+          allMessages: initialMessages,
+          hasNextPart: false,
+        });
+      }
     }
-  }, [initialMessages]);
+  }, [initialMessages, loadedSubchatIndex]);
   useEffect(() => {
     const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
       const currentState = chatSyncState.get();
@@ -157,7 +166,7 @@ async function chatSyncWorker(args: {
   chatSyncState.set({
     ...currentState,
     started: true,
-    savedFileUpdateCounter: currentState.savedFileUpdateCounter ?? getFileUpdateCounter(),
+    subchatIndex: args.currentSubchatIndex,
   });
   while (true) {
     const currentState = await waitForInitialized();
@@ -179,7 +188,8 @@ async function chatSyncWorker(args: {
           currentState.persistedMessageInfo.partIndex,
           /* alertOnNextPartStart */ true,
         );
-        await Promise.race([fileUpdatePromise, newMessagesPromise]);
+        const subchatIndexPromise = waitForSubchatIndexChanged(currentState.subchatIndex);
+        await Promise.race([fileUpdatePromise, newMessagesPromise, subchatIndexPromise]);
       } else {
         // if the next part has started, ignore file system changes but listen for the next part
         // to complete
@@ -188,7 +198,8 @@ async function chatSyncWorker(args: {
           currentState.persistedMessageInfo.partIndex,
           /* alertOnNextPartStart */ false,
         );
-        await newMessagesPromise;
+        const subchatIndexPromise = waitForSubchatIndexChanged(currentState.subchatIndex);
+        await Promise.race([newMessagesPromise, subchatIndexPromise]);
       }
     }
 
@@ -206,6 +217,7 @@ async function chatSyncWorker(args: {
       sessionId,
       completeMessageInfo,
       persistedMessageInfo: currentState.persistedMessageInfo,
+      subchatIndex: currentState.subchatIndex,
     });
     const { url, update } = messageHistoryResult;
     if (update !== null) {
@@ -240,6 +252,13 @@ async function chatSyncWorker(args: {
     }
     if (snapshotBlob !== undefined) {
       formData.append('snapshot', new Blob([snapshotBlob]));
+    }
+    if (currentState.subchatIndex !== subchatIndexStore.get()) {
+      chatSyncState.set({
+        ...currentState,
+        persistedMessageInfo: null,
+      });
+      continue;
     }
     try {
       response = await fetch(url, {
@@ -281,7 +300,11 @@ async function chatSyncWorker(args: {
 
 async function waitForInitialized(): Promise<InitialBackupSyncState> {
   const state = chatSyncState.get();
-  if (state.persistedMessageInfo !== null && state.savedFileUpdateCounter !== null) {
+  if (
+    state.persistedMessageInfo !== null &&
+    state.savedFileUpdateCounter !== null &&
+    state.subchatIndex === subchatIndexStore.get()
+  ) {
     return {
       ...state,
       persistedMessageInfo: state.persistedMessageInfo!,
@@ -291,7 +314,11 @@ async function waitForInitialized(): Promise<InitialBackupSyncState> {
   return new Promise<InitialBackupSyncState>((resolve) => {
     let unlisten: (() => void) | null = null;
     unlisten = chatSyncState.listen((state) => {
-      if (state.persistedMessageInfo !== null && state.savedFileUpdateCounter !== null) {
+      if (
+        state.persistedMessageInfo !== null &&
+        state.savedFileUpdateCounter !== null &&
+        state.subchatIndex === subchatIndexStore.get()
+      ) {
         if (unlisten !== null) {
           unlisten();
           unlisten = null;

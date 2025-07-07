@@ -7,6 +7,7 @@ import type { viewParameters } from './tools/view.js';
 import type { lookupDocsParameters } from './tools/lookupDocs.js';
 import type { z } from 'zod';
 import type { addEnvironmentVariablesParameters } from './tools/addEnvironmentVariables.js';
+import type { getConvexDeploymentNameParameters } from './tools/getConvexDeploymentName.js';
 
 export type ConvexProject = {
   token: string;
@@ -85,6 +86,7 @@ export type ConvexToolSet = {
   addEnvironmentVariables?: Tool<typeof addEnvironmentVariablesParameters, void>;
   view?: Tool<typeof viewParameters, string>;
   edit?: Tool<typeof editToolParameters, string>;
+  getConvexDeploymentName: Tool<typeof getConvexDeploymentNameParameters, string>;
 };
 
 export type Dirent = File | Folder;

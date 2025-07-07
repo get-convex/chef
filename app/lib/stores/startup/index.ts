@@ -7,22 +7,22 @@ import { useExistingChatContainerSetup, useNewChatContainerSetup } from './useCo
 import { useBackupSyncState } from './history';
 import { useState } from 'react';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
-import { api } from '@convex/_generated/api';
 import { useQuery } from 'convex/react';
+import { api } from '@convex/_generated/api';
 
 export function useConvexChatHomepage(chatId: string) {
   useTeamsInitializer();
   useProjectInitializer(chatId);
   const [chatInitialized, setChatInitialized] = useState(false);
   const initializeChat = useHomepageInitializeChat(chatId, setChatInitialized);
-  useBackupSyncState(chatId, []);
   const storeMessageHistory = useStoreMessageHistory();
   useNewChatContainerSetup();
-  const sessionId = useConvexSessionIdOrNullOrLoading();
   const initialMessages = useInitialMessages(chatInitialized ? chatId : undefined);
+  useBackupSyncState(chatId, initialMessages?.loadedSubchatIndex, initialMessages?.deserialized);
+  const sessionId = useConvexSessionIdOrNullOrLoading();
   const subchats = useQuery(
     api.subchats.get,
-    !!sessionId && chatInitialized
+    sessionId && chatInitialized
       ? {
           chatId,
           sessionId,
@@ -33,8 +33,8 @@ export function useConvexChatHomepage(chatId: string) {
   return {
     initializeChat,
     storeMessageHistory,
-    subchats,
     initialMessages: !initialMessages ? initialMessages : initialMessages?.deserialized,
+    subchats,
   };
 }
 
@@ -43,13 +43,24 @@ export function useConvexChatExisting(chatId: string) {
   useProjectInitializer(chatId);
   const initializeChat = useExistingInitializeChat(chatId);
   const initialMessages = useInitialMessages(chatId);
-  useBackupSyncState(chatId, initialMessages?.deserialized);
+  useBackupSyncState(chatId, initialMessages?.loadedSubchatIndex, initialMessages?.deserialized);
   const storeMessageHistory = useStoreMessageHistory();
   useExistingChatContainerSetup(initialMessages?.loadedChatId);
+  const sessionId = useConvexSessionIdOrNullOrLoading();
+  const subchats = useQuery(
+    api.subchats.get,
+    sessionId
+      ? {
+          chatId,
+          sessionId,
+        }
+      : 'skip',
+  );
+
   return {
     initialMessages: !initialMessages ? initialMessages : initialMessages?.deserialized,
     initializeChat,
     storeMessageHistory,
-    subchats: initialMessages?.subchats,
+    subchats,
   };
 }

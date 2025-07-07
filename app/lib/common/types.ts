@@ -6,6 +6,7 @@ import type { viewParameters } from 'chef-agent/tools/view';
 import type { ActionStatus } from '~/lib/runtime/action-runner';
 import type { lookupDocsParameters } from 'chef-agent/tools/lookupDocs';
 import type { ConvexToolSet, EmptyArgs } from 'chef-agent/types';
+import type { getConvexDeploymentNameParameters } from 'chef-agent/tools/getConvexDeploymentName';
 
 type ConvexToolCall = ToolCallUnion<ConvexToolSet>;
 
@@ -40,6 +41,11 @@ type ConvexToolResult =
   | {
       toolName: 'addEnvironmentVariables';
       args: typeof addEnvironmentVariablesParameters;
+      result: string;
+    }
+  | {
+      toolName: 'getConvexDeploymentName';
+      args: typeof getConvexDeploymentNameParameters;
       result: string;
     };
 

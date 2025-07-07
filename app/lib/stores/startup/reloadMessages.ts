@@ -4,7 +4,7 @@ import { makePartId } from 'chef-agent/partId';
 import { toast } from 'sonner';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { messageParser, processMessage, type PartCache } from '~/lib/hooks/useMessageParser';
-import { subchatIndexStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore } from '~/lib/stores/subchats';
 import { useStore } from '@nanostores/react';
 
 export type ReloadedMessages = {

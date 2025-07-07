@@ -25,6 +25,7 @@ import type { ConvexToolName } from '~/lib/common/types';
 import { lookupDocsParameters, docs, type DocKey } from 'chef-agent/tools/lookupDocs';
 import { addEnvironmentVariablesParameters } from 'chef-agent/tools/addEnvironmentVariables';
 import { openDashboardToPath } from '~/lib/stores/dashboardPath';
+import { convexProjectStore } from '~/lib/stores/convexProject';
 
 const logger = createScopedLogger('ActionRunner');
 
@@ -518,6 +519,16 @@ export class ActionRunner {
           }
           openDashboardToPath(path);
           result = `Opened dashboard to add environment variables: ${envVarNames.join(', ')}\nPlease add the values in the dashboard.`;
+          break;
+        }
+        case 'getConvexDeploymentName': {
+          const convexProject = convexProjectStore.get();
+          if (!convexProject) {
+            result = 'Error: No Convex project is currently connected. Please connect a Convex project first.';
+          } else {
+            result = convexProject.deploymentName;
+            console.log('getConvexDeploymentName tool called, returning:', result);
+          }
           break;
         }
         default: {

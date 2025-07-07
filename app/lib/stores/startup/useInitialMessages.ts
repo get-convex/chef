@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useConvex, useQuery } from 'convex/react';
-import { useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { useConvex } from 'convex/react';
+import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
 import type { SerializedMessage } from '@convex/messages';
 import type { Message } from '@ai-sdk/react';
@@ -10,14 +10,14 @@ import { description } from '~/lib/stores/description';
 import { toast } from 'sonner';
 import * as lz4 from 'lz4-wasm';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
-import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore } from '~/lib/stores/subchats';
 import { useStore } from '@nanostores/react';
 
 export interface InitialMessages {
   loadedChatId: string;
   serialized: SerializedMessage[];
   deserialized: Message[];
-  subchats?: { subchatIndex: number; description?: string }[];
+  loadedSubchatIndex: number;
 }
 
 export function useInitialMessages(chatId: string | undefined):
@@ -26,17 +26,7 @@ export function useInitialMessages(chatId: string | undefined):
   | undefined {
   const convex = useConvex();
   const [initialMessages, setInitialMessages] = useState<InitialMessages | null | undefined>();
-  const sessionIdOrNullOrLoading = useConvexSessionIdOrNullOrLoading();
   const subchatIndex = useStore(subchatIndexStore);
-  const subchats = useQuery(
-    api.subchats.get,
-    sessionIdOrNullOrLoading && chatId
-      ? {
-          chatId,
-          sessionId: sessionIdOrNullOrLoading,
-        }
-      : 'skip',
-  );
 
   useEffect(() => {
     const loadInitialMessages = async () => {
@@ -55,12 +45,7 @@ export function useInitialMessages(chatId: string | undefined):
           setInitialMessages(null);
           return;
         }
-        if (!subchats) {
-          setInitialMessages(undefined);
-          return;
-        }
         if (subchatIndex === undefined) {
-          subchatLoadedStore.set(false);
           subchatIndexStore.set(chatInfo.subchatIndex);
           // Exit early to let the effect run again with the new subchatIndex
           return;
@@ -70,12 +55,13 @@ export function useInitialMessages(chatId: string | undefined):
         if (chatInfo.urlId) {
           setKnownUrlId(chatInfo.urlId);
         }
+        const subchatIndexToFetch = subchatIndex ?? chatInfo.subchatIndex;
         const initialMessagesResponse = await fetch(`${siteUrl}/initial_messages`, {
           method: 'POST',
           body: JSON.stringify({
             chatId,
             sessionId,
-            subchatIndex: subchatIndex ?? chatInfo.subchatIndex,
+            subchatIndex: subchatIndexToFetch,
           }),
         });
         if (!initialMessagesResponse.ok) {
@@ -87,9 +73,8 @@ export function useInitialMessages(chatId: string | undefined):
             loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
             serialized: [],
             deserialized: [],
-            subchats,
+            loadedSubchatIndex: subchatIndexToFetch,
           });
-          subchatLoadedStore.set(true);
           return;
         }
         const content = await initialMessagesResponse.arrayBuffer();
@@ -130,9 +115,8 @@ export function useInitialMessages(chatId: string | undefined):
           loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
           serialized: transformedMessages,
           deserialized: deserializedMessages,
-          subchats,
+          loadedSubchatIndex: subchatIndexToFetch,
         });
-        subchatLoadedStore.set(true);
         description.set(chatInfo.description);
       } catch (error) {
         toast.error('Failed to load chat messages from Convex. Try reloading the page.');
@@ -140,7 +124,7 @@ export function useInitialMessages(chatId: string | undefined):
       }
     };
     void loadInitialMessages();
-  }, [convex, chatId, subchats, subchatIndex]);
+  }, [convex, chatId, subchatIndex]);
 
   return initialMessages;
 }
