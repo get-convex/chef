@@ -197,7 +197,8 @@ function toolsInstructions(options: SystemPromptOptions) {
     <addEnvironmentVariables_tool>
       You can prompt the user to add environment variables to their Convex deployment using the \`addEnvironmentVariables\`
       tool, which will open the dashboard to the "Environment Variables" tab with the environment variable names prepopulated.
-      The user needs to fill in the values for the environment variables and then click "Save".
+      The user needs to fill in the values for the environment variables and then click "Save". Always call this toolcall at the end of a
+      message so that the user has time to add the environment variables before the next message.
     </addEnvironmentVariables_tool>
 
     ${options.enablePreciseEdits ? preciseToolInstructions(options) : ''}

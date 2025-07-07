@@ -25,8 +25,8 @@ npm install @convex-dev/resend
 
 ## Get Started
 
-Create a [Resend](https://resend.com) account and grab an API key. Set it to
-\`RESEND_API_KEY\` in your deployment environment.
+Create a [Resend](https://resend.com) account and grab an API key. 
+Use the addEnvironmentVariables tool to add \`RESEND_API_KEY\` to your deployment.
 
 Next, add the component to your Convex app via \`convex/convex.config.ts\`:
 
@@ -67,9 +67,6 @@ Then, calling \`sendTestEmail\` from anywhere in your app will send this test em
 If you want to send emails to real addresses, you need to disable \`testMode\`.
 You can do this in \`ResendOptions\`, [as detailed below](#resend-component-options-and-going-into-production).
 
-## Advanced Usage
-
-### Setting up a Resend webhook
 
 While the setup we have so far will reliably send emails, you don't have any feedback
 on anything delivering, bouncing, or triggering spam complaints. For that, we need
@@ -102,8 +99,8 @@ our project running at \`https://happy-leopard-123.convex.site/resend-webhook\`.
 So navigate to the Resend dashboard and create a new webhook at that URL. Make sure
 to enable all the \`email.*\` events; the other event types will be ignored.
 
-Finally, copy the webhook secret out of the Resend dashboard and set it to the
-\`RESEND_WEBHOOK_SECRET\` environment variable in your Convex deployment.
+Finally, copy the webhook secret out of the Resend dashboard and
+use the addEnvironmentVariables tool to add \`RESEND_WEBHOOK_SECRET\` to your deployment.
 
 You should now be seeing email status updates as Resend makes progress on your
 batches!
