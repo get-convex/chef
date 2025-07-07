@@ -10,7 +10,7 @@ import { description } from '~/lib/stores/description';
 import { toast } from 'sonner';
 import * as lz4 from 'lz4-wasm';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
-import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore } from '~/lib/stores/subchats';
 import { useStore } from '@nanostores/react';
 
 export interface InitialMessages {
@@ -61,7 +61,6 @@ export function useInitialMessages(chatId: string | undefined):
           return;
         }
         if (subchatIndex === undefined) {
-          subchatLoadedStore.set(false);
           subchatIndexStore.set(chatInfo.subchatIndex);
           // Exit early to let the effect run again with the new subchatIndex
           return;
@@ -92,7 +91,6 @@ export function useInitialMessages(chatId: string | undefined):
             loadedSubchatIndex: subchatIndexToFetch,
             subchats,
           });
-          subchatLoadedStore.set(true);
           return;
         }
         const content = await initialMessagesResponse.arrayBuffer();
@@ -136,7 +134,6 @@ export function useInitialMessages(chatId: string | undefined):
           loadedSubchatIndex: subchatIndexToFetch,
           subchats,
         });
-        subchatLoadedStore.set(true);
         description.set(chatInfo.description);
       } catch (error) {
         toast.error('Failed to load chat messages from Convex. Try reloading the page.');

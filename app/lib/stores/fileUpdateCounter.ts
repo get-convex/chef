@@ -1,6 +1,5 @@
 import { useStore } from '@nanostores/react';
 import { atom } from 'nanostores';
-import { subchatIndexStore } from '~/components/ExistingChat.client';
 import { IGNORED_PATHS } from '~/utils/constants';
 
 const fileUpdateCounter = atom(0);
@@ -25,20 +24,6 @@ export async function waitForFileUpdateCounterChanged(counter: number) {
     }
     fileUpdateCounter.listen((newCounter) => {
       if (newCounter !== counter) {
-        resolve();
-      }
-    });
-  });
-}
-
-export async function waitForSubchatIndexChanged(subchatIndex: number) {
-  return new Promise<void>((resolve) => {
-    if (subchatIndexStore.get() !== subchatIndex) {
-      resolve();
-      return;
-    }
-    subchatIndexStore.listen((newSubchatIndex) => {
-      if (subchatIndex !== undefined && newSubchatIndex !== subchatIndex) {
         resolve();
       }
     });

@@ -14,7 +14,7 @@ import { ChatBubbleIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
 import { useEarliestRewindableMessageRank } from '~/lib/hooks/useEarliestRewindableMessageRank';
-import { subchatIndexStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore } from '~/lib/stores/subchats';
 
 interface MessagesProps {
   id?: string;

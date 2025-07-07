@@ -23,12 +23,12 @@ import { useLaunchDarkly } from '~/lib/hooks/useLaunchDarkly';
 import { CompatibilityWarnings } from '~/components/CompatibilityWarnings.client';
 import { chooseExperience } from '~/utils/experienceChooser';
 import { AnimatePresence, motion } from 'framer-motion';
-import { subchatIndexStore, subchatLoadedStore } from '~/components/ExistingChat.client';
 import { useStore } from '@nanostores/react';
 import { SubchatBar } from './SubchatBar';
 import { SubchatLimitNudge } from './SubchatLimitNudge';
 import { useMutation } from 'convex/react';
 import { api } from '@convex/_generated/api';
+import { subchatIndexStore, useIsSubchatLoaded } from '~/lib/stores/subchats';
 
 interface BaseChatProps {
   // Refs
@@ -104,6 +104,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const { newChatFeature, minMessagesForNudge } = useLaunchDarkly();
     const shouldShowNudge = newChatFeature && messages.length > minMessagesForNudge;
     const createSubchat = useMutation(api.subchats.create);
+    const isSubchatLoaded = useIsSubchatLoaded();
 
     useEffect(() => {
       const hasDismissedMobileWarning = localStorage.getItem('hasDismissedMobileWarning') === 'true';
@@ -127,7 +128,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         return;
       }
       const subchatIndex = await createSubchat({ chatId, sessionId });
-      subchatLoadedStore.set(false);
       subchatIndexStore.set(subchatIndex);
       messageInputStore.set('');
     }, [createSubchat, chatId, sessionId]);
@@ -182,17 +182,88 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         sessionId={sessionId ?? null}
                         onRewind={onRewindToMessage}
                         handleCreateSubchat={handleCreateSubchat}
+                        isSubchatLoaded={isSubchatLoaded}
                       />
                     )}
 
-                    <Messages
-                      ref={messageRef}
-                      className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
-                      messages={messages}
-                      isStreaming={isStreaming}
-                      onRewindToMessage={onRewindToMessage}
-                      subchatsLength={subchats?.length}
-                    />
+                    <AnimatePresence mode="wait">
+                      {isSubchatLoaded ? (
+                        <motion.div
+                          key="messages"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                          className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
+                        >
+                          <Messages
+                            ref={messageRef}
+                            className="w-full flex flex-col gap-4"
+                            messages={messages}
+                            isStreaming={isStreaming}
+                            onRewindToMessage={onRewindToMessage}
+                            subchatsLength={subchats?.length}
+                          />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="skeleton"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="z-[1] mx-auto flex w-full max-w-chat flex-1 flex-col gap-4 pb-6"
+                        >
+                          {/* Loading indicator */}
+                          <div className="flex items-center justify-center gap-3 py-8">
+                            <div className="relative">
+                              <div className="w-4 h-4 border-2 border-gray-200 dark:border-gray-600 rounded-full animate-spin border-t-blue-500 dark:border-t-blue-400"></div>
+                            </div>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 animate-pulse">
+                              Loading chat...
+                            </span>
+                          </div>
+                          
+                          {/* Loading skeleton for messages */}
+                          <div className="flex flex-col gap-4">
+                            {/* Skeleton for user message */}
+                            <div className="flex justify-end">
+                              <div className="max-w-[80%] rounded-2xl bg-gray-100/60 dark:bg-gray-800/40 p-4">
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded mb-2 animate-pulse"></div>
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded w-3/4 animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                              </div>
+                            </div>
+                            
+                            {/* Skeleton for assistant message */}
+                            <div className="flex justify-start">
+                              <div className="max-w-[80%] rounded-2xl bg-gray-100/60 dark:bg-gray-800/40 p-4">
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded mb-2 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded mb-2 animate-pulse" style={{animationDelay: '0.3s'}}></div>
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded w-2/3 animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                              </div>
+                            </div>
+                            
+                            {/* Skeleton for another user message */}
+                            <div className="flex justify-end">
+                              <div className="max-w-[80%] rounded-2xl bg-gray-100/60 dark:bg-gray-800/40 p-4">
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded mb-2 animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded w-5/6 animate-pulse" style={{animationDelay: '0.6s'}}></div>
+                              </div>
+                            </div>
+                            
+                            {/* Skeleton for another assistant message */}
+                            <div className="flex justify-start">
+                              <div className="max-w-[80%] rounded-2xl bg-gray-100/60 dark:bg-gray-800/40 p-4">
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded mb-2 animate-pulse" style={{animationDelay: '0.7s'}}></div>
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded mb-2 animate-pulse" style={{animationDelay: '0.8s'}}></div>
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded mb-2 animate-pulse" style={{animationDelay: '0.9s'}}></div>
+                                <div className="h-3 bg-gray-200/80 dark:bg-gray-700/60 rounded w-1/2 animate-pulse" style={{animationDelay: '1.0s'}}></div>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </>
                 ) : null}
                 <div
@@ -220,7 +291,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       />
                     </div>
                   )}
-                  {chatEnabled && (!subchats || currentSubchatIndex >= subchats.length - 1) && (
+                  {chatEnabled && (!subchats || (currentSubchatIndex >= subchats.length - 1 && isSubchatLoaded)) && (
                     <>
                       {shouldShowNudge && sessionId && (
                         <div className="mb-4">

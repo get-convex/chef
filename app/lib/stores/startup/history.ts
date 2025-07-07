@@ -2,11 +2,7 @@ import type { Message } from 'ai';
 import { useConvex, useQuery, type ConvexReactClient } from 'convex/react';
 import { atom } from 'nanostores';
 import { useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
-import {
-  getFileUpdateCounter,
-  waitForFileUpdateCounterChanged,
-  waitForSubchatIndexChanged,
-} from '~/lib/stores/fileUpdateCounter';
+import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from '~/lib/stores/fileUpdateCounter';
 import { buildUncompressedSnapshot } from '~/lib/snapshot.client';
 import type { Id } from '@convex/_generated/dataModel';
 import { backoffTime } from '~/utils/constants';
@@ -20,7 +16,7 @@ import {
 } from './messages';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { useStore } from '@nanostores/react';
-import { subchatIndexStore } from '~/components/ExistingChat.client';
+import { subchatIndexStore, waitForSubchatIndexChanged } from '~/lib/stores/subchats';
 import { api } from '@convex/_generated/api';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 
