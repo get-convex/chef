@@ -573,7 +573,7 @@ describe("share", () => {
       chatMessageId: originalSubchatStates.subchat0State!._id,
       summary: "Initial greeting chat",
     });
-    
+
     await t.mutation(internal.summarize.saveMessageSummary, {
       chatMessageId: originalSubchatStates.subchat1State!._id,
       summary: "Todo app creation",
@@ -581,7 +581,7 @@ describe("share", () => {
 
     const { code } = await t.mutation(api.share.create, { sessionId, id: chatId });
     expect(code).toBeDefined();
-    
+
     const { id: clonedChatId } = await t.mutation(api.share.clone, {
       sessionId,
       shareCode: code,
@@ -606,8 +606,8 @@ describe("share", () => {
         .collect();
     });
 
-    const clonedSubchat0State = clonedSubchatStates.find(s => s.subchatIndex === 0);
-    const clonedSubchat1State = clonedSubchatStates.find(s => s.subchatIndex === 1);
+    const clonedSubchat0State = clonedSubchatStates.find((s) => s.subchatIndex === 0);
+    const clonedSubchat1State = clonedSubchatStates.find((s) => s.subchatIndex === 1);
 
     expect(clonedSubchat0State).toBeDefined();
     expect(clonedSubchat1State).toBeDefined();
