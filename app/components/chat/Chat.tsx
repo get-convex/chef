@@ -85,6 +85,7 @@ interface ChatProps {
 
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
+  subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
 }
 
 const retryState = atom({
@@ -92,18 +93,9 @@ const retryState = atom({
   nextRetry: Date.now(),
 });
 export const Chat = memo(
-  ({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy }: ChatProps) => {
+  ({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy, subchats }: ChatProps) => {
     const convex = useConvex();
     const sessionId = useConvexSessionIdOrNullOrLoading();
-    const subchats = useQuery(
-      api.subchats.get,
-      sessionId
-        ? {
-            chatId: chatIdStore.get(),
-            sessionId,
-          }
-        : 'skip',
-    );
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0 || (!!subchats && subchats.length > 1));
     const actionAlert = useStore(workbenchStore.alert);
     const syncState = useStore(chatSyncState);

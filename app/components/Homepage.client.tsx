@@ -29,7 +29,7 @@ export function Homepage() {
 
 const ChatWrapper = ({ initialId }: { initialId: string }) => {
   const partCache = useRef<PartCache>(new Map());
-  const { storeMessageHistory, initializeChat, initialMessages } = useConvexChatHomepage(initialId);
+  const { storeMessageHistory, initializeChat, initialMessages, subchats } = useConvexChatHomepage(initialId);
   return (
     <Chat
       initialMessages={initialMessages ?? emptyList}
@@ -38,6 +38,7 @@ const ChatWrapper = ({ initialId }: { initialId: string }) => {
       initializeChat={initializeChat}
       isReload={false}
       hadSuccessfulDeploy={false}
+      subchats={subchats}
     />
   );
 };

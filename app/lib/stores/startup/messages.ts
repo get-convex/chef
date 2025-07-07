@@ -7,7 +7,7 @@ import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { description as descriptionStore } from '~/lib/stores/description';
 import { compressWithLz4 } from '~/lib/compression';
-import { subchatIndexStore } from '~/lib/stores/subchats';
+import { subchatIndexStore } from '../subchats';
 
 type CompleteMessageInfo = {
   messageIndex: number;
@@ -23,6 +23,7 @@ export async function prepareMessageHistory(args: {
   sessionId: string;
   completeMessageInfo: CompleteMessageInfo;
   persistedMessageInfo: { messageIndex: number; partIndex: number };
+  subchatIndex: number;
 }): Promise<{
   url: URL;
   update: {
