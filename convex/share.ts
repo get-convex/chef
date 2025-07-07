@@ -186,6 +186,7 @@ export async function cloneShow(
         subchatIndex: storageState.subchatIndex,
         partIndex: storageState.partIndex,
         snapshotId: storageState.snapshotId,
+        description: storageState.description,
       });
     }
   }
@@ -263,6 +264,7 @@ export const clone = mutation({
           subchatIndex: storageState.subchatIndex,
           partIndex: storageState.partIndex,
           snapshotId: storageState.snapshotId,
+          description: storageState.description,
         });
       }
     }
@@ -273,6 +275,7 @@ export const clone = mutation({
       lastMessageRank: getShare.lastMessageRank,
       subchatIndex: getShare.lastSubchatIndex,
       partIndex: getShare.partIndex ?? -1,
+      description: getShare.description,
     });
 
     await startProvisionConvexProjectHelper(ctx, {
