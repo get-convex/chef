@@ -99,8 +99,8 @@ export async function chatAction({ request }: ActionFunctionArgs) {
         status: 402,
       });
     }
-    if (!isPaidPlan && centitokensUsed >= centitokensQuota) {
-      if (body.userApiKey?.preference !== 'quotaExhausted') {
+    if (centitokensUsed >= centitokensQuota) {
+      if (!isPaidPlan && body.userApiKey?.preference !== 'quotaExhausted') {
         logger.error(`No tokens available for ${deploymentName}: ${centitokensUsed} of ${centitokensQuota}`);
         return new Response(
           JSON.stringify({ code: 'no-tokens', error: noTokensText(centitokensUsed, centitokensQuota) }),
@@ -108,9 +108,10 @@ export async function chatAction({ request }: ActionFunctionArgs) {
             status: 402,
           },
         );
+      } else if (body.userApiKey?.preference === 'quotaExhausted') {
+        // If they're set to quotaExhausted mode, try to use the user's API key.
+        useUserApiKey = true;
       }
-      // If they're set to quotaExhausted mode, try to use the user's API key.
-      useUserApiKey = true;
     }
   }
 
