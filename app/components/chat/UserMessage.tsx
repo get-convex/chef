@@ -38,7 +38,7 @@ export const UserMessage = memo(function UserMessage({ content }: UserMessagePro
   );
 });
 
-function stripMetadata(content: string) {
+export function stripMetadata(content: string) {
   const artifactRegex = /<boltArtifact\s+[^>]*>[\s\S]*?<\/boltArtifact>/gm;
   return content.replace(artifactRegex, '');
 }

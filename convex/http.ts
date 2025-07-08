@@ -122,8 +122,8 @@ httpWithCors.route({
     const lastMessageRank = url.searchParams.get("lastMessageRank");
     const lastSubchatIndex = url.searchParams.get("lastSubchatIndex");
     const partIndex = url.searchParams.get("partIndex");
-    const firstMessage = url.searchParams.get("firstMessage");
     const formData = await request.formData();
+    let firstMessage = url.searchParams.get("firstMessage");
     let messageStorageId: Id<"_storage"> | null = null;
     let snapshotStorageId: Id<"_storage"> | null = null;
     if (formData.has("messages")) {
@@ -133,6 +133,9 @@ httpWithCors.route({
     if (formData.has("snapshot")) {
       const snapshotBlob = formData.get("snapshot") as Blob;
       snapshotStorageId = await ctx.storage.store(snapshotBlob);
+    }
+    if (formData.has("firstMessage")) {
+      firstMessage = formData.get("firstMessage") as string;
     }
     const maybeStorageStateId = await ctx.runMutation(internal.messages.updateStorageState, {
       sessionId: sessionId as Id<"sessions">,

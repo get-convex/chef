@@ -184,6 +184,7 @@ async function chatSyncWorker(args: {
     let messageBlob: Uint8Array | undefined = undefined;
     let urlHintAndDescription: { urlHint: string; description: string } | null = null;
     let newPersistedMessageInfo: { messageIndex: number; partIndex: number } | null = null;
+    let firstMessage: string | undefined = undefined;
 
     const messageHistoryResult = await prepareMessageHistory({
       chatId,
@@ -197,6 +198,7 @@ async function chatSyncWorker(args: {
       messageBlob = update.compressed;
       urlHintAndDescription = update.urlHintAndDescription ?? null;
       newPersistedMessageInfo = { messageIndex: update.messageIndex, partIndex: update.partIndex };
+      firstMessage = update.firstMessage;
     }
 
     let snapshotBlob: Uint8Array | undefined = undefined;
@@ -225,6 +227,9 @@ async function chatSyncWorker(args: {
     }
     if (snapshotBlob !== undefined) {
       formData.append('snapshot', new Blob([snapshotBlob]));
+    }
+    if (firstMessage !== undefined) {
+      formData.append('firstMessage', firstMessage);
     }
     if (currentState.subchatIndex !== subchatIndexStore.get()) {
       chatSyncState.set({

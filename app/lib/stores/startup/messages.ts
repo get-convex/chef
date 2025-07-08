@@ -7,6 +7,7 @@ import type { ConvexReactClient } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { description as descriptionStore } from '~/lib/stores/description';
 import { compressWithLz4 } from '~/lib/compression';
+import { stripMetadata } from '~/components/chat/UserMessage';
 
 type CompleteMessageInfo = {
   messageIndex: number;
@@ -30,6 +31,7 @@ export async function prepareMessageHistory(args: {
     urlHintAndDescription: { urlHint: string; description: string } | undefined;
     messageIndex: number;
     partIndex: number;
+    firstMessage: string | undefined;
   } | null;
 }> {
   const { chatId, sessionId, completeMessageInfo, persistedMessageInfo } = args;
@@ -42,9 +44,7 @@ export async function prepareMessageHistory(args: {
   url.searchParams.set('lastMessageRank', messageIndex.toString());
   url.searchParams.set('partIndex', partIndex.toString());
   url.searchParams.set('lastSubchatIndex', args.subchatIndex.toString());
-  if (allMessages.length > 0) {
-    url.searchParams.set('firstMessage', allMessages[0].content);
-  }
+  const firstMessage = allMessages.length > 0 ? stripMetadata(allMessages[0].content) : undefined;
   if (messageIndex === persistedMessageInfo.messageIndex && partIndex === persistedMessageInfo.partIndex) {
     // No changes
     return { url, update: null };
@@ -55,7 +55,7 @@ export async function prepareMessageHistory(args: {
     urlHintAndDescription = extractUrlHintAndDescription(allMessages) ?? undefined;
   }
   const compressed = await compressMessages(allMessages, messageIndex, partIndex);
-  return { url, update: { compressed, urlHintAndDescription, messageIndex, partIndex } };
+  return { url, update: { compressed, urlHintAndDescription, messageIndex, partIndex, firstMessage } };
 }
 
 export async function handleUrlHintAndDescription(
