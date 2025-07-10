@@ -9,6 +9,8 @@ import {
 } from "./messages";
 import { internal } from "./_generated/api";
 
+const subchatCleanupBatchSize = parseInt(process.env.SUBCHAT_CLEANUP_BATCH_SIZE ?? "128");
+
 export const get = query({
   args: {
     sessionId: v.id("sessions"),
@@ -95,26 +97,42 @@ export const cleanupOldSubchatStorageStates = internalMutation({
     chatId: v.string(),
     newSubchatIndex: v.number(),
     latestStorageState: v.optional(v.id("chatMessagesStorageState")),
+    cursor: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { chatId, sessionId, newSubchatIndex, latestStorageState } = args;
+    const { chatId, sessionId, newSubchatIndex, latestStorageState, cursor } = args;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
     if (!chat) {
       throw CHAT_NOT_FOUND_ERROR;
     }
 
-    // Delete all storage states for the previous subchat
-    const oldSubchatStorageStates = await ctx.db
+    const query = ctx.db
       .query("chatMessagesStorageState")
       .withIndex("byChatId", (q) => q.eq("chatId", chat._id).eq("subchatIndex", newSubchatIndex - 1))
-      .collect();
-    for (const storageState of oldSubchatStorageStates) {
+      .order("asc");
+
+    const result = await query.paginate({
+      cursor: cursor ?? null,
+      numItems: subchatCleanupBatchSize,
+    });
+
+    for (const storageState of result.page) {
       // Don't delete the latest storage state because this is the one we will rewind
       // to if the user rewinds to this subchat
       if (storageState._id !== latestStorageState) {
         await deleteStorageState(ctx, storageState);
       }
+    }
+
+    if (!result.isDone) {
+      await ctx.scheduler.runAfter(0, internal.subchats.cleanupOldSubchatStorageStates, {
+        sessionId,
+        chatId,
+        newSubchatIndex,
+        latestStorageState,
+        cursor: result.continueCursor,
+      });
     }
   },
 });
