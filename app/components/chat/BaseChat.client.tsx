@@ -2,7 +2,6 @@ import { Sheet } from '@ui/Sheet';
 import type { Message } from 'ai';
 import React, { type ReactNode, type RefCallback, useCallback, useEffect, useMemo, useState } from 'react';
 import Landing from '~/components/landing/Landing';
-import { Menu } from '~/components/sidebar/Menu.client';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import type { ToolStatus } from '~/lib/common/types';
 import type { TerminalInitializationOptions } from '~/types/terminal';
@@ -145,7 +144,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         data-chat-visible={showChat}
         data-messages-for-evals={dataForEvals}
       >
-        <Menu />
         <div ref={scrollRef} className="flex size-full flex-col overflow-y-auto">
           <div className="flex w-full grow flex-col lg:flex-row">
             <div
