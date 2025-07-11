@@ -9,6 +9,7 @@ import {
 } from "./messages";
 import { internal } from "./_generated/api";
 
+// TODO(jordan): Change this to 1 and test pagination in tests once changes to convex-test are in
 const subchatCleanupBatchSize = parseInt(process.env.SUBCHAT_CLEANUP_BATCH_SIZE ?? "128");
 
 export const get = query({
