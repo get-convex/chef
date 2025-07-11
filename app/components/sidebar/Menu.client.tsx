@@ -116,12 +116,12 @@ export const Menu = memo(({ isOpen, onClose }: MenuProps) => {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Element;
-      
+
       // Don't close if clicking on the hamburger icon
       if (target?.closest('[data-hamburger-menu]')) {
         return;
       }
-      
+
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         onClose();
       }
