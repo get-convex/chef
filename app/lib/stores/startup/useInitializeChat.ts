@@ -9,6 +9,37 @@ import { openSignInWindow } from '~/components/ChefSignInPage';
 import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
 import { toast } from 'sonner';
 
+// Helper function to wait for project connection to complete
+async function waitForConvexProjectConnection(
+  convex: any,
+  sessionId: string,
+  chatId: string,
+  maxWaitTime: number = 30000 // 30 seconds
+): Promise<boolean> {
+  const startTime = Date.now();
+  const pollInterval = 1000; // 1 second
+  
+  while (Date.now() - startTime < maxWaitTime) {
+    const projectStatus = await convex.query(api.convexProjects.loadConnectedConvexProjectCredentials, {
+      sessionId,
+      chatId,
+    });
+    
+    if (projectStatus?.kind === 'connected') {
+      return true;
+    }
+    
+    if (projectStatus?.kind === 'failed') {
+      throw new Error(`Project connection failed: ${projectStatus.errorMessage}`);
+    }
+    
+    // Wait before polling again
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+  }
+  
+  throw new Error('Timeout waiting for project connection');
+}
+
 export function useHomepageInitializeChat(chatId: string, setChatInitialized: (chatInitialized: boolean) => void) {
   const convex = useConvex();
   const chefAuthState = useChefAuth();
@@ -37,12 +68,23 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
       teamSlug,
       auth0AccessToken,
     };
+    
+    // Initialize the chat and start project creation
     await convex.mutation(api.messages.initializeChat, {
       id: chatId,
       sessionId,
       projectInitParams,
     });
-    setChatInitialized(true);
+
+    try {
+      // Wait for the Convex project to be successfully created before allowing chat to start
+      await waitForConvexProjectConnection(convex, sessionId, chatId);
+      setChatInitialized(true);
+    } catch (error) {
+      console.error('Failed to create Convex project:', error);
+      toast.error('Failed to create Convex project. Please try again.');
+      return;
+    }
 
     // Wait for the WebContainer to have its snapshot loaded before sending a message.
     await waitForBootStepCompleted(ContainerBootState.LOADING_SNAPSHOT);
