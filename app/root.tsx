@@ -21,6 +21,7 @@ import posthog from 'posthog-js';
 import 'allotment/dist/style.css';
 
 import { ErrorDisplay } from './components/ErrorComponent';
+import useVersionNotificationBanner from './components/VersionNotificationBanner';
 
 export async function loader() {
   // These environment variables are available in the client (they aren't secret).
@@ -130,6 +131,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  useVersionNotificationBanner();
+
   return (
     <>
       <ClientOnly>
@@ -144,7 +147,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               useRefreshTokens={true}
               cacheLocation="localstorage"
             >
-              <ConvexProviderWithAuth0 client={convex}>{children}</ConvexProviderWithAuth0>
+              <ConvexProviderWithAuth0 client={convex}>
+                {children}
+              </ConvexProviderWithAuth0>
             </Auth0Provider>
           </DndProvider>
         )}
