@@ -14,29 +14,29 @@ async function waitForConvexProjectConnection(
   convex: any,
   sessionId: string,
   chatId: string,
-  maxWaitTime: number = 30000 // 30 seconds
+  maxWaitTime: number = 30000, // 30 seconds
 ): Promise<boolean> {
   const startTime = Date.now();
   const pollInterval = 1000; // 1 second
-  
+
   while (Date.now() - startTime < maxWaitTime) {
     const projectStatus = await convex.query(api.convexProjects.loadConnectedConvexProjectCredentials, {
       sessionId,
       chatId,
     });
-    
+
     if (projectStatus?.kind === 'connected') {
       return true;
     }
-    
+
     if (projectStatus?.kind === 'failed') {
       throw new Error(`Project connection failed: ${projectStatus.errorMessage}`);
     }
-    
+
     // Wait before polling again
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
+    await new Promise((resolve) => setTimeout(resolve, pollInterval));
   }
-  
+
   throw new Error('Timeout waiting for project connection');
 }
 
@@ -68,7 +68,7 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
       teamSlug,
       auth0AccessToken,
     };
-    
+
     // Initialize the chat and start project creation
     await convex.mutation(api.messages.initializeChat, {
       id: chatId,
