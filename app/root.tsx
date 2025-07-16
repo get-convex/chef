@@ -147,9 +147,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               useRefreshTokens={true}
               cacheLocation="localstorage"
             >
-              <ConvexProviderWithAuth0 client={convex}>
-                {children}
-              </ConvexProviderWithAuth0>
+              <ConvexProviderWithAuth0 client={convex}>{children}</ConvexProviderWithAuth0>
             </Auth0Provider>
           </DndProvider>
         )}

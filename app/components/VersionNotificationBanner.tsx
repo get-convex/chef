@@ -5,20 +5,20 @@ import { SymbolIcon } from '@radix-ui/react-icons';
 
 export default function useVersionNotificationBanner() {
   const currentSha = process.env.VITE_VERCEL_GIT_COMMIT_SHA;
-  const [productionSha, setProductionSha] = useState<string>("");
+  const [productionSha, setProductionSha] = useState<string>('');
   const [error, setError] = useState<boolean>(false);
 
   useEffect(() => {
     async function getVersion() {
       try {
-        const res = await fetch("/api/version");
+        const res = await fetch('/api/version');
         if (!res.ok) {
-          throw new Error("Failed to fetch version information");
+          throw new Error('Failed to fetch version information');
         } else {
           const data = await res.json();
           setProductionSha(data.sha);
         }
-      } catch (e) {
+      } catch (_e) {
         setError(true);
       }
     }
@@ -41,9 +41,9 @@ export default function useVersionNotificationBanner() {
         </Button>
       </div>,
       {
-        id: "chefVersion",
+        id: 'chefVersion',
         duration: Number.POSITIVE_INFINITY,
-      }
+      },
     );
   }
 }
