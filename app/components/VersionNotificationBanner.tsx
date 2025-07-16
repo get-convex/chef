@@ -41,7 +41,7 @@ export default function useVersionNotificationBanner() {
         </Button>
       </div>,
       {
-        id: "dashboardVersion",
+        id: "chefVersion",
         duration: Number.POSITIVE_INFINITY,
       }
     );
