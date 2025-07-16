@@ -8,37 +8,9 @@ import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { openSignInWindow } from '~/components/ChefSignInPage';
 import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
 import { toast } from 'sonner';
+import { waitForConvexProjectConnection } from '~/lib/stores/convexProject';
 
-// Helper function to wait for project connection to complete
-async function waitForConvexProjectConnection(
-  convex: any,
-  sessionId: string,
-  chatId: string,
-  maxWaitTime: number = 30000, // 30 seconds
-): Promise<boolean> {
-  const startTime = Date.now();
-  const pollInterval = 1000; // 1 second
-
-  while (Date.now() - startTime < maxWaitTime) {
-    const projectStatus = await convex.query(api.convexProjects.loadConnectedConvexProjectCredentials, {
-      sessionId,
-      chatId,
-    });
-
-    if (projectStatus?.kind === 'connected') {
-      return true;
-    }
-
-    if (projectStatus?.kind === 'failed') {
-      throw new Error(`Project connection failed: ${projectStatus.errorMessage}`);
-    }
-
-    // Wait before polling again
-    await new Promise((resolve) => setTimeout(resolve, pollInterval));
-  }
-
-  throw new Error('Timeout waiting for project connection');
-}
+const CREATE_PROJECT_TIMEOUT = 15000;
 
 export function useHomepageInitializeChat(chatId: string, setChatInitialized: (chatInitialized: boolean) => void) {
   const convex = useConvex();
@@ -47,20 +19,20 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
   return useCallback(async () => {
     if (!isFullyLoggedIn) {
       openSignInWindow();
-      return;
+      return false;
     }
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const selectedTeamSlug = selectedTeamSlugStore.get();
     if (selectedTeamSlug === null) {
       // If the user hasn't selected a team, don't initialize the chat.
-      return;
+      return false;
     }
 
     const auth0AccessToken = getConvexAuthToken(convex);
     if (!auth0AccessToken) {
       console.error('No auth0 access token');
       toast.error('Unexpected error creating chat');
-      return;
+      return false;
     }
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
 
@@ -78,16 +50,29 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
 
     try {
       // Wait for the Convex project to be successfully created before allowing chat to start
-      await waitForConvexProjectConnection(convex, sessionId, chatId);
+      // Add 15-second timeout with retry functionality
+      await Promise.race([
+        waitForConvexProjectConnection(),
+        new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Connection timeout'));
+          }, CREATE_PROJECT_TIMEOUT);
+        }),
+      ]);
       setChatInitialized(true);
     } catch (error) {
       console.error('Failed to create Convex project:', error);
-      toast.error('Failed to create Convex project. Please try again.');
-      return;
+      if (error instanceof Error && error.message === 'Connection timeout') {
+        toast.error('Connection timed out. Please try again.');
+      } else {
+        toast.error('Failed to create Convex project. Please try again.');
+      }
+      return false;
     }
 
     // Wait for the WebContainer to have its snapshot loaded before sending a message.
     await waitForBootStepCompleted(ContainerBootState.LOADING_SNAPSHOT);
+    return true;
   }, [convex, chatId, isFullyLoggedIn, setChatInitialized]);
 }
 
@@ -100,7 +85,7 @@ export function useExistingInitializeChat(chatId: string) {
     if (!auth0AccessToken) {
       console.error('No auth0 access token');
       toast.error('Unexpected error creating chat');
-      return;
+      return false;
     }
     const projectInitParams = {
       teamSlug,
@@ -114,5 +99,6 @@ export function useExistingInitializeChat(chatId: string) {
 
     // We don't need to wait for container boot here since we don't mount
     // the UI until it's fully ready.
+    return true;
   }, [convex, chatId]);
 }

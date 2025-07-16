@@ -80,7 +80,7 @@ interface ChatProps {
     messages: Message[],
     streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
   ) => Promise<void>;
-  initializeChat: () => Promise<void>;
+  initializeChat: () => Promise<boolean>;
   description?: string;
 
   isReload: boolean;
@@ -524,7 +524,11 @@ export const Chat = memo(
 
         enableAutoScroll();
 
-        await initializeChat();
+        const chatInitialized = await initializeChat();
+        if (!chatInitialized) {
+          return;
+        }
+
         runAnimation();
 
         const shouldSendRelevantFiles = chatContextManager.current.shouldSendRelevantFiles(
