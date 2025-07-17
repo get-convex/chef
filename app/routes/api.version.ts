@@ -3,13 +3,7 @@ import type { ActionFunctionArgs } from '@vercel/remix';
 
 declare const Deno: any;
 
-export async function action({ request }: ActionFunctionArgs) {
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+async function fetchVersionInfo() {
   const projectId = process.env.VERCEL_PROJECT_ID;
   const teamId = process.env.VERCEL_TEAM_ID;
   const productionBranchUrl = process.env.VERCEL_PRODUCTION_BRANCH_URL || 'chef.convex.dev';
@@ -25,10 +19,6 @@ export async function action({ request }: ActionFunctionArgs) {
   console.log('process.env?.[VERCEL_PRODUCTION_BRANCH_URL]?.trim()', process.env.VERCEL_PRODUCTION_BRANCH_URL?.trim());
 
   console.log('process.env', process.env);
-
-  console.log('Deno', Deno);
-  console.log('Deno.env', Deno.env);
-  console.log('Deno.env.get("VERCEL_TOKEN")', Deno.env.get('VERCEL_TOKEN'));
 
   if (!process.env.VERCEL_TOKEN) {
     return json({ error: 'Failed to fetch version information' }, { status: 500 });
@@ -97,4 +87,15 @@ export async function action({ request }: ActionFunctionArgs) {
     },
     { status: 200 },
   );
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return await fetchVersionInfo();
 }
