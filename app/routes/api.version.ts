@@ -17,6 +17,11 @@ export async function action({ request }: ActionFunctionArgs) {
   console.log('vercel production branch url', productionBranchUrl);
   console.log('vercel token', process.env.VERCEL_TOKEN);
 
+  console.log('process.env?.[VERCEL_TOKEN]?.trim()', process.env.VERCEL_TOKEN?.trim());
+  console.log('process.env?.[VERCEL_TEAM_ID]?.trim()', process.env.VERCEL_TEAM_ID?.trim());
+  console.log('process.env?.[VERCEL_PROJECT_ID]?.trim()', process.env.VERCEL_PROJECT_ID?.trim());
+  console.log('process.env?.[VERCEL_PRODUCTION_BRANCH_URL]?.trim()', process.env.VERCEL_PRODUCTION_BRANCH_URL?.trim());
+
   console.log('process.env', process.env);
 
   if (!process.env.VERCEL_TOKEN) {
