@@ -4,7 +4,7 @@ import type { LoaderFunctionArgs } from '@vercel/remix';
 export async function loader({ request: _request }: LoaderFunctionArgs) {
   const projectId = process.env.VERCEL_PROJECT_ID;
   const teamId = process.env.VERCEL_TEAM_ID;
-  const productionBranchUrl = process.env.VERCEL_PRODUCTION_BRANCH_URL || 'https://chef.convex.dev';
+  const productionBranchUrl = process.env.VERCEL_PRODUCTION_BRANCH_URL || 'chef.convex.dev';
 
   if (!process.env.VERCEL_TOKEN) {
     return json({ error: 'Failed to fetch version information' }, { status: 500 });
@@ -17,8 +17,6 @@ export async function loader({ request: _request }: LoaderFunctionArgs) {
     method: 'get',
   };
 
-  console.log('process.env.VERCEL_ENV', process.env.VERCEL_ENV, process.env.VERCEL_ENV !== 'preview');
-
   if (process.env.VERCEL_ENV !== 'preview') {
     // If we're not in a preview deployment, fetch the production deployment from Vercel's undocumented
     // production-deployment API.
@@ -29,7 +27,6 @@ export async function loader({ request: _request }: LoaderFunctionArgs) {
       `https://vercel.com/api/v1/projects/${projectId}/production-deployment?teamId=${teamId}`,
       requestOptions,
     );
-    console.log(prodResponse);
     if (!prodResponse.ok) {
       return json({ error: 'Failed to fetch production version information' }, { status: 500 });
     }
@@ -46,7 +43,6 @@ export async function loader({ request: _request }: LoaderFunctionArgs) {
     // If the production deployment is rolled back,
     // we should not show a version notification.
     if (prodData.deploymentIsStale) {
-      console.log('production deployment is stale');
       return json({ sha: null }, { status: 200 });
     }
   }

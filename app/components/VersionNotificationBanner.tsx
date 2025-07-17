@@ -7,6 +7,9 @@ export default function useVersionNotificationBanner() {
   const currentSha = process.env.VITE_VERCEL_GIT_COMMIT_SHA;
   const [productionSha, setProductionSha] = useState<string>('');
   const [error, setError] = useState<boolean>(false);
+  console.log('currentSha', currentSha);
+  console.log('VITE_VERCEL_GIT_COMMIT_SHA', process.env.VITE_VERCEL_GIT_COMMIT_SHA);
+  console.log('VERCEL_GIT_COMMIT_SHA', process.env.VERCEL_GIT_COMMIT_SHA);
 
   useEffect(() => {
     async function getVersion() {
@@ -23,6 +26,11 @@ export default function useVersionNotificationBanner() {
       }
     }
     getVersion();
+
+    const interval = setInterval(getVersion, 60 * 60 * 1000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
   }, []);
 
   if (!error && productionSha && currentSha && productionSha !== currentSha) {
