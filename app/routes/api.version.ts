@@ -6,6 +6,9 @@ export async function loader({ request: _request }: LoaderFunctionArgs) {
   const teamId = process.env.VERCEL_TEAM_ID;
   const productionBranchUrl = process.env.VERCEL_PRODUCTION_BRANCH_URL || 'chef.convex.dev';
 
+  console.log('vercel project id', projectId);
+  console.log('vercel team id', teamId);
+  console.log('vercel production branch url', productionBranchUrl);
   console.log('vercel token', process.env.VERCEL_TOKEN);
 
   if (!process.env.VERCEL_TOKEN) {
