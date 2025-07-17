@@ -117,6 +117,8 @@ export async function action({ request }: ActionFunctionArgs) {
       });
     }
 
+    console.log('process.env.OPENAI_API_KEY', process.env.OPENAI_API_KEY?.length);
+
     const { prompt } = await request.json();
 
     if (!prompt || typeof prompt !== 'string') {

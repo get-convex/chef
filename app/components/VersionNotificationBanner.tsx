@@ -13,7 +13,9 @@ export default function useVersionNotificationBanner() {
   useEffect(() => {
     async function getVersion() {
       try {
-        const res = await fetch('/api/version');
+        const res = await fetch('/api/version', {
+          method: 'POST',
+        });
         console.log('res', res);
         if (!res.ok) {
           throw new Error('Failed to fetch version information');

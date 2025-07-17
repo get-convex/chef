@@ -1,7 +1,13 @@
 import { json } from '@vercel/remix';
-import type { LoaderFunctionArgs } from '@vercel/remix';
+import type { ActionFunctionArgs } from '@vercel/remix';
 
-export async function loader({ request: _request }: LoaderFunctionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
   const projectId = process.env.VERCEL_PROJECT_ID;
   const teamId = process.env.VERCEL_TEAM_ID;
   const productionBranchUrl = process.env.VERCEL_PRODUCTION_BRANCH_URL || 'chef.convex.dev';
