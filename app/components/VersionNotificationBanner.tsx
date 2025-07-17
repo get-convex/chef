@@ -19,6 +19,7 @@ export default function useVersionNotificationBanner() {
         } else {
           const data = await res.json();
           setProductionSha(data.sha);
+          console.log('productionSha', productionSha);
         }
       } catch (_e) {
         setError(true);
@@ -26,7 +27,8 @@ export default function useVersionNotificationBanner() {
     }
     getVersion();
 
-    const interval = setInterval(getVersion, 60 * 60 * 1000);
+    // TODO: Change to 60 * 60 * 1000
+    const interval = setInterval(getVersion, 1000);
 
     // Cleanup interval on unmount
     return () => clearInterval(interval);
