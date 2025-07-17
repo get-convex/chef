@@ -50,7 +50,6 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
 
     try {
       // Wait for the Convex project to be successfully created before allowing chat to start
-      // Add 15-second timeout with retry functionality
       await Promise.race([
         waitForConvexProjectConnection(),
         new Promise((_, reject) => {
