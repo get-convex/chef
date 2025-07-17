@@ -4,9 +4,11 @@ import { Button } from '@ui/Button';
 import { SymbolIcon } from '@radix-ui/react-icons';
 
 export default function useVersionNotificationBanner() {
-  const currentSha = import.meta.env.VERCEL_GIT_COMMIT_SHA;
+  const currentSha = process.env.VERCEL_GIT_COMMIT_SHA;
   const [productionSha, setProductionSha] = useState<string>('');
   const [error, setError] = useState<boolean>(false);
+
+  console.log('currentSha', currentSha);
 
   useEffect(() => {
     async function getVersion() {
