@@ -50,7 +50,9 @@ export async function loader({ request: _request }: LoaderFunctionArgs) {
   // Even though we retrieved the production data, we might be on a preview branch deployment.
   // So, fetch the data specific to the latest branch deployment.
   const branchUrl = process.env.VERCEL_BRANCH_URL || productionBranchUrl;
+  console.log('branchUrl', branchUrl);
   if (!branchUrl) {
+    console.log('branchUrl not set');
     throw new Error('VERCEL_BRANCH_URL or VERCEL_PRODUCTION_BRANCH_URL not set');
   }
   const branchResponse = await fetch(
@@ -58,10 +60,12 @@ export async function loader({ request: _request }: LoaderFunctionArgs) {
     requestOptions,
   );
   if (!branchResponse.ok) {
+    console.log('branchResponse not ok');
     throw new Error('Failed to fetch branch version information');
   }
 
   const branchData = await branchResponse.json();
+  console.log('branchData', branchData);
 
   return json(
     {

@@ -14,6 +14,7 @@ export default function useVersionNotificationBanner() {
     async function getVersion() {
       try {
         const res = await fetch('/api/version');
+        console.log('res', res);
         if (!res.ok) {
           throw new Error('Failed to fetch version information');
         } else {
