@@ -132,6 +132,8 @@ export async function action({ request }: ActionFunctionArgs) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
+    console.log('openai.apiKey', openai.apiKey);
+
     const completion = await openai.chat.completions.create({
       model: 'gpt-4.1-mini',
       messages: [
