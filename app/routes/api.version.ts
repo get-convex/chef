@@ -11,6 +11,8 @@ export async function loader({ request: _request }: LoaderFunctionArgs) {
   console.log('vercel production branch url', productionBranchUrl);
   console.log('vercel token', process.env.VERCEL_TOKEN);
 
+  console.log('process.env', process.env);
+
   if (!process.env.VERCEL_TOKEN) {
     return json({ error: 'Failed to fetch version information' }, { status: 500 });
   }
