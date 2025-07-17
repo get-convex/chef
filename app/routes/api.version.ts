@@ -6,6 +6,8 @@ export async function loader({ request: _request }: LoaderFunctionArgs) {
   const teamId = process.env.VERCEL_TEAM_ID;
   const productionBranchUrl = process.env.VERCEL_PRODUCTION_BRANCH_URL || 'chef.convex.dev';
 
+  console.log('vercel token', process.env.VERCEL_TOKEN);
+
   if (!process.env.VERCEL_TOKEN) {
     return json({ error: 'Failed to fetch version information' }, { status: 500 });
   }
