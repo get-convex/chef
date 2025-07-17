@@ -4,34 +4,34 @@ import type { ActionFunctionArgs } from '@vercel/remix';
 declare const Deno: any;
 
 async function fetchVersionInfo() {
-  const projectId = process.env.VERCEL_PROJECT_ID;
-  const teamId = process.env.VERCEL_TEAM_ID;
-  const productionBranchUrl = process.env.VERCEL_PRODUCTION_BRANCH_URL || 'chef.convex.dev';
+  const projectId = globalThis.process.env.VERCEL_PROJECT_ID;
+  const teamId = globalThis.process.env.VERCEL_TEAM_ID;
+  const productionBranchUrl = globalThis.process.env.VERCEL_PRODUCTION_BRANCH_URL || 'chef.convex.dev';
 
   console.log('vercel project id', projectId);
   console.log('vercel team id', teamId);
   console.log('vercel production branch url', productionBranchUrl);
-  console.log('vercel token', process.env.VERCEL_TOKEN);
+  console.log('vercel token', globalThis.process.env.VERCEL_TOKEN);
 
-  console.log('process.env?.[VERCEL_TOKEN]?.trim()', process.env.VERCEL_TOKEN?.trim());
-  console.log('process.env?.[VERCEL_TEAM_ID]?.trim()', process.env.VERCEL_TEAM_ID?.trim());
-  console.log('process.env?.[VERCEL_PROJECT_ID]?.trim()', process.env.VERCEL_PROJECT_ID?.trim());
-  console.log('process.env?.[VERCEL_PRODUCTION_BRANCH_URL]?.trim()', process.env.VERCEL_PRODUCTION_BRANCH_URL?.trim());
+  console.log('globalThis.process.env?.[VERCEL_TOKEN]?.trim()', globalThis.process.env.VERCEL_TOKEN?.trim());
+  console.log('globalThis.process.env?.[VERCEL_TEAM_ID]?.trim()', globalThis.process.env.VERCEL_TEAM_ID?.trim());
+  console.log('globalThis.process.env?.[VERCEL_PROJECT_ID]?.trim()', globalThis.process.env.VERCEL_PROJECT_ID?.trim());
+  console.log('globalThis.process.env?.[VERCEL_PRODUCTION_BRANCH_URL]?.trim()', globalThis.process.env.VERCEL_PRODUCTION_BRANCH_URL?.trim());
 
-  console.log('process.env', process.env);
+  console.log('globalThis.process.env', globalThis.process.env);
 
-  if (!process.env.VERCEL_TOKEN) {
+  if (!globalThis.process.env.VERCEL_TOKEN) {
     return json({ error: 'Failed to fetch version information' }, { status: 500 });
   }
 
   const requestOptions = {
     headers: {
-      Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
+      Authorization: `Bearer ${globalThis.process.env.VERCEL_TOKEN}`,
     },
     method: 'get',
   };
 
-  if (process.env.VERCEL_ENV !== 'preview') {
+  if (globalThis.process.env.VERCEL_ENV !== 'preview') {
     // If we're not in a preview deployment, fetch the production deployment from Vercel's undocumented
     // production-deployment API.
     // This response includes a boolean indicating if the production deployment is stale (i.e. rolled back)
@@ -63,7 +63,7 @@ async function fetchVersionInfo() {
 
   // Even though we retrieved the production data, we might be on a preview branch deployment.
   // So, fetch the data specific to the latest branch deployment.
-  const branchUrl = process.env.VERCEL_BRANCH_URL || productionBranchUrl;
+  const branchUrl = globalThis.process.env.VERCEL_BRANCH_URL || productionBranchUrl;
   console.log('branchUrl', branchUrl);
   if (!branchUrl) {
     console.log('branchUrl not set');
