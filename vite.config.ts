@@ -14,6 +14,7 @@ export default defineConfig((config) => {
   return {
     define: {
       'process.env.VERCEL_ENV': JSON.stringify(process.env.VERCEL_ENV),
+      'process.env.VERCEL_GIT_COMMIT_SHA': JSON.stringify(process.env.VERCEL_GIT_COMMIT_SHA),
     },
 
     /*
