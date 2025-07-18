@@ -16,7 +16,8 @@ const noDirectProcessEnv = {
     fixable: null,
     schema: [],
     messages: {
-      noDirectProcessEnv: 'Direct process.env usage is not allowed. Use a config module instead.',
+      noDirectProcessEnv:
+        'Direct process.env usage is not allowed. Use globalThis.process.env instead because process.env is shimmed in for both the browser and the server.',
     },
   },
   create(context) {
