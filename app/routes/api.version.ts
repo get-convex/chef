@@ -77,6 +77,4 @@ export async function action({ request }: ActionFunctionArgs) {
     },
     { status: 200 },
   );
-
-  return await fetchVersionInfo();
 }
