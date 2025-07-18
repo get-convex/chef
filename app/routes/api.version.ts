@@ -84,6 +84,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const branchData = await branchResponse.json();
   console.log('branchData', branchData);
+  console.log('branchData.gitSource.sha', branchData.gitSource.sha);
 
   return json(
     {

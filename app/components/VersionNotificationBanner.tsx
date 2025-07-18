@@ -45,7 +45,9 @@ export default function useVersionNotificationBanner() {
 }
 
 const versionFetcher = async (url: string) => {
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    method: 'POST',
+  });
   if (!res.ok) {
     try {
       const { error } = await res.json();
