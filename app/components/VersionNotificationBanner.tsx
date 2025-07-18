@@ -9,12 +9,17 @@ export default function useVersionNotificationBanner() {
   const currentSha = process.env.VERCEL_GIT_COMMIT_SHA;
   const { data, error } = useSWR<{ sha?: string | null }>('/api/version', {
     // Refresh every hour.
-    refreshInterval: 1000 * 60 * 60,
+    refreshInterval: 1000 * 10,
     // Refresh on focus at most every 10 minutes.
-    focusThrottleInterval: 1000 * 60 * 10,
+    focusThrottleInterval: 1000 * 10,
     shouldRetryOnError: false,
     fetcher: versionFetcher,
   });
+
+  console.log('data', data);
+  console.log('error', error);
+  console.log('currentSha', currentSha);
+  console.log('data?.sha', data?.sha);
 
   if (!error && data?.sha && currentSha && data.sha !== currentSha) {
     toast.info(
