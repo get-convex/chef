@@ -48,6 +48,7 @@ const versionFetcher = async (url: string) => {
   const res = await fetch(url, {
     method: 'POST',
   });
+  console.log('res', res);
   if (!res.ok) {
     try {
       const { error } = await res.json();
