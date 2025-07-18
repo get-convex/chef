@@ -1,44 +1,25 @@
-import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@ui/Button';
 import { SymbolIcon } from '@radix-ui/react-icons';
+import { captureMessage } from '@sentry/remix';
+import useSWR from 'swr';
 
 export default function useVersionNotificationBanner() {
-  // @eslint-disable-next-line local/no-direct-process-env
+  // eslint-disable-next-line local/no-direct-process-env
   const currentSha = process.env.VERCEL_GIT_COMMIT_SHA;
-  const [productionSha, setProductionSha] = useState<string>('');
-  const [error, setError] = useState<boolean>(false);
+  const { data, error } = useSWR<{ sha?: string | null }>('/api/version', {
+    // Refresh every hour.
+    refreshInterval: 1000 * 60 * 60,
+    // Refresh on focus at most every 10 minutes.
+    focusThrottleInterval: 1000 * 60 * 10,
+    shouldRetryOnError: false,
+    fetcher: versionFetcher,
+  });
 
-  console.log('currentSha', currentSha);
+  console.log('data', data);
+  console.log('error', error);
 
-  useEffect(() => {
-    async function getVersion() {
-      try {
-        const res = await fetch('/api/version', {
-          method: 'POST',
-        });
-        console.log('res', res);
-        if (!res.ok) {
-          throw new Error('Failed to fetch version information');
-        } else {
-          const data = await res.json();
-          setProductionSha(data.sha);
-          console.log('productionSha', productionSha);
-        }
-      } catch (_e) {
-        setError(true);
-      }
-    }
-    getVersion();
-
-    // TODO: Change to 60 * 60 * 1000
-    const interval = setInterval(getVersion, 1000);
-
-    // Cleanup interval on unmount
-    return () => clearInterval(interval);
-  }, [productionSha]);
-
-  if (!error && productionSha && currentSha && productionSha !== currentSha) {
+  if (!error && data?.sha && currentSha && data.sha !== currentSha) {
     toast.info(
       <div className="flex flex-col">
         A new version of Chef is available! Refresh this page to update.
@@ -60,3 +41,17 @@ export default function useVersionNotificationBanner() {
     );
   }
 }
+
+const versionFetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    try {
+      const { error } = await res.json();
+      captureMessage(error);
+    } catch (_e) {
+      captureMessage('Failed to fetch dashboard version information.');
+    }
+    throw new Error('Failed to fetch dashboard version information.');
+  }
+  return res.json();
+};

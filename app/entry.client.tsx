@@ -3,7 +3,7 @@ import { RemixBrowser, useLocation, useMatches } from '@remix-run/react';
 import { startTransition, useEffect } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 
-// @eslint-disable-next-line local/no-direct-process-env
+// eslint-disable-next-line local/no-direct-process-env
 const environment = process.env.VERCEL_ENV === 'production' ? 'production' : 'development';
 
 Sentry.init({

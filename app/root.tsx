@@ -25,7 +25,7 @@ import useVersionNotificationBanner from './components/VersionNotificationBanner
 
 export async function loader() {
   // These environment variables are available in the client (they aren't secret).
-  // @eslint-disable-next-line local/no-direct-process-env
+  // eslint-disable-next-line local/no-direct-process-env
   const CONVEX_URL = process.env.VITE_CONVEX_URL || globalThis.process.env.CONVEX_URL!;
   const CONVEX_OAUTH_CLIENT_ID = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID!;
   return json({
