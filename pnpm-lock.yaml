@@ -325,6 +325,9 @@ importers:
       sonner:
         specifier: ^2.0.3
         version: 2.0.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      swr:
+        specifier: ^2.3.4
+        version: 2.3.4(react@18.3.1)
       ua-parser-js:
         specifier: ^1.0.40
         version: 1.0.40
@@ -8657,6 +8660,11 @@ packages:
     peerDependencies:
       react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
+  swr@2.3.4:
+    resolution: {integrity: sha512-bYd2lrhc+VarcpkgWclcUi92wYCpOgMws9Sd1hG1ntAu0NEy+14CbotuFjshBU2kt9rYj9TSmDcybpxpeTU1fg==}
+    peerDependencies:
+      react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   swrev@4.0.0:
     resolution: {integrity: sha512-LqVcOHSB4cPGgitD1riJ1Hh4vdmITOp+BkmfmXRh4hSF/t7EnS4iD+SOTmq7w5pPm/SiPeto4ADbKS6dHUDWFA==}
 
@@ -9620,7 +9628,7 @@ snapshots:
       '@ai-sdk/provider-utils': 2.2.4(zod@3.24.1)
       '@ai-sdk/ui-utils': 1.2.5(zod@3.24.1)
       react: 18.3.1
-      swr: 2.3.2(react@18.3.1)
+      swr: 2.3.4(react@18.3.1)
       throttleit: 2.1.0
     optionalDependencies:
       zod: 3.24.1
@@ -18977,6 +18985,12 @@ snapshots:
       zimmerframe: 1.1.2
 
   swr@2.3.2(react@18.3.1):
+    dependencies:
+      dequal: 2.0.3
+      react: 18.3.1
+      use-sync-external-store: 1.4.0(react@18.3.1)
+
+  swr@2.3.4(react@18.3.1):
     dependencies:
       dequal: 2.0.3
       react: 18.3.1

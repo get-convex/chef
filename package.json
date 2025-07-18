@@ -33,7 +33,6 @@
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^2.2.9",
     "@ai-sdk/anthropic": "^1.2.12",
-    "@convex-dev/ai-sdk-google": "1.2.17",
     "@ai-sdk/google": "^1.2.11",
     "@ai-sdk/openai": "^1.3.6",
     "@ai-sdk/react": "^1.2.5",
@@ -57,6 +56,7 @@
     "@codemirror/search": "^6.5.8",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.35.0",
+    "@convex-dev/ai-sdk-google": "1.2.17",
     "@convex-dev/design-system": "0.1.11",
     "@convex-dev/eslint-plugin": "0.0.1-alpha.4",
     "@convex-dev/migrations": "^0.2.8",
@@ -135,6 +135,7 @@
     "remix-utils": "^7.7.0",
     "shiki": "^1.24.0",
     "sonner": "^2.0.3",
+    "swr": "^2.3.4",
     "ua-parser-js": "^1.0.40",
     "undici": "^7.7.0",
     "unist-util-visit": "^5.0.0",
