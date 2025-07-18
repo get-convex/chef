@@ -16,9 +16,6 @@ export default function useVersionNotificationBanner() {
     fetcher: versionFetcher,
   });
 
-  console.log('data', data);
-  console.log('error', error);
-
   if (!error && data?.sha && currentSha && data.sha !== currentSha) {
     toast.info(
       <div className="flex flex-col">
