@@ -4,6 +4,7 @@ import { Button } from '@ui/Button';
 import { SymbolIcon } from '@radix-ui/react-icons';
 
 export default function useVersionNotificationBanner() {
+  // @eslint-disable-next-line local/no-direct-process-env
   const currentSha = process.env.VERCEL_GIT_COMMIT_SHA;
   const [productionSha, setProductionSha] = useState<string>('');
   const [error, setError] = useState<boolean>(false);
@@ -35,7 +36,7 @@ export default function useVersionNotificationBanner() {
 
     // Cleanup interval on unmount
     return () => clearInterval(interval);
-  }, []);
+  }, [productionSha]);
 
   if (!error && productionSha && currentSha && productionSha !== currentSha) {
     toast.info(

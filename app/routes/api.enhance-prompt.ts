@@ -117,8 +117,6 @@ export async function action({ request }: ActionFunctionArgs) {
       });
     }
 
-    console.log('process.env.OPENAI_API_KEY', process.env.OPENAI_API_KEY?.length);
-
     const { prompt } = await request.json();
 
     if (!prompt || typeof prompt !== 'string') {
@@ -129,7 +127,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: globalThis.process.env.OPENAI_API_KEY,
     });
 
     console.log('openai.apiKey', openai.apiKey);
