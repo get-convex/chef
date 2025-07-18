@@ -8,25 +8,24 @@ import noGlobalFetchRule from './eslint-rules/no-global-fetch.js';
 
 const noDirectProcessEnv = {
   meta: {
-    type: "problem",
+    type: 'problem',
     docs: {
-      description: "Disallow direct process.env usage",
-      category: "Best Practices",
+      description: 'Disallow direct process.env usage',
+      category: 'Best Practices',
     },
     fixable: null,
     schema: [],
     messages: {
-      noDirectProcessEnv:
-        "Direct process.env usage is not allowed. Use a config module instead.",
+      noDirectProcessEnv: 'Direct process.env usage is not allowed. Use a config module instead.',
     },
   },
   create(context) {
     return {
       MemberExpression(node) {
-        if (node.object.name === "process" && node.property.name === "env") {
+        if (node.object.name === 'process' && node.property.name === 'env') {
           context.report({
             node,
-            messageId: "noDirectProcessEnv",
+            messageId: 'noDirectProcessEnv',
           });
         }
       },
@@ -54,7 +53,7 @@ export default [
       'react-hooks': reactHooksPlugin,
       local: {
         rules: {
-          "no-direct-process-env": noDirectProcessEnv,
+          'no-direct-process-env': noDirectProcessEnv,
         },
       },
     },
@@ -118,7 +117,7 @@ export default [
         },
       ],
       // Don't allow direct process.env usage
-      "local/no-direct-process-env": "error",
+      'local/no-direct-process-env': 'error',
     },
     settings: {
       react: {
