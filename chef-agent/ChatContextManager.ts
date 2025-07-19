@@ -332,16 +332,6 @@ export class ChatContextManager {
   }
 }
 
-function summarizePart(message: UIMessage, part: UIMessagePart): string | null {
-  if (part.type === 'text') {
-    return `${message.role}: ${StreamingMessageParser.stripArtifacts(part.text)}`;
-  }
-  if (part.type === 'tool-invocation' && part.toolInvocation.state === 'result') {
-    return abbreviateToolInvocation(part.toolInvocation);
-  }
-  return null;
-}
-
 function makeUserMessage(content: string[], id: string): UIMessage {
   const parts: UIMessagePart[] = content.map((c) => ({
     type: 'text',
