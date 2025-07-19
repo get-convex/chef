@@ -1,4 +1,4 @@
-import { generateId, type ToolInvocation, type UIMessage } from 'ai';
+import { type ToolInvocation, type UIMessage } from 'ai';
 import { type AbsolutePath, getAbsolutePath } from './utils/workDir.js';
 import { type Dirent, type EditorDocument, type FileMap } from './types.js';
 import { PREWARM_PATHS, WORK_DIR } from './constants.js';
@@ -31,6 +31,18 @@ export class ChatContextManager {
     private getFiles: () => FileMap,
     private getUserWrites: () => Map<AbsolutePath, number>,
   ) {}
+
+  /**
+   * Reset the context manager state. This should be called when switching
+   * between subchats to prevent stale message indices from causing errors.
+   */
+  reset(): void {
+    this.assistantMessageCache = new WeakMap();
+    this.messageSizeCache = new WeakMap();
+    this.partSizeCache = new WeakMap();
+    this.messageIndex = -1;
+    this.partIndex = -1;
+  }
 
   /**
    * Our request context has a few sections:

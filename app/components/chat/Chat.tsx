@@ -424,6 +424,8 @@ export const Chat = memo(
     // messages if `initialMessages` changes without a subchat index change.
     useEffect(() => {
       setMessages(initialMessages);
+      // Reset chat context manager state when switching subchats to prevent stale indices
+      chatContextManager.current.reset();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [setMessages, syncState.subchatIndex]);
 
