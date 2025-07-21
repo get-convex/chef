@@ -1,7 +1,5 @@
-import { useStore } from '@nanostores/react';
 import { getConvexAuthToken, useConvexSessionId } from '~/lib/stores/sessionId';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
-import { convexProjectStore } from '~/lib/stores/convexProject';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useChatId } from '~/lib/stores/chatId';
@@ -43,7 +41,6 @@ export function ConvexConnectButton() {
       },
     });
   };
-  const isConnected = useStore(convexProjectStore) !== null;
   const isLoading = credentials === undefined || credentials?.kind === 'connecting';
 
   return (
@@ -62,7 +59,7 @@ export function ConvexConnectButton() {
           disabled={isLoading || !selectedTeamSlug}
           onClick={handleClick}
         >
-          {isLoading ? 'Connecting…' : isConnected ? 'Connect a different project' : 'Connect'}
+          {isLoading ? 'Connecting…' : 'Connect'}
         </Button>
       </div>
     </div>

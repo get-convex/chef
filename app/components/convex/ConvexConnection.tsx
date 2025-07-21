@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
-import { convexProjectStore } from '~/lib/stores/convexProject';
 import { useChatId } from '~/lib/stores/chatId';
-import { useConvex, useQuery } from 'convex/react';
+import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { ConvexConnectButton } from '~/components/convex/ConvexConnectButton';
-import { ExternalLinkIcon, LinkBreak1Icon } from '@radix-ui/react-icons';
+import { ExternalLinkIcon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
 import { Modal } from '@ui/Modal';
 import { Callout } from '@ui/Callout';
@@ -76,27 +75,14 @@ function ConnectedDialogContent({
     warningMessage: string | undefined;
   };
 }) {
-  const convexClient = useConvex();
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chatId = useChatId();
 
-  const handleDisconnect = async () => {
-    convexProjectStore.set(null);
-    if (sessionId) {
-      void convexClient.mutation(api.convexProjects.disconnectConvexProject, {
-        sessionId,
-        chatId,
-      });
-    } else {
-      console.error('No sessionId or chatId so cannot disconnect');
-    }
-  };
-
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <p className="text-sm text-content-tertiary">
-          Project: <strong className="font-semibold text-content-primary">{projectInfo.projectSlug}</strong>
+          Current Project: <strong className="font-semibold text-content-primary">{projectInfo.projectSlug}</strong>
         </p>
         <p className="text-sm text-content-tertiary">
           Team: <strong className="font-semibold text-content-primary">{projectInfo.teamSlug}</strong>
@@ -113,9 +99,10 @@ function ConnectedDialogContent({
         {projectInfo.warningMessage && <p className="text-sm text-content-secondary">{projectInfo.warningMessage}</p>}
       </div>
 
-      <Button onClick={handleDisconnect} variant="danger" icon={<LinkBreak1Icon />}>
-        Disconnect from Convex
-      </Button>
+      <div className="border-t pt-4">
+        <p className="mb-3 text-sm font-medium text-content-primary">Connect to a new Convex project</p>
+        {sessionId && chatId && <ConvexConnectButton />}
+      </div>
     </div>
   );
 }
