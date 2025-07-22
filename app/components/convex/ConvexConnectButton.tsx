@@ -27,11 +27,6 @@ export function ConvexConnectButton() {
       console.error('No auth0 access token');
       return;
     }
-    await convexClient.mutation(api.convexProjects.disconnectConvexProject, {
-      sessionId,
-      chatId,
-    });
-
     await convexClient.mutation(api.convexProjects.startProvisionConvexProject, {
       sessionId,
       chatId,
