@@ -100,7 +100,7 @@ can use the Vercel instant rollbacks to prompt old deployments to production.
   - `VITE_AUTH0_CLIENT_ID`
   - `VITE_AUTH0_DOMAIN`
 
-Additionally make sure `CHEF_OAUTH_APP_NAME` is set on your Convex deployment
+Additionally make sure `CONVEX_OAUTH_CLIENT_ID` and `CONVEX_OAUTH_CLIENT_SECRET` is set on your Convex deployment
 (it'll also be in the default Convex project env vars, so you can sync via dashboard).
 
 ### Developing against local big-brain
