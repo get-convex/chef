@@ -19,6 +19,7 @@ import { subchatIndexStore, waitForSubchatIndexChanged } from '~/lib/stores/subc
 import { api } from '@convex/_generated/api';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { chatSyncState, type BackupSyncState, type InitialBackupSyncState } from './chatSyncState';
+import { toast } from 'sonner';
 
 const logger = createScopedLogger('history');
 
@@ -249,18 +250,33 @@ async function chatSyncWorker(args: {
     if (error !== null || (response !== undefined && !response.ok)) {
       const errorText = response !== undefined ? await response.text() : (error?.message ?? 'Unknown error');
       logger.error('Complete message info not initialized');
+      const newFailureCount = currentState.numFailures + 1;
       chatSyncState.set({
         ...currentState,
-        numFailures: currentState.numFailures + 1,
+        numFailures: newFailureCount,
       });
-      const sleepTime = backoffTime(currentState.numFailures);
+
+      // Show toast notification after 3 consecutive failures
+      if (newFailureCount >= 3) {
+        toast.error('Your chat is having trouble saving and progress may be lost. Download your code to save it.', {
+          id: 'chat-save-failure',
+          duration: Number.POSITIVE_INFINITY,
+        });
+      }
+
+      const sleepTime = backoffTime(newFailureCount);
       logger.error(
-        `Failed to save chat (num failures: ${currentState.numFailures}), sleeping for ${sleepTime.toFixed(2)}ms`,
+        `Failed to save chat (num failures: ${newFailureCount}), sleeping for ${sleepTime.toFixed(2)}ms`,
         errorText,
       );
       await new Promise((resolve) => setTimeout(resolve, sleepTime));
       continue;
     }
+    // Dismiss the save failure toast on successful save
+    if (currentState.numFailures >= 3) {
+      toast.dismiss('chat-save-failure');
+    }
+
     const updates: Partial<BackupSyncState> = {
       lastSync: now,
       numFailures: 0,
