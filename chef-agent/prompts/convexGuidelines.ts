@@ -510,6 +510,10 @@ Auth state does not propagate to scheduled jobs, so \`getAuthUserId()\` and
 job. Prefer using internal, privileged functions for scheduled jobs that don't
 need to do access checks.
 
+Scheduled jobs should be used sparingly and never called in a tight loop. Scheduled functions should not be scheduled more
+than once every 10 seconds. Especially in things like a game simulation or something similar that needs many updates
+in a short period of time.
+
 ## File storage guidelines
 
 - Convex includes file storage for large files like images, videos, and PDFs.
