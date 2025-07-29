@@ -100,7 +100,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       });
     }
     if (centitokensUsed >= centitokensQuota) {
-      if (!isPaidPlan && !hasApiKeySet(body.userApiKey)) {
+      if (!isPaidPlan && !hasApiKeySetForProvider(body.userApiKey, body.modelProvider)) {
         // If they're not on a paid plan and don't have an API key set, return an error.
         logger.error(`No tokens available for ${deploymentName}: ${centitokensUsed} of ${centitokensQuota}`);
         return new Response(
@@ -109,7 +109,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
             status: 402,
           },
         );
-      } else if (hasApiKeySet(body.userApiKey)) {
+      } else if (hasApiKeySetForProvider(body.userApiKey, body.modelProvider)) {
         // If they have an API key set, use it. Otherwise, they use Convex tokens.
         useUserApiKey = true;
       }
@@ -208,10 +208,22 @@ export async function chatAction({ request }: ActionFunctionArgs) {
 }
 
 // Returns whether or not the user has an API key set
-function hasApiKeySet(
+function hasApiKeySetForProvider(
   userApiKey:
     | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
     | undefined,
+  provider: ModelProvider,
 ) {
-  return Object.keys(userApiKey || {}).length > 1;
+  switch (provider) {
+    case 'Anthropic':
+      return userApiKey?.value !== undefined;
+    case 'OpenAI':
+      return userApiKey?.openai !== undefined;
+    case 'XAI':
+      return userApiKey?.xai !== undefined;
+    case 'Google':
+      return userApiKey?.google !== undefined;
+    default:
+      return false;
+  }
 }
