@@ -18,7 +18,7 @@ const admin_key =
 
 const convexRelease = fetch('https://api.github.com/repos/get-convex/convex-backend/releases')
   .then((r) => r.json())
-  .then((releases) => releases.filter((r: any) => r.prerelease === false)[0]);
+  .then((releases) => releases.find((release: any) => release.prerelease === false));
 
 const downloadBinaryMutex = new Mutex();
 const portMutex = new Mutex();
