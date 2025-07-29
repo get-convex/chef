@@ -207,7 +207,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   }
 }
 
-// Returns whether or not the user has an API key set
+// Returns whether or not the user has an API key set for a given provider
 function hasApiKeySetForProvider(
   userApiKey:
     | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
