@@ -10,24 +10,33 @@ import { description } from '~/lib/stores/description';
 import { toast } from 'sonner';
 import * as lz4 from 'lz4-wasm';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
+import { subchatIndexStore } from '~/lib/stores/subchats';
+import { useStore } from '@nanostores/react';
 
 export interface InitialMessages {
   loadedChatId: string;
   serialized: SerializedMessage[];
   deserialized: Message[];
+  loadedSubchatIndex: number;
 }
 
-export function useInitialMessages(chatId: string):
+export function useInitialMessages(chatId: string | undefined):
   | InitialMessages
   | null // not found
   | undefined {
   const convex = useConvex();
   const [initialMessages, setInitialMessages] = useState<InitialMessages | null | undefined>();
+  const subchatIndex = useStore(subchatIndexStore);
+
   useEffect(() => {
     const loadInitialMessages = async () => {
       const sessionId = await waitForConvexSessionId('loadInitialMessages');
       try {
         const siteUrl = getConvexSiteUrl();
+        if (!chatId) {
+          setInitialMessages(undefined);
+          return;
+        }
         const chatInfo = await convex.query(api.messages.get, {
           id: chatId,
           sessionId,
@@ -36,20 +45,37 @@ export function useInitialMessages(chatId: string):
           setInitialMessages(null);
           return;
         }
+        if (subchatIndex === undefined) {
+          subchatIndexStore.set(chatInfo.subchatIndex);
+          // Exit early to let the effect run again with the new subchatIndex
+          return;
+        }
+
         setKnownInitialId(chatInfo.initialId);
         if (chatInfo.urlId) {
           setKnownUrlId(chatInfo.urlId);
         }
+        const subchatIndexToFetch = subchatIndex ?? chatInfo.subchatIndex;
         const initialMessagesResponse = await fetch(`${siteUrl}/initial_messages`, {
           method: 'POST',
           body: JSON.stringify({
             chatId,
             sessionId,
-            subchatIndex: chatInfo.subchatIndex,
+            subchatIndex: subchatIndexToFetch,
           }),
         });
         if (!initialMessagesResponse.ok) {
           throw new Error('Failed to fetch initial messages');
+        }
+
+        if (initialMessagesResponse.status === 204) {
+          setInitialMessages({
+            loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
+            serialized: [],
+            deserialized: [],
+            loadedSubchatIndex: subchatIndexToFetch,
+          });
+          return;
         }
         const content = await initialMessagesResponse.arrayBuffer();
         const initialMessages = await decompressMessages(new Uint8Array(content));
@@ -89,6 +115,7 @@ export function useInitialMessages(chatId: string):
           loadedChatId: chatInfo.urlId ?? chatInfo.initialId,
           serialized: transformedMessages,
           deserialized: deserializedMessages,
+          loadedSubchatIndex: subchatIndexToFetch,
         });
         description.set(chatInfo.description);
       } catch (error) {
@@ -97,7 +124,7 @@ export function useInitialMessages(chatId: string):
       }
     };
     void loadInitialMessages();
-  }, [convex, chatId]);
+  }, [convex, chatId, subchatIndex]);
 
   return initialMessages;
 }

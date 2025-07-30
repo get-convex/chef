@@ -6,6 +6,34 @@ import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import noGlobalFetchRule from './eslint-rules/no-global-fetch.js';
 
+const noDirectProcessEnv = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'Disallow direct process.env usage',
+      category: 'Best Practices',
+    },
+    fixable: null,
+    schema: [],
+    messages: {
+      noDirectProcessEnv:
+        'Direct process.env usage is not allowed. Use globalThis.process.env instead because process.env is shimmed in for both the browser and the server.',
+    },
+  },
+  create(context) {
+    return {
+      MemberExpression(node) {
+        if (node.object.name === 'process' && node.property.name === 'env') {
+          context.report({
+            node,
+            messageId: 'noDirectProcessEnv',
+          });
+        }
+      },
+    };
+  },
+};
+
 export default [
   {
     ignores: [
@@ -24,6 +52,11 @@ export default [
     plugins: {
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
+      local: {
+        rules: {
+          'no-direct-process-env': noDirectProcessEnv,
+        },
+      },
     },
     rules: {
       ...reactPlugin.configs.flat.recommended.rules,
@@ -84,6 +117,8 @@ export default [
           selector: 'Literal[value=/bottom-4(?:\\D|$)/i]',
         },
       ],
+      // Don't allow direct process.env usage
+      'local/no-direct-process-env': 'error',
     },
     settings: {
       react: {

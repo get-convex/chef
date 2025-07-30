@@ -34,7 +34,6 @@ export function ShareButton() {
   const [isThumbnailModalOpen, setIsThumbnailModalOpen] = useState(false);
   const [snapshotStatus, setSnapshotStatus] = useState<SnapshotStatus>('idle');
   const [shareStatus, setShareStatus] = useState<ShareStatus>('idle');
-  const [snapshotCode, setSnapshotCode] = useState<string | null>(null);
   const [snapshotUrl, setSnapshotUrl] = useState('');
   const [shareUrl, setShareUrl] = useState('');
 
@@ -65,8 +64,6 @@ export function ShareButton() {
     currentShare?.code ? { code: currentShare.code } : 'skip',
   );
 
-  const isSnapshotReady = useQuery(api.share.isShareReady, snapshotCode ? { code: snapshotCode } : 'skip');
-
   const createShare = useMutation(api.share.create);
   const socialShare = useMutation(api.socialShare.share);
 
@@ -95,10 +92,10 @@ export function ShareButton() {
         id: chatId,
         sessionId,
       });
-
-      if (result.code) {
-        setSnapshotCode(result.code);
-      }
+      const { origin } = window.location;
+      const url = `${origin}/create/${result.code}`;
+      setSnapshotUrl(url);
+      setSnapshotStatus('success');
     } catch (error) {
       toast.error('Failed to create snapshot. Please try again.');
       console.error('Snapshot error:', error);
@@ -160,16 +157,6 @@ export function ShareButton() {
       setShareStatus('idle');
     }
   };
-
-  useEffect(() => {
-    if (snapshotStatus === 'loading' && isSnapshotReady) {
-      const { origin } = window.location;
-      const url = `${origin}/create/${snapshotCode}`;
-
-      setSnapshotUrl(url);
-      setSnapshotStatus('success');
-    }
-  }, [snapshotCode, snapshotStatus, isSnapshotReady]);
 
   const hasChanges = currentShare && (currentShare.shared === 'shared') !== isSharedDraft;
 

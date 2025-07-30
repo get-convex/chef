@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react';
 import { makePartId } from 'chef-agent/partId';
 import { toast } from 'sonner';
 import { workbenchStore } from '~/lib/stores/workbench.client';
-import { processMessage, type PartCache } from '~/lib/hooks/useMessageParser';
+import { messageParser, processMessage, type PartCache } from '~/lib/hooks/useMessageParser';
+import { subchatIndexStore } from '~/lib/stores/subchats';
+import { useStore } from '@nanostores/react';
 
 export type ReloadedMessages = {
   partCache: PartCache;
@@ -11,6 +13,7 @@ export type ReloadedMessages = {
 
 export function useReloadMessages(initialMessages: Message[] | undefined): ReloadedMessages | undefined {
   const [reloadState, setReloadState] = useState<ReloadedMessages | undefined>(undefined);
+  const subchatIndex = useStore(subchatIndexStore);
   useEffect(() => {
     if (initialMessages === undefined) {
       return;
@@ -29,12 +32,13 @@ export function useReloadMessages(initialMessages: Message[] | undefined): Reloa
           processMessage(message, partCache);
         }
         setReloadState({ partCache });
+        messageParser.reset();
       } catch (error) {
         toast.error('Failed to load previous chat messages from Convex.');
         console.error('Error reloading messages:', error);
       }
     };
     void reload();
-  }, [initialMessages]);
+  }, [initialMessages, subchatIndex]);
   return reloadState;
 }

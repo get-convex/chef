@@ -97,6 +97,7 @@ export const MessageInput = memo(function MessageInput({
   disabled,
   modelSelection,
   setModelSelection,
+  numMessages,
 }: {
   chatStarted: boolean;
   isStreaming: boolean;
@@ -106,6 +107,7 @@ export const MessageInput = memo(function MessageInput({
   disabled: boolean;
   modelSelection: ModelSelection;
   setModelSelection: (modelSelection: ModelSelection) => void;
+  numMessages: number | undefined;
 }) {
   const [isEnhancing, setIsEnhancing] = useState(false);
   const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -246,7 +248,13 @@ export const MessageInput = memo(function MessageInput({
             chatStarted={chatStarted}
             minHeight={100}
             maxHeight={chatStarted ? 400 : 200}
-            placeholder={chatStarted ? 'Request changes by sending another message…' : 'What app do you want to serve?'}
+            placeholder={
+              chatStarted
+                ? numMessages !== undefined && numMessages > 0
+                  ? 'Request changes by sending another message…'
+                  : 'Send a prompt for a new feature…'
+                : 'What app do you want to serve?'
+            }
             disabled={disabled}
             highlights={HIGHLIGHTS}
           />
@@ -346,7 +354,15 @@ export const MessageInput = memo(function MessageInput({
               size="xs"
               className="ml-2 h-[1.625rem]"
               aria-label={isStreaming ? 'Stop' : 'Send'}
-              icon={!isStreaming ? <ArrowRightIcon /> : <StopIcon />}
+              icon={
+                sendMessageInProgress ? (
+                  <Spinner className="text-white" />
+                ) : !isStreaming ? (
+                  <ArrowRightIcon />
+                ) : (
+                  <StopIcon />
+                )
+              }
             />
           </div>
         </div>

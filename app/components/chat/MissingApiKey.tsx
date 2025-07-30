@@ -34,7 +34,7 @@ export function MissingApiKey({ provider, requireKey, resetDisableChatMessage }:
       const apiKey = await convex.query(api.apiKeys.apiKeyForCurrentMember);
 
       const apiKeyMutation: Doc<'convexMembers'>['apiKey'] = {
-        preference: apiKey?.preference || ('always' as 'always' | 'quotaExhausted'),
+        preference: apiKey?.preference || ('quotaExhausted' as 'always' | 'quotaExhausted'),
         value: apiKey?.value || undefined,
         openai: apiKey?.openai || undefined,
         xai: apiKey?.xai || undefined,

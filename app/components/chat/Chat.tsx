@@ -46,6 +46,7 @@ import { UsageDebugView } from '~/components/debug/UsageDebugView';
 import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 import { useUsage } from '~/lib/stores/usage';
 import { hasAnyApiKeySet, hasApiKeySet } from '~/lib/common/apiKey';
+import { chatSyncState } from '~/lib/stores/startup/chatSyncState';
 
 const logger = createScopedLogger('Chat');
 
@@ -65,7 +66,7 @@ const processSampledMessages = createSampler(
     const { messages, initialMessages, parseMessages, storeMessageHistory, streamStatus } = options;
     parseMessages(messages);
 
-    if (messages.length > initialMessages.length) {
+    if (messages.length >= initialMessages.length) {
       storeMessageHistory(messages, streamStatus).catch((error) => toast.error(error.message));
     }
   },
@@ -79,11 +80,12 @@ interface ChatProps {
     messages: Message[],
     streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
   ) => Promise<void>;
-  initializeChat: () => Promise<void>;
+  initializeChat: () => Promise<boolean>;
   description?: string;
 
   isReload: boolean;
   hadSuccessfulDeploy: boolean;
+  subchats?: { subchatIndex: number; updatedAt: number; description?: string }[];
 }
 
 const retryState = atom({
@@ -91,11 +93,20 @@ const retryState = atom({
   nextRetry: Date.now(),
 });
 export const Chat = memo(
-  ({ initialMessages, partCache, storeMessageHistory, initializeChat, isReload, hadSuccessfulDeploy }: ChatProps) => {
+  ({
+    initialMessages,
+    partCache,
+    storeMessageHistory,
+    initializeChat,
+    isReload,
+    hadSuccessfulDeploy,
+    subchats,
+  }: ChatProps) => {
     const convex = useConvex();
-    const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
-    const actionAlert = useStore(workbenchStore.alert);
     const sessionId = useConvexSessionIdOrNullOrLoading();
+    const [chatStarted, setChatStarted] = useState(initialMessages.length > 0 || (!!subchats && subchats.length > 1));
+    const actionAlert = useStore(workbenchStore.alert);
+    const syncState = useStore(chatSyncState);
 
     const rewindToMessage = async (subchatIndex?: number, messageIndex?: number) => {
       if (sessionId && typeof sessionId === 'string') {
@@ -103,7 +114,7 @@ export const Chat = memo(
         if (!chatId) {
           return;
         }
-        if (!subchatIndex) {
+        if (subchatIndex === undefined) {
           return;
         }
 
@@ -135,6 +146,7 @@ export const Chat = memo(
       useClaude4Auto,
       enablePreciseEdits,
       enableEnvironmentVariables,
+      enableResend,
     } = useLaunchDarkly();
 
     const title = useStore(description);
@@ -149,9 +161,9 @@ export const Chat = memo(
     const terminalInitializationOptions = useMemo(
       () => ({
         isReload,
-        shouldDeployConvexFunctions: hadSuccessfulDeploy,
+        shouldDeployConvexFunctions: hadSuccessfulDeploy || (!!subchats && subchats.length > 1),
       }),
-      [isReload, hadSuccessfulDeploy],
+      [isReload, hadSuccessfulDeploy, subchats],
     );
 
     useEffect(() => {
@@ -360,6 +372,7 @@ export const Chat = memo(
             enablePreciseEdits,
             smallFiles,
             enableEnvironmentVariables,
+            enableResend,
           },
         };
       },
@@ -407,6 +420,15 @@ export const Chat = memo(
       },
     });
 
+    // Reset chat messages when the loaded subchat index changes. We don't want to reset the
+    // messages if `initialMessages` changes without a subchat index change.
+    useEffect(() => {
+      setMessages(initialMessages);
+      // Reset chat context manager state when switching subchats to prevent stale indices
+      chatContextManager.current.reset();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [setMessages, syncState.subchatIndex]);
+
     setChefDebugProperty('messages', messages);
 
     // AKA "processed messages," since parsing has side effects
@@ -415,8 +437,8 @@ export const Chat = memo(
     setChefDebugProperty('parsedMessages', parsedMessages);
 
     useEffect(() => {
-      chatStore.setKey('started', initialMessages.length > 0);
-    }, [initialMessages.length]);
+      chatStore.setKey('started', messages.length > 0 || (!!subchats && subchats.length > 1));
+    }, [messages.length, subchats]);
 
     useEffect(() => {
       processSampledMessages({
@@ -504,7 +526,11 @@ export const Chat = memo(
 
         enableAutoScroll();
 
-        await initializeChat();
+        const chatInitialized = await initializeChat();
+        if (!chatInitialized) {
+          return;
+        }
+
         runAnimation();
 
         const shouldSendRelevantFiles = chatContextManager.current.shouldSendRelevantFiles(
@@ -620,6 +646,7 @@ export const Chat = memo(
           modelSelection={modelSelection}
           setModelSelection={handleModelSelectionChange}
           onRewindToMessage={rewindToMessage}
+          subchats={subchats}
         />
         <UsageDebugView />
       </>

@@ -1,12 +1,20 @@
 import { useStore } from '@nanostores/react';
 import { atom } from 'nanostores';
 import { IGNORED_PATHS } from '~/utils/constants';
+import { chatSyncState } from './startup/chatSyncState';
 
 const fileUpdateCounter = atom(0);
 
 let currentTimer: NodeJS.Timeout | null = null;
 let lastUpdated = 0;
 const DEBOUNCE_TIME = 1000;
+
+export function useAreFilesSaving() {
+  const backupState = useStore(chatSyncState);
+  const fileCounter = useFileUpdateCounter();
+
+  return backupState.savedFileUpdateCounter !== fileCounter;
+}
 
 export function useFileUpdateCounter() {
   return useStore(fileUpdateCounter);

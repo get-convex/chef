@@ -34,6 +34,7 @@ import { getEnv } from '~/lib/.server/env';
 import { calculateChefTokens, usageFromGeneration } from '~/lib/common/usage';
 import { lookupDocsTool } from 'chef-agent/tools/lookupDocs';
 import { addEnvironmentVariablesTool } from 'chef-agent/tools/addEnvironmentVariables';
+import { getConvexDeploymentNameTool } from 'chef-agent/tools/getConvexDeploymentName';
 
 type Messages = Message[];
 
@@ -56,6 +57,7 @@ export async function convexAgent(args: {
     enablePreciseEdits: boolean;
     smallFiles: boolean;
     enableEnvironmentVariables: boolean;
+    enableResend: boolean;
   };
 }) {
   const {
@@ -90,11 +92,13 @@ export async function convexAgent(args: {
     usingGoogle: modelProvider == 'Google',
     resendProxyEnabled: getEnv('RESEND_PROXY_ENABLED') == '1',
     smallFiles: featureFlags.smallFiles,
+    enableResend: featureFlags.enableResend,
   };
   const tools: ConvexToolSet = {
     deploy: deployTool,
     npmInstall: npmInstallTool,
     lookupDocs: lookupDocsTool(),
+    getConvexDeploymentName: getConvexDeploymentNameTool,
   };
   if (featureFlags.enableEnvironmentVariables) {
     tools.addEnvironmentVariables = addEnvironmentVariablesTool();
@@ -234,6 +238,7 @@ async function onFinishHandler({
     enablePreciseEdits: boolean;
     smallFiles: boolean;
     enableEnvironmentVariables: boolean;
+    enableResend: boolean;
   };
 }) {
   const { providerMetadata } = result;

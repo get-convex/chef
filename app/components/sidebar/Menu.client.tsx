@@ -42,12 +42,16 @@ const menuVariants = {
 
 type ModalContent = { type: 'delete'; item: ChatHistoryItem } | null;
 
-export const Menu = memo(() => {
+interface MenuProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const Menu = memo(({ isOpen, onClose }: MenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
   const list = useQuery(api.messages.getAll, sessionId ? { sessionId } : 'skip') ?? [];
-  const [open, setOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState<ModalContent>(null);
   const [shouldDeleteConvexProject, setShouldDeleteConvexProject] = useState(false);
   const convexProjectInfo = useQuery(
@@ -110,28 +114,27 @@ export const Menu = memo(() => {
   };
 
   useEffect(() => {
-    const enterThreshold = 40;
-    const enterTopThreshold = 200;
-    const exitThreshold = 40;
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Element;
 
-    function onMouseMove(event: MouseEvent) {
-      if (event.pageX < enterThreshold && event.pageY < enterTopThreshold) {
-        setOpen(true);
-      } else if (event.pageX < 2) {
-        setOpen(true);
+      // Don't close if clicking on the hamburger icon
+      if (target?.closest('[data-hamburger-menu]')) {
+        return;
       }
 
-      if (menuRef.current && event.clientX > menuRef.current.getBoundingClientRect().right + exitThreshold) {
-        setOpen(false);
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
       }
     }
 
-    window.addEventListener('mousemove', onMouseMove);
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
 
     return () => {
-      window.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isOpen, onClose]);
 
   const handleDeleteClick = useCallback((item: ChatHistoryItem) => {
     setDialogContent({ type: 'delete', item });
@@ -147,7 +150,7 @@ export const Menu = memo(() => {
       <motion.div
         ref={menuRef}
         initial="closed"
-        animate={open ? 'open' : 'closed'}
+        animate={isOpen ? 'open' : 'closed'}
         variants={menuVariants}
         style={{ width: '340px' }}
         className={classNames(

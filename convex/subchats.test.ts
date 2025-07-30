@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
-import { createChat, setupTest, storeChat, type TestConvex } from "./test.setup";
+import { createChat, createSubchat, setupTest, storeChat, type TestConvex } from "./test.setup";
 import type { SerializedMessage } from "./messages";
 import { describe } from "node:test";
 
@@ -18,6 +18,22 @@ function createMessage(overrides: Partial<SerializedMessage> = {}): SerializedMe
     createdAt: Date.now(),
     ...overrides,
   };
+}
+
+function getChatStorageStates(t: TestConvex, chatId: string) {
+  return t.run(async (ctx) => {
+    const chat = await ctx.db
+      .query("chats")
+      .withIndex("byInitialId", (q) => q.eq("initialId", chatId))
+      .first();
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+    return ctx.db
+      .query("chatMessagesStorageState")
+      .withIndex("byChatId", (q) => q.eq("chatId", chat._id))
+      .collect();
+  });
 }
 
 describe("subchats", () => {
@@ -66,10 +82,7 @@ describe("subchats", () => {
     });
 
     // Create a new subchat
-    await t.mutation(api.subchats.create, {
-      chatId,
-      sessionId,
-    });
+    await createSubchat(t, chatId, sessionId);
 
     // Confirm that the subchat was created
     const subchats = await t.query(api.subchats.get, {
@@ -139,5 +152,116 @@ describe("subchats", () => {
     expect(subchat1StorageInfo).not.toBeNull();
     expect(subchat1StorageInfo?.lastMessageRank).toBe(1);
     expect(subchat1StorageInfo?.subchatIndex).toBe(1);
+  });
+
+  test("creating new subchat deletes all storage states from previous subchat except latest", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    // Setup subchat 0 with multiple messages
+    const firstMessage: SerializedMessage = createMessage({
+      id: "msg1",
+      role: "user",
+      parts: [{ text: "First message", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage],
+      snapshot: new Blob(["first snapshot"]),
+    });
+
+    const secondMessage: SerializedMessage = createMessage({
+      id: "msg2",
+      role: "assistant",
+      parts: [{ text: "Second message", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage, secondMessage],
+      snapshot: new Blob(["second snapshot"]),
+    });
+
+    const thirdMessage: SerializedMessage = createMessage({
+      id: "msg3",
+      role: "user",
+      parts: [{ text: "Third message", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [firstMessage, secondMessage, thirdMessage],
+      snapshot: new Blob(["third snapshot"]),
+    });
+
+    // Verify subchat 0 has multiple messages
+    const storageStatesBeforeNewSubchat = await getChatStorageStates(t, chatId);
+    expect(storageStatesBeforeNewSubchat).toHaveLength(4);
+
+    const subchat0StatesBefore = storageStatesBeforeNewSubchat.filter((s) => s.subchatIndex === 0);
+    expect(subchat0StatesBefore).toHaveLength(4);
+
+    const latestSubchat0State = subchat0StatesBefore.find((s) => s.lastMessageRank === 2);
+    expect(latestSubchat0State).toBeDefined();
+
+    // Create subchat 1 and add messages
+    await createSubchat(t, chatId, sessionId);
+
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+
+    const subchat1Message1: SerializedMessage = createMessage({
+      id: "subchat1-msg1",
+      role: "user",
+      parts: [{ text: "First message in subchat 1", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat1Message1],
+      snapshot: new Blob(["subchat 1 first snapshot"]),
+      subchatIndex: 1,
+    });
+
+    const subchat1Message2: SerializedMessage = createMessage({
+      id: "subchat1-msg2",
+      role: "assistant",
+      parts: [{ text: "Second message in subchat 1", type: "text" }],
+    });
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat1Message1, subchat1Message2],
+      snapshot: new Blob(["subchat 1 second snapshot"]),
+      subchatIndex: 1,
+    });
+
+    // Verify subchat 1 has multiple messages
+    const storageStatesBeforeSubchat2 = await getChatStorageStates(t, chatId);
+    const subchat1StatesBefore = storageStatesBeforeSubchat2.filter((s) => s.subchatIndex === 1);
+    expect(subchat1StatesBefore).toHaveLength(3);
+
+    const latestSubchat1State = subchat1StatesBefore.find((s) => s.lastMessageRank === 1);
+    expect(latestSubchat1State).toBeDefined();
+
+    // Create subchat 2 - should clean up previous subchat intermediate states
+    await createSubchat(t, chatId, sessionId);
+
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+
+    // Verify cleanup: only latest state from each subchat remains
+    const storageStatesAfterSubchat2 = await getChatStorageStates(t, chatId);
+    expect(storageStatesAfterSubchat2).toHaveLength(3);
+
+    const subchat0StatesAfter = storageStatesAfterSubchat2.filter((s) => s.subchatIndex === 0);
+    const subchat1StatesAfter = storageStatesAfterSubchat2.filter((s) => s.subchatIndex === 1);
+    const subchat2StatesAfter = storageStatesAfterSubchat2.filter((s) => s.subchatIndex === 2);
+
+    expect(subchat0StatesAfter).toHaveLength(1);
+    expect(subchat1StatesAfter).toHaveLength(1);
+    expect(subchat2StatesAfter).toHaveLength(1);
+
+    const remainingSubchat0State = subchat0StatesAfter.find((s) => s.lastMessageRank === 2);
+    expect(remainingSubchat0State).toBeDefined();
+    expect(remainingSubchat0State?._id).toBe(latestSubchat0State?._id);
+
+    const remainingSubchat1State = subchat1StatesAfter.find((s) => s.lastMessageRank === 1);
+    expect(remainingSubchat1State).toBeDefined();
+    expect(remainingSubchat1State?._id).toBe(latestSubchat1State?._id);
+
+    const subchat1IntermediateStates = subchat1StatesAfter.filter((s) => s.lastMessageRank === 0);
+    expect(subchat1IntermediateStates).toHaveLength(0);
+
+    const subchat2InitialState = subchat2StatesAfter.find((s) => s.lastMessageRank === -1);
+    expect(subchat2InitialState).toBeDefined();
   });
 });

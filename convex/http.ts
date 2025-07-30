@@ -123,6 +123,7 @@ httpWithCors.route({
     const lastSubchatIndex = url.searchParams.get("lastSubchatIndex");
     const partIndex = url.searchParams.get("partIndex");
     const formData = await request.formData();
+    let firstMessage = url.searchParams.get("firstMessage");
     let messageStorageId: Id<"_storage"> | null = null;
     let snapshotStorageId: Id<"_storage"> | null = null;
     if (formData.has("messages")) {
@@ -133,7 +134,10 @@ httpWithCors.route({
       const snapshotBlob = formData.get("snapshot") as Blob;
       snapshotStorageId = await ctx.storage.store(snapshotBlob);
     }
-    await ctx.runMutation(internal.messages.updateStorageState, {
+    if (formData.has("firstMessage")) {
+      firstMessage = formData.get("firstMessage") as string;
+    }
+    const maybeStorageStateId = await ctx.runMutation(internal.messages.updateStorageState, {
       sessionId: sessionId as Id<"sessions">,
       chatId: chatId as Id<"chats">,
       lastMessageRank: parseInt(lastMessageRank!),
@@ -143,6 +147,12 @@ httpWithCors.route({
       storageId: messageStorageId,
       snapshotId: snapshotStorageId,
     });
+    if (firstMessage && maybeStorageStateId) {
+      await ctx.scheduler.runAfter(0, internal.summarize.firstMessage, {
+        chatMessageId: maybeStorageStateId,
+        message: firstMessage,
+      });
+    }
     return new Response(null, {
       status: 200,
     });

@@ -127,7 +127,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: globalThis.process.env.OPENAI_API_KEY,
     });
 
     const completion = await openai.chat.completions.create({

@@ -317,7 +317,10 @@ async function _connectConvexProjectForMember(
     body: JSON.stringify({
       authn_token: args.accessToken,
       projectId: data.projectId,
-      appName: ensureEnvVar("CHEF_OAUTH_APP_NAME"),
+      oauthApp: {
+        clientId: ensureEnvVar("CONVEX_OAUTH_CLIENT_ID"),
+        clientSecret: ensureEnvVar("CONVEX_OAUTH_CLIENT_SECRET"),
+      },
     }),
   });
   if (!projectDeployKeyResponse.ok) {

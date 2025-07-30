@@ -1,7 +1,6 @@
 import type { Message } from 'ai';
-import { useConvex, type ConvexReactClient } from 'convex/react';
-import { atom } from 'nanostores';
-import { waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { useConvex, useQuery, type ConvexReactClient } from 'convex/react';
+import { useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from '~/lib/stores/fileUpdateCounter';
 import { buildUncompressedSnapshot } from '~/lib/snapshot.client';
 import type { Id } from '@convex/_generated/dataModel';
@@ -15,49 +14,47 @@ import {
   waitForNewMessages,
 } from './messages';
 import { createScopedLogger } from 'chef-agent/utils/logger';
+import { useStore } from '@nanostores/react';
+import { subchatIndexStore, waitForSubchatIndexChanged } from '~/lib/stores/subchats';
+import { api } from '@convex/_generated/api';
+import { workbenchStore } from '~/lib/stores/workbench.client';
+import { chatSyncState, type BackupSyncState, type InitialBackupSyncState } from './chatSyncState';
+import { toast } from 'sonner';
 
 const logger = createScopedLogger('history');
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
-export const chatSyncState = atom<BackupSyncState>({
-  lastSync: 0,
-  numFailures: 0,
-  started: false,
-  persistedMessageInfo: null,
-  savedFileUpdateCounter: null,
-});
-
-type BackupSyncState = {
-  lastSync: number;
-  numFailures: number;
-  started: boolean;
-  persistedMessageInfo: { messageIndex: number; partIndex: number } | null;
-  savedFileUpdateCounter: number | null;
-};
-
-type InitialBackupSyncState = {
-  lastSync: number;
-  numFailures: number;
-  started: boolean;
-  persistedMessageInfo: { messageIndex: number; partIndex: number };
-  savedFileUpdateCounter: number;
-};
-
-export function useBackupSyncState(chatId: string, initialMessages?: Message[]) {
+export function useBackupSyncState(chatId: string, loadedSubchatIndex?: number, initialMessages?: Message[]) {
   const convex = useConvex();
+  const subchatIndex = useStore(subchatIndexStore);
+  const sessionId = useConvexSessionIdOrNullOrLoading();
+  const chatInfo = useQuery(
+    api.messages.get,
+    sessionId
+      ? {
+          id: chatId,
+          sessionId,
+        }
+      : 'skip',
+  );
   useEffect(() => {
     if (initialMessages !== undefined) {
       const lastMessage = initialMessages[initialMessages.length - 1];
       const lastMessagePartIndex = (lastMessage?.parts?.length ?? 0) - 1;
       const currentSyncState = chatSyncState.get();
-      if (currentSyncState.persistedMessageInfo === null) {
+      // Update the persistedMessageInfo when initialMessages is null or the subchat index changes
+      if (
+        loadedSubchatIndex !== undefined &&
+        (currentSyncState.persistedMessageInfo === null || loadedSubchatIndex !== currentSyncState.subchatIndex)
+      ) {
         chatSyncState.set({
           ...currentSyncState,
           persistedMessageInfo: {
             messageIndex: initialMessages.length - 1,
             partIndex: lastMessagePartIndex,
           },
+          subchatIndex: loadedSubchatIndex,
         });
         lastCompleteMessageInfoStore.set({
           messageIndex: initialMessages.length - 1,
@@ -67,7 +64,7 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
         });
       }
     }
-  }, [initialMessages]);
+  }, [initialMessages, loadedSubchatIndex]);
   useEffect(() => {
     const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
       const currentState = chatSyncState.get();
@@ -96,10 +93,20 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
   useEffect(() => {
     const run = async () => {
       const sessionId = await waitForConvexSessionId('useBackupSyncState');
-      void chatSyncWorker({ chatId, sessionId, convex });
+      // Open the workbench by default if you have more than one subchat
+      if (chatInfo && chatInfo.subchatIndex > 0) {
+        workbenchStore.showWorkbench.set(true);
+      }
+      void chatSyncWorker({
+        chatId,
+        sessionId,
+        convex,
+        currentSubchatIndex: subchatIndex,
+        latestSubchatIndex: chatInfo?.subchatIndex,
+      });
     };
     void run();
-  }, [chatId, convex]);
+  }, [chatId, convex, subchatIndex, chatInfo]);
 }
 
 /**
@@ -110,15 +117,30 @@ export function useBackupSyncState(chatId: string, initialMessages?: Message[]) 
  * changes to `lastCompleteMessageInfoStore` and `fileUpdateCounter` respectively
  * to know when to sync.
  */
-async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>; convex: ConvexReactClient }) {
+async function chatSyncWorker(args: {
+  chatId: string;
+  sessionId: Id<'sessions'>;
+  convex: ConvexReactClient;
+  currentSubchatIndex: number | undefined;
+  latestSubchatIndex: number | undefined;
+}) {
   const { chatId, sessionId, convex } = args;
   const currentState = chatSyncState.get();
   if (currentState.started) {
     return;
   }
+  if (args.currentSubchatIndex === undefined || args.latestSubchatIndex === undefined) {
+    return;
+  }
+  // We only need to sync if we're on the latest subchat. Otherwise, we shouldn't be sending
+  // updates to the server.
+  if (args.currentSubchatIndex !== args.latestSubchatIndex) {
+    return;
+  }
   chatSyncState.set({
     ...currentState,
     started: true,
+    subchatIndex: args.currentSubchatIndex,
   });
   while (true) {
     const currentState = await waitForInitialized();
@@ -140,7 +162,8 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
           currentState.persistedMessageInfo.partIndex,
           /* alertOnNextPartStart */ true,
         );
-        await Promise.race([fileUpdatePromise, newMessagesPromise]);
+        const subchatIndexPromise = waitForSubchatIndexChanged(currentState.subchatIndex);
+        await Promise.race([fileUpdatePromise, newMessagesPromise, subchatIndexPromise]);
       } else {
         // if the next part has started, ignore file system changes but listen for the next part
         // to complete
@@ -149,7 +172,8 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
           currentState.persistedMessageInfo.partIndex,
           /* alertOnNextPartStart */ false,
         );
-        await newMessagesPromise;
+        const subchatIndexPromise = waitForSubchatIndexChanged(currentState.subchatIndex);
+        await Promise.race([newMessagesPromise, subchatIndexPromise]);
       }
     }
 
@@ -161,18 +185,21 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
     let messageBlob: Uint8Array | undefined = undefined;
     let urlHintAndDescription: { urlHint: string; description: string } | null = null;
     let newPersistedMessageInfo: { messageIndex: number; partIndex: number } | null = null;
+    let firstMessage: string | undefined = undefined;
 
     const messageHistoryResult = await prepareMessageHistory({
       chatId,
       sessionId,
       completeMessageInfo,
       persistedMessageInfo: currentState.persistedMessageInfo,
+      subchatIndex: currentState.subchatIndex,
     });
     const { url, update } = messageHistoryResult;
     if (update !== null) {
       messageBlob = update.compressed;
       urlHintAndDescription = update.urlHintAndDescription ?? null;
       newPersistedMessageInfo = { messageIndex: update.messageIndex, partIndex: update.partIndex };
+      firstMessage = update.firstMessage;
     }
 
     let snapshotBlob: Uint8Array | undefined = undefined;
@@ -202,6 +229,16 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
     if (snapshotBlob !== undefined) {
       formData.append('snapshot', new Blob([snapshotBlob]));
     }
+    if (firstMessage !== undefined) {
+      formData.append('firstMessage', firstMessage);
+    }
+    if (currentState.subchatIndex !== subchatIndexStore.get()) {
+      chatSyncState.set({
+        ...currentState,
+        persistedMessageInfo: null,
+      });
+      continue;
+    }
     try {
       response = await fetch(url, {
         method: 'POST',
@@ -213,18 +250,33 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
     if (error !== null || (response !== undefined && !response.ok)) {
       const errorText = response !== undefined ? await response.text() : (error?.message ?? 'Unknown error');
       logger.error('Complete message info not initialized');
+      const newFailureCount = currentState.numFailures + 1;
       chatSyncState.set({
         ...currentState,
-        numFailures: currentState.numFailures + 1,
+        numFailures: newFailureCount,
       });
-      const sleepTime = backoffTime(currentState.numFailures);
+
+      // Show toast notification after 3 consecutive failures
+      if (newFailureCount >= 3) {
+        toast.error('Your chat is having trouble saving and progress may be lost. Download your code to save it.', {
+          id: 'chat-save-failure',
+          duration: Number.POSITIVE_INFINITY,
+        });
+      }
+
+      const sleepTime = backoffTime(newFailureCount);
       logger.error(
-        `Failed to save chat (num failures: ${currentState.numFailures}), sleeping for ${sleepTime.toFixed(2)}ms`,
+        `Failed to save chat (num failures: ${newFailureCount}), sleeping for ${sleepTime.toFixed(2)}ms`,
         errorText,
       );
       await new Promise((resolve) => setTimeout(resolve, sleepTime));
       continue;
     }
+    // Dismiss the save failure toast on successful save
+    if (currentState.numFailures >= 3) {
+      toast.dismiss('chat-save-failure');
+    }
+
     const updates: Partial<BackupSyncState> = {
       lastSync: now,
       numFailures: 0,
@@ -242,7 +294,11 @@ async function chatSyncWorker(args: { chatId: string; sessionId: Id<'sessions'>;
 
 async function waitForInitialized(): Promise<InitialBackupSyncState> {
   const state = chatSyncState.get();
-  if (state.persistedMessageInfo !== null && state.savedFileUpdateCounter !== null) {
+  if (
+    state.persistedMessageInfo !== null &&
+    state.savedFileUpdateCounter !== null &&
+    state.subchatIndex === subchatIndexStore.get()
+  ) {
     return {
       ...state,
       persistedMessageInfo: state.persistedMessageInfo!,
@@ -252,7 +308,11 @@ async function waitForInitialized(): Promise<InitialBackupSyncState> {
   return new Promise<InitialBackupSyncState>((resolve) => {
     let unlisten: (() => void) | null = null;
     unlisten = chatSyncState.listen((state) => {
-      if (state.persistedMessageInfo !== null && state.savedFileUpdateCounter !== null) {
+      if (
+        state.persistedMessageInfo !== null &&
+        state.savedFileUpdateCounter !== null &&
+        state.subchatIndex === subchatIndexStore.get()
+      ) {
         if (unlisten !== null) {
           unlisten();
           unlisten = null;

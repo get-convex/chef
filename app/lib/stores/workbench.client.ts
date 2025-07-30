@@ -545,10 +545,6 @@ export class WorkbenchStore {
     // Get the project name from the description input, or use a default name
     const projectName = (description.value ?? 'project').toLocaleLowerCase().split(' ').join('_');
 
-    // Generate a simple 6-character hash based on the current timestamp
-    const timestampHash = Date.now().toString(36).slice(-6);
-    const uniqueProjectName = `${projectName}_${timestampHash}`;
-
     let hasReadme = false;
     let hasSetupMjs = false;
     let hasEnvLocalFile = false;
@@ -594,7 +590,7 @@ export class WorkbenchStore {
       description.value ?? 'project',
       args.convexProject?.deploymentName ?? null,
     );
-    const readmePath = hasReadme ? `CHEF_README_${timestampHash}.md` : 'README.md';
+    const readmePath = hasReadme ? `CHEF_README.md` : 'README.md';
     zip.file(readmePath, readmeContent);
     if (!hasSetupMjs) {
       zip.file('setup.mjs', setupMjsContent);
@@ -608,7 +604,7 @@ export class WorkbenchStore {
     }
     // Generate the zip file and save it
     const content = await zip.generateAsync({ type: 'blob' });
-    saveAs(content, `${uniqueProjectName}.zip`);
+    saveAs(content, `${projectName}.zip`);
   }
 
   isDefaultPreviewRunning() {

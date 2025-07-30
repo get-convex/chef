@@ -8,6 +8,7 @@ import {
   storeChat,
   verifyStoredContent,
   initializeChat,
+  createSubchat,
 } from "./test.setup";
 import type { SerializedMessage } from "./messages";
 import { describe } from "node:test";
@@ -31,11 +32,33 @@ describe("share", () => {
     await expect(t.mutation(api.share.create, { sessionId, id: "test" })).rejects.toThrow("Chat history not found");
   });
 
+  test("sharing a chat works if there is an empty subchat after the first one", async () => {
+    const { sessionId, chatId } = await initializeChat(t);
+
+    const subchat0Message: SerializedMessage = {
+      id: "subchat0-msg1",
+      role: "user",
+      parts: [{ text: "Hello from subchat 0!", type: "text" }],
+      createdAt: Date.now(),
+    };
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat0Message],
+      snapshot: new Blob(["subchat 0 snapshot"]),
+      subchatIndex: 0,
+    });
+
+    // Create a second subchat
+    await createSubchat(t, chatId, sessionId);
+
+    const code = await t.mutation(api.share.create, { sessionId, id: chatId });
+    expect(code).toBeDefined();
+  });
+
   test("sharing a chat works if there is a snapshot + message", async () => {
     const { sessionId, chatId } = await initializeChat(t);
 
     // Create a second subchat
-    await t.mutation(api.subchats.create, { chatId, sessionId });
+    await createSubchat(t, chatId, sessionId);
 
     // Add messages to the second subchat
     const subchat1Message: SerializedMessage = {
@@ -58,7 +81,7 @@ describe("share", () => {
     const { sessionId, chatId } = await initializeChat(t);
 
     // Create a second subchat
-    await t.mutation(api.subchats.create, { chatId, sessionId });
+    await createSubchat(t, chatId, sessionId);
 
     // Add messages to the second subchat
     const subchat1Message: SerializedMessage = {
@@ -95,7 +118,7 @@ describe("share", () => {
     const { sessionId, chatId } = await initializeChat(t, firstMessage);
 
     // Create a second subchat
-    await t.mutation(api.subchats.create, { chatId, sessionId });
+    await createSubchat(t, chatId, sessionId);
 
     // Add messages to the second subchat
     const subchat1Message: SerializedMessage = {
@@ -150,7 +173,7 @@ describe("share", () => {
     const { sessionId, chatId } = await initializeChat(t);
 
     // Create a second subchat
-    await t.mutation(api.subchats.create, { chatId, sessionId });
+    await createSubchat(t, chatId, sessionId);
 
     // Add messages to the second subchat
     const subchat1Message: SerializedMessage = {
@@ -237,7 +260,7 @@ describe("share", () => {
     const { sessionId, chatId } = await initializeChat(t);
 
     // Create a second subchat
-    await t.mutation(api.subchats.create, { chatId, sessionId });
+    await createSubchat(t, chatId, sessionId);
 
     // Add messages to the second subchat
     const subchat1Message: SerializedMessage = {
@@ -344,7 +367,7 @@ describe("share", () => {
     });
 
     // Create a second subchat with different snapshot
-    await t.mutation(api.subchats.create, { chatId, sessionId });
+    await createSubchat(t, chatId, sessionId);
 
     const subchat1Message: SerializedMessage = {
       id: "subchat1-msg1",
@@ -433,7 +456,7 @@ describe("share", () => {
     });
 
     // Create a second subchat also without snapshot
-    await t.mutation(api.subchats.create, { chatId, sessionId });
+    await createSubchat(t, chatId, sessionId);
 
     const subchat1Message: SerializedMessage = {
       id: "subchat1-msg1",
@@ -490,5 +513,105 @@ describe("share", () => {
 
     // Verify the actual content of the snapshot
     await verifyStoredContent(t, share.snapshotId, snapshotContent);
+  });
+
+  test("cloning a chat copies over the subchat descriptions", async () => {
+    const firstMessage: SerializedMessage = {
+      id: "1",
+      role: "user",
+      parts: [{ text: "Hello, world!", type: "text" }],
+      createdAt: Date.now(),
+    };
+    const { sessionId, chatId } = await initializeChat(t, firstMessage);
+
+    // Create a second subchat
+    await createSubchat(t, chatId, sessionId);
+
+    // Add messages to the second subchat
+    const subchat1Message: SerializedMessage = {
+      id: "subchat1-msg1",
+      role: "user",
+      parts: [{ text: "Create a todo app with React!", type: "text" }],
+      createdAt: Date.now(),
+    };
+    await storeChat(t, chatId, sessionId, {
+      messages: [subchat1Message],
+      snapshot: new Blob(["subchat 1 snapshot"]),
+      subchatIndex: 1,
+    });
+
+    // Get the original chat doc to find the internal chat ID
+    const originalChat = await t.run(async (ctx) => {
+      return ctx.db
+        .query("chats")
+        .withIndex("byInitialId", (q) => q.eq("initialId", chatId))
+        .first();
+    });
+    expect(originalChat).toBeDefined();
+
+    // Add descriptions to both subchats using saveMessageSummary - get the LATEST states after storeChat
+    const originalSubchatStates = await t.run(async (ctx) => {
+      const subchat0State = await ctx.db
+        .query("chatMessagesStorageState")
+        .filter((q) => q.eq(q.field("chatId"), originalChat!._id))
+        .filter((q) => q.eq(q.field("subchatIndex"), 0))
+        .order("desc")
+        .first();
+      const subchat1State = await ctx.db
+        .query("chatMessagesStorageState")
+        .filter((q) => q.eq(q.field("chatId"), originalChat!._id))
+        .filter((q) => q.eq(q.field("subchatIndex"), 1))
+        .order("desc")
+        .first();
+      return { subchat0State, subchat1State };
+    });
+
+    expect(originalSubchatStates.subchat0State).toBeDefined();
+    expect(originalSubchatStates.subchat1State).toBeDefined();
+
+    await t.mutation(internal.summarize.saveMessageSummary, {
+      chatMessageId: originalSubchatStates.subchat0State!._id,
+      summary: "Initial greeting chat",
+    });
+
+    await t.mutation(internal.summarize.saveMessageSummary, {
+      chatMessageId: originalSubchatStates.subchat1State!._id,
+      summary: "Todo app creation",
+    });
+
+    const { code } = await t.mutation(api.share.create, { sessionId, id: chatId });
+    expect(code).toBeDefined();
+
+    const { id: clonedChatId } = await t.mutation(api.share.clone, {
+      sessionId,
+      shareCode: code,
+      projectInitParams: testProjectInitParams,
+    });
+    expect(clonedChatId).toBeDefined();
+
+    // Get the cloned chat doc to find the internal chat ID
+    const clonedChat = await t.run(async (ctx) => {
+      return ctx.db
+        .query("chats")
+        .withIndex("byInitialId", (q) => q.eq("initialId", clonedChatId))
+        .first();
+    });
+    expect(clonedChat).toBeDefined();
+
+    // Verify subchat descriptions were copied
+    const clonedSubchatStates = await t.run(async (ctx) => {
+      return ctx.db
+        .query("chatMessagesStorageState")
+        .filter((q) => q.eq(q.field("chatId"), clonedChat!._id))
+        .collect();
+    });
+
+    const clonedSubchat0State = clonedSubchatStates.find((s) => s.subchatIndex === 0);
+    const clonedSubchat1State = clonedSubchatStates.find((s) => s.subchatIndex === 1);
+
+    expect(clonedSubchat0State).toBeDefined();
+    expect(clonedSubchat1State).toBeDefined();
+    expect(clonedSubchat0State!.description).toBe("Initial greeting chat");
+    expect(clonedSubchat1State!.description).toBe("Todo app creation");
   });
 });

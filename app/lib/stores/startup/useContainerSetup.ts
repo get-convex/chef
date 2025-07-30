@@ -19,11 +19,11 @@ import { workbenchStore } from '~/lib/stores/workbench.client';
 import { initializeConvexAuth } from 'chef-agent/convexAuth';
 import { appendEnvVarIfNotSet } from '~/utils/envFileUtils';
 import { getFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
-import { chatSyncState } from '~/lib/stores/startup/history';
+import { chatSyncState } from './chatSyncState';
 import { FILE_EVENTS_DEBOUNCE_MS } from '~/lib/stores/files';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 
-const TEMPLATE_URL = '/template-snapshot-d42e5c1b.bin';
+const TEMPLATE_URL = '/template-snapshot-63fbe575.bin';
 
 export function useNewChatContainerSetup() {
   const convex = useConvex();

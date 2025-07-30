@@ -260,7 +260,7 @@ function ApiKeyItem({
       const apiKey = await convex.query(api.apiKeys.apiKeyForCurrentMember);
 
       const apiKeyMutation = {
-        preference: 'quotaExhausted' as 'always' | 'quotaExhausted',
+        preference: apiKey?.preference || ('quotaExhausted' as 'always' | 'quotaExhausted'),
         value: apiKey?.value || undefined,
         openai: apiKey?.openai || undefined,
         xai: apiKey?.xai || undefined,

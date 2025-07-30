@@ -64,6 +64,11 @@ export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId:
   const title = action && toolTitle(parsed);
   const icon = action && statusIcon(action.status, parsed);
 
+  // Early return if artifact doesn't exist
+  if (!artifact) {
+    return null;
+  }
+
   if (!action) {
     return null;
   }
@@ -86,7 +91,7 @@ export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId:
         </button>
         <div className="w-px bg-bolt-elements-artifacts-borderColor" />
         <AnimatePresence>
-          {artifact.type !== 'bundled' && (
+          {artifact.type !== 'bundled' && parsed.toolName !== 'getConvexDeploymentName' && (
             <motion.button
               initial={{ width: 0 }}
               animate={{ width: 'auto' }}
@@ -155,6 +160,9 @@ const ToolUseContents = memo(function ToolUseContents({
     }
     case 'addEnvironmentVariables': {
       return <AddEnvironmentVariablesTool invocation={invocation} />;
+    }
+    case 'getConvexDeploymentName': {
+      return <GetConvexDeploymentNameTool invocation={invocation} />;
     }
     default: {
       // Fallback for other tool types
@@ -481,6 +489,20 @@ function toolTitle(invocation: ConvexToolInvocation): React.ReactNode {
         </div>
       );
     }
+    case 'getConvexDeploymentName': {
+      if (invocation.state === 'partial-call' || invocation.state === 'call') {
+        return 'Getting Convex deployment name...';
+      } else if (invocation.result?.startsWith('Error:')) {
+        return 'Failed to get Convex deployment name';
+      } else {
+        return (
+          <div className="flex items-center gap-2">
+            <img className="mr-1 size-4" height="16" width="16" src="/icons/Convex.svg" alt="Convex" />
+            <span>Got Convex deployment name: {invocation.result}</span>
+          </div>
+        );
+      }
+    }
     default: {
       return (invocation as any).toolName;
     }
@@ -702,6 +724,33 @@ function AddEnvironmentVariablesTool({ invocation }: { invocation: ConvexToolInv
             <li key={name}>{name}</li>
           ))}
         </ul>
+      </div>
+    </div>
+  );
+}
+
+function GetConvexDeploymentNameTool({ invocation }: { invocation: ConvexToolInvocation }) {
+  if (invocation.toolName !== 'getConvexDeploymentName') {
+    throw new Error('GetConvexDeploymentNameTool can only be used for the getConvexDeploymentName tool');
+  }
+  if (invocation.state === 'partial-call' || invocation.state === 'call') {
+    return null;
+  }
+  if (invocation.result.startsWith('Error:')) {
+    return (
+      <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+        <pre>{invocation.result}</pre>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-lg border bg-bolt-elements-background-depth-1 font-mono text-sm text-content-primary">
+      <div className="space-y-2 p-4">
+        <div className="flex items-center gap-2">
+          <span>Convex Deployment Name:</span>
+          <code className="rounded bg-bolt-elements-background-depth-2 px-2 py-1 font-mono">{invocation.result}</code>
+        </div>
       </div>
     </div>
   );

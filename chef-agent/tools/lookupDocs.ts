@@ -2,6 +2,7 @@ import type { Tool } from 'ai';
 import { presenceComponentReadmePrompt } from 'chef-agent/prompts/components/presence';
 import { proseMirrorComponentReadmePrompt } from 'chef-agent/prompts/components/proseMirror';
 import { z } from 'zod';
+import { resendComponentReadmePrompt } from 'chef-agent/prompts/components/resend';
 
 export const lookupDocsParameters = z.object({
   docs: z
@@ -24,6 +25,7 @@ export type LookupDocsParameters = z.infer<typeof lookupDocsParameters>;
 export const docs = {
   proseMirror: proseMirrorComponentReadmePrompt,
   presence: presenceComponentReadmePrompt,
+  resend: resendComponentReadmePrompt,
 } as const;
 
 export type DocKey = keyof typeof docs;

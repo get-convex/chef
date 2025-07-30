@@ -71,6 +71,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       enablePreciseEdits: boolean;
       smallFiles: boolean;
       enableEnvironmentVariables?: boolean;
+      enableResend?: boolean;
     };
   };
   const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug, recordRawPromptsForDebugging } =
@@ -98,8 +99,9 @@ export async function chatAction({ request }: ActionFunctionArgs) {
         status: 402,
       });
     }
-    if (!isPaidPlan && centitokensUsed >= centitokensQuota) {
-      if (body.userApiKey?.preference !== 'quotaExhausted') {
+    if (centitokensUsed >= centitokensQuota) {
+      if (!isPaidPlan && !hasApiKeySetForProvider(body.userApiKey, body.modelProvider)) {
+        // If they're not on a paid plan and don't have an API key set, return an error.
         logger.error(`No tokens available for ${deploymentName}: ${centitokensUsed} of ${centitokensQuota}`);
         return new Response(
           JSON.stringify({ code: 'no-tokens', error: noTokensText(centitokensUsed, centitokensQuota) }),
@@ -107,9 +109,10 @@ export async function chatAction({ request }: ActionFunctionArgs) {
             status: 402,
           },
         );
+      } else if (hasApiKeySetForProvider(body.userApiKey, body.modelProvider)) {
+        // If they have an API key set, use it. Otherwise, they use Convex tokens.
+        useUserApiKey = true;
       }
-      // If they're set to quotaExhausted mode, try to use the user's API key.
-      useUserApiKey = true;
     }
   }
 
@@ -174,6 +177,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
         enablePreciseEdits: body.featureFlags.enablePreciseEdits,
         smallFiles: body.featureFlags.smallFiles,
         enableEnvironmentVariables: body.featureFlags.enableEnvironmentVariables ?? false,
+        enableResend: body.featureFlags.enableResend ?? false,
       },
     });
 
@@ -200,5 +204,26 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       status: 500,
       statusText: 'Internal Server Error',
     });
+  }
+}
+
+// Returns whether or not the user has an API key set for a given provider
+function hasApiKeySetForProvider(
+  userApiKey:
+    | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
+    | undefined,
+  provider: ModelProvider,
+) {
+  switch (provider) {
+    case 'Anthropic':
+      return userApiKey?.value !== undefined;
+    case 'OpenAI':
+      return userApiKey?.openai !== undefined;
+    case 'XAI':
+      return userApiKey?.xai !== undefined;
+    case 'Google':
+      return userApiKey?.google !== undefined;
+    default:
+      return false;
   }
 }

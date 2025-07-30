@@ -26,7 +26,7 @@ export const create = mutation({
     if (!storageState) {
       throw new ConvexError("Your project has never been saved.");
     }
-    if (storageState.storageId === null) {
+    if (storageState.storageId === null && chat.lastSubchatIndex === 0) {
       throw new ConvexError("Chat history not found");
     }
     const snapshotId = storageState.snapshotId ?? chat.snapshotId;
@@ -65,7 +65,7 @@ export const isShareReady = query({
     if (!share) {
       return false;
     }
-    return share.chatHistoryId !== null;
+    return share.snapshotId !== null;
   },
 });
 
@@ -154,7 +154,7 @@ export async function cloneShow(
   if (!storageState) {
     throw new ConvexError("Chat history not found");
   }
-  if (storageState.storageId === null) {
+  if (storageState.storageId === null && parentChat.lastSubchatIndex === 0) {
     throw new ConvexError("Chat history not found");
   }
   const snapshotId = storageState.snapshotId ?? parentChat.snapshotId;
@@ -186,6 +186,7 @@ export async function cloneShow(
         subchatIndex: storageState.subchatIndex,
         partIndex: storageState.partIndex,
         snapshotId: storageState.snapshotId,
+        description: storageState.description,
       });
     }
   }
@@ -243,7 +244,7 @@ export const clone = mutation({
     };
     const clonedChatId = await ctx.db.insert("chats", clonedChat);
 
-    if (!getShare.chatHistoryId) {
+    if (!getShare.chatHistoryId && getShare.lastSubchatIndex === 0) {
       throw new ConvexError({
         code: "NotFound",
         message: "The original chat history was not found. It may have been deleted.",
@@ -263,9 +264,15 @@ export const clone = mutation({
           subchatIndex: storageState.subchatIndex,
           partIndex: storageState.partIndex,
           snapshotId: storageState.snapshotId,
+          description: storageState.description,
         });
       }
     }
+    const storageState = await getLatestChatMessageStorageState(ctx, {
+      _id: parentChat._id,
+      subchatIndex: getShare.lastSubchatIndex,
+      lastMessageRank: getShare.lastMessageRank,
+    });
     await ctx.db.insert("chatMessagesStorageState", {
       chatId: clonedChatId,
       storageId: getShare.chatHistoryId,
@@ -273,6 +280,7 @@ export const clone = mutation({
       lastMessageRank: getShare.lastMessageRank,
       subchatIndex: getShare.lastSubchatIndex,
       partIndex: getShare.partIndex ?? -1,
+      description: storageState?.description,
     });
 
     await startProvisionConvexProjectHelper(ctx, {

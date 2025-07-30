@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useFileUpdateCounter } from '~/lib/stores/fileUpdateCounter';
-import { chatSyncState } from '~/lib/stores/startup/history';
+import { chatSyncState } from '~/lib/stores/startup/chatSyncState';
 
 type ToastState = { type: 'idle'; lastCompleted: number } | { type: 'loading'; toastId: string };
 
@@ -29,11 +29,17 @@ export function BackupStatusIndicator() {
       if (toastState.current.type === 'idle') {
         const now = Date.now();
         if (toastState.current.lastCompleted + TOAST_COOLDOWN < now) {
-          const toastId = crypto.randomUUID();
-          toast.loading('Saving...', {
-            id: toastId,
-          });
-          toastState.current = { type: 'loading', toastId };
+          // Only show "Saving..." toast if "chat-save-failure" toast is not currently showing
+          const activeToasts = toast.getHistory();
+          const chatSaveFailureToastActive = activeToasts.some((t) => t.id === 'chat-save-failure');
+
+          if (!chatSaveFailureToastActive) {
+            const toastId = crypto.randomUUID();
+            toast.loading('Saving...', {
+              id: toastId,
+            });
+            toastState.current = { type: 'loading', toastId };
+          }
         }
       }
     }

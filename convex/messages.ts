@@ -239,7 +239,8 @@ export const updateStorageState = internalMutation({
     partIndex: v.number(),
     snapshotId: v.optional(v.union(v.id("_storage"), v.null())),
   },
-  handler: async (ctx, args): Promise<void> => {
+  returns: v.union(v.id("chatMessagesStorageState"), v.null()),
+  handler: async (ctx, args): Promise<Id<"chatMessagesStorageState"> | null> => {
     const { chatId, storageId, lastMessageRank, partIndex, snapshotId, sessionId } = args;
     const messageHistoryStorageId = storageId;
     const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId });
@@ -258,13 +259,13 @@ export const updateStorageState = internalMutation({
       console.warn(
         `Stale update -- stored messages up to ${previous.lastMessageRank} but received update up to ${lastMessageRank}`,
       );
-      return;
+      return null;
     }
     if (previous.lastMessageRank === lastMessageRank && previous.partIndex > partIndex) {
       console.warn(
         `Stale update -- stored parts in message ${previous.lastMessageRank} up to part ${previous.partIndex} but received update up to part ${partIndex}`,
       );
-      return;
+      return null;
     }
 
     if (previous.lastMessageRank === lastMessageRank && previous.partIndex === partIndex) {
@@ -273,7 +274,7 @@ export const updateStorageState = internalMutation({
         console.warn(
           `Received duplicate update for message history, message ${lastMessageRank} part ${partIndex}, ignoring`,
         );
-        return;
+        return null;
       }
       if (snapshotId === null) {
         throw new Error("Received null snapshotId for message that is already saved and has no storageId");
@@ -281,7 +282,7 @@ export const updateStorageState = internalMutation({
       await ctx.db.patch(previous._id, {
         snapshotId,
       });
-      return;
+      return null;
     }
 
     if (previous.storageId !== null && storageId === null) {
@@ -320,10 +321,10 @@ export const updateStorageState = internalMutation({
         partIndex,
         snapshotId: snapshotId ?? previous.snapshotId,
       });
-      return;
+      return null;
     }
 
-    await ctx.db.insert("chatMessagesStorageState", {
+    const id = await ctx.db.insert("chatMessagesStorageState", {
       chatId: chat._id,
       storageId,
       lastMessageRank,
@@ -331,7 +332,12 @@ export const updateStorageState = internalMutation({
       partIndex,
       // Should we be using null here to distinguish between not having a snapshot and records written before we also recorded snapshots here?
       snapshotId: snapshotId ?? previous.snapshotId,
+      description: previous.description,
     });
+    if (previous.description === undefined) {
+      return id;
+    }
+    return null;
   },
 });
 
@@ -383,7 +389,7 @@ async function deleteSnapshotIdIfUnused(ctx: MutationCtx, snapshotId: Id<"_stora
   }
 }
 
-async function deleteStorageState(ctx: MutationCtx, storageState: Doc<"chatMessagesStorageState">) {
+export async function deleteStorageState(ctx: MutationCtx, storageState: Doc<"chatMessagesStorageState">) {
   await ctx.db.delete(storageState._id);
   const chatStorageId = storageState.storageId;
   if (chatStorageId) {
@@ -515,7 +521,14 @@ export const rewindChat = mutation({
         },
       });
     }
-    ctx.db.patch(chat._id, { lastSubchatIndex: subchatIndex, lastMessageRank: latestStorageState.lastMessageRank });
+    await ctx.db.patch(chat._id, {
+      lastSubchatIndex: subchatIndex,
+      lastMessageRank: latestStorageState.lastMessageRank,
+    });
+    await deletePreviousStorageStates(ctx, {
+      chat: { ...chat, lastMessageRank: latestStorageState.lastMessageRank, lastSubchatIndex: subchatIndex },
+      subchatIndex,
+    });
   },
 });
 

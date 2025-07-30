@@ -1,4 +1,5 @@
 import { useStore } from '@nanostores/react';
+import { useState } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { chatStore } from '~/lib/stores/chatId';
 import { HeaderActionButtons } from './HeaderActionButtons.client';
@@ -20,9 +21,11 @@ import { ReferButton } from './ReferButton';
 import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useUsage } from '~/lib/stores/usage';
 import { useReferralStats } from '~/lib/hooks/useReferralCode';
+import { Menu } from '~/components/sidebar/Menu.client';
 
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const isLoggedIn = sessionId !== null;
@@ -52,7 +55,16 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
   return (
     <header className={'flex h-[var(--header-height)] items-center overflow-x-auto overflow-y-hidden border-b p-5'}>
       <div className="z-40 flex cursor-pointer items-center gap-2 text-content-primary">
-        {showSidebarIcon && <HamburgerMenuIcon className="shrink-0" />}
+        {showSidebarIcon && (
+          <HamburgerMenuIcon
+            className="shrink-0"
+            data-hamburger-menu
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMenuOpen(!isMenuOpen);
+            }}
+          />
+        )}
         <a href="/">
           {/* The logo is shifted up slightly, to visually align it with the hamburger icon. */}
           <img src="/chef.svg" alt="Chef logo" width={72} height={42} className="relative -top-1" />
@@ -118,6 +130,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
           )}
         </ClientOnly>
       </>
+      <Menu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </header>
   );
 }

@@ -136,6 +136,7 @@
     "remix-utils": "^7.7.0",
     "shiki": "^1.24.0",
     "sonner": "^2.0.3",
+    "swr": "^2.3.4",
     "ua-parser-js": "^1.0.40",
     "undici": "^7.7.0",
     "unist-util-visit": "^5.0.0",
