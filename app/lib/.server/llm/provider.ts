@@ -76,10 +76,12 @@ export function getProvider(
           fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
         });
       } else {
+        console.log('using vertex');
         const credentials = JSON.parse(getEnv('GOOGLE_VERTEX_CREDENTIALS_JSON')!);
         google = createVertex({
           project: credentials.project_id,
-          location: 'us-central1',
+          baseURL: `https://aiplatform.googleapis.com/v1/projects/${credentials.project_id}/locations/global/publishers/google`,
+          location: 'global',
           googleCredentials: {
             clientEmail: credentials.client_email,
             privateKeyId: credentials.private_key_id,
