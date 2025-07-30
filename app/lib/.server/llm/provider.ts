@@ -3,7 +3,7 @@ import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createVertex } from '@ai-sdk/google-vertex/edge';
+import { createVertex } from '@ai-sdk/google-vertex';
 import { createOpenAI } from '@ai-sdk/openai';
 import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { captureException } from '@sentry/remix';
@@ -76,17 +76,18 @@ export function getProvider(
           fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
         });
       } else {
-        console.log('using vertex');
         const credentials = JSON.parse(getEnv('GOOGLE_VERTEX_CREDENTIALS_JSON')!);
         google = createVertex({
           project: credentials.project_id,
           // Use global endpoint for higher availability
           baseURL: `https://aiplatform.googleapis.com/v1/projects/${credentials.project_id}/locations/global/publishers/google`,
           location: 'global',
-          googleCredentials: {
-            clientEmail: credentials.client_email,
-            privateKeyId: credentials.private_key_id,
-            privateKey: credentials.private_key,
+          googleAuthOptions: {
+            credentials: {
+              client_email: credentials.client_email,
+              private_key_id: credentials.private_key_id,
+              private_key: credentials.private_key,
+            },
           },
         });
       }
