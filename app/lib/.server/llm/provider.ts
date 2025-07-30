@@ -80,6 +80,7 @@ export function getProvider(
         const credentials = JSON.parse(getEnv('GOOGLE_VERTEX_CREDENTIALS_JSON')!);
         google = createVertex({
           project: credentials.project_id,
+          // Use global endpoint for higher availability
           baseURL: `https://aiplatform.googleapis.com/v1/projects/${credentials.project_id}/locations/global/publishers/google`,
           location: 'global',
           googleCredentials: {
