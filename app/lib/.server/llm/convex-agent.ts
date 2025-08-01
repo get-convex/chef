@@ -35,6 +35,7 @@ import { calculateChefTokens, usageFromGeneration } from '~/lib/common/usage';
 import { lookupDocsTool } from 'chef-agent/tools/lookupDocs';
 import { addEnvironmentVariablesTool } from 'chef-agent/tools/addEnvironmentVariables';
 import { getConvexDeploymentNameTool } from 'chef-agent/tools/getConvexDeploymentName';
+import type { PromptCharacterCounts } from 'chef-agent/ChatContextManager';
 
 type Messages = Message[];
 
@@ -53,6 +54,7 @@ export async function convexAgent(args: {
   ) => Promise<void>;
   recordRawPromptsForDebugging: boolean;
   collapsedMessages: boolean;
+  promptCharacterCounts?: PromptCharacterCounts;
   featureFlags: {
     enablePreciseEdits: boolean;
     smallFiles: boolean;
@@ -72,6 +74,7 @@ export async function convexAgent(args: {
     recordUsageCb,
     recordRawPromptsForDebugging,
     collapsedMessages,
+    promptCharacterCounts,
     featureFlags,
   } = args;
   console.debug('Starting agent with model provider', modelProvider);
@@ -143,6 +146,7 @@ export async function convexAgent(args: {
             modelProvider,
             modelChoice,
             collapsedMessages,
+            promptCharacterCounts,
             _startTime: startTime,
             _firstResponseTime: firstResponseTime,
             providerModel: provider.model.modelId,
@@ -211,6 +215,7 @@ async function onFinishHandler({
   modelProvider,
   modelChoice,
   collapsedMessages,
+  promptCharacterCounts,
   _startTime,
   _firstResponseTime,
   providerModel,
@@ -231,6 +236,7 @@ async function onFinishHandler({
   modelProvider: ModelProvider;
   modelChoice: string | undefined;
   collapsedMessages: boolean;
+  promptCharacterCounts?: PromptCharacterCounts;
   _startTime: number;
   _firstResponseTime: number | null;
   providerModel: string;
@@ -265,6 +271,14 @@ async function onFinishHandler({
     span.setAttribute('featureFlags.enableEnvironmentVariables', featureFlags.enableEnvironmentVariables);
     span.setAttribute('collapsedMessages', collapsedMessages);
     span.setAttribute('model', providerModel);
+
+    // Add prompt character count metrics
+    if (promptCharacterCounts) {
+      span.setAttribute('promptCharacterCounts.relevantFilesChars', promptCharacterCounts.relevantFilesChars);
+      span.setAttribute('promptCharacterCounts.messageHistoryChars', promptCharacterCounts.messageHistoryChars);
+      span.setAttribute('promptCharacterCounts.currentTurnChars', promptCharacterCounts.currentTurnChars);
+      span.setAttribute('promptCharacterCounts.totalPromptChars', promptCharacterCounts.totalPromptChars);
+    }
     if (providerMetadata) {
       if (providerMetadata.anthropic) {
         const anthropic: any = providerMetadata.anthropic;

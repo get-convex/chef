@@ -8,6 +8,7 @@ import { checkTokenUsage, recordUsage } from '~/lib/.server/usage';
 import { disabledText, noTokensText } from '~/lib/convexUsage';
 import type { ModelProvider } from '~/lib/.server/llm/provider';
 import { getEnv } from '~/lib/.server/env';
+import type { PromptCharacterCounts } from 'chef-agent/ChatContextManager';
 
 type Messages = Message[];
 
@@ -67,6 +68,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     smallFiles: boolean;
     recordRawPromptsForDebugging?: boolean;
     collapsedMessages: boolean;
+    promptCharacterCounts?: PromptCharacterCounts;
     featureFlags: {
       enablePreciseEdits: boolean;
       smallFiles: boolean;
@@ -173,6 +175,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       recordUsageCb,
       recordRawPromptsForDebugging: !!recordRawPromptsForDebugging,
       collapsedMessages: body.collapsedMessages,
+      promptCharacterCounts: body.promptCharacterCounts,
       featureFlags: {
         enablePreciseEdits: body.featureFlags.enablePreciseEdits,
         smallFiles: body.featureFlags.smallFiles,

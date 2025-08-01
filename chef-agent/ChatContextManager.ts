@@ -15,6 +15,13 @@ const MAX_RELEVANT_FILES = 16;
 
 type UIMessagePart = UIMessage['parts'][number];
 
+export type PromptCharacterCounts = {
+  relevantFilesChars: number;
+  messageHistoryChars: number;
+  currentTurnChars: number;
+  totalPromptChars: number;
+};
+
 type ParsedAssistantMessage = {
   filesTouched: Map<AbsolutePath, number>;
 };
@@ -58,7 +65,7 @@ export class ChatContextManager {
     messages: UIMessage[],
     maxCollapsedMessagesSize: number,
     minCollapsedMessagesSize: number,
-  ): { messages: UIMessage[]; collapsedMessages: boolean } {
+  ): { messages: UIMessage[]; collapsedMessages: boolean; promptCharacterCounts?: PromptCharacterCounts } {
     // If the last message is a user message this is the first LLM call that includes that user message.
     // Only update the relevant files and the message cutoff indices if the last message is a user message to avoid clearing the cache as the agent makes changes.
     let collapsedMessages = false;
@@ -77,7 +84,76 @@ export class ChatContextManager {
       }
     }
     messages = this.collapseMessages(messages);
-    return { messages, collapsedMessages };
+
+    // Calculate character counts for the prepared messages
+    const promptCharacterCounts = this.calculatePromptCharacterCounts(messages);
+
+    return { messages, collapsedMessages, promptCharacterCounts };
+  }
+
+  /**
+   * Calculate character counts for different parts of the prompt
+   */
+  calculatePromptCharacterCounts(
+    messages: UIMessage[],
+    relevantFilesMessage?: UIMessage,
+    systemPrompts?: string[],
+  ): PromptCharacterCounts {
+    // Calculate relevant files character count
+    let relevantFilesChars = 0;
+    if (relevantFilesMessage) {
+      relevantFilesChars = this.messageSize(relevantFilesMessage);
+    }
+
+    // Calculate message history character count (excluding current turn)
+    let messageHistoryChars = 0;
+    const lastMessage = messages[messages.length - 1];
+    const isLastMessageUser = lastMessage?.role === 'user';
+
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      // Skip the current turn (last message if it's from user)
+      if (isLastMessageUser && i === messages.length - 1) {
+        continue;
+      }
+      messageHistoryChars += this.messageSize(message);
+    }
+
+    // Calculate current turn character count
+    let currentTurnChars = 0;
+    if (isLastMessageUser) {
+      currentTurnChars = this.messageSize(lastMessage);
+    }
+
+    // Calculate system prompts character count (if provided)
+    let systemPromptsChars = 0;
+    if (systemPrompts) {
+      systemPromptsChars = systemPrompts.reduce((sum, prompt) => sum + prompt.length, 0);
+    }
+
+    const totalPromptChars = relevantFilesChars + messageHistoryChars + currentTurnChars + systemPromptsChars;
+
+    return {
+      relevantFilesChars,
+      messageHistoryChars,
+      currentTurnChars,
+      totalPromptChars,
+    };
+  }
+
+  private messageSize(message: UIMessage): number {
+    const cached = this.messageSizeCache.get(message);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    let size = message.content.length;
+    for (const part of message.parts) {
+      size += this.partSize(part);
+    }
+
+    this.messageSizeCache.set(message, size);
+    return size;
   }
 
   relevantFiles(messages: UIMessage[], id: string, maxRelevantFilesSize: number): UIMessage {
