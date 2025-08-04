@@ -77,7 +77,6 @@ export function getProvider(
         });
       } else {
         const credentials = JSON.parse(getEnv('GOOGLE_VERTEX_CREDENTIALS_JSON')!);
-        console.log('credentials', credentials);
         google = createVertex({
           project: credentials.project_id,
           // Use global endpoint for higher availability
