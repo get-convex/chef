@@ -90,6 +90,7 @@ export function getProvider(
               private_key: credentials.private_key,
             },
           },
+          fetch,
         });
       }
       provider = {
