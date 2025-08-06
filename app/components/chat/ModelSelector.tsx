@@ -119,18 +119,13 @@ export const ModelSelector = React.memo(function ModelSelector({
 }: ModelSelectorProps) {
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
   const selectedModel = models[modelSelection];
-  const { useGeminiAuto, enableClaude4Sonnet } = useLaunchDarkly();
+  const { useGeminiAuto } = useLaunchDarkly();
   if (!selectedModel) {
     captureMessage(`Model ${modelSelection} not found`);
     setModelSelection('auto');
   }
 
-  const availableModels = Object.entries(models).filter(([key]) => {
-    if (key === 'claude-4-sonnet') {
-      return enableClaude4Sonnet;
-    }
-    return true;
-  });
+  const availableModels = Object.entries(models);
 
   return (
     <Combobox

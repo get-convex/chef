@@ -10,9 +10,7 @@ const flagDefaults: {
   maxRelevantFilesSize: number;
   minCollapsedMessagesSize: number;
   useGeminiAuto: boolean;
-  enableClaude4Sonnet: boolean;
   notionClonePrompt: boolean;
-  useClaude4Auto: boolean;
   enablePreciseEdits: boolean;
   enableEnvironmentVariables: boolean;
   newChatFeature: boolean;
@@ -27,9 +25,7 @@ const flagDefaults: {
   maxRelevantFilesSize: 8192,
   minCollapsedMessagesSize: 8192,
   useGeminiAuto: false,
-  enableClaude4Sonnet: false,
   notionClonePrompt: false,
-  useClaude4Auto: false,
   enablePreciseEdits: false,
   enableEnvironmentVariables: false,
   newChatFeature: false,

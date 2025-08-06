@@ -143,7 +143,6 @@ export const Chat = memo(
       maxRelevantFilesSize,
       minCollapsedMessagesSize,
       useGeminiAuto,
-      useClaude4Auto,
       enablePreciseEdits,
       enableEnvironmentVariables,
       enableResend,
@@ -238,6 +237,10 @@ export const Chat = memo(
 
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
+    const useAnthropicFraction = Number(import.meta.env.VITE_USE_ANTHROPIC_FRACTION) || 1.0;
+    const anthropicProvider: ProviderType[] =
+      Math.random() < useAnthropicFraction ? ['Anthropic', 'Bedrock'] : ['Bedrock', 'Anthropic'];
+
     const checkTokenUsage = useCallback(async () => {
       if (hasApiKeySet(modelSelection, useGeminiAuto, apiKey)) {
         setDisableChatMessage(null);
@@ -296,25 +299,17 @@ export const Chat = memo(
         const retries = retryState.get();
         let modelChoice: string | undefined = undefined;
         if (modelSelection === 'auto') {
-          if (useClaude4Auto) {
-            const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
-            modelProvider = providers[retries.numFailures % providers.length];
-            modelChoice = 'claude-sonnet-4-0';
-          } else if (useGeminiAuto) {
-            modelProvider = 'Google';
-          } else {
-            // Send all traffic to Anthropic first before failing over to Bedrock.
-            const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
-            modelProvider = providers[retries.numFailures % providers.length];
-          }
+          const providers: ProviderType[] = anthropicProvider;
+          modelProvider = providers[retries.numFailures % providers.length];
+          modelChoice = 'claude-sonnet-4-0';
         } else if (modelSelection === 'claude-3.5-sonnet') {
-          const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
+          const providers: ProviderType[] = anthropicProvider;
           modelProvider = providers[retries.numFailures % providers.length];
         } else if (modelSelection === 'claude-3-5-haiku') {
           modelProvider = 'Anthropic';
           modelChoice = 'claude-3-5-haiku-latest';
         } else if (modelSelection === 'claude-4-sonnet') {
-          const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
+          const providers: ProviderType[] = anthropicProvider;
           modelProvider = providers[retries.numFailures % providers.length];
           modelChoice = 'claude-sonnet-4-0';
         } else if (modelSelection === 'grok-3-mini') {
