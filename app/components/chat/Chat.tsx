@@ -238,7 +238,7 @@ export const Chat = memo(
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
     const useAnthropicFraction = Number(import.meta.env.VITE_USE_ANTHROPIC_FRACTION) || 1.0;
-    const anthropicProvider: ProviderType[] =
+    const anthropicProviders: ProviderType[] =
       Math.random() < useAnthropicFraction ? ['Anthropic', 'Bedrock'] : ['Bedrock', 'Anthropic'];
 
     const checkTokenUsage = useCallback(async () => {
@@ -299,17 +299,17 @@ export const Chat = memo(
         const retries = retryState.get();
         let modelChoice: string | undefined = undefined;
         if (modelSelection === 'auto') {
-          const providers: ProviderType[] = anthropicProvider;
+          const providers: ProviderType[] = anthropicProviders;
           modelProvider = providers[retries.numFailures % providers.length];
           modelChoice = 'claude-sonnet-4-0';
         } else if (modelSelection === 'claude-3.5-sonnet') {
-          const providers: ProviderType[] = anthropicProvider;
+          const providers: ProviderType[] = anthropicProviders;
           modelProvider = providers[retries.numFailures % providers.length];
         } else if (modelSelection === 'claude-3-5-haiku') {
           modelProvider = 'Anthropic';
           modelChoice = 'claude-3-5-haiku-latest';
         } else if (modelSelection === 'claude-4-sonnet') {
-          const providers: ProviderType[] = anthropicProvider;
+          const providers: ProviderType[] = anthropicProviders;
           modelProvider = providers[retries.numFailures % providers.length];
           modelChoice = 'claude-sonnet-4-0';
         } else if (modelSelection === 'grok-3-mini') {
