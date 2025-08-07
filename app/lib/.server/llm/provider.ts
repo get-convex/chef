@@ -34,6 +34,10 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
       return 'us.anthropic.claude-sonnet-4-20250514-v1:0';
     }
 
+    if (modelChoice === 'gpt-5') {
+      return 'gpt-5';
+    }
+
     return modelChoice;
   }
   switch (provider) {
