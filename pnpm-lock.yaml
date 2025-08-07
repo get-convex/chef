@@ -11,7 +11,7 @@ overrides:
 
 patchedDependencies:
   '@ai-sdk/openai@1.3.6':
-    hash: n6pdefd2zd3ufcgtvcfhujlrdq
+    hash: czsd76p7yavx4uccq5pd3xgsfu
     path: patches/@ai-sdk__openai@1.3.6.patch
 
 importers:
@@ -32,7 +32,7 @@ importers:
         version: 2.2.24(zod@3.24.1)
       '@ai-sdk/openai':
         specifier: ^1.3.6
-        version: 1.3.6(patch_hash=n6pdefd2zd3ufcgtvcfhujlrdq)(zod@3.24.1)
+        version: 1.3.6(patch_hash=czsd76p7yavx4uccq5pd3xgsfu)(zod@3.24.1)
       '@ai-sdk/react':
         specifier: ^1.2.5
         version: 1.2.6(react@18.3.1)(zod@3.24.1)
@@ -554,7 +554,7 @@ importers:
         version: '@convex-dev/ai-sdk-google@1.2.17(zod@3.24.1)'
       '@ai-sdk/openai':
         specifier: ^1.3.6
-        version: 1.3.6(patch_hash=n6pdefd2zd3ufcgtvcfhujlrdq)(zod@3.24.1)
+        version: 1.3.6(patch_hash=czsd76p7yavx4uccq5pd3xgsfu)(zod@3.24.1)
       '@ai-sdk/xai':
         specifier: ^1.2.13
         version: 1.2.13(zod@3.24.1)
@@ -9622,7 +9622,7 @@ snapshots:
       '@ai-sdk/provider-utils': 2.2.7(zod@3.24.1)
       zod: 3.24.1
 
-  '@ai-sdk/openai@1.3.6(patch_hash=n6pdefd2zd3ufcgtvcfhujlrdq)(zod@3.24.1)':
+  '@ai-sdk/openai@1.3.6(patch_hash=czsd76p7yavx4uccq5pd3xgsfu)(zod@3.24.1)':
     dependencies:
       '@ai-sdk/provider': 1.1.0
       '@ai-sdk/provider-utils': 2.2.3(zod@3.24.1)
