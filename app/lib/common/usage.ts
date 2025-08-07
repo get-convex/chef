@@ -16,7 +16,7 @@ export function usageFromGeneration(generation: {
     openaiCachedPromptTokens: Number(generation.providerMetadata?.openai?.cachedPromptTokens ?? 0),
     xaiCachedPromptTokens: Number(generation.providerMetadata?.xai?.cachedPromptTokens ?? 0),
     googleCachedContentTokenCount: Number(generation.providerMetadata?.google?.cachedContentTokenCount ?? 0),
-    googleThoughtsTokenCount: Number(generation.providerMetadata?.google?.thoughtTokensCount ?? 0),
+    googleThoughtsTokenCount: Number(generation.providerMetadata?.google?.thoughtsTokenCount ?? 0),
   };
 }
 
