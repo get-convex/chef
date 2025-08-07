@@ -16,7 +16,7 @@ export function usageFromGeneration(generation: {
     openaiCachedPromptTokens: Number(generation.providerMetadata?.openai?.cachedPromptTokens ?? 0),
     xaiCachedPromptTokens: Number(generation.providerMetadata?.xai?.cachedPromptTokens ?? 0),
     googleCachedContentTokenCount: Number(generation.providerMetadata?.google?.cachedContentTokenCount ?? 0),
-    googleThoughtTokenCount: Number(generation.providerMetadata?.google?.thoughtTokensCount ?? 0),
+    googleThoughtsTokenCount: Number(generation.providerMetadata?.google?.thoughtTokensCount ?? 0),
   };
 }
 
@@ -30,7 +30,7 @@ export function initializeUsage(): Usage {
     openaiCachedPromptTokens: 0,
     xaiCachedPromptTokens: 0,
     googleCachedContentTokenCount: 0,
-    googleThoughtTokenCount: 0,
+    googleThoughtsTokenCount: 0,
   };
 }
 
@@ -189,7 +189,7 @@ export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) 
   } else if (provider === 'Google') {
     const googleCompletionTokens = totalUsage.completionTokens * 140;
     chefTokens += googleCompletionTokens;
-    const googleThoughtTokens = totalUsage.googleThoughtTokenCount * 140;
+    const googleThoughtTokens = totalUsage.googleThoughtsTokenCount * 140;
     chefTokens += googleThoughtTokens;
     breakdown.completionTokens.google = googleCompletionTokens;
     const googlePromptTokens = (totalUsage.promptTokens - totalUsage.googleCachedContentTokenCount) * 18;

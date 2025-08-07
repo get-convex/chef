@@ -386,8 +386,8 @@ function buildUsageRecord(usage: Usage): UsageRecord {
         usageRecord.cachedPromptTokens += usage.googleCachedContentTokenCount;
         break;
       }
-      case 'googleThoughtTokenCount': {
-        usageRecord.completionTokens += usage.googleThoughtTokenCount;
+      case 'googleThoughtsTokenCount': {
+        usageRecord.completionTokens += usage.googleThoughtsTokenCount;
         break;
       }
       case 'toolCallId':

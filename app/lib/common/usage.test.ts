@@ -43,3 +43,25 @@ test('calculateChefTokensGoogleNoCachedContent', () => {
   expect(breakdown.promptTokens.google.uncached).toBe(3600);
   expect(breakdown.promptTokens.google.cached).toBe(0);
 });
+
+test('calculateChefTokensGoogleWithThoughtTokens', () => {
+  const usage = {
+    ...initializeUsage(),
+    completionTokens: 100,
+    promptTokens: 200,
+    totalTokens: 300,
+    googleCachedContentTokenCount: 0,
+    googleThoughtsTokenCount: 50,
+  };
+
+  const { chefTokens, breakdown } = calculateChefTokens(usage, 'Google');
+
+  // Google completion tokens: (100 + 50) * 140 = 21000
+  // Google uncached prompt tokens: 200 * 18 = 3600
+  // Total: 21000 + 3600 = 24600
+  expect(chefTokens).toBe(24600);
+
+  expect(breakdown.completionTokens.google).toBe(14000);
+  expect(breakdown.promptTokens.google.uncached).toBe(3600);
+  expect(breakdown.promptTokens.google.cached).toBe(0);
+});
