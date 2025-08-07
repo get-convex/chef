@@ -16,6 +16,7 @@ const flagDefaults: {
   newChatFeature: boolean;
   minMessagesForNudge: number;
   enableResend: boolean;
+  useAnthropicFraction: number;
 } = {
   maintenanceMode: false,
   showUsageAnnotations: false,
@@ -31,6 +32,7 @@ const flagDefaults: {
   newChatFeature: false,
   minMessagesForNudge: 40,
   enableResend: false,
+  useAnthropicFraction: 1.0,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {

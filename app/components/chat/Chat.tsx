@@ -146,6 +146,7 @@ export const Chat = memo(
       enablePreciseEdits,
       enableEnvironmentVariables,
       enableResend,
+      useAnthropicFraction,
     } = useLaunchDarkly();
 
     const title = useStore(description);
@@ -237,7 +238,6 @@ export const Chat = memo(
 
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
-    const useAnthropicFraction = Number(import.meta.env.VITE_USE_ANTHROPIC_FRACTION ?? '1.0');
     const anthropicProviders: ProviderType[] =
       Math.random() < useAnthropicFraction ? ['Anthropic', 'Bedrock'] : ['Bedrock', 'Anthropic'];
 
