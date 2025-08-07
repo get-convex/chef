@@ -22,8 +22,11 @@ type Provider = {
   maxTokens: number;
   model: LanguageModelV1;
   options?: {
-    xai: {
+    xai?: {
       stream_options: { include_usage: true };
+    };
+    openai?: {
+      reasoningEffort?: string;
     };
   };
 };
@@ -129,7 +132,7 @@ export function getProvider(
       provider = {
         model: openai(model),
         maxTokens: 8192,
-        options: undefined,
+        options: modelChoice === 'gpt-5' ? { openai: { reasoningEffort: 'high' } } : undefined,
       };
       break;
     }
