@@ -1,8 +1,8 @@
-import { convertToCoreMessages } from 'ai';
-import type { Message } from 'ai';
+import { convertToModelMessages } from 'ai';
+import type { UIMessage } from 'ai';
 import { EXCLUDED_FILE_PATHS } from './constants.js';
 
-export function cleanupAssistantMessages(messages: Message[]) {
+export function cleanupAssistantMessages(messages: UIMessage[]) {
   let processedMessages = messages.map((message) => {
     if (message.role == 'assistant') {
       let content = cleanMessage(message.content);
@@ -24,7 +24,7 @@ export function cleanupAssistantMessages(messages: Message[]) {
       (message.parts &&
         message.parts.filter((part) => part.type === 'text' || part.type === 'tool-invocation').length > 0),
   );
-  return convertToCoreMessages(processedMessages).filter((message) => message.content.length > 0);
+  return convertToModelMessages(processedMessages).filter((message) => message.content.length > 0);
 }
 
 function cleanMessage(message: string) {

@@ -1,4 +1,4 @@
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import { Fragment, useCallback, useState } from 'react';
 import { classNames } from '~/utils/classNames';
 import { AssistantMessage } from './AssistantMessage';
@@ -20,7 +20,7 @@ interface MessagesProps {
   id?: string;
   className?: string;
   isStreaming?: boolean;
-  messages?: Message[];
+  messages?: UIMessage[];
   subchatsLength?: number;
   onRewindToMessage?: (subchatIndex?: number, messageIndex?: number) => void;
 }

@@ -1,5 +1,5 @@
 import { Sheet } from '@ui/Sheet';
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import React, { type ReactNode, type RefCallback, useCallback, useEffect, useMemo, useState } from 'react';
 import Landing from '~/components/landing/Landing';
 import { Workbench } from '~/components/workbench/Workbench.client';
@@ -48,7 +48,7 @@ interface BaseChatProps {
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
   currentError: Error | undefined;
   toolStatus: ToolStatus;
-  messages: Message[];
+  messages: UIMessage[];
   terminalInitializationOptions: TerminalInitializationOptions | undefined;
   disableChatMessage: ReactNode | string | null;
 

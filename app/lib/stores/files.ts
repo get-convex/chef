@@ -117,7 +117,14 @@ export class FilesStore {
       }
 
       // we immediately update the file and don't rely on the `change` event coming from the watcher
-      this.files.setKey(filePath, { type: 'file', content, isBinary: false });
+      this.files.setKey(filePath, {
+        type: 'file',
+
+        file: {
+          content,
+          isBinary: false
+        }
+      });
       this.userWrites.set(filePath, Date.now());
 
       logger.info('File updated');
@@ -166,7 +173,14 @@ export class FilesStore {
       if (!isBinary) {
         content = this.#decodeFileContent(buffer);
       }
-      this.files.setKey(getAbsolutePath(absPath), { type: 'file', content, isBinary });
+      this.files.setKey(getAbsolutePath(absPath), {
+        type: 'file',
+
+        file: {
+          content,
+          isBinary
+        }
+      });
     };
     await Promise.all(absFilePaths.map(loadFile));
   }
@@ -215,7 +229,14 @@ export class FilesStore {
             content = this.#decodeFileContent(buffer);
           }
 
-          this.files.setKey(getAbsolutePath(sanitizedPath), { type: 'file', content, isBinary });
+          this.files.setKey(getAbsolutePath(sanitizedPath), {
+            type: 'file',
+
+            file: {
+              content,
+              isBinary
+            }
+          });
 
           break;
         }

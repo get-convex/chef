@@ -13,5 +13,5 @@ export const getConvexDeploymentNameParameters = z.object({});
 
 export const getConvexDeploymentNameTool: Tool = {
   description: getConvexDeploymentNameDescription,
-  parameters: getConvexDeploymentNameParameters,
+  inputSchema: getConvexDeploymentNameParameters,
 };

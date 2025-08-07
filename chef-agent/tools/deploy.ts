@@ -18,7 +18,7 @@ top can only contain actions. They can NEVER contains queries or mutations.
 
 export const deployTool: Tool = {
   description: deployToolDescription,
-  parameters: z.object({}),
+  inputSchema: z.object({}),
 };
 
 export const deployToolParameters = z.object({});

@@ -67,5 +67,12 @@ export async function readPath(
     // try it as a file below.
   }
   const content = await container.fs.readFile(relPath, 'utf-8');
-  return { type: 'file', content, isBinary: false };
+  return {
+    type: 'file',
+
+    file: {
+      content,
+      isBinary: false
+    }
+  };
 }

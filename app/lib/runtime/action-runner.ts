@@ -215,7 +215,7 @@ export class ActionRunner {
     try {
       switch (action.type) {
         case 'file': {
-          await this.#runFileAction(action);
+          await this.#runFileAction(action.file);
           break;
         }
         case 'toolUse': {
@@ -309,9 +309,12 @@ export class ActionRunner {
 
     await this.#runFileAction({
       type: 'file',
-      filePath: historyPath,
-      content: JSON.stringify(history),
-      changeSource: 'auto-save',
+
+      file: {
+        filePath: historyPath,
+        content: JSON.stringify(history),
+        changeSource: 'auto-save'
+      }
     } as any);
   }
 

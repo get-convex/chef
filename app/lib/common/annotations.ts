@@ -1,4 +1,4 @@
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import { z } from 'zod';
 
 // This is added as a message annotation by the server when the agent has
@@ -9,10 +9,10 @@ export const REPEATED_ERROR_REASON = 'repeated-errors';
 
 export const usageAnnotationValidator = z.object({
   toolCallId: z.string().optional(),
-  completionTokens: z.number(),
-  promptTokens: z.number(),
+  outputTokens: z.number(),
+  inputTokens: z.number(),
   totalTokens: z.number(),
-  providerMetadata: z
+  providerOptions: z
     .object({
       openai: z
         .object({
@@ -72,7 +72,7 @@ export const annotationValidator = z.discriminatedUnion('type', [
   }),
 ]);
 
-export const failedDueToRepeatedErrors = (annotations: Message['annotations']) => {
+export const failedDueToRepeatedErrors = (annotations: UIMessage['annotations']) => {
   if (!annotations) {
     return false;
   }
@@ -83,7 +83,7 @@ export const failedDueToRepeatedErrors = (annotations: Message['annotations']) =
 };
 
 export const parseAnnotations = (
-  annotations: Message['annotations'],
+  annotations: UIMessage['annotations'],
 ): {
   failedDueToRepeatedErrors: boolean;
   usageForToolCall: Record<string, UsageAnnotation | null>;

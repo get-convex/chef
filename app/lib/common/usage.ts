@@ -1,29 +1,29 @@
-import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
+import type { LanguageModelUsage, UIMessage, ProviderMetadata } from 'ai';
 import { type ProviderType, type Usage, type UsageAnnotation, parseAnnotations } from '~/lib/common/annotations';
 import { captureMessage } from '@sentry/remix';
 
 export function usageFromGeneration(generation: {
   usage: LanguageModelUsage;
-  providerMetadata?: ProviderMetadata;
+  providerOptions?: ProviderMetadata;
 }): Usage {
   return {
-    completionTokens: generation.usage.completionTokens,
-    promptTokens: generation.usage.promptTokens,
+    outputTokens: generation.usage.outputTokens,
+    inputTokens: generation.usage.inputTokens,
     totalTokens: generation.usage.totalTokens,
-    providerMetadata: generation.providerMetadata,
-    anthropicCacheCreationInputTokens: Number(generation.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0),
-    anthropicCacheReadInputTokens: Number(generation.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
-    openaiCachedPromptTokens: Number(generation.providerMetadata?.openai?.cachedPromptTokens ?? 0),
-    xaiCachedPromptTokens: Number(generation.providerMetadata?.xai?.cachedPromptTokens ?? 0),
-    googleCachedContentTokenCount: Number(generation.providerMetadata?.google?.cachedContentTokenCount ?? 0),
-    googleThoughtsTokenCount: Number(generation.providerMetadata?.google?.thoughtsTokenCount ?? 0),
+    providerOptions: generation.providerOptions,
+    anthropicCacheCreationInputTokens: Number(generation.providerOptions?.anthropic?.cacheCreationInputTokens ?? 0),
+    anthropicCacheReadInputTokens: Number(generation.providerOptions?.anthropic?.cacheReadInputTokens ?? 0),
+    openaiCachedPromptTokens: Number(generation.providerOptions?.openai?.cachedPromptTokens ?? 0),
+    xaiCachedPromptTokens: Number(generation.providerOptions?.xai?.cachedPromptTokens ?? 0),
+    googleCachedContentTokenCount: Number(generation.providerOptions?.google?.cachedContentTokenCount ?? 0),
+    googleThoughtsTokenCount: Number(generation.providerOptions?.google?.thoughtsTokenCount ?? 0),
   };
 }
 
 export function initializeUsage(): Usage {
   return {
-    completionTokens: 0,
-    promptTokens: 0,
+    outputTokens: 0,
+    inputTokens: 0,
     totalTokens: 0,
     anthropicCacheCreationInputTokens: 0,
     anthropicCacheReadInputTokens: 0,
@@ -34,7 +34,7 @@ export function initializeUsage(): Usage {
   };
 }
 
-export function getFailedToolCalls(message: Message): Set<string> {
+export function getFailedToolCalls(message: UIMessage): Set<string> {
   const failedToolCalls: Set<string> = new Set();
   for (const part of message.parts ?? []) {
     if (part.type !== 'tool-invocation') {
@@ -68,8 +68,8 @@ export function calculateTotalUsage(args: {
 }
 
 export async function calculateTotalBilledUsageForMessage(
-  lastMessage: Message | undefined,
-  finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
+  lastMessage: UIMessage | undefined,
+  finalGeneration: { usage: LanguageModelUsage; providerOptions?: ProviderMetadata },
 ): Promise<Usage> {
   const { usageForToolCall } = parseAnnotations(lastMessage?.annotations ?? []);
   // If there's an annotation for the final part, start with an empty usage, otherwise, create a
@@ -83,14 +83,14 @@ export async function calculateTotalBilledUsageForMessage(
 }
 
 function addUsage(totalUsage: Usage, payload: UsageAnnotation) {
-  totalUsage.completionTokens += payload.completionTokens;
-  totalUsage.promptTokens += payload.promptTokens;
+  totalUsage.outputTokens += payload.outputTokens;
+  totalUsage.inputTokens += payload.inputTokens;
   totalUsage.totalTokens += payload.totalTokens;
-  totalUsage.anthropicCacheCreationInputTokens += payload.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0;
-  totalUsage.anthropicCacheReadInputTokens += payload.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0;
-  totalUsage.openaiCachedPromptTokens += payload.providerMetadata?.openai?.cachedPromptTokens ?? 0;
-  totalUsage.xaiCachedPromptTokens += payload.providerMetadata?.xai?.cachedPromptTokens ?? 0;
-  totalUsage.googleCachedContentTokenCount += payload.providerMetadata?.google?.cachedContentTokenCount ?? 0;
+  totalUsage.anthropicCacheCreationInputTokens += payload.providerOptions?.anthropic?.cacheCreationInputTokens ?? 0;
+  totalUsage.anthropicCacheReadInputTokens += payload.providerOptions?.anthropic?.cacheReadInputTokens ?? 0;
+  totalUsage.openaiCachedPromptTokens += payload.providerOptions?.openai?.cachedPromptTokens ?? 0;
+  totalUsage.xaiCachedPromptTokens += payload.providerOptions?.xai?.cachedPromptTokens ?? 0;
+  totalUsage.googleCachedContentTokenCount += payload.providerOptions?.google?.cachedContentTokenCount ?? 0;
 }
 
 export type ChefTokenBreakdown = {
@@ -116,14 +116,14 @@ export type ChefTokenBreakdown = {
 export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) {
   let chefTokens = 0;
   const breakdown = {
-    completionTokens: {
+    outputTokens: {
       anthropic: 0,
       openai: 0,
       xai: 0,
       google: 0,
       bedrock: 0,
     },
-    promptTokens: {
+    inputTokens: {
       anthropic: {
         uncached: 0,
         cached: 0,
@@ -147,57 +147,57 @@ export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) 
     },
   };
   if (provider === 'Anthropic') {
-    const anthropicCompletionTokens = totalUsage.completionTokens * 200;
+    const anthropicCompletionTokens = totalUsage.outputTokens * 200;
     chefTokens += anthropicCompletionTokens;
-    breakdown.completionTokens.anthropic = anthropicCompletionTokens;
-    const anthropicPromptTokens = totalUsage.promptTokens * 40;
+    breakdown.outputTokens.anthropic = anthropicCompletionTokens;
+    const anthropicPromptTokens = totalUsage.inputTokens * 40;
     chefTokens += anthropicPromptTokens;
-    breakdown.promptTokens.anthropic.uncached = anthropicPromptTokens;
+    breakdown.inputTokens.anthropic.uncached = anthropicPromptTokens;
     const cacheCreationInputTokens = totalUsage.anthropicCacheCreationInputTokens * 40;
     chefTokens += cacheCreationInputTokens;
-    breakdown.promptTokens.anthropic.cached = cacheCreationInputTokens;
+    breakdown.inputTokens.anthropic.cached = cacheCreationInputTokens;
     const cacheReadInputTokens = totalUsage.anthropicCacheReadInputTokens * 3;
     chefTokens += cacheReadInputTokens;
-    breakdown.promptTokens.anthropic.cached += cacheReadInputTokens;
+    breakdown.inputTokens.anthropic.cached += cacheReadInputTokens;
   } else if (provider === 'Bedrock') {
-    const bedrockCompletionTokens = totalUsage.completionTokens * 200;
+    const bedrockCompletionTokens = totalUsage.outputTokens * 200;
     chefTokens += bedrockCompletionTokens;
-    breakdown.completionTokens.bedrock = bedrockCompletionTokens;
-    const bedrockPromptTokens = totalUsage.promptTokens * 40;
+    breakdown.outputTokens.bedrock = bedrockCompletionTokens;
+    const bedrockPromptTokens = totalUsage.inputTokens * 40;
     chefTokens += bedrockPromptTokens;
-    breakdown.promptTokens.bedrock.uncached = bedrockPromptTokens;
+    breakdown.inputTokens.bedrock.uncached = bedrockPromptTokens;
   } else if (provider === 'OpenAI') {
-    const openaiCompletionTokens = totalUsage.completionTokens * 100;
+    const openaiCompletionTokens = totalUsage.outputTokens * 100;
     chefTokens += openaiCompletionTokens;
-    breakdown.completionTokens.openai = openaiCompletionTokens;
+    breakdown.outputTokens.openai = openaiCompletionTokens;
     const openaiCachedPromptTokens = totalUsage.openaiCachedPromptTokens * 5;
     chefTokens += openaiCachedPromptTokens;
-    breakdown.promptTokens.openai.cached = openaiCachedPromptTokens;
-    const openaiUncachedPromptTokens = (totalUsage.promptTokens - totalUsage.openaiCachedPromptTokens) * 26;
+    breakdown.inputTokens.openai.cached = openaiCachedPromptTokens;
+    const openaiUncachedPromptTokens = (totalUsage.inputTokens - totalUsage.openaiCachedPromptTokens) * 26;
     chefTokens += openaiUncachedPromptTokens;
-    breakdown.promptTokens.openai.uncached = openaiUncachedPromptTokens;
+    breakdown.inputTokens.openai.uncached = openaiUncachedPromptTokens;
   } else if (provider === 'XAI') {
     // TODO: This is a guess. Billing like anthropic
-    const xaiCompletionTokens = totalUsage.completionTokens * 200;
+    const xaiCompletionTokens = totalUsage.outputTokens * 200;
     chefTokens += xaiCompletionTokens;
-    breakdown.completionTokens.xai = xaiCompletionTokens;
-    const xaiPromptTokens = totalUsage.promptTokens * 40;
+    breakdown.outputTokens.xai = xaiCompletionTokens;
+    const xaiPromptTokens = totalUsage.inputTokens * 40;
     chefTokens += xaiPromptTokens;
-    breakdown.promptTokens.xai.uncached = xaiPromptTokens;
+    breakdown.inputTokens.xai.uncached = xaiPromptTokens;
     // TODO - never seen xai set this field to anything but 0, so holding off until we understand.
     //chefTokens += totalUsage.xaiCachedPromptTokens * 3;
   } else if (provider === 'Google') {
-    const googleCompletionTokens = totalUsage.completionTokens * 140;
+    const googleCompletionTokens = totalUsage.outputTokens * 140;
     chefTokens += googleCompletionTokens;
     const googleThoughtTokens = totalUsage.googleThoughtsTokenCount * 140;
     chefTokens += googleThoughtTokens;
-    breakdown.completionTokens.google = googleCompletionTokens;
-    const googlePromptTokens = (totalUsage.promptTokens - totalUsage.googleCachedContentTokenCount) * 18;
+    breakdown.outputTokens.google = googleCompletionTokens;
+    const googlePromptTokens = (totalUsage.inputTokens - totalUsage.googleCachedContentTokenCount) * 18;
     chefTokens += googlePromptTokens;
-    breakdown.promptTokens.google.uncached = googlePromptTokens;
+    breakdown.inputTokens.google.uncached = googlePromptTokens;
     const googleCachedContentTokens = totalUsage.googleCachedContentTokenCount * 5;
     chefTokens += googleCachedContentTokens;
-    breakdown.promptTokens.google.cached = googleCachedContentTokens;
+    breakdown.inputTokens.google.cached = googleCachedContentTokens;
   } else {
     captureMessage('WARNING: Unknown provider. Not recording usage. Giving away for free.', {
       level: 'error',

@@ -23,5 +23,5 @@ export const npmInstallToolParameters = z.object({
 
 export const npmInstallTool: Tool = {
   description: npmInstallToolDescription,
-  parameters: npmInstallToolParameters,
+  inputSchema: npmInstallToolParameters,
 };

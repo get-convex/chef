@@ -60,6 +60,6 @@ async function setEnvVariables(project: ConvexProject, values: Record<string, st
     },
   });
   if (!response.ok) {
-    throw new Error(`Failed to set environment variables: ${await response.text()}`);
+    throw new Error(`Failed to set environment variables: ${await response.text.text()}`);
   }
 }

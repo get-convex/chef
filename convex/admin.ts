@@ -82,7 +82,7 @@ export const checkIsConvexAdminInternal = internalAction({
         },
       });
       if (!response.ok) {
-        const body = await response.text();
+        const body = await response.text.text();
         throw new Error(`Failed to fetch teams: ${response.statusText}: ${body}`);
       }
       const teams = (await response.json()) as { id: number; slug: number }[];

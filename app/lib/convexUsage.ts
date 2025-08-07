@@ -47,11 +47,11 @@ export async function getTokenUsage(
     },
   });
   if (!response.ok) {
-    const body = await response.text();
+    const body = await response.text.text();
     throw new Error(`Failed to fetch usage: ${response.statusText}: ${body}`);
   }
   if (!response.ok) {
-    const body = await response.text();
+    const body = await response.text.text();
     return {
       status: 'error',
       httpStatus: response.status,

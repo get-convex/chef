@@ -10,7 +10,7 @@ const model: ChefModel = {
   name: 'claude-3.5-sonnet',
   model_slug: 'claude-3-5-sonnet-20240620',
   ai: anthropic('claude-3-5-sonnet-20241022'),
-  maxTokens: 8192,
+  maxOutputTokens: 8192,
 };
 mkdirSync('/tmp/backend', { recursive: true });
 const result = await chefTask(model, '/tmp/backend', 'Make me a chat app');

@@ -4,8 +4,8 @@ import { calculateChefTokens, initializeUsage } from './usage';
 test('calculateChefTokensGoogle', () => {
   const usage = {
     ...initializeUsage(),
-    completionTokens: 100,
-    promptTokens: 200,
+    outputTokens: 100,
+    inputTokens: 200,
     totalTokens: 300,
     googleCachedContentTokenCount: 50,
   };
@@ -18,16 +18,16 @@ test('calculateChefTokensGoogle', () => {
   // Total: 14000 + 2700 + 250 = 16950
   expect(chefTokens).toBe(16950);
 
-  expect(breakdown.completionTokens.google).toBe(14000);
-  expect(breakdown.promptTokens.google.uncached).toBe(2700);
-  expect(breakdown.promptTokens.google.cached).toBe(250);
+  expect(breakdown.outputTokens.google).toBe(14000);
+  expect(breakdown.inputTokens.google.uncached).toBe(2700);
+  expect(breakdown.inputTokens.google.cached).toBe(250);
 });
 
 test('calculateChefTokensGoogleNoCachedContent', () => {
   const usage = {
     ...initializeUsage(),
-    completionTokens: 100,
-    promptTokens: 200,
+    outputTokens: 100,
+    inputTokens: 200,
     totalTokens: 300,
     googleCachedContentTokenCount: 0,
   };
@@ -39,16 +39,16 @@ test('calculateChefTokensGoogleNoCachedContent', () => {
   // Total: 14000 + 3600 = 17600
   expect(chefTokens).toBe(17600);
 
-  expect(breakdown.completionTokens.google).toBe(14000);
-  expect(breakdown.promptTokens.google.uncached).toBe(3600);
-  expect(breakdown.promptTokens.google.cached).toBe(0);
+  expect(breakdown.outputTokens.google).toBe(14000);
+  expect(breakdown.inputTokens.google.uncached).toBe(3600);
+  expect(breakdown.inputTokens.google.cached).toBe(0);
 });
 
 test('calculateChefTokensGoogleWithThoughtTokens', () => {
   const usage = {
     ...initializeUsage(),
-    completionTokens: 100,
-    promptTokens: 200,
+    outputTokens: 100,
+    inputTokens: 200,
     totalTokens: 300,
     googleCachedContentTokenCount: 0,
     googleThoughtsTokenCount: 50,
@@ -61,7 +61,7 @@ test('calculateChefTokensGoogleWithThoughtTokens', () => {
   // Total: 21000 + 3600 = 24600
   expect(chefTokens).toBe(24600);
 
-  expect(breakdown.completionTokens.google).toBe(14000);
-  expect(breakdown.promptTokens.google.uncached).toBe(3600);
-  expect(breakdown.promptTokens.google.cached).toBe(0);
+  expect(breakdown.outputTokens.google).toBe(14000);
+  expect(breakdown.inputTokens.google.uncached).toBe(3600);
+  expect(breakdown.inputTokens.google.cached).toBe(0);
 });

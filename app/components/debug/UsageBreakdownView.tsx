@@ -1,4 +1,4 @@
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 
 import { useEffect } from 'react';
 
@@ -89,7 +89,7 @@ export function UsageBreakdownView({
   fileContent: Blob | null;
   convexSiteUrl: string;
 }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<UIMessage[]>([]);
   const [usageData, setUsageData] = useState<DebugUsageData | null>(null);
   const convex = useConvex();
   useEffect(() => {
@@ -238,18 +238,18 @@ function BreakdownView({
   startOpen?: boolean;
 }) {
   const tokensData = {
-    'Prompt - Anthropic (Uncached)': chefBreakdown.promptTokens.anthropic.uncached,
-    'Prompt - Anthropic (Cached)': chefBreakdown.promptTokens.anthropic.cached,
-    'Prompt - OpenAI (Uncached)': chefBreakdown.promptTokens.openai.uncached,
-    'Prompt - OpenAI (Cached)': chefBreakdown.promptTokens.openai.cached,
-    'Prompt - XAI (Uncached)': chefBreakdown.promptTokens.xai.uncached,
-    'Prompt - XAI (Cached)': chefBreakdown.promptTokens.xai.cached,
-    'Prompt - Google (Uncached)': chefBreakdown.promptTokens.google.uncached,
-    'Prompt - Google (Cached)': chefBreakdown.promptTokens.google.cached,
-    'Completion - Anthropic': chefBreakdown.completionTokens.anthropic,
-    'Completion - OpenAI': chefBreakdown.completionTokens.openai,
-    'Completion - XAI': chefBreakdown.completionTokens.xai,
-    'Completion - Google': chefBreakdown.completionTokens.google,
+    'Prompt - Anthropic (Uncached)': chefBreakdown.inputTokens.anthropic.uncached,
+    'Prompt - Anthropic (Cached)': chefBreakdown.inputTokens.anthropic.cached,
+    'Prompt - OpenAI (Uncached)': chefBreakdown.inputTokens.openai.uncached,
+    'Prompt - OpenAI (Cached)': chefBreakdown.inputTokens.openai.cached,
+    'Prompt - XAI (Uncached)': chefBreakdown.inputTokens.xai.uncached,
+    'Prompt - XAI (Cached)': chefBreakdown.inputTokens.xai.cached,
+    'Prompt - Google (Uncached)': chefBreakdown.inputTokens.google.uncached,
+    'Prompt - Google (Cached)': chefBreakdown.inputTokens.google.cached,
+    'Completion - Anthropic': chefBreakdown.outputTokens.anthropic,
+    'Completion - OpenAI': chefBreakdown.outputTokens.openai,
+    'Completion - XAI': chefBreakdown.outputTokens.xai,
+    'Completion - Google': chefBreakdown.outputTokens.google,
   };
   return (
     <div>
@@ -258,8 +258,8 @@ function BreakdownView({
         <CollapsibleView title="Raw Usage" startOpen={startOpen}>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p>Completion Tokens: {formatNumber(rawUsage.completionTokens)}</p>
-              <p>Prompt Tokens: {formatNumber(rawUsage.promptTokens)}</p>
+              <p>Completion Tokens: {formatNumber(rawUsage.outputTokens)}</p>
+              <p>Prompt Tokens: {formatNumber(rawUsage.inputTokens)}</p>
               <p>Total Tokens: {formatNumber(rawUsage.totalTokens)}</p>
             </div>
             <div>
@@ -270,8 +270,8 @@ function BreakdownView({
         <CollapsibleView title="Billed Usage" startOpen={startOpen}>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p>Completion Tokens: {formatNumber(billedUsage.completionTokens)}</p>
-              <p>Prompt Tokens: {formatNumber(billedUsage.promptTokens)}</p>
+              <p>Completion Tokens: {formatNumber(billedUsage.outputTokens)}</p>
+              <p>Prompt Tokens: {formatNumber(billedUsage.inputTokens)}</p>
               <p>Total Tokens: {formatNumber(billedUsage.totalTokens)}</p>
             </div>
             <div>
@@ -295,10 +295,10 @@ function BreakdownView({
     </div>
   );
 }
-async function getUsageBreakdown(messages: Message[]) {
+async function getUsageBreakdown(messages: UIMessage[]) {
   const chatTotalRawUsage = {
-    completionTokens: 0,
-    promptTokens: 0,
+    outputTokens: 0,
+    inputTokens: 0,
     totalTokens: 0,
     anthropicCacheCreationInputTokens: 0,
     anthropicCacheReadInputTokens: 0,
@@ -308,8 +308,8 @@ async function getUsageBreakdown(messages: Message[]) {
     googleThoughtsTokenCount: 0,
   };
   const chatTotalUsageBilledFor = {
-    completionTokens: 0,
-    promptTokens: 0,
+    outputTokens: 0,
+    inputTokens: 0,
     totalTokens: 0,
     anthropicCacheCreationInputTokens: 0,
     anthropicCacheReadInputTokens: 0,
@@ -320,13 +320,13 @@ async function getUsageBreakdown(messages: Message[]) {
   };
   let chatTotalChefTokens = 0;
   const chatTotalChefBreakdown: ChefBreakdown = {
-    completionTokens: {
+    outputTokens: {
       anthropic: 0,
       openai: 0,
       xai: 0,
       google: 0,
     },
-    promptTokens: {
+    inputTokens: {
       anthropic: {
         uncached: 0,
         cached: 0,
@@ -413,7 +413,7 @@ function getPartInfos({
   usageAnnotationsForToolCalls,
   providerAnnotationsForToolCalls,
 }: {
-  message: Message;
+  message: UIMessage;
   usageAnnotationsForToolCalls: Record<string, UsageAnnotation | null>;
   providerAnnotationsForToolCalls: Record<string, { provider: ProviderType; model: string | undefined }>;
 }) {
@@ -441,7 +441,7 @@ function getPartInfos({
       const rawUsageForPart = usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]
         ? usageFromGeneration({
             usage: usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]!,
-            providerMetadata: usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]?.providerMetadata,
+            providerOptions: usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]?.providerOptions,
           })
         : initializeUsage();
       const billedUsageForPart = rawUsageForPart;
@@ -461,7 +461,7 @@ function getPartInfos({
   }
   const finalUsage = usageFromGeneration({
     usage: usageAnnotationsForToolCalls.final ?? initializeUsage(),
-    providerMetadata: usageAnnotationsForToolCalls.final?.providerMetadata ?? undefined,
+    providerOptions: usageAnnotationsForToolCalls.final?.providerOptions ?? undefined,
   });
   const provider = providerAnnotationsForToolCalls.final?.provider ?? 'Anthropic';
   const { chefTokens, breakdown } = calculateChefTokens(finalUsage, provider);
@@ -480,8 +480,8 @@ function getPartInfos({
 }
 
 function addUsage(usageA: Usage, update: Usage) {
-  usageA.completionTokens += update.completionTokens;
-  usageA.promptTokens += update.promptTokens;
+  usageA.outputTokens += update.outputTokens;
+  usageA.inputTokens += update.inputTokens;
   usageA.totalTokens += update.totalTokens;
   usageA.anthropicCacheCreationInputTokens += update.anthropicCacheCreationInputTokens;
   usageA.anthropicCacheReadInputTokens += update.anthropicCacheReadInputTokens;
@@ -517,18 +517,18 @@ type ChefBreakdown = {
 };
 
 function addBreakdown(breakdownA: ChefBreakdown, update: ChefBreakdown) {
-  breakdownA.completionTokens.anthropic += update.completionTokens.anthropic;
-  breakdownA.completionTokens.openai += update.completionTokens.openai;
-  breakdownA.completionTokens.xai += update.completionTokens.xai;
-  breakdownA.completionTokens.google += update.completionTokens.google;
-  breakdownA.promptTokens.anthropic.cached += update.promptTokens.anthropic.cached;
-  breakdownA.promptTokens.anthropic.uncached += update.promptTokens.anthropic.uncached;
-  breakdownA.promptTokens.openai.cached += update.promptTokens.openai.cached;
-  breakdownA.promptTokens.openai.uncached += update.promptTokens.openai.uncached;
-  breakdownA.promptTokens.xai.cached += update.promptTokens.xai.cached;
-  breakdownA.promptTokens.xai.uncached += update.promptTokens.xai.uncached;
-  breakdownA.promptTokens.google.cached += update.promptTokens.google.cached;
-  breakdownA.promptTokens.google.uncached += update.promptTokens.google.uncached;
+  breakdownA.outputTokens.anthropic += update.outputTokens.anthropic;
+  breakdownA.outputTokens.openai += update.outputTokens.openai;
+  breakdownA.outputTokens.xai += update.outputTokens.xai;
+  breakdownA.outputTokens.google += update.outputTokens.google;
+  breakdownA.inputTokens.anthropic.cached += update.inputTokens.anthropic.cached;
+  breakdownA.inputTokens.anthropic.uncached += update.inputTokens.anthropic.uncached;
+  breakdownA.inputTokens.openai.cached += update.inputTokens.openai.cached;
+  breakdownA.inputTokens.openai.uncached += update.inputTokens.openai.uncached;
+  breakdownA.inputTokens.xai.cached += update.inputTokens.xai.cached;
+  breakdownA.inputTokens.xai.uncached += update.inputTokens.xai.uncached;
+  breakdownA.inputTokens.google.cached += update.inputTokens.google.cached;
+  breakdownA.inputTokens.google.uncached += update.inputTokens.google.uncached;
 }
 
 function CollapsibleView({

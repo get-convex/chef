@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { Markdown } from './Markdown';
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import { ToolCall } from './ToolCall';
 import { makePartId, type PartId } from 'chef-agent/partId.js';
 import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
@@ -10,7 +10,7 @@ import { calculateChefTokens, usageFromGeneration, type ChefTokenBreakdown } fro
 import { captureMessage } from '@sentry/remix';
 
 interface AssistantMessageProps {
-  message: Message;
+  message: UIMessage;
 }
 
 export const AssistantMessage = memo(function AssistantMessage({ message }: AssistantMessageProps) {
@@ -64,7 +64,7 @@ function AssistantMessagePart({
   partId,
   parsedAnnotations,
 }: {
-  part: NonNullable<Message['parts']>[number];
+  part: NonNullable<UIMessage['parts']>[number];
   showUsageAnnotations: boolean;
   partId: PartId;
   parsedAnnotations: ReturnType<typeof parseAnnotations>;
@@ -138,7 +138,7 @@ function displayChefTokenNumber(num: number) {
 function displayUsage(usageAnnotation: UsageAnnotation, provider: ProviderType, showUsageAnnotations: boolean) {
   const usage: Usage = usageFromGeneration({
     usage: usageAnnotation,
-    providerMetadata: usageAnnotation.providerMetadata,
+    providerOptions: usageAnnotation.providerOptions,
   });
   const { chefTokens, breakdown } = calculateChefTokens(usage, provider);
   return (
@@ -151,20 +151,20 @@ function displayUsage(usageAnnotation: UsageAnnotation, provider: ProviderType, 
 
 function displayBreakdownForSingleAnnotation(breakdown: ChefTokenBreakdown) {
   // A single annotation should always have a single provider.
-  if (breakdown.completionTokens.anthropic > 0) {
-    return `${displayChefTokenNumber(breakdown.promptTokens.anthropic.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.anthropic.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.anthropic)} completion`;
+  if (breakdown.outputTokens.anthropic > 0) {
+    return `${displayChefTokenNumber(breakdown.inputTokens.anthropic.uncached)} uncached, ${displayChefTokenNumber(breakdown.inputTokens.anthropic.cached)} cached, ${displayChefTokenNumber(breakdown.outputTokens.anthropic)} completion`;
   }
-  if (breakdown.completionTokens.openai > 0) {
-    return `${displayChefTokenNumber(breakdown.promptTokens.openai.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.openai.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.openai)} completion`;
+  if (breakdown.outputTokens.openai > 0) {
+    return `${displayChefTokenNumber(breakdown.inputTokens.openai.uncached)} uncached, ${displayChefTokenNumber(breakdown.inputTokens.openai.cached)} cached, ${displayChefTokenNumber(breakdown.outputTokens.openai)} completion`;
   }
-  if (breakdown.completionTokens.xai > 0) {
-    return `${displayChefTokenNumber(breakdown.promptTokens.xai.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.xai.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.xai)} completion`;
+  if (breakdown.outputTokens.xai > 0) {
+    return `${displayChefTokenNumber(breakdown.inputTokens.xai.uncached)} uncached, ${displayChefTokenNumber(breakdown.inputTokens.xai.cached)} cached, ${displayChefTokenNumber(breakdown.outputTokens.xai)} completion`;
   }
-  if (breakdown.completionTokens.google > 0) {
-    return `${displayChefTokenNumber(breakdown.promptTokens.google.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.google.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.google)} completion`;
+  if (breakdown.outputTokens.google > 0) {
+    return `${displayChefTokenNumber(breakdown.inputTokens.google.uncached)} uncached, ${displayChefTokenNumber(breakdown.inputTokens.google.cached)} cached, ${displayChefTokenNumber(breakdown.outputTokens.google)} completion`;
   }
-  if (breakdown.completionTokens.bedrock > 0) {
-    return `${displayChefTokenNumber(breakdown.promptTokens.bedrock.uncached)} uncached, ${displayChefTokenNumber(breakdown.promptTokens.bedrock.cached)} cached, ${displayChefTokenNumber(breakdown.completionTokens.bedrock)} completion`;
+  if (breakdown.outputTokens.bedrock > 0) {
+    return `${displayChefTokenNumber(breakdown.inputTokens.bedrock.uncached)} uncached, ${displayChefTokenNumber(breakdown.inputTokens.bedrock.cached)} cached, ${displayChefTokenNumber(breakdown.outputTokens.bedrock)} completion`;
   }
   return 'unknown';
 }

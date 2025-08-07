@@ -1,4 +1,4 @@
-import type { Message, UIMessage } from 'ai';
+import type { UIMessage } from 'ai';
 import { useCallback, useRef, useState } from 'react';
 import { StreamingMessageParser } from 'chef-agent/message-parser';
 import { workbenchStore } from '~/lib/stores/workbench.client';
@@ -52,9 +52,9 @@ function isPartMaybeEqual(a: Part, b: Part): boolean {
 }
 
 export function processMessage(
-  message: Message,
+  message: UIMessage,
   previousParts: PartCache,
-): { message: Message; hitRate: [number, number] } {
+): { message: UIMessage; hitRate: [number, number] } {
   if (message.role === 'user') {
     return { message, hitRate: [0, 0] };
   }
@@ -132,13 +132,13 @@ export function processMessage(
 type Part = UIMessage['parts'][number];
 
 export function useMessageParser(partCache: PartCache) {
-  const [parsedMessages, setParsedMessages] = useState<Message[]>([]);
+  const [parsedMessages, setParsedMessages] = useState<UIMessage[]>([]);
 
-  const previousMessages = useRef<{ original: Message; parsed: Message }[]>([]);
+  const previousMessages = useRef<{ original: UIMessage; parsed: UIMessage }[]>([]);
   const previousParts = useRef<PartCache>(partCache);
 
-  const parseMessages = useCallback((messages: Message[]) => {
-    const nextPrevMessages: { original: Message; parsed: Message }[] = [];
+  const parseMessages = useCallback((messages: UIMessage[]) => {
+    const nextPrevMessages: { original: UIMessage; parsed: UIMessage }[] = [];
 
     for (let i = 0; i < messages.length; i++) {
       const prev = previousMessages.current[i];

@@ -1,7 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import type { Infer, Validator } from "convex/values";
-import type { CoreMessage } from "ai";
+import type { ModelMessage } from "ai";
 
 export const apiKeyValidator = v.object({
   preference: v.union(v.literal("always"), v.literal("quotaExhausted")),
@@ -14,8 +14,8 @@ export const apiKeyValidator = v.object({
 
 // A stable-enough way to store token usage.
 export const usageRecordValidator = v.object({
-  completionTokens: v.number(),
-  promptTokens: v.number(),
+  outputTokens: v.number(),
+  inputTokens: v.number(),
   /** Included in promptTokens total! */
   cachedPromptTokens: v.number(),
 });
@@ -208,7 +208,7 @@ export default defineSchema({
     // Such a loose type doesn't feel so bad since this is debugging data, but if we try
     // to display older versions of this we need to make any fields added to CoreMessage in
     // later versions of the Vercel AI SDK optional on the read path.
-    responseCoreMessages: v.array(v.any() as Validator<CoreMessage, "required", any>),
+    responseCoreMessages: v.array(v.any() as Validator<ModelMessage, "required", any>),
     promptCoreMessagesStorageId: v.id("_storage"),
     finishReason: v.string(),
     modelId: v.string(),

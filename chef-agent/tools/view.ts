@@ -21,5 +21,5 @@ export const viewParameters = z.object({
 
 export const viewTool: Tool = {
   description: viewDescription,
-  parameters: viewParameters,
+  inputSchema: viewParameters,
 };

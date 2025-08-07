@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import type { Message, UIMessage } from 'ai';
+import type { UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useAnimate } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -54,12 +54,12 @@ const MAX_RETRIES = 4;
 
 const processSampledMessages = createSampler(
   (options: {
-    messages: Message[];
-    initialMessages: Message[];
-    parseMessages: (messages: Message[]) => void;
+    messages: UIMessage[];
+    initialMessages: UIMessage[];
+    parseMessages: (messages: UIMessage[]) => void;
     streamStatus: 'streaming' | 'submitted' | 'ready' | 'error';
     storeMessageHistory: (
-      messages: Message[],
+      messages: UIMessage[],
       streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
     ) => Promise<void>;
   }) => {
@@ -74,10 +74,10 @@ const processSampledMessages = createSampler(
 );
 
 interface ChatProps {
-  initialMessages: Message[];
+  initialMessages: UIMessage[];
   partCache: PartCache;
   storeMessageHistory: (
-    messages: Message[],
+    messages: UIMessage[],
     streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
   ) => Promise<void>;
   initializeChat: () => Promise<boolean>;
@@ -283,7 +283,7 @@ export const Chat = memo(
     const { messages, status, stop, append, setMessages, reload, error } = useChat({
       initialMessages,
       api: '/api/chat',
-      sendExtraMessageFields: true,
+
       experimental_prepareRequestBody: ({ messages }) => {
         const chatInitialId = initialIdStore.get();
         const deploymentName = convexProjectStore.get()?.deploymentName;

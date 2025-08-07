@@ -1,4 +1,4 @@
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import { useConvex, useQuery, type ConvexReactClient } from 'convex/react';
 import { useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from '~/lib/stores/fileUpdateCounter';
@@ -25,7 +25,7 @@ const logger = createScopedLogger('history');
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
-export function useBackupSyncState(chatId: string, loadedSubchatIndex?: number, initialMessages?: Message[]) {
+export function useBackupSyncState(chatId: string, loadedSubchatIndex?: number, initialMessages?: UIMessage[]) {
   const convex = useConvex();
   const subchatIndex = useStore(subchatIndexStore);
   const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -248,7 +248,7 @@ async function chatSyncWorker(args: {
       error = e as Error;
     }
     if (error !== null || (response !== undefined && !response.ok)) {
-      const errorText = response !== undefined ? await response.text() : (error?.message ?? 'Unknown error');
+      const errorText = response !== undefined ? await response.text.text() : (error?.message ?? 'Unknown error');
       logger.error('Complete message info not initialized');
       const newFailureCount = currentState.numFailures + 1;
       chatSyncState.set({

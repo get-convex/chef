@@ -2,7 +2,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { JsonView } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
-import type { CoreMessage, FilePart, ToolCallPart, TextPart } from 'ai';
+import type { ModelMessage, FilePart, ToolCallPart, TextPart } from 'ai';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 import { ClipboardIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { useDebugPrompt } from '~/lib/hooks/useDebugPrompt';
@@ -107,7 +107,7 @@ function isToolCallPart(part: unknown): part is ToolCallPart {
   return typeof part === 'object' && part !== null && 'type' in part && part.type === 'tool-call';
 }
 
-function getMessageCharCount(message: CoreMessage): number {
+function getMessageCharCount(message: ModelMessage): number {
   if (typeof message.content === 'string') return message.content.length;
   if (Array.isArray(message.content)) {
     return message.content.reduce((sum, part) => {
@@ -145,7 +145,7 @@ function getPreviewClass(text: string) {
   return `preview-${Math.abs(text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0))}`;
 }
 
-function findLastAssistantMessage(prompt: CoreMessage[]): string {
+function findLastAssistantMessage(prompt: ModelMessage[]): string {
   // The last assistant message in a LLM  of messages is the response.
   // It should generally just be the last message, full stop.
   for (let i = prompt.length - 1; i >= 0; i--) {
@@ -177,16 +177,16 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
   const { prompt, completion, finishReason, modelId } = promptAndResponse;
 
   const [isExpanded, setIsExpanded] = useState(true);
-  const promptTokensTotal = promptAndResponse.usage.promptTokens;
+  const promptTokensTotal = promptAndResponse.usage.inputTokens;
   const cachedPromptTokens = promptAndResponse.usage.cachedPromptTokens;
-  const outputTokens = promptAndResponse.usage.completionTokens;
+  const outputTokens = promptAndResponse.usage.outputTokens;
   const chefTokens = promptAndResponse.chefTokens || 0;
 
   // Calculate total characters
   const totalInputChars = (prompt || []).reduce((sum, msg) => sum + getMessageCharCount(msg), 0);
   const totalOutputChars = (completion || []).reduce((sum, msg) => sum + getMessageCharCount(msg), 0);
 
-  const getTokenEstimate = (message: CoreMessage) => {
+  const getTokenEstimate = (message: ModelMessage) => {
     const charCount = getMessageCharCount(message);
     return estimateTokenCount(charCount, totalInputChars, promptTokensTotal);
   };
@@ -262,12 +262,12 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
 }
 
 type CoreMessageViewProps = {
-  message: CoreMessage;
-  getTokenEstimate?: (message: CoreMessage) => number;
+  message: ModelMessage;
+  getTokenEstimate?: (message: ModelMessage) => number;
   totalCompletionTokens?: number;
 };
 
-function getMessagePreview(content: CoreMessage['content']): string {
+function getMessagePreview(content: ModelMessage['content']): string {
   if (typeof content === 'string') {
     return content;
   }
@@ -288,7 +288,7 @@ function getMessagePreview(content: CoreMessage['content']): string {
 }
 
 type MessageContentViewProps = {
-  content: CoreMessage['content'];
+  content: ModelMessage['content'];
   showRawJson?: boolean;
 };
 
@@ -410,7 +410,6 @@ function CoreMessageView({ message, getTokenEstimate, totalCompletionTokens }: C
           className={`flex-1 truncate text-sm text-gray-600 dark:text-gray-300 ${getPreviewClass(preview)} before:block before:truncate`}
         />
       </button>
-
       <div>
         {isExpanded && (
           <div className="mt-2">
@@ -458,7 +457,7 @@ function groupIntoUserPrompts(data: LlmPromptAndResponse[]): AllPromptsForUserIn
       if (currentGroup.length > 0) {
         const totalCompletionTokens = currentGroup.reduce((sum, item) => {
           const usage = item.usage;
-          return sum + usage.promptTokens;
+          return sum + usage.inputTokens;
         }, 0);
         const cachedCompletionTokens = currentGroup.reduce((sum, item) => {
           const usage = item.usage;
@@ -466,7 +465,7 @@ function groupIntoUserPrompts(data: LlmPromptAndResponse[]): AllPromptsForUserIn
         }, 0);
         const totalOutputTokens = currentGroup.reduce((sum, item) => {
           const usage = item.usage;
-          return sum + usage.completionTokens;
+          return sum + usage.outputTokens;
         }, 0);
         const totalChefTokens = currentGroup.reduce((sum, item) => {
           return sum + (item.chefTokens || 0);
@@ -593,16 +592,16 @@ export default function DebugAllPromptsForChat({ chatInitialId, onClose, isDebug
   const totals = userPromptGroups.reduce(
     (acc, group) => {
       return {
-        promptTokens: acc.promptTokens + group.summary.totalCompletionTokens,
+        inputTokens: acc.inputTokens + group.summary.totalCompletionTokens,
         cachedPromptTokens: acc.cachedPromptTokens + group.summary.cachedCompletionTokens,
-        completionTokens: acc.completionTokens + group.summary.totalOutputTokens,
+        outputTokens: acc.outputTokens + group.summary.totalOutputTokens,
         chefTokens: acc.chefTokens + group.summary.totalChefTokens,
       };
     },
     {
-      promptTokens: 0,
+      inputTokens: 0,
       cachedPromptTokens: 0,
-      completionTokens: 0,
+      outputTokens: 0,
       chefTokens: 0,
     },
   );
@@ -664,14 +663,14 @@ export default function DebugAllPromptsForChat({ chatInitialId, onClose, isDebug
           <div className="mt-2 flex gap-4 text-sm text-gray-500 dark:text-gray-400">
             <div>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {formatNumber(totals.promptTokens - totals.cachedPromptTokens)}
+                {formatNumber(totals.inputTokens - totals.cachedPromptTokens)}
               </span>{' '}
               total prompt tokens
               {totals.cachedPromptTokens ? ` (+${formatNumber(totals.cachedPromptTokens)} cached)` : ''}
             </div>
             <div>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {formatNumber(totals.completionTokens)}
+                {formatNumber(totals.outputTokens)}
               </span>{' '}
               total completion tokens
             </div>

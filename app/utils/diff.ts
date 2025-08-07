@@ -32,7 +32,9 @@ export function computeFileModifications(files: FileMap, modifiedFiles: Map<Abso
 
     if (unifiedDiff.length > file.content.length) {
       // if there are lots of changes we simply grab the current file content since it's smaller than the diff
-      modifications[filePath] = { type: 'file', content: file.content };
+      modifications[filePath] = { type: 'file', file: {
+        content: file.content
+      } };
     } else {
       // otherwise we use the diff since it's smaller
       modifications[filePath] = { type: 'diff', content: unifiedDiff };

@@ -20,5 +20,5 @@ export const editToolParameters = z.object({
 
 export const editTool: Tool = {
   description: editToolDescription,
-  parameters: editToolParameters,
+  inputSchema: editToolParameters,
 };

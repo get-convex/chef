@@ -44,7 +44,7 @@ export async function bbGet(path: string, authToken: string) {
     },
   });
   if (!response.ok) {
-    throw new Error('fetch error: ' + response.status + (await response.text()));
+    throw new Error('fetch error: ' + response.status + (await response.text.text()));
   }
 
   return await response.json();

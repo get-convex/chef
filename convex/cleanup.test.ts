@@ -55,8 +55,8 @@ describe("cleanup", () => {
         finishReason: "stop",
         modelId: "test-model",
         usage: {
-          completionTokens: 0,
-          promptTokens: 0,
+          outputTokens: 0,
+          inputTokens: 0,
           cachedPromptTokens: 0,
         },
         chefTokens: 0,
@@ -655,8 +655,8 @@ describe("file cleanup tests", () => {
         finishReason: "stop",
         modelId: "test-model",
         usage: {
-          completionTokens: 0,
-          promptTokens: 0,
+          outputTokens: 0,
+          inputTokens: 0,
           cachedPromptTokens: 0,
         },
         chefTokens: 0,

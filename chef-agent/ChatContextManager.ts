@@ -141,7 +141,7 @@ export class ChatContextManager {
       if (entry.type === 'file') {
         const content = renderFile(entry.content);
         fileActions.push(`<boltAction type="file" filePath="${path}">${content}</boltAction>`);
-        const size = estimateSize(entry);
+        const size = estimateSize(entry.file);
         sizeEstimate += size;
         numFiles++;
       }
@@ -306,11 +306,11 @@ export class ChatContextManager {
         result = part.text.length;
         break;
       case 'file':
-        result += part.data.length;
-        result += part.mimeType.length;
+        result += part.file.data.length;
+        result += part.file.mimeType.length;
         break;
       case 'reasoning':
-        result += part.reasoning.length;
+        result += part.reasoningText.length;
         break;
       case 'tool-invocation':
         result += JSON.stringify(part.toolInvocation.args).length;
@@ -319,8 +319,8 @@ export class ChatContextManager {
         }
         break;
       case 'source':
-        result += (part.source.title ?? '').length;
-        result += part.source.url.length;
+        result += (part.title ?? '').length;
+        result += part.url.length;
         break;
       case 'step-start':
         break;
