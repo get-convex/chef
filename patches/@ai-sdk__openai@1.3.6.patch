@@ -1,0 +1,22 @@
+diff --git a/dist/index.js b/dist/index.js
+index b1a026aa623bb10a7ba312b8bb89e6885ac4686f..4c9797b5397b94390405282bce93bee23fe552b0 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1044,7 +1044,7 @@ var openaiChatChunkSchema = import_zod2.z.union([
+   openaiErrorDataSchema
+ ]);
+ function isReasoningModel(modelId) {
+-  return modelId === "o1" || modelId.startsWith("o1-") || modelId === "o3" || modelId.startsWith("o3-");
++  return modelId === "o1" || modelId.startsWith("o1-") || modelId === "o3" || modelId.startsWith("o3-") || modelId.startsWith("gpt-5");
+ }
+ function isAudioModel(modelId) {
+   return modelId.startsWith("gpt-4o-audio-preview");
+@@ -2364,7 +2364,7 @@ function isResponseAnnotationAddedChunk(chunk) {
+   return chunk.type === "response.output_text.annotation.added";
+ }
+ function getResponsesModelConfig(modelId) {
+-  if (modelId.startsWith("o")) {
++  if (modelId.startsWith("o") || modelId.startsWith('gpt-5')) {
+     if (modelId.startsWith("o1-mini") || modelId.startsWith("o1-preview")) {
+       return {
+         isReasoningModel: true,
