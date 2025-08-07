@@ -22,6 +22,7 @@ export function hasApiKeySet(
       return !!apiKey.value?.trim();
     case 'gpt-4.1':
     case 'gpt-4.1-mini':
+    case 'gpt-5':
       return !!apiKey.openai?.trim();
     case 'grok-3-mini':
       return !!apiKey.xai?.trim();

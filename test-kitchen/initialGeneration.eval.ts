@@ -66,6 +66,12 @@ if (process.env.OPENAI_API_KEY && process.env.USE_OPENAI === 'true') {
     ai: openai('gpt-4.1'),
     maxTokens: 8192,
   });
+  chefEval({
+    name: 'gpt-5',
+    model_slug: 'gpt-5',
+    ai: openai('gpt-5'),
+    maxTokens: 8192,
+  });
 }
 
 if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {

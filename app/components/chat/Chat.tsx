@@ -204,6 +204,7 @@ export const Chat = memo(
           'claude-3.5-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
           'claude-4-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
           'gpt-4.1': { providerName: 'openai', apiKeyField: 'openai' },
+          'gpt-5': { providerName: 'openai', apiKeyField: 'openai' },
           'grok-3-mini': { providerName: 'xai', apiKeyField: 'xai' },
           'gemini-2.5-pro': { providerName: 'google', apiKeyField: 'google' },
           'claude-3-5-haiku': { providerName: 'anthropic', apiKeyField: 'value' },
@@ -326,6 +327,9 @@ export const Chat = memo(
           modelChoice = 'gpt-4.1-mini';
         } else if (modelSelection === 'gpt-4.1') {
           modelProvider = 'OpenAI';
+        } else if (modelSelection === 'gpt-5') {
+          modelProvider = 'OpenAI';
+          modelChoice = 'gpt-5';
         } else {
           const _exhaustiveCheck: never = modelSelection;
           throw new Error(`Unknown model: ${_exhaustiveCheck}`);

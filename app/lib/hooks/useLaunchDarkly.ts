@@ -18,6 +18,7 @@ const flagDefaults: {
   newChatFeature: boolean;
   minMessagesForNudge: number;
   enableResend: boolean;
+  enableGpt5: boolean;
 } = {
   maintenanceMode: false,
   showUsageAnnotations: false,
@@ -35,6 +36,7 @@ const flagDefaults: {
   newChatFeature: false,
   minMessagesForNudge: 40,
   enableResend: false,
+  enableGpt5: false,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {
