@@ -170,8 +170,11 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       messages,
       tracer,
       modelProvider: body.modelProvider,
-      // Only set the requested model choice if we're using a user API key or Claude 4 Sonnet
-      modelChoice: userApiKey || body.modelChoice === 'claude-sonnet-4-0' ? body.modelChoice : undefined,
+      // Only set the requested model choice if we're using a user API key or Claude 4 Sonnet/GPT-5
+      modelChoice:
+        userApiKey || body.modelChoice === 'claude-sonnet-4-0' || body.modelChoice === 'gpt-5'
+          ? body.modelChoice
+          : undefined,
       userApiKey,
       shouldDisableTools: body.shouldDisableTools,
       recordUsageCb,
