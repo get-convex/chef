@@ -17,6 +17,8 @@ import { GENERAL_SYSTEM_PROMPT_PRELUDE, ROLE_SYSTEM_PROMPT } from 'chef-agent/pr
 
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
 
+const BEDROCK_CLAUDE_SONNET_4_0 = 'us.anthropic.claude-sonnet-4-20250514-v1:0';
+
 export type ModelProvider = Exclude<ProviderType, 'Unknown'>;
 type Provider = {
   maxTokens: number;
@@ -34,7 +36,7 @@ type Provider = {
 export function modelForProvider(provider: ModelProvider, modelChoice: string | undefined) {
   if (modelChoice) {
     if (modelChoice === 'claude-sonnet-4-0' && provider === 'Bedrock') {
-      return 'us.anthropic.claude-sonnet-4-20250514-v1:0';
+      return BEDROCK_CLAUDE_SONNET_4_0;
     }
 
     if (modelChoice === 'gpt-5') {
@@ -62,7 +64,7 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
 }
 
 function anthropicMaxTokens(modelChoice: string | undefined) {
-  return modelChoice === 'claude-sonnet-4-0' ? 24576 : 8192;
+  return modelChoice === 'claude-sonnet-4-0' || modelChoice === BEDROCK_CLAUDE_SONNET_4_0 ? 24576 : 8192;
 }
 
 export function getProvider(
@@ -131,7 +133,7 @@ export function getProvider(
       });
       provider = {
         model: openai(model),
-        maxTokens: 8192,
+        maxTokens: 24576,
         options: modelChoice === 'gpt-5' ? { openai: { reasoningEffort: 'high' } } : undefined,
       };
       break;
