@@ -259,6 +259,7 @@ async function onFinishHandler({
     usage,
     providerMetadata,
   });
+  console.log('Prompt character counts', promptCharacterCounts);
   if (tracer) {
     const span = tracer.startSpan('on-finish-handler');
     span.setAttribute('chatInitialId', chatInitialId);
@@ -272,7 +273,6 @@ async function onFinishHandler({
     span.setAttribute('collapsedMessages', collapsedMessages);
     span.setAttribute('model', providerModel);
 
-    // Add prompt character count metrics
     if (promptCharacterCounts) {
       span.setAttribute('promptCharacterCounts.relevantFilesChars', promptCharacterCounts.relevantFilesChars);
       span.setAttribute('promptCharacterCounts.messageHistoryChars', promptCharacterCounts.messageHistoryChars);
