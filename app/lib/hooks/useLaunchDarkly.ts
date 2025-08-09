@@ -10,14 +10,14 @@ const flagDefaults: {
   maxRelevantFilesSize: number;
   minCollapsedMessagesSize: number;
   useGeminiAuto: boolean;
-  enableClaude4Sonnet: boolean;
   notionClonePrompt: boolean;
-  useClaude4Auto: boolean;
   enablePreciseEdits: boolean;
   enableEnvironmentVariables: boolean;
   newChatFeature: boolean;
   minMessagesForNudge: number;
   enableResend: boolean;
+  enableGpt5: boolean;
+  useAnthropicFraction: number;
 } = {
   maintenanceMode: false,
   showUsageAnnotations: false,
@@ -27,14 +27,14 @@ const flagDefaults: {
   maxRelevantFilesSize: 8192,
   minCollapsedMessagesSize: 8192,
   useGeminiAuto: false,
-  enableClaude4Sonnet: false,
   notionClonePrompt: false,
-  useClaude4Auto: false,
   enablePreciseEdits: false,
   enableEnvironmentVariables: false,
   newChatFeature: false,
   minMessagesForNudge: 40,
   enableResend: false,
+  enableGpt5: false,
+  useAnthropicFraction: 1.0,
 };
 
 function kebabCaseKeys(object: typeof flagDefaults) {

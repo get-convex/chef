@@ -96,6 +96,10 @@ export const models: Partial<
     name: 'GPT-4.1',
     provider: 'openai',
   },
+  'gpt-5': {
+    name: 'GPT-5',
+    provider: 'openai',
+  },
   'grok-3-mini': {
     name: 'Grok 3 Mini',
     provider: 'xai',
@@ -119,15 +123,15 @@ export const ModelSelector = React.memo(function ModelSelector({
 }: ModelSelectorProps) {
   const apiKey = useQuery(api.apiKeys.apiKeyForCurrentMember);
   const selectedModel = models[modelSelection];
-  const { useGeminiAuto, enableClaude4Sonnet } = useLaunchDarkly();
+  const { useGeminiAuto, enableGpt5 } = useLaunchDarkly();
   if (!selectedModel) {
     captureMessage(`Model ${modelSelection} not found`);
     setModelSelection('auto');
   }
 
   const availableModels = Object.entries(models).filter(([key]) => {
-    if (key === 'claude-4-sonnet') {
-      return enableClaude4Sonnet;
+    if (key === 'gpt-5') {
+      return enableGpt5;
     }
     return true;
   });

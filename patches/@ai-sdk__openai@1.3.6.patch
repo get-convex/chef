@@ -1,0 +1,88 @@
+diff --git a/dist/index.js b/dist/index.js
+index b1a026aa623bb10a7ba312b8bb89e6885ac4686f..4c9797b5397b94390405282bce93bee23fe552b0 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1044,7 +1044,7 @@ var openaiChatChunkSchema = import_zod2.z.union([
+   openaiErrorDataSchema
+ ]);
+ function isReasoningModel(modelId) {
+-  return modelId === "o1" || modelId.startsWith("o1-") || modelId === "o3" || modelId.startsWith("o3-");
++  return modelId === "o1" || modelId.startsWith("o1-") || modelId === "o3" || modelId.startsWith("o3-") || modelId.startsWith("gpt-5");
+ }
+ function isAudioModel(modelId) {
+   return modelId.startsWith("gpt-4o-audio-preview");
+@@ -2364,7 +2364,7 @@ function isResponseAnnotationAddedChunk(chunk) {
+   return chunk.type === "response.output_text.annotation.added";
+ }
+ function getResponsesModelConfig(modelId) {
+-  if (modelId.startsWith("o")) {
++  if (modelId.startsWith("o") || modelId.startsWith('gpt-5')) {
+     if (modelId.startsWith("o1-mini") || modelId.startsWith("o1-preview")) {
+       return {
+         isReasoningModel: true,
+diff --git a/dist/index.mjs b/dist/index.mjs
+index c2fc509b7df3ef9ed2b310251f2d77aa434ebf29..56b565d29ede0baf320d253da1d46e4f7dae0dff 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -1034,7 +1034,7 @@ var openaiChatChunkSchema = z2.union([
+   openaiErrorDataSchema
+ ]);
+ function isReasoningModel(modelId) {
+-  return modelId === "o1" || modelId.startsWith("o1-") || modelId === "o3" || modelId.startsWith("o3-");
++  return modelId === "o1" || modelId.startsWith("o1-") || modelId === "o3" || modelId.startsWith("o3-") || modelId.startsWith("gpt-5");
+ }
+ function isAudioModel(modelId) {
+   return modelId.startsWith("gpt-4o-audio-preview");
+@@ -2385,7 +2385,7 @@ function isResponseAnnotationAddedChunk(chunk) {
+   return chunk.type === "response.output_text.annotation.added";
+ }
+ function getResponsesModelConfig(modelId) {
+-  if (modelId.startsWith("o")) {
++  if (modelId.startsWith("o") || modelId.startsWith('gpt-5')) {
+     if (modelId.startsWith("o1-mini") || modelId.startsWith("o1-preview")) {
+       return {
+         isReasoningModel: true,
+diff --git a/internal/dist/index.js b/internal/dist/index.js
+index be377b09e3478fb605cccca49d5268cf5eacead5..cec3749bca78dc80bc9f9f91e49b72df7056d9f4 100644
+--- a/internal/dist/index.js
++++ b/internal/dist/index.js
+@@ -1045,7 +1045,7 @@ var openaiChatChunkSchema = import_zod2.z.union([
+   openaiErrorDataSchema
+ ]);
+ function isReasoningModel(modelId) {
+-  return modelId === "o1" || modelId.startsWith("o1-") || modelId === "o3" || modelId.startsWith("o3-");
++  return modelId === "o1" || modelId.startsWith("o1-") || modelId === "o3" || modelId.startsWith("o3-") || modelId.startsWith("gpt-5");
+ }
+ function isAudioModel(modelId) {
+   return modelId.startsWith("gpt-4o-audio-preview");
+@@ -2365,7 +2365,7 @@ function isResponseAnnotationAddedChunk(chunk) {
+   return chunk.type === "response.output_text.annotation.added";
+ }
+ function getResponsesModelConfig(modelId) {
+-  if (modelId.startsWith("o")) {
++  if (modelId.startsWith("o") || modelId.startsWith('gpt-5')) {
+     if (modelId.startsWith("o1-mini") || modelId.startsWith("o1-preview")) {
+       return {
+         isReasoningModel: true,
+diff --git a/internal/dist/index.mjs b/internal/dist/index.mjs
+index b076fbcbda50b3f36551a65179d5f4e2ae157de9..5257d7d0499c2f3b78f4758089dcad498b3ac4be 100644
+--- a/internal/dist/index.mjs
++++ b/internal/dist/index.mjs
+@@ -1028,7 +1028,7 @@ var openaiChatChunkSchema = z2.union([
+   openaiErrorDataSchema
+ ]);
+ function isReasoningModel(modelId) {
+-  return modelId === "o1" || modelId.startsWith("o1-") || modelId === "o3" || modelId.startsWith("o3-");
++  return modelId === "o1" || modelId.startsWith("o1-") || modelId === "o3" || modelId.startsWith("o3-") || modelId.startsWith("gpt-5");
+ }
+ function isAudioModel(modelId) {
+   return modelId.startsWith("gpt-4o-audio-preview");
+@@ -2379,7 +2379,7 @@ function isResponseAnnotationAddedChunk(chunk) {
+   return chunk.type === "response.output_text.annotation.added";
+ }
+ function getResponsesModelConfig(modelId) {
+-  if (modelId.startsWith("o")) {
++  if (modelId.startsWith("o") || modelId.startsWith('gpt-5')) {
+     if (modelId.startsWith("o1-mini") || modelId.startsWith("o1-preview")) {
+       return {
+         isReasoningModel: true,

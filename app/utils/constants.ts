@@ -31,6 +31,7 @@ export type ModelSelection =
   | 'claude-4-sonnet'
   | 'gpt-4.1'
   | 'gpt-4.1-mini'
+  | 'gpt-5'
   | 'grok-3-mini'
   | 'gemini-2.5-pro';
 

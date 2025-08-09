@@ -143,10 +143,10 @@ export const Chat = memo(
       maxRelevantFilesSize,
       minCollapsedMessagesSize,
       useGeminiAuto,
-      useClaude4Auto,
       enablePreciseEdits,
       enableEnvironmentVariables,
       enableResend,
+      useAnthropicFraction,
     } = useLaunchDarkly();
 
     const title = useStore(description);
@@ -204,6 +204,7 @@ export const Chat = memo(
           'claude-3.5-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
           'claude-4-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
           'gpt-4.1': { providerName: 'openai', apiKeyField: 'openai' },
+          'gpt-5': { providerName: 'openai', apiKeyField: 'openai' },
           'grok-3-mini': { providerName: 'xai', apiKeyField: 'xai' },
           'gemini-2.5-pro': { providerName: 'google', apiKeyField: 'google' },
           'claude-3-5-haiku': { providerName: 'anthropic', apiKeyField: 'value' },
@@ -237,6 +238,9 @@ export const Chat = memo(
     const disableChatMessage = forceDisable ? { type: 'ExceededQuota' as const } : _disableChatMessage;
 
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
+
+    const anthropicProviders: ProviderType[] =
+      Math.random() < useAnthropicFraction ? ['Anthropic', 'Bedrock'] : ['Bedrock', 'Anthropic'];
 
     const checkTokenUsage = useCallback(async () => {
       if (hasApiKeySet(modelSelection, useGeminiAuto, apiKey)) {
@@ -296,25 +300,17 @@ export const Chat = memo(
         const retries = retryState.get();
         let modelChoice: string | undefined = undefined;
         if (modelSelection === 'auto') {
-          if (useClaude4Auto) {
-            const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
-            modelProvider = providers[retries.numFailures % providers.length];
-            modelChoice = 'claude-sonnet-4-0';
-          } else if (useGeminiAuto) {
-            modelProvider = 'Google';
-          } else {
-            // Send all traffic to Anthropic first before failing over to Bedrock.
-            const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
-            modelProvider = providers[retries.numFailures % providers.length];
-          }
+          const providers: ProviderType[] = anthropicProviders;
+          modelProvider = providers[retries.numFailures % providers.length];
+          modelChoice = 'claude-sonnet-4-0';
         } else if (modelSelection === 'claude-3.5-sonnet') {
-          const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
+          const providers: ProviderType[] = anthropicProviders;
           modelProvider = providers[retries.numFailures % providers.length];
         } else if (modelSelection === 'claude-3-5-haiku') {
           modelProvider = 'Anthropic';
           modelChoice = 'claude-3-5-haiku-latest';
         } else if (modelSelection === 'claude-4-sonnet') {
-          const providers: ProviderType[] = ['Anthropic', 'Bedrock'];
+          const providers: ProviderType[] = anthropicProviders;
           modelProvider = providers[retries.numFailures % providers.length];
           modelChoice = 'claude-sonnet-4-0';
         } else if (modelSelection === 'grok-3-mini') {
@@ -326,6 +322,9 @@ export const Chat = memo(
           modelChoice = 'gpt-4.1-mini';
         } else if (modelSelection === 'gpt-4.1') {
           modelProvider = 'OpenAI';
+        } else if (modelSelection === 'gpt-5') {
+          modelProvider = 'OpenAI';
+          modelChoice = 'gpt-5';
         } else {
           const _exhaustiveCheck: never = modelSelection;
           throw new Error(`Unknown model: ${_exhaustiveCheck}`);
