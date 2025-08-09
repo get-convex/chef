@@ -16,7 +16,6 @@ const MAX_RELEVANT_FILES = 16;
 type UIMessagePart = UIMessage['parts'][number];
 
 export type PromptCharacterCounts = {
-  relevantFilesChars: number;
   messageHistoryChars: number;
   currentTurnChars: number;
   totalPromptChars: number;
@@ -85,26 +84,13 @@ export class ChatContextManager {
     }
     messages = this.collapseMessages(messages);
 
-    // Calculate character counts for the prepared messages
-    const promptCharacterCounts = this.calculatePromptCharacterCounts(messages);
-
-    return { messages, collapsedMessages, promptCharacterCounts };
+    return { messages, collapsedMessages };
   }
 
   /**
    * Calculate character counts for different parts of the prompt
    */
-  calculatePromptCharacterCounts(
-    messages: UIMessage[],
-    relevantFilesMessage?: UIMessage,
-    systemPrompts?: string[],
-  ): PromptCharacterCounts {
-    // Calculate relevant files character count
-    let relevantFilesChars = 0;
-    if (relevantFilesMessage) {
-      relevantFilesChars = this.messageSize(relevantFilesMessage);
-    }
-
+  calculatePromptCharacterCounts(messages: UIMessage[], systemPrompts?: string[]): PromptCharacterCounts {
     // Calculate message history character count (excluding current turn)
     let messageHistoryChars = 0;
     const lastMessage = messages[messages.length - 1];
@@ -131,10 +117,9 @@ export class ChatContextManager {
       systemPromptsChars = systemPrompts.reduce((sum, prompt) => sum + prompt.length, 0);
     }
 
-    const totalPromptChars = relevantFilesChars + messageHistoryChars + currentTurnChars + systemPromptsChars;
+    const totalPromptChars = messageHistoryChars + currentTurnChars + systemPromptsChars;
 
     return {
-      relevantFilesChars,
       messageHistoryChars,
       currentTurnChars,
       totalPromptChars,

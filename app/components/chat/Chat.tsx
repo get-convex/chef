@@ -348,40 +348,14 @@ export const Chat = memo(
             }
           }
         }
-        const {
-          messages: preparedMessages,
-          collapsedMessages,
-          promptCharacterCounts,
-        } = chatContextManager.current.prepareContext(
+        const { messages: preparedMessages, collapsedMessages } = chatContextManager.current.prepareContext(
           messages,
           maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
           minCollapsedMessagesSize,
         );
 
-        // Calculate character counts for the prompt if we have the data
-        let characterCounts;
-        if (promptCharacterCounts) {
-          characterCounts = promptCharacterCounts;
-        } else if (
-          chatContextManager.current.shouldSendRelevantFiles(
-            messages,
-            maxSizeForModel(modelSelection, maxCollapsedMessagesSize),
-          )
-        ) {
-          // If we're going to send relevant files, calculate character counts including them
-          const relevantFilesMessage = chatContextManager.current.relevantFiles(
-            messages,
-            `relevant-files-${Date.now()}`,
-            maxRelevantFilesSize,
-          );
-          characterCounts = chatContextManager.current.calculatePromptCharacterCounts(
-            preparedMessages,
-            relevantFilesMessage,
-          );
-        } else {
-          // Calculate character counts without relevant files
-          characterCounts = chatContextManager.current.calculatePromptCharacterCounts(preparedMessages);
-        }
+        const characterCounts = chatContextManager.current.calculatePromptCharacterCounts(preparedMessages);
+
         return {
           messages: preparedMessages,
           firstUserMessage: messages.filter((message) => message.role == 'user').length == 1,

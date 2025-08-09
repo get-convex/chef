@@ -274,7 +274,6 @@ async function onFinishHandler({
     span.setAttribute('model', providerModel);
 
     if (promptCharacterCounts) {
-      span.setAttribute('promptCharacterCounts.relevantFilesChars', promptCharacterCounts.relevantFilesChars);
       span.setAttribute('promptCharacterCounts.messageHistoryChars', promptCharacterCounts.messageHistoryChars);
       span.setAttribute('promptCharacterCounts.currentTurnChars', promptCharacterCounts.currentTurnChars);
       span.setAttribute('promptCharacterCounts.totalPromptChars', promptCharacterCounts.totalPromptChars);
