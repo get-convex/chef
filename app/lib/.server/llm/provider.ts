@@ -134,7 +134,7 @@ export function getProvider(
       provider = {
         model: openai(model),
         maxTokens: 24576,
-        options: modelChoice === 'gpt-5' ? { openai: { reasoningEffort: 'high' } } : undefined,
+        options: modelChoice === 'gpt-5' ? { openai: { reasoningEffort: 'medium' } } : undefined,
       };
       break;
     }
