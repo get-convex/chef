@@ -83,7 +83,6 @@ export class ChatContextManager {
       }
     }
     messages = this.collapseMessages(messages);
-
     return { messages, collapsedMessages };
   }
 
