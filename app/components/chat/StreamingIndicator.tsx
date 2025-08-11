@@ -134,7 +134,7 @@ export default function StreamingIndicator(props: StreamingIndicatorProps) {
             } else if (code === 'no-tokens') {
               message = (
                 <div>
-                  You&aposve used all the tokens included with your free plan.{' '}
+                  You&apos;ve used all the tokens included with your free plan.{' '}
                   <a href="/settings" className="text-content-link hover:underline">
                     Upgrade to a paid plan or add your own API key.
                   </a>
