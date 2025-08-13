@@ -16,7 +16,6 @@ export function hasApiKeySet(
         return !!apiKey.google?.trim();
       }
       return !!apiKey.value?.trim();
-    case 'claude-3.5-sonnet':
     case 'claude-3-5-haiku':
     case 'claude-4-sonnet':
       return !!apiKey.value?.trim();

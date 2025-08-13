@@ -22,11 +22,10 @@ export function backoffTime(numFailures: number) {
 
 // These are the user facing options for the model selector, which the
 // client then maps to the model provider used by the backend. For
-// example, the user may specify "claude-3.5-sonnet", but then we'll
+// example, the user may specify "claude-4-sonnet", but then we'll
 // fallback between Anthropic and Bedrock.
 export type ModelSelection =
   | 'auto'
-  | 'claude-3.5-sonnet'
   | 'claude-3-5-haiku'
   | 'claude-4-sonnet'
   | 'gpt-4.1'

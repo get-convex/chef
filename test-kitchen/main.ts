@@ -7,10 +7,10 @@ import { chefSetLogLevel } from 'chef-agent/utils/logger.js';
 chefSetLogLevel('info');
 
 const model: ChefModel = {
-  name: 'claude-3.5-sonnet',
-  model_slug: 'claude-3-5-sonnet-20240620',
-  ai: anthropic('claude-3-5-sonnet-20241022'),
-  maxTokens: 8192,
+  name: 'claude-4-sonnet',
+  model_slug: 'claude-sonnet-4-20250514',
+  ai: anthropic('claude-sonnet-4-20250514'),
+  maxTokens: 16384,
 };
 mkdirSync('/tmp/backend', { recursive: true });
 const result = await chefTask(model, '/tmp/backend', 'Make me a chat app');

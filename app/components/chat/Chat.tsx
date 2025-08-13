@@ -201,7 +201,6 @@ export const Chat = memo(
           [K in ModelSelection]: { providerName: ModelProvider; apiKeyField: 'value' | 'openai' | 'xai' | 'google' };
         } = {
           auto: { providerName: 'anthropic', apiKeyField: 'value' },
-          'claude-3.5-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
           'claude-4-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
           'gpt-4.1': { providerName: 'openai', apiKeyField: 'openai' },
           'gpt-5': { providerName: 'openai', apiKeyField: 'openai' },
@@ -303,9 +302,6 @@ export const Chat = memo(
           const providers: ProviderType[] = anthropicProviders;
           modelProvider = providers[retries.numFailures % providers.length];
           modelChoice = 'claude-sonnet-4-0';
-        } else if (modelSelection === 'claude-3.5-sonnet') {
-          const providers: ProviderType[] = anthropicProviders;
-          modelProvider = providers[retries.numFailures % providers.length];
         } else if (modelSelection === 'claude-3-5-haiku') {
           modelProvider = 'Anthropic';
           modelChoice = 'claude-3-5-haiku-latest';
@@ -828,7 +824,6 @@ export function DisabledText({
 function maxSizeForModel(modelSelection: ModelSelection, maxSize: number) {
   switch (modelSelection) {
     case 'auto':
-    case 'claude-3.5-sonnet':
     case 'gemini-2.5-pro':
       return maxSize;
     default:
