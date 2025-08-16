@@ -127,6 +127,7 @@ async function getOrCreateCurrentMember(ctx: MutationCtx) {
   }
   return ctx.db.insert("convexMembers", {
     tokenIdentifier: identity.tokenIdentifier,
+    convexMemberId: (identity.convexMemberId as string | undefined) || (identity.convexMemberId as string | undefined),
   });
 }
 

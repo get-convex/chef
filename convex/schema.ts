@@ -38,6 +38,7 @@ export default defineSchema({
   convexMembers: defineTable({
     tokenIdentifier: v.string(),
     apiKey: v.optional(apiKeyValidator),
+    convexMemberId: v.optional(v.string()),
     // Not authoritative, just a cache of the user's profile from Auth0/provision host.
     cachedProfile: v.optional(
       v.object({
@@ -47,7 +48,9 @@ export default defineSchema({
         id: v.string(),
       }),
     ),
-  }).index("byTokenIdentifier", ["tokenIdentifier"]),
+  })
+    .index("byTokenIdentifier", ["tokenIdentifier"])
+    .index("byConvexMemberId", ["convexMemberId"]),
 
   /*
    * Admin status means being on the convex team on the provision host.

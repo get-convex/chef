@@ -1,5 +1,6 @@
 import { Migrations } from "@convex-dev/migrations";
 import { components, internal } from "./_generated/api.js";
+import { Doc } from "./_generated/dataModel.js";
 
 export const migrations = new Migrations(components.migrations);
 export const run = migrations.runner();
@@ -59,4 +60,17 @@ export const addSubchatIndexToDebugChatApiRequestLog = migrations.define({
 
 export const runAddSubchatIndexToDebugChatApiRequestLog = migrations.runner(
   internal.migrations.addSubchatIndexToDebugChatApiRequestLog,
+);
+
+export const addConvexMemberIdToConvexMembers = migrations.define({
+  table: "convexMembers",
+  migrateOne: async (ctx, doc) => {
+    if (doc.convexMemberId === undefined && doc.cachedProfile !== undefined) {
+      await ctx.db.patch(doc._id, { convexMemberId: (doc as Doc<"convexMembers">).cachedProfile?.id });
+    }
+  },
+});
+
+export const runAddConvexMemberIdToConvexMembers = migrations.runner(
+  internal.migrations.addConvexMemberIdToConvexMembers,
 );
