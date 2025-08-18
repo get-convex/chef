@@ -84,7 +84,7 @@ export const backfillConvexMemberIdFromTempIdentities = migrations.define({
         .query("tempIdentities")
         .withIndex("bySubject", (q) => q.eq("subject", subject))
         .first()) as Doc<"tempIdentities">;
-      if (member !== undefined) {
+      if (member !== undefined && member !== null) {
         await ctx.db.patch(doc._id, { convexMemberId: member.member_id.toString() });
       }
     }
