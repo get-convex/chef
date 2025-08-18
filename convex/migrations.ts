@@ -74,3 +74,23 @@ export const addConvexMemberIdToConvexMembers = migrations.define({
 export const runAddConvexMemberIdToConvexMembers = migrations.runner(
   internal.migrations.addConvexMemberIdToConvexMembers,
 );
+
+export const backfillConvexMemberIdFromTempIdentities = migrations.define({
+  table: "convexMembers",
+  migrateOne: async (ctx, doc) => {
+    if (doc.convexMemberId === undefined && typeof doc.tokenIdentifier === "string") {
+      const subject = doc.tokenIdentifier.split("/|")[1];
+      const member = (await ctx.db
+        .query("tempIdentities")
+        .withIndex("bySubject", (q) => q.eq("subject", subject))
+        .first()) as Doc<"tempIdentities">;
+      if (member !== undefined) {
+        await ctx.db.patch(doc._id, { convexMemberId: member.member_id.toString() });
+      }
+    }
+  },
+});
+
+export const runBackfillConvexMemberIdFromTempIdentities = migrations.runner(
+  internal.migrations.backfillConvexMemberIdFromTempIdentities,
+);
