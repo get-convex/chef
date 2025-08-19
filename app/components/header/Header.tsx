@@ -97,17 +97,16 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                     title: 'User menu',
                     inline: true,
                     className: 'rounded-full',
-                    icon:
-                      profile.avatar && !profile.avatar.includes('workos') ? (
-                        <img
-                          src={profile.avatar}
-                          className="size-8 min-w-8 rounded-full object-cover"
-                          loading="eager"
-                          decoding="sync"
-                        />
-                      ) : (
-                        <PersonIcon className="size-8 min-w-8 rounded-full border text-content-secondary" />
-                      ),
+                    icon: profile.avatar ? (
+                      <img
+                        src={`/api/images?img=${encodeURIComponent(profile.avatar)}`}
+                        className="size-8 min-w-8 rounded-full object-cover"
+                        loading="eager"
+                        decoding="sync"
+                      />
+                    ) : (
+                      <PersonIcon className="size-8 min-w-8 rounded-full border text-content-secondary" />
+                    ),
                   }}
                 >
                   <FeedbackButton showInMenu={true} />

@@ -108,9 +108,9 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
             >
               {isUserMessage && (
                 <div className="flex size-[40px] shrink-0 items-center justify-center self-start overflow-hidden rounded-full bg-white text-gray-600 dark:bg-gray-800 dark:text-gray-500">
-                  {profile?.avatar && !profile.avatar.includes('workos') ? (
+                  {profile?.avatar ? (
                     <img
-                      src={profile.avatar}
+                      src={`/api/images?img=${encodeURIComponent(profile.avatar)}`}
                       alt={profile?.username || 'User'}
                       className="size-full object-cover"
                       loading="eager"

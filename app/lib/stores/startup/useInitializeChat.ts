@@ -73,7 +73,7 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
     // Wait for the WebContainer to have its snapshot loaded before sending a message.
     await waitForBootStepCompleted(ContainerBootState.LOADING_SNAPSHOT);
     return true;
-  }, [convex, chatId, isFullyLoggedIn, setChatInitialized]);
+  }, [convex, chatId, isFullyLoggedIn, setChatInitialized, signIn]);
 }
 
 export function useExistingInitializeChat(chatId: string) {
