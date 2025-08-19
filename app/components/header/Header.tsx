@@ -99,7 +99,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                     className: 'rounded-full',
                     icon: profile.avatar ? (
                       <img
-                        src={`/api/images?img=${encodeURIComponent(profile.avatar)}`}
+                        src={profile.avatar}
                         className="size-8 min-w-8 rounded-full object-cover"
                         loading="eager"
                         decoding="sync"

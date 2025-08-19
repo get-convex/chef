@@ -20,11 +20,7 @@ export function ProfileCard() {
             <div className="flex items-center gap-4">
               <div className="size-20 min-w-20 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
                 {profile.avatar ? (
-                  <img
-                    src={`/api/images?img=${encodeURIComponent(profile.avatar)}`}
-                    alt={profile?.username || 'User'}
-                    className="size-full object-cover"
-                  />
+                  <img src={profile.avatar} alt={profile?.username || 'User'} className="size-full object-cover" />
                 ) : (
                   <div className="flex size-full items-center justify-center">
                     <PersonIcon className="size-8 text-gray-400" />
