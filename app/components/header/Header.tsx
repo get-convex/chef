@@ -10,7 +10,6 @@ import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { HamburgerMenuIcon, PersonIcon, GearIcon, ExitIcon } from '@radix-ui/react-icons';
 import { DownloadButton } from './DownloadButton';
 import { LoggedOutHeaderButtons } from './LoggedOutHeaderButtons';
-import { useAuth0 } from '@auth0/auth0-react';
 import { profileStore, setProfile } from '~/lib/stores/profile';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { SESSION_ID_KEY } from '~/components/chat/ChefAuthWrapper';
@@ -22,6 +21,7 @@ import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useUsage } from '~/lib/stores/usage';
 import { useReferralStats } from '~/lib/hooks/useReferralCode';
 import { Menu } from '~/components/sidebar/Menu.client';
+import { useAuth } from '@workos-inc/authkit-react';
 
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
@@ -32,7 +32,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
   const showSidebarIcon = !hideSidebarIcon && isLoggedIn;
 
   const profile = useStore(profileStore);
-  const { logout } = useAuth0();
+  const { signOut } = useAuth();
 
   const teamSlug = useSelectedTeamSlug();
   const { isPaidPlan } = useUsage({ teamSlug });
@@ -41,11 +41,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
   const handleLogout = () => {
     setProfile(null);
     window.localStorage.removeItem(SESSION_ID_KEY);
-    logout({
-      logoutParams: {
-        returnTo: window.location.origin,
-      },
-    });
+    signOut({ returnTo: window.location.origin });
   };
 
   const handleSettingsClick = () => {
@@ -80,6 +76,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
           {() => (
             <div className="ml-auto flex items-center gap-2">
               {!isLoggedIn && <LoggedOutHeaderButtons />}
+
               {chat.started && (
                 <>
                   <PromptDebugButton />
@@ -101,7 +98,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                     inline: true,
                     className: 'rounded-full',
                     icon:
-                      profile.avatar && !profile.avatar.includes('googleusercontent.com') ? (
+                      profile.avatar && !profile.avatar.includes('workos') ? (
                         <img
                           src={profile.avatar}
                           className="size-8 min-w-8 rounded-full object-cover"

@@ -11,12 +11,12 @@ import { TeamSelector } from '~/components/convex/TeamSelector';
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider, useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { useParams } from '@remix-run/react';
-import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Loading } from '~/components/Loading';
 import type { MetaFunction } from '@vercel/remix';
 import { Button } from '@ui/Button';
 import { ConvexError } from 'convex/values';
 import { Sheet } from '@ui/Sheet';
+import { useAuth } from '@workos-inc/authkit-react';
 export const meta: MetaFunction = () => {
   return [
     { title: 'Cooked with Chef' },
@@ -53,6 +53,7 @@ export default function ShareProject() {
 }
 
 function ShareProjectContent() {
+  const { signIn } = useAuth();
   const { shareCode } = useParams();
 
   if (!shareCode) {
@@ -90,9 +91,6 @@ function ShareProjectContent() {
       }
     }
   }, [convex, cloneChat, shareCode]);
-  const signIn = useCallback(() => {
-    openSignInWindow();
-  }, []);
 
   const selectedTeamSlug = useSelectedTeamSlug();
 
@@ -118,7 +116,13 @@ function ShareProjectContent() {
             </p>
           </div>
 
-          <Button onClick={signIn}>Sign in</Button>
+          <Button
+            onClick={() => {
+              signIn();
+            }}
+          >
+            Sign in
+          </Button>
         </div>
       </div>
     );

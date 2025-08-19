@@ -10,8 +10,8 @@ import { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ClientOnly } from 'remix-utils/client-only';
-import { Auth0Provider } from '@auth0/auth0-react';
-import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
+import { AuthKitProvider, useAuth } from '@workos-inc/authkit-react';
+import { ConvexProviderWithAuthKit } from '@convex-dev/workos';
 import { ConvexReactClient } from 'convex/react';
 import globalStyles from './styles/index.css?url';
 import '@convex-dev/design-system/styles/shared.css';
@@ -28,8 +28,10 @@ export async function loader() {
   // eslint-disable-next-line local/no-direct-process-env
   const CONVEX_URL = process.env.VITE_CONVEX_URL || globalThis.process.env.CONVEX_URL!;
   const CONVEX_OAUTH_CLIENT_ID = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID!;
+  const WORKOS_REDIRECT_URI =
+    globalThis.process.env.VITE_WORKOS_REDIRECT_URI || globalThis.process.env.VERCEL_BRANCH_URL!;
   return json({
-    ENV: { CONVEX_URL, CONVEX_OAUTH_CLIENT_ID },
+    ENV: { CONVEX_URL, CONVEX_OAUTH_CLIENT_ID, WORKOS_REDIRECT_URI },
   });
 }
 
@@ -139,17 +141,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <ClientOnly>
         {() => (
           <DndProvider backend={HTML5Backend}>
-            <Auth0Provider
-              domain={import.meta.env.VITE_AUTH0_DOMAIN}
-              clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
-              authorizationParams={{
-                redirect_uri: window.location.origin,
-              }}
-              useRefreshTokens={true}
-              cacheLocation="localstorage"
+            <AuthKitProvider
+              clientId={import.meta.env.VITE_WORKOS_CLIENT_ID}
+              redirectUri={globalThis.process.env.WORKOS_REDIRECT_URI}
             >
-              <ConvexProviderWithAuth0 client={convex}>{children}</ConvexProviderWithAuth0>
-            </Auth0Provider>
+              <ConvexProviderWithAuthKit client={convex} useAuth={useAuth}>
+                {children}
+              </ConvexProviderWithAuthKit>
+            </AuthKitProvider>
           </DndProvider>
         )}
       </ClientOnly>

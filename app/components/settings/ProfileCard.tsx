@@ -1,18 +1,14 @@
 import { useStore } from '@nanostores/react';
 import { profileStore } from '~/lib/stores/profile';
-import { useAuth0 } from '@auth0/auth0-react';
 import { ExitIcon, ExternalLinkIcon, PersonIcon } from '@radix-ui/react-icons';
 import { LoadingTransition } from '@ui/Loading';
+import { useAuth } from '@workos-inc/authkit-react';
 
 export function ProfileCard() {
   const profile = useStore(profileStore);
-  const { logout } = useAuth0();
+  const { signOut } = useAuth();
   const handleLogout = () => {
-    logout({
-      logoutParams: {
-        returnTo: window.location.origin,
-      },
-    });
+    signOut({ returnTo: window.location.origin });
   };
 
   return (
@@ -23,7 +19,7 @@ export function ProfileCard() {
             <h2 className="mb-4 text-xl font-semibold text-content-primary">Profile</h2>
             <div className="flex items-center gap-4">
               <div className="size-20 min-w-20 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-                {profile.avatar && !profile.avatar.includes('googleusercontent.com') ? (
+                {profile.avatar && !profile.avatar.includes('workos') ? (
                   <img src={profile.avatar} alt={profile?.username || 'User'} className="size-full object-cover" />
                 ) : (
                   <div className="flex size-full items-center justify-center">

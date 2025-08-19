@@ -12,7 +12,7 @@ export const verifySession = query({
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
-    const sessionId = await ctx.db.normalizeId("sessions", args.sessionId);
+    const sessionId = ctx.db.normalizeId("sessions", args.sessionId);
     if (!sessionId) {
       return false;
     }
@@ -120,14 +120,14 @@ async function getOrCreateCurrentMember(ctx: MutationCtx) {
   }
   const existingMember = await ctx.db
     .query("convexMembers")
-    .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+    .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
     .unique();
   if (existingMember) {
     return existingMember._id;
   }
   return ctx.db.insert("convexMembers", {
     tokenIdentifier: identity.tokenIdentifier,
-    convexMemberId: (identity.convexMemberId as string | undefined) || (identity.convexMemberId as string | undefined),
+    convexMemberId: identity.convexMemberId as string | undefined,
   });
 }
 

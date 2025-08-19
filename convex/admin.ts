@@ -16,7 +16,7 @@ export async function assertIsConvexAdmin(ctx: QueryCtx) {
 
   const member = await ctx.db
     .query("convexMembers")
-    .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+    .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.tokenIdentifier))
     .unique();
 
   if (!member) {
@@ -114,7 +114,7 @@ export const requestAdminCheck = mutation({
 
     const member = await ctx.db
       .query("convexMembers")
-      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
       .unique();
 
     if (!member) {
@@ -152,7 +152,7 @@ export const isCurrentUserAdmin = query({
 
     const member = await ctx.db
       .query("convexMembers")
-      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
       .unique();
 
     if (!member) {
