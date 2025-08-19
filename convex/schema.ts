@@ -52,11 +52,6 @@ export default defineSchema({
     .index("byTokenIdentifier", ["tokenIdentifier"])
     .index("byConvexMemberId", ["convexMemberId"]),
 
-  tempIdentities: defineTable({
-    member_id: v.number(),
-    subject: v.string(),
-  }).index("bySubject", ["subject"]),
-
   /*
    * Admin status means being on the convex team on the provision host.
    * It doesn't work when using a local big brain (provision host).
