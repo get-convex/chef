@@ -1,6 +1,4 @@
-import { type LoaderFunctionArgs } from '@vercel/remix';
-
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const loader = async ({ request }: any) => {
   const url = new URL(request.url);
   const imageUrl = url.searchParams.get('img');
 
