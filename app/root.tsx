@@ -6,7 +6,7 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, us
 import { themeStore } from './lib/stores/theme';
 import { stripIndents } from 'chef-agent/utils/stripIndent';
 import { createHead } from 'remix-island';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ClientOnly } from 'remix-utils/client-only';
