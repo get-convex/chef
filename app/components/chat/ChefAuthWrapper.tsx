@@ -10,9 +10,9 @@ import type { Id } from '@convex/_generated/dataModel';
 import { useLocalStorage } from '@uidotdev/usehooks';
 import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
+import { useAuth0 } from '@auth0/auth0-react';
 import { fetchOptIns } from '~/lib/convexOptins';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
-import { useAuth } from '@workos-inc/authkit-react';
 type ChefAuthState =
   | {
       kind: 'loading';
@@ -63,7 +63,7 @@ export const ChefAuthProvider = ({
   );
   const hasAlertedAboutOptIns = useRef(false);
   const authRetries = useRef(0);
-  const { getAccessToken } = useAuth();
+  const { getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
     function setSessionId(sessionId: Id<'sessions'> | null) {
@@ -91,8 +91,10 @@ export const ChefAuthProvider = ({
       if (sessionIdFromLocalStorage) {
         // Seems like Auth0 does not automatically refresh its state, so call this to kick it
         try {
-          // Call this to prove that WorkOS is set up
-          await getAccessToken({});
+          // Call this to prove that Auth0 is set up
+          await getAccessTokenSilently({
+            detailedResponse: true,
+          });
           authRetries.current = 0;
         } catch (_e) {
           console.error('Unable to fetch access token from Auth0');
@@ -162,7 +164,7 @@ export const ChefAuthProvider = ({
     isConvexAuthLoading,
     sessionIdFromLocalStorage,
     setSessionIdFromLocalStorage,
-    getAccessToken,
+    getAccessTokenSilently,
   ]);
 
   const isLoading = sessionId === undefined || isConvexAuthLoading;

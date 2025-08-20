@@ -41,7 +41,7 @@ pnpm run dev
 
 npx convex dev
 
-# now visit http://127.0.0.1:5173
+# now visit http://localhost:5173
 # make sure to use this port, it's been specifically listed in our Auth0 application.
 # Wait a few seconds, and then RELOAD THE PAGE! Unfortunately this is currently required
 # to use the hot-reloading dev server.
@@ -108,6 +108,7 @@ Additionally make sure `CONVEX_OAUTH_CLIENT_ID` and `CONVEX_OAUTH_CLIENT_SECRET`
 You will need a lot of terminals
 
 - just run-big-brain-for-chef-dev
+- just run-usher-with-big-brain
 - just run-dash
 - Switch chef .env.local env vars to the dev variants (from 1Password)
 - Set VITE_CONVEX_URL to 'placeholder' and remove CONVEX_URL

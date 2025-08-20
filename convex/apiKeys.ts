@@ -12,7 +12,7 @@ export const apiKeyForCurrentMember = query({
     }
     const existingMember = await ctx.db
       .query("convexMembers")
-      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     return existingMember?.apiKey;
@@ -32,7 +32,7 @@ export const setApiKeyForCurrentMember = mutation({
 
     const existingMember = await ctx.db
       .query("convexMembers")
-      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {
@@ -54,7 +54,7 @@ export const deleteApiKeyForCurrentMember = mutation({
 
     const existingMember = await ctx.db
       .query("convexMembers")
-      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {
@@ -76,7 +76,7 @@ export const deleteAnthropicApiKeyForCurrentMember = mutation({
 
     const existingMember = await ctx.db
       .query("convexMembers")
-      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {
@@ -105,7 +105,7 @@ export const deleteOpenaiApiKeyForCurrentMember = mutation({
 
     const existingMember = await ctx.db
       .query("convexMembers")
-      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {
@@ -134,7 +134,7 @@ export const deleteXaiApiKeyForCurrentMember = mutation({
 
     const existingMember = await ctx.db
       .query("convexMembers")
-      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {
@@ -163,7 +163,7 @@ export const deleteGoogleApiKeyForCurrentMember = mutation({
 
     const existingMember = await ctx.db
       .query("convexMembers")
-      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (!existingMember) {

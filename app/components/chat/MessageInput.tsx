@@ -27,6 +27,7 @@ import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTea
 import { useChefAuth } from './ChefAuthWrapper';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { KeyboardShortcut } from '@ui/KeyboardShortcut';
+import { openSignInWindow } from '~/components/ChefSignInPage';
 import { Button } from '@ui/Button';
 import { Spinner } from '@ui/Spinner';
 import { debounce } from '~/utils/debounce';
@@ -35,7 +36,6 @@ import { captureException } from '@sentry/remix';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftIcon, DocumentArrowUpIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '@workos-inc/authkit-react';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
@@ -592,21 +592,30 @@ const CharacterWarning = memo(function CharacterWarning() {
 });
 
 const SignInButton = memo(function SignInButton() {
-  const { signIn } = useAuth();
-
+  const [started, setStarted] = useState(false);
+  const signIn = useCallback(() => {
+    setStarted(true);
+    openSignInWindow();
+  }, [setStarted]);
   return (
     <Button
       variant="neutral"
-      onClick={() => {
-        void signIn();
-      }}
+      onClick={signIn}
       size="xs"
       className="text-xs font-normal"
-      icon={<img className="size-4" src="/icons/Convex.svg" alt="Convex" />}
+      icon={!started ? <img className="size-4" src="/icons/Convex.svg" alt="Convex" /> : undefined}
     >
-      <>
-        <span>Sign in</span>
-      </>
+      {!started && (
+        <>
+          <span>Sign in</span>
+        </>
+      )}
+      {started && (
+        <>
+          <Spinner />
+          Signing in…
+        </>
+      )}
     </Button>
   );
 });

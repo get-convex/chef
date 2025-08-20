@@ -46,7 +46,7 @@ export async function generateApp({ prompt, chefUrl, outputDir, headless = true,
   if (!(await isChefRunning(chefUrl))) {
     throw new Error(
       `No Chef server found at ${chefUrl}. Please start the appropriate server first:\n` +
-        `  - For --dev: Run 'pnpm run dev' (http://127.0.0.1:5173)\n` +
+        `  - For --dev: Run 'pnpm run dev' (http://localhost:5173)\n` +
         `  - For --local-build: Run 'pnpm run build && pnpm run start' (http://localhost:3000)\n` +
         `  - For --prod: are you connected to the internet?`,
     );

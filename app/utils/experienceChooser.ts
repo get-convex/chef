@@ -30,7 +30,7 @@ export function chooseExperience(userAgent: string, crossOriginIsolated: boolean
 
   // iOS devices get marketing page regardless: all iOS browsers use WebKit
   // so they're going to give us
-  //   Sandbox access violation: Blocked a frame at "http://127.0.0.1:5173" from accessing a frame at "https://stackblitz.com".  The frame being accessed is sandboxed and lacks the "allow-same-origin" flag.
+  //   Sandbox access violation: Blocked a frame at "http://localhost:5173" from accessing a frame at "https://stackblitz.com".  The frame being accessed is sandboxed and lacks the "allow-same-origin" flag.
   // and
   //   Refused to display 'https://stackblitz.com/headless?version=1.5.1-internal.10&coep=credentialless' in a frame because of Cross-Origin-Embedder-Policy.
   if (os.name === 'iOS') {

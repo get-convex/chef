@@ -61,7 +61,7 @@ const generateCommand = new Command('generate')
     new Option('--prod', 'Use production Chef at chef.convex.dev').conflicts(['chef-url', 'dev', 'local-build']),
   )
   .addOption(
-    new Option('--dev', 'Use local dev server at http://127.0.0.1:5173').conflicts(['chef-url', 'prod', 'local-build']),
+    new Option('--dev', 'Use local dev server at http://localhost:5173').conflicts(['chef-url', 'prod', 'local-build']),
   )
   .addOption(
     new Option('--local-build', 'Build (if needed) and run local server at http://localhost:3000')
@@ -85,7 +85,7 @@ const generateCommand = new Command('generate')
   .action(async (prompt: string, options: GenerateOptions) => {
     let chefUrl: string;
     if (options.dev) {
-      chefUrl = 'http://127.0.0.1:5173';
+      chefUrl = 'http://localhost:5173';
     } else if (options.prod) {
       chefUrl = 'https://chef.convex.dev';
     } else if (options.chefUrl) {

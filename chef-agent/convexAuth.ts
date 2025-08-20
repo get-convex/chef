@@ -10,11 +10,11 @@ export async function initializeConvexAuth(project: ConvexProject) {
 
   const newEnv: Record<string, string> = {};
 
-  if (SITE_URL && SITE_URL !== 'http://127.0.0.1:5173') {
-    console.warn('SITE_URL is not http://127.0.0.1:5173');
+  if (SITE_URL && SITE_URL !== 'http://localhost:5173') {
+    console.warn('SITE_URL is not http://localhost:5173');
   }
   if (!SITE_URL) {
-    newEnv.SITE_URL = 'http://127.0.0.1:5173';
+    newEnv.SITE_URL = 'http://localhost:5173';
   }
 
   if (!JWKS || !JWT_PRIVATE_KEY) {
@@ -23,7 +23,7 @@ export async function initializeConvexAuth(project: ConvexProject) {
     newEnv.JWT_PRIVATE_KEY = keys.JWT_PRIVATE_KEY;
   }
   if (!SITE_URL) {
-    newEnv.SITE_URL = 'http://127.0.0.1:5173';
+    newEnv.SITE_URL = 'http://localhost:5173';
   }
   if (Object.entries(newEnv).length > 0) {
     await setEnvVariablesWithRetries(project, newEnv);

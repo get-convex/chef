@@ -5,21 +5,20 @@ import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/session
 import { useCallback } from 'react';
 import { api } from '@convex/_generated/api';
 import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
+import { openSignInWindow } from '~/components/ChefSignInPage';
 import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
 import { toast } from 'sonner';
 import { waitForConvexProjectConnection } from '~/lib/stores/convexProject';
-import { useAuth } from '@workos-inc/authkit-react';
 
 const CREATE_PROJECT_TIMEOUT = 15000;
 
 export function useHomepageInitializeChat(chatId: string, setChatInitialized: (chatInitialized: boolean) => void) {
   const convex = useConvex();
-  const { signIn } = useAuth();
   const chefAuthState = useChefAuth();
   const isFullyLoggedIn = chefAuthState.kind === 'fullyLoggedIn';
   return useCallback(async () => {
     if (!isFullyLoggedIn) {
-      signIn();
+      openSignInWindow();
       return false;
     }
     const sessionId = await waitForConvexSessionId('useInitializeChat');
@@ -73,7 +72,7 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
     // Wait for the WebContainer to have its snapshot loaded before sending a message.
     await waitForBootStepCompleted(ContainerBootState.LOADING_SNAPSHOT);
     return true;
-  }, [convex, chatId, isFullyLoggedIn, setChatInitialized, signIn]);
+  }, [convex, chatId, isFullyLoggedIn, setChatInitialized]);
 }
 
 export function useExistingInitializeChat(chatId: string) {
