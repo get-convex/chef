@@ -166,7 +166,6 @@ async function getOrCreateCurrentMember(ctx: MutationCtx) {
         for (const chat of chatsForExtraMember) {
           await ctx.db.patch(chat._id, {
             creatorId: sessionForExistingMember._id,
-            urlId: chat.urlId ? chat.urlId + "-" + extraMember._id.slice(0, 8) : undefined,
           });
         }
       }
