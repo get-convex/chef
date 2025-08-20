@@ -24,7 +24,7 @@ export async function assertIsConvexAdmin(ctx: QueryCtx) {
   const adminStatus = await ctx.db
     .query("convexAdmins")
     .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", member._id))
-    .first();
+    .unique();
 
   if (!adminStatus) {
     throw new ConvexError({ code: "NotAuthorized", message: "Not a Convex admin" });
@@ -50,7 +50,7 @@ export const updateAdminStatus = internalMutation({
     const existing = await ctx.db
       .query("convexAdmins")
       .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", args.memberId))
-      .first();
+      .unique();
 
     if (existing) {
       await ctx.db.patch(existing._id, {
@@ -119,7 +119,7 @@ export const requestAdminCheck = mutation({
     const adminStatus = await ctx.db
       .query("convexAdmins")
       .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", member._id))
-      .first();
+      .unique();
 
     if (adminStatus?.lastCheckedForAdminStatus) {
       const timeSinceLastCheck = Date.now() - adminStatus.lastCheckedForAdminStatus;
@@ -154,7 +154,7 @@ export const isCurrentUserAdmin = query({
     const adminStatus = await ctx.db
       .query("convexAdmins")
       .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", member._id))
-      .first();
+      .unique();
 
     return adminStatus?.wasAdmin ?? false;
   },
