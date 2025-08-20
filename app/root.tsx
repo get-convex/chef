@@ -141,6 +141,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <AuthKitProvider
         clientId={import.meta.env.VITE_WORKOS_CLIENT_ID}
         redirectUri={globalThis.process.env.WORKOS_REDIRECT_URI}
+        apiHostname="https://login.convex.dev"
       >
         <ClientOnly>
           {() => {
