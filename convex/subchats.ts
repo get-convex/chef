@@ -12,6 +12,8 @@ import { internal } from "./_generated/api";
 // TODO(jordan): Change this to 1 and test pagination in tests once changes to convex-test are in
 const subchatCleanupBatchSize = parseInt(process.env.SUBCHAT_CLEANUP_BATCH_SIZE ?? "128");
 
+const MAX_SUBCHATS = 400;
+
 export const get = query({
   args: {
     sessionId: v.id("sessions"),
@@ -63,7 +65,7 @@ export const create = mutation({
       subchatIndex: chat.lastSubchatIndex,
     });
     const newSubchatIndex = chat.lastSubchatIndex + 1;
-    if (newSubchatIndex > 200) {
+    if (newSubchatIndex > MAX_SUBCHATS) {
       throw new ConvexError({
         code: "TooManySubchats",
         message:
