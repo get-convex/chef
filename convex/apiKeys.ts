@@ -1,7 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { action, mutation, query } from "./_generated/server";
 import { apiKeyValidator } from "./schema";
-import { getMemberByConvexMemberIdQuery } from "./sessions";
 
 export const apiKeyForCurrentMember = query({
   args: {},
@@ -11,7 +10,10 @@ export const apiKeyForCurrentMember = query({
     if (!identity) {
       return null;
     }
-    const existingMember = await getMemberByConvexMemberIdQuery(ctx, identity).first();
+    const existingMember = await ctx.db
+      .query("convexMembers")
+      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .unique();
 
     return existingMember?.apiKey;
   },
@@ -28,7 +30,10 @@ export const setApiKeyForCurrentMember = mutation({
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
-    const existingMember = await getMemberByConvexMemberIdQuery(ctx, identity).first();
+    const existingMember = await ctx.db
+      .query("convexMembers")
+      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .unique();
 
     if (!existingMember) {
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
@@ -47,7 +52,10 @@ export const deleteApiKeyForCurrentMember = mutation({
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
-    const existingMember = await getMemberByConvexMemberIdQuery(ctx, identity).first();
+    const existingMember = await ctx.db
+      .query("convexMembers")
+      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .unique();
 
     if (!existingMember) {
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
@@ -66,7 +74,10 @@ export const deleteAnthropicApiKeyForCurrentMember = mutation({
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
-    const existingMember = await getMemberByConvexMemberIdQuery(ctx, identity).first();
+    const existingMember = await ctx.db
+      .query("convexMembers")
+      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .unique();
 
     if (!existingMember) {
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
@@ -92,7 +103,10 @@ export const deleteOpenaiApiKeyForCurrentMember = mutation({
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
-    const existingMember = await getMemberByConvexMemberIdQuery(ctx, identity).first();
+    const existingMember = await ctx.db
+      .query("convexMembers")
+      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .unique();
 
     if (!existingMember) {
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
@@ -118,7 +132,10 @@ export const deleteXaiApiKeyForCurrentMember = mutation({
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
-    const existingMember = await getMemberByConvexMemberIdQuery(ctx, identity).first();
+    const existingMember = await ctx.db
+      .query("convexMembers")
+      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .unique();
 
     if (!existingMember) {
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
@@ -144,7 +161,10 @@ export const deleteGoogleApiKeyForCurrentMember = mutation({
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
-    const existingMember = await getMemberByConvexMemberIdQuery(ctx, identity).first();
+    const existingMember = await ctx.db
+      .query("convexMembers")
+      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
+      .unique();
 
     if (!existingMember) {
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
