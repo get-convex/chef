@@ -1,6 +1,6 @@
 import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
-import type { MetaFunction } from '@vercel/remix';
+import type { LinksFunction, MetaFunction } from '@vercel/remix';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Header } from '~/components/header/Header';
 import { Homepage } from '~/components/Homepage.client';
@@ -15,6 +15,13 @@ export const meta: MetaFunction = () => {
     },
   ];
 };
+
+export const links: LinksFunction = () => [
+  {
+    rel: 'canonical',
+    href: 'https://chef.convex.dev/',
+  },
+];
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const url = new URL(args.request.url);
