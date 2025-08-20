@@ -4,6 +4,7 @@ import { ConvexError } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { getChatByIdOrUrlIdEnsuringAccess } from "./messages";
 import { internal } from "./_generated/api";
+import type { UserIdentity } from "convex/server";
 
 export const verifySession = query({
   args: {
@@ -46,7 +47,8 @@ async function isValidSessionForConvexOAuth(
     return true;
   }
   // But if we have the identity, it better match
-  return identity.tokenIdentifier === member.tokenIdentifier;
+  // console.log("token identifiers", identity.tokenIdentifier, member.tokenIdentifier);
+  return identity.convex_member_id === member.convexMemberId;
 }
 
 export const registerConvexOAuthConnection = internalMutation({
@@ -118,16 +120,69 @@ async function getOrCreateCurrentMember(ctx: MutationCtx) {
   if (!identity) {
     throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
   }
-  const existingMember = await ctx.db
-    .query("convexMembers")
-    .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convexMemberId as string))
-    .unique();
+  const existingMembers = await getMemberByConvexMemberIdQuery(ctx, identity).collect();
+  const existingMember = existingMembers[0];
+  if (existingMembers.length > 1) {
+    const sessionForExistingMember = await ctx.db
+      .query("sessions")
+      .withIndex("byMemberId", (q) => q.eq("memberId", existingMember._id))
+      .unique();
+    if (!sessionForExistingMember) {
+      console.error("Found a member without a session!", existingMember._id, existingMember.convexMemberId);
+      return existingMember._id;
+    }
+
+    let newApiKey = existingMember.apiKey;
+    let newCachedProfile = existingMember.cachedProfile;
+    // Migrate cached profile, api key, etc
+    // Migrate chats for all other members to existing member
+    for (const extraMember of existingMembers.slice(1)) {
+      console.log("Migrating member ", extraMember._id, "to WorkOS");
+      if (newApiKey === undefined && extraMember.apiKey !== undefined) {
+        newApiKey = extraMember.apiKey;
+      }
+      if (newCachedProfile === undefined && extraMember.cachedProfile !== undefined) {
+        newCachedProfile = extraMember.cachedProfile;
+      }
+
+      const sessionForExtraMember = await ctx.db
+        .query("sessions")
+        .withIndex("byMemberId", (q) => q.eq("memberId", extraMember._id))
+        .unique();
+      if (sessionForExtraMember) {
+        const CHATS_TO_CHECK = 100;
+        const chatsForExtraMember = await ctx.db
+          .query("chats")
+          .withIndex("byCreatorAndId", (q) => q.eq("creatorId", sessionForExtraMember._id))
+          .take(CHATS_TO_CHECK);
+        if (chatsForExtraMember.length === 0) {
+          await ctx.db.patch(extraMember._id, {
+            softDeletedForWorkOSMerge: true,
+          });
+        }
+        if (chatsForExtraMember.length === CHATS_TO_CHECK) {
+          console.warn("Too many chats to migrate in one go for member", extraMember.convexMemberId);
+        }
+        for (const chat of chatsForExtraMember) {
+          await ctx.db.patch(chat._id, {
+            creatorId: sessionForExistingMember._id,
+          });
+        }
+      }
+    }
+
+    await ctx.db.patch(existingMember._id, {
+      cachedProfile: newCachedProfile,
+      apiKey: newApiKey,
+    });
+  }
+
   if (existingMember) {
     return existingMember._id;
   }
   return ctx.db.insert("convexMembers", {
     tokenIdentifier: identity.tokenIdentifier,
-    convexMemberId: identity.convexMemberId as string | undefined,
+    convexMemberId: identity.convex_member_id as string | undefined,
   });
 }
 
@@ -139,7 +194,7 @@ export async function getCurrentMember(ctx: QueryCtx) {
   const existingMember = await ctx.db
     .query("convexMembers")
     .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-    .unique();
+    .first();
   if (!existingMember) {
     throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
   }
@@ -208,4 +263,12 @@ export interface ConvexProfile {
   name: string;
   email: string;
   id: string;
+}
+
+export function getMemberByConvexMemberIdQuery(ctx: QueryCtx, identity: UserIdentity) {
+  return ctx.db
+    .query("convexMembers")
+    .withIndex("byConvexMemberId", (q) =>
+      q.eq("convexMemberId", identity.convex_member_id as string).lt("softDeletedForWorkOSMerge", true),
+    );
 }

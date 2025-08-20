@@ -39,6 +39,7 @@ export default defineSchema({
     tokenIdentifier: v.string(),
     apiKey: v.optional(apiKeyValidator),
     convexMemberId: v.optional(v.string()),
+    softDeletedForWorkOSMerge: v.optional(v.boolean()),
     // Not authoritative, just a cache of the user's profile from Auth0/provision host.
     cachedProfile: v.optional(
       v.object({
@@ -50,7 +51,7 @@ export default defineSchema({
     ),
   })
     .index("byTokenIdentifier", ["tokenIdentifier"])
-    .index("byConvexMemberId", ["convexMemberId"]),
+    .index("byConvexMemberId", ["convexMemberId", "softDeletedForWorkOSMerge"]),
 
   /*
    * Admin status means being on the convex team on the provision host.
