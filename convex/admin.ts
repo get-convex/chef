@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, internalMutation, internalAction, query } from "./_generated/server";
 import type { QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { getMemberByConvexMemberIdQuery } from "./sessions";
 
 const PROVISION_HOST = process.env.PROVISION_HOST || "https://api.convex.dev";
 const CONVEX_TEAM_ID = 4916;
@@ -14,10 +15,7 @@ export async function assertIsConvexAdmin(ctx: QueryCtx) {
     throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
   }
 
-  const member = await ctx.db
-    .query("convexMembers")
-    .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-    .unique();
+  const member = await getMemberByConvexMemberIdQuery(ctx, identity).first();
 
   if (!member) {
     throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
@@ -112,10 +110,7 @@ export const requestAdminCheck = mutation({
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
-    const member = await ctx.db
-      .query("convexMembers")
-      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const member = await getMemberByConvexMemberIdQuery(ctx, identity).first();
 
     if (!member) {
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
@@ -150,10 +145,7 @@ export const isCurrentUserAdmin = query({
       return false;
     }
 
-    const member = await ctx.db
-      .query("convexMembers")
-      .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique();
+    const member = await getMemberByConvexMemberIdQuery(ctx, identity).first();
 
     if (!member) {
       return false;

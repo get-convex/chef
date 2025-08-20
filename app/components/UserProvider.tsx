@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import { setExtra, setUser } from '@sentry/remix';
 import { useConvex } from 'convex/react';
 import { useConvexSessionIdOrNullOrLoading, getConvexAuthToken } from '~/lib/stores/sessionId';
@@ -8,6 +7,7 @@ import { setProfile } from '~/lib/stores/profile';
 import { getConvexProfile } from '~/lib/convexProfile';
 import { useLDClient, withLDProvider, basicLogger } from 'launchdarkly-react-client-sdk';
 import { api } from '@convex/_generated/api';
+import { useAuth } from '@workos-inc/authkit-react';
 
 export const UserProvider = withLDProvider<any>({
   clientSideID: import.meta.env.VITE_LD_CLIENT_SIDE_ID,
@@ -18,7 +18,7 @@ export const UserProvider = withLDProvider<any>({
 
 function UserProviderInner({ children }: { children: React.ReactNode }) {
   const launchdarkly = useLDClient();
-  const { user } = useAuth0();
+  const { user } = useAuth();
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chatId = useChatId();
   const convex = useConvex();
@@ -33,17 +33,18 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
     setExtra('chatId', chatId);
   }, [chatId]);
 
+  const tokenValue = (convex as any)?.sync?.state?.auth?.value;
+
   useEffect(() => {
     async function updateProfile() {
       if (user) {
         launchdarkly?.identify({
-          key: user.sub ?? '',
-          name: user.name ?? user.nickname ?? '',
+          key: user.id ?? '',
           email: user.email ?? '',
         });
         setUser({
-          id: user.sub ?? undefined,
-          username: user.name ?? user.nickname ?? undefined,
+          id: user.id,
+          username: user.firstName ? (user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName) : '',
           email: user.email ?? undefined,
         });
 
@@ -54,20 +55,22 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
             void convex.action(api.sessions.updateCachedProfile, { convexAuthToken: token });
             const convexProfile = await getConvexProfile(token);
             setProfile({
-              username: convexProfile.name || user.name || user.nickname || '',
+              username:
+                convexProfile.name ??
+                (user.firstName ? (user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName) : ''),
               email: convexProfile.email || user.email || '',
-              avatar: user.picture || '',
-              id: convexProfile.id || user.sub || '',
+              avatar: user.profilePictureUrl || '',
+              id: convexProfile.id || user.id || '',
             });
           }
         } catch (error) {
           console.error('Failed to fetch Convex profile:', error);
-          // Fallback to Auth0 profile if Convex profile fetch fails
+          // Fallback to WorkOS profile if Convex profile fetch fails
           setProfile({
-            username: user.name ?? user.nickname ?? '',
+            username: user.firstName ? (user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName) : '',
             email: user.email ?? '',
-            avatar: user.picture ?? '',
-            id: user.sub ?? '',
+            avatar: user.profilePictureUrl ?? '',
+            id: user.id ?? '',
           });
         }
       } else {
@@ -77,7 +80,8 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
       }
     }
     void updateProfile();
-  }, [launchdarkly, user, convex]);
+    // Including tokenValue is important here even though it's not a direct dependency
+  }, [launchdarkly, user, convex, tokenValue]);
 
   return children;
 }
