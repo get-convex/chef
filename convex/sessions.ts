@@ -169,6 +169,11 @@ async function getOrCreateCurrentMember(ctx: MutationCtx) {
             urlId: chat.urlId ? chat.urlId + "-" + extraMember._id.slice(0, 8) : undefined,
           });
         }
+      } else {
+        console.log("no session for member", extraMember.convexMemberId);
+        await ctx.db.patch(extraMember._id, {
+          softDeletedForWorkOSMerge: true,
+        });
       }
     }
 

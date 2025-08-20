@@ -6,7 +6,7 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, us
 import { themeStore } from './lib/stores/theme';
 import { stripIndents } from 'chef-agent/utils/stripIndent';
 import { createHead } from 'remix-island';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ClientOnly } from 'remix-utils/client-only';
@@ -138,20 +138,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <ClientOnly>
-        {() => (
-          <DndProvider backend={HTML5Backend}>
-            <AuthKitProvider
-              clientId={import.meta.env.VITE_WORKOS_CLIENT_ID}
-              redirectUri={globalThis.process.env.WORKOS_REDIRECT_URI}
-            >
-              <ConvexProviderWithAuthKit client={convex} useAuth={useAuth}>
-                {children}
-              </ConvexProviderWithAuthKit>
-            </AuthKitProvider>
-          </DndProvider>
-        )}
-      </ClientOnly>
+      <AuthKitProvider
+        clientId={import.meta.env.VITE_WORKOS_CLIENT_ID}
+        redirectUri={globalThis.process.env.WORKOS_REDIRECT_URI}
+      >
+        <ClientOnly>
+          {() => {
+            return (
+              <DndProvider backend={HTML5Backend}>
+                <ConvexProviderWithAuthKit client={convex} useAuth={useAuth}>
+                  {children}
+                </ConvexProviderWithAuthKit>
+              </DndProvider>
+            );
+          }}
+        </ClientOnly>
+      </AuthKitProvider>
+
       <ScrollRestoration />
       <Scripts />
     </>
