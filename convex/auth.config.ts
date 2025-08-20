@@ -4,9 +4,16 @@ export default {
   providers: [
     {
       type: "customJwt",
-      issuer: `https://api.auth.convex.dev/user_management/${clientId}`,
+      issuer: `https://api.workos.com/`,
       algorithm: "RS256",
-      jwks: `https://api.auth.convex.dev/sso/jwks/${clientId}`,
+      jwks: `https://api.workos.com/sso/jwks/${clientId}`,
+      applicationID: clientId,
+    },
+    {
+      type: "customJwt",
+      issuer: `https://api.workos.com/user_management/${clientId}`,
+      algorithm: "RS256",
+      jwks: `https://api.workos.com/sso/jwks/${clientId}`,
       applicationID: clientId,
     },
   ],
