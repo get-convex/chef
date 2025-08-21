@@ -70,15 +70,15 @@ function ShareProjectContent() {
   const handleCloneChat = useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const auth0AccessToken = getConvexAuthToken(convex);
-    if (!auth0AccessToken) {
-      console.error('No auth0 access token');
+    const workosAccessToken = getConvexAuthToken(convex);
+    if (!workosAccessToken) {
+      console.error('No WorkOS access token');
       toast.error('Unexpected error cloning chat');
       return;
     }
     const projectInitParams = {
       teamSlug,
-      auth0AccessToken,
+      workosAccessToken,
     };
     try {
       const { id: chatId } = await cloneChat({ shareCode, sessionId, projectInitParams });

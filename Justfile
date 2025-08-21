@@ -9,7 +9,7 @@ convex-bb command *ARGS:
     if [[ -n "$CONVEX_OVERRIDE_ACCESS_TOKEN" ]]; then echo "Plz unset CONVEX_OVERRIDE_ACCESS_TOKEN"; exit 1; fi
     cd {{invocation_directory()}}
     if [ "$1" == "dev" ] || [ "$1" == "login" ]; then
-        npx convex "$1" --override-auth-url "https://convexdev-test.us.auth0.com/" --override-auth-client "YyByEO5qldCzUIcBYCmZai13XvJh9ZjY" "${@:2}"
+        npx convex "$1" --override-auth-url "https://cheerful-lake-55-staging.authkit.app/" --override-auth-client "client_01K1EFJ1R8YHBZ131A4VDN433S" "${@:2}"
     else
         npx convex "$@"
     fi

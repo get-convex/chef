@@ -36,7 +36,7 @@ export async function createChat(t: TestConvex) {
 
 export const testProjectInitParams = {
   teamSlug: "test",
-  auth0AccessToken: "test",
+  workosAccessToken: "test",
 };
 
 export async function storeChat(

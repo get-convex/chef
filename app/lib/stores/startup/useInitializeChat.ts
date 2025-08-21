@@ -29,9 +29,9 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
       return false;
     }
 
-    const auth0AccessToken = getConvexAuthToken(convex);
-    if (!auth0AccessToken) {
-      console.error('No auth0 access token');
+    const workosAccessToken = getConvexAuthToken(convex);
+    if (!workosAccessToken) {
+      console.error('No WorkOS access token');
       toast.error('Unexpected error creating chat');
       return false;
     }
@@ -39,7 +39,7 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
 
     const projectInitParams = {
       teamSlug,
-      auth0AccessToken,
+      workosAccessToken,
     };
 
     // Initialize the chat and start project creation
@@ -81,15 +81,15 @@ export function useExistingInitializeChat(chatId: string) {
   return useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const auth0AccessToken = getConvexAuthToken(convex);
-    if (!auth0AccessToken) {
-      console.error('No auth0 access token');
+    const workosAccessToken = getConvexAuthToken(convex);
+    if (!workosAccessToken) {
+      console.error('No WorkOS access token');
       toast.error('Unexpected error creating chat');
       return false;
     }
     const projectInitParams = {
       teamSlug,
-      auth0AccessToken,
+      workosAccessToken,
     };
     await convex.mutation(api.messages.initializeChat, {
       id: chatId,

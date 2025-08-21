@@ -89,13 +89,13 @@ export const ChefAuthProvider = ({
 
     async function verifySession() {
       if (sessionIdFromLocalStorage) {
-        // Seems like Auth0 does not automatically refresh its state, so call this to kick it
+        // Seems like auth might not automatically refresh its state, so call this to kick it
         try {
           // Call this to prove that WorkOS is set up
           await getAccessToken({});
           authRetries.current = 0;
         } catch (_e) {
-          console.error('Unable to fetch access token from Auth0');
+          console.error('Unable to fetch access token from WorkOS');
           if (authRetries.current < 3 && verifySessionTimeout === null) {
             authRetries.current++;
             verifySessionTimeout = setTimeout(() => {

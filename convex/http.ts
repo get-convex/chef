@@ -180,7 +180,7 @@ http.route({
   method: "POST",
   handler: httpActionWithErrorHandling(async (ctx, request) => {
     const body = await request.json();
-    // We auth either via the Auth0 token or with a custom header
+    // We auth either via the WorkOS token or with a custom header
     const header = request.headers.get("X-Chef-Admin-Token");
     const authHeader = request.headers.get("Authorization");
     if (authHeader === null) {

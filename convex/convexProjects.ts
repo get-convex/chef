@@ -90,7 +90,7 @@ export const startProvisionConvexProject = mutation({
     projectInitParams: v.optional(
       v.object({
         teamSlug: v.string(),
-        auth0AccessToken: v.string(),
+        workosAccessToken: v.string(),
       }),
     ),
   },
@@ -106,7 +106,7 @@ export async function startProvisionConvexProjectHelper(
     chatId: string;
     projectInitParams?: {
       teamSlug: string;
-      auth0AccessToken: string;
+      workosAccessToken: string;
     };
   },
 ): Promise<void> {
@@ -131,7 +131,7 @@ export async function startProvisionConvexProjectHelper(
   await ctx.scheduler.runAfter(0, internal.convexProjects.connectConvexProjectForOauth, {
     sessionId: args.sessionId,
     chatId: args.chatId,
-    accessToken: args.projectInitParams.auth0AccessToken,
+    accessToken: args.projectInitParams.workosAccessToken,
     teamSlug: args.projectInitParams.teamSlug,
   });
   const jobId = await ctx.scheduler.runAfter(CHECK_CONNECTION_DEADLINE_MS, internal.convexProjects.checkConnection, {

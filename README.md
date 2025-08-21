@@ -42,7 +42,7 @@ pnpm run dev
 npx convex dev
 
 # now visit http://127.0.0.1:5173
-# make sure to use this port, it's been specifically listed in our Auth0 application.
+# make sure to use this port and 127.0.0.1 instead of localhost as the hostname, it's been specifically listed in our WorkOS application.
 # Wait a few seconds, and then RELOAD THE PAGE! Unfortunately this is currently required
 # to use the hot-reloading dev server.
 ```
@@ -92,15 +92,15 @@ can use the Vercel instant rollbacks to prompt old deployments to production.
 
 ### Auth
 
-- Users sign in with their Github account to Convex via the same Auth0 app as the dashboard.
+- Users sign in with their regular Convex account through WorkOS.
 - Users choose a team to create a new project in for app they conconct with Chef.
   Note that this is _not_ the OAuth flow that we offer to customers; if a customer wants this,
   they need to use the OAuth flow that grants them access to a user's specific Convex project.
 - You'll need the following env vars set in `.env.local` (values are in 1Password under `flex .env.local`)
-  - `VITE_AUTH0_CLIENT_ID`
-  - `VITE_AUTH0_DOMAIN`
+  - VITE_WORKOS_CLIENT_ID=client_01K0YV0SNPRYJ5AV4AS0VG7T1J
+  - VITE_WORKOS_REDIRECT_URI=http://127.0.0.1:5173
+  - VITE_WORKOS_API_HOSTNAME=apiauth.convex.dev
 
-Additionally make sure `CONVEX_OAUTH_CLIENT_ID` and `CONVEX_OAUTH_CLIENT_SECRET` is set on your Convex deployment
 (it'll also be in the default Convex project env vars, so you can sync via dashboard).
 
 ### Developing against local big-brain
