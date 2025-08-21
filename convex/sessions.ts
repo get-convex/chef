@@ -199,7 +199,7 @@ export async function getCurrentMember(ctx: QueryCtx) {
   }
   const existingMember = await ctx.db
     .query("convexMembers")
-    .withIndex("byTokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+    .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convex_member_id as string))
     .first();
   if (!existingMember) {
     throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
