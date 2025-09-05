@@ -49,7 +49,6 @@ export function encodeModelAnnotation(
 ) {
   let provider: ProviderType | null = null;
   let model: string | null = null;
-  console.log('Provider metadata', providerMetadata);
   if (providerMetadata?.anthropic) {
     provider = 'Anthropic';
     model = modelForProvider('Anthropic', modelChoice);
