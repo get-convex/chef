@@ -49,6 +49,7 @@ export function encodeModelAnnotation(
 ) {
   let provider: ProviderType | null = null;
   let model: string | null = null;
+  console.log('Provider metadata', providerMetadata);
   if (providerMetadata?.anthropic) {
     provider = 'Anthropic';
     model = modelForProvider('Anthropic', modelChoice);
@@ -62,7 +63,6 @@ export function encodeModelAnnotation(
     provider = 'Google';
     model = modelForProvider('Google', modelChoice);
   } else if (providerMetadata?.bedrock) {
-    console.log('Bedrock provider metadata', providerMetadata.bedrock);
     provider = 'Bedrock';
     model = modelForProvider('Bedrock', modelChoice);
   }
