@@ -51,8 +51,6 @@ export function encodeModelAnnotation(
   let model: string | null = null;
   if (providerMetadata?.anthropic) {
     provider = 'Anthropic';
-    // This covers both claude on Bedrock vs. Anthropic, unclear if we want to
-    // try and differentiate between the two.
     model = modelForProvider('Anthropic', modelChoice);
   } else if (providerMetadata?.openai) {
     provider = 'OpenAI';
@@ -63,6 +61,10 @@ export function encodeModelAnnotation(
   } else if (providerMetadata?.google) {
     provider = 'Google';
     model = modelForProvider('Google', modelChoice);
+  } else if (providerMetadata?.bedrock) {
+    console.log('Bedrock provider metadata', providerMetadata.bedrock);
+    provider = 'Bedrock';
+    model = modelForProvider('Bedrock', modelChoice);
   }
   return { toolCallId: call.kind === 'tool-call' ? call.toolCallId : 'final', provider, model };
 }
