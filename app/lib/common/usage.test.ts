@@ -65,3 +65,27 @@ test('calculateChefTokensGoogleWithThoughtTokens', () => {
   expect(breakdown.promptTokens.google.uncached).toBe(3600);
   expect(breakdown.promptTokens.google.cached).toBe(0);
 });
+
+test('calculateChefTokensBedrock', () => {
+  const usage = {
+    ...initializeUsage(),
+    completionTokens: 100,
+    promptTokens: 200,
+    totalTokens: 300,
+    bedrockCacheWriteInputTokens: 50,
+    bedrockCacheReadInputTokens: 10,
+  };
+
+  const { chefTokens, breakdown } = calculateChefTokens(usage, 'Bedrock');
+
+  // Bedrock completion tokens: 100 * 200 = 20000
+  // Bedrock uncached prompt tokens: 200 * 40 = 8000
+  // Bedrock cache write content tokens: 50 * 40 = 2000
+  // Bedrock cache read content tokens: 10 * 3 = 30
+  // Total: 20000 + 8000 + 2000 + 30 = 30030
+  expect(chefTokens).toBe(30030);
+
+  expect(breakdown.completionTokens.bedrock).toBe(20000);
+  expect(breakdown.promptTokens.bedrock.uncached).toBe(8000);
+  expect(breakdown.promptTokens.bedrock.cached).toBe(30 + 2000);
+});

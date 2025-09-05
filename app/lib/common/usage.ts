@@ -6,6 +6,7 @@ export function usageFromGeneration(generation: {
   usage: LanguageModelUsage;
   providerMetadata?: ProviderMetadata;
 }): Usage {
+  const bedrockUsage = generation.providerMetadata?.bedrock?.usage as any;
   return {
     completionTokens: generation.usage.completionTokens,
     promptTokens: generation.usage.promptTokens,
@@ -17,6 +18,8 @@ export function usageFromGeneration(generation: {
     xaiCachedPromptTokens: Number(generation.providerMetadata?.xai?.cachedPromptTokens ?? 0),
     googleCachedContentTokenCount: Number(generation.providerMetadata?.google?.cachedContentTokenCount ?? 0),
     googleThoughtsTokenCount: Number(generation.providerMetadata?.google?.thoughtsTokenCount ?? 0),
+    bedrockCacheWriteInputTokens: Number(bedrockUsage?.cacheWriteInputTokens ?? 0),
+    bedrockCacheReadInputTokens: Number(bedrockUsage?.cacheReadInputTokens ?? 0),
   };
 }
 
@@ -31,6 +34,8 @@ export function initializeUsage(): Usage {
     xaiCachedPromptTokens: 0,
     googleCachedContentTokenCount: 0,
     googleThoughtsTokenCount: 0,
+    bedrockCacheWriteInputTokens: 0,
+    bedrockCacheReadInputTokens: 0,
   };
 }
 
@@ -91,6 +96,8 @@ function addUsage(totalUsage: Usage, payload: UsageAnnotation) {
   totalUsage.openaiCachedPromptTokens += payload.providerMetadata?.openai?.cachedPromptTokens ?? 0;
   totalUsage.xaiCachedPromptTokens += payload.providerMetadata?.xai?.cachedPromptTokens ?? 0;
   totalUsage.googleCachedContentTokenCount += payload.providerMetadata?.google?.cachedContentTokenCount ?? 0;
+  totalUsage.bedrockCacheWriteInputTokens += payload.providerMetadata?.bedrock?.usage?.cacheWriteInputTokens ?? 0;
+  totalUsage.bedrockCacheReadInputTokens += payload.providerMetadata?.bedrock?.usage?.cacheReadInputTokens ?? 0;
 }
 
 export type ChefTokenBreakdown = {
@@ -166,6 +173,12 @@ export function calculateChefTokens(totalUsage: Usage, provider?: ProviderType) 
     const bedrockPromptTokens = totalUsage.promptTokens * 40;
     chefTokens += bedrockPromptTokens;
     breakdown.promptTokens.bedrock.uncached = bedrockPromptTokens;
+    const cacheWriteInputTokens = totalUsage.bedrockCacheWriteInputTokens * 40;
+    chefTokens += cacheWriteInputTokens;
+    breakdown.promptTokens.bedrock.cached = cacheWriteInputTokens;
+    const cacheReadInputTokens = totalUsage.bedrockCacheReadInputTokens * 3;
+    chefTokens += cacheReadInputTokens;
+    breakdown.promptTokens.bedrock.cached += cacheReadInputTokens;
   } else if (provider === 'OpenAI') {
     const openaiCompletionTokens = totalUsage.completionTokens * 100;
     chefTokens += openaiCompletionTokens;

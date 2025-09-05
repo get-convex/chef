@@ -123,6 +123,16 @@ export async function convexAgent(args: {
     ...cleanupAssistantMessages(messages),
   ];
 
+  if (modelProvider === 'Bedrock') {
+    messagesForDataStream[messagesForDataStream.length - 1].providerOptions = {
+      bedrock: {
+        cachePoint: {
+          type: 'default',
+        },
+      },
+    };
+  }
+
   const dataStream = createDataStream({
     execute(dataStream) {
       const result = streamText({
@@ -292,6 +302,14 @@ async function onFinishHandler({
         const openai: any = providerMetadata.openai;
         span.setAttribute('providerMetadata.openai.cachedPromptTokens', openai.cachedPromptTokens ?? 0);
       }
+      if (providerMetadata.bedrock) {
+        const bedrock: any = providerMetadata.bedrock;
+        span.setAttribute(
+          'providerMetadata.bedrock.cacheCreationInputTokens',
+          bedrock.usage?.cacheCreationInputTokens ?? 0,
+        );
+        span.setAttribute('providerMetadata.bedrock.cacheReadInputTokens', bedrock.usage?.cacheReadInputTokens ?? 0);
+      }
     }
     if (result.finishReason === 'stop' || result.finishReason === 'unknown') {
       const lastMessage = messages[messages.length - 1];
@@ -401,6 +419,15 @@ function buildUsageRecord(usage: Usage): UsageRecord {
       }
       case 'googleThoughtsTokenCount': {
         usageRecord.completionTokens += usage.googleThoughtsTokenCount;
+        break;
+      }
+      case 'bedrockCacheWriteInputTokens': {
+        usageRecord.promptTokens += usage.bedrockCacheWriteInputTokens;
+        break;
+      }
+      case 'bedrockCacheReadInputTokens': {
+        usageRecord.cachedPromptTokens += usage.bedrockCacheReadInputTokens;
+        usageRecord.promptTokens += usage.bedrockCacheReadInputTokens;
         break;
       }
       case 'toolCallId':

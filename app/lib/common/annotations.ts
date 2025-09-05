@@ -35,6 +35,14 @@ export const usageAnnotationValidator = z.object({
           cachedContentTokenCount: z.number(),
         })
         .optional(),
+      bedrock: z
+        .object({
+          usage: z.object({
+            cacheWriteInputTokens: z.number(),
+            cacheReadInputTokens: z.number(),
+          }),
+        })
+        .optional(),
     })
     .optional(),
 });
@@ -48,6 +56,8 @@ export type Usage = UsageAnnotation & {
   xaiCachedPromptTokens: number;
   googleCachedContentTokenCount: number;
   googleThoughtsTokenCount: number;
+  bedrockCacheWriteInputTokens: number;
+  bedrockCacheReadInputTokens: number;
 };
 
 const providerValidator = z.enum(['Anthropic', 'Bedrock', 'OpenAI', 'XAI', 'Google', 'Unknown']);

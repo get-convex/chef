@@ -47,7 +47,6 @@ async function isValidSessionForConvexOAuth(
     return true;
   }
   // But if we have the identity, it better match
-  // console.log("token identifiers", identity.tokenIdentifier, member.tokenIdentifier);
   return identity.convex_member_id === member.convexMemberId;
 }
 
