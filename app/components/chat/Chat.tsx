@@ -238,7 +238,8 @@ export const Chat = memo(
 
     const [sendMessageInProgress, setSendMessageInProgress] = useState(false);
 
-    const anthropicProviders: ProviderType[] = ['Bedrock', 'Bedrock'];
+    const anthropicProviders: ProviderType[] =
+      Math.random() < useAnthropicFraction ? ['Anthropic', 'Bedrock'] : ['Bedrock', 'Anthropic'];
 
     const checkTokenUsage = useCallback(async () => {
       if (hasApiKeySet(modelSelection, useGeminiAuto, apiKey)) {

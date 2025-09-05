@@ -306,6 +306,8 @@ async function getUsageBreakdown(messages: Message[]) {
     xaiCachedPromptTokens: 0,
     googleCachedContentTokenCount: 0,
     googleThoughtsTokenCount: 0,
+    bedrockCacheWriteInputTokens: 0,
+    bedrockCacheReadInputTokens: 0,
   };
   const chatTotalUsageBilledFor = {
     completionTokens: 0,
@@ -317,6 +319,8 @@ async function getUsageBreakdown(messages: Message[]) {
     xaiCachedPromptTokens: 0,
     googleCachedContentTokenCount: 0,
     googleThoughtsTokenCount: 0,
+    bedrockCacheWriteInputTokens: 0,
+    bedrockCacheReadInputTokens: 0,
   };
   let chatTotalChefTokens = 0;
   const chatTotalChefBreakdown: ChefBreakdown = {
