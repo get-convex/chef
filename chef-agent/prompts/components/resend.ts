@@ -1,8 +1,6 @@
 export const resendComponentReadmePrompt = `
 # Resend Convex Component (Beta)
-
-[![npm version](https://badge.fury.io/js/@convex-dev%2Fresend.svg)](https://badge.fury.io/js/@convex-dev%2Fresend)
-
+;
 This component is the official way to integrate the Resend email service
 with your Convex project.
 
@@ -13,9 +11,6 @@ Features:
 - Durable execution: Uses Convex workpools to ensure emails are eventually delivered, even in the face of temporary failures or network outages.
 - Idempotency: Manages Resend idempotency keys to guarantee emails are delivered exactly once, preventing accidental spamming from retries.
 - Rate limiting: Honors API rate limits established by Resend.
-
-See [example](./example) for a demo of how to incorporate this hook into your
-application.
 
 ## Installation
 
@@ -28,7 +23,7 @@ First, you'll need to get a Resend account [here](https://resend.com).
 You'll need a registered domain to send emails from. 
 Set one up in the Resend dashboard [here](https://resend.com/domains).
 Grab an API key [here](https://resend.com/api-keys)
-Use the addEnvironmentVariables tool to add \`RESEND_API_KEY\` and \`RESEND_DOMAIN\` to your deployment.
+Use the addEnvironmentVariables tool to add \`RESEND_API_KEY\` to your deployment.
 
 Next, add the component to your Convex app via \`convex/convex.config.ts\`:
 
@@ -49,14 +44,14 @@ import { components } from "./_generated/api";
 import { Resend } from "@convex-dev/resend";
 import { internalMutation } from "./_generated/server";
 
-export const resend: Resend = new Resend(components.resend, {});
+export const resend: Resend = new Resend(components.resend, { testMode: false });
 
-export const sendTestEmail = internalMutation({
+export const sendEmail = internalMutation({
   handler: async (ctx) => {
     await resend.sendEmail(
       ctx,
-      "Me <test@\${process.env.RESEND_DOMAIN}>",
-      "Resend <delivered@resend.dev>",
+      "Resend <onboarding@resend.dev>",
+      "Me <me@domain.com>",
       "Hi there",
       "This is a test email"
     );
@@ -64,25 +59,21 @@ export const sendTestEmail = internalMutation({
 });
 \`\`\`
 
-Then, calling \`sendTestEmail\` from anywhere in your app will send this test email. 
-You must configure it to send emails from the \`RESEND_DOMAIN\` environment variable, otherwise you will see an unverified domain error.
+Then, calling \`sendEmail\` from anywhere in your app will send this email. 
+You should alwaysuse the onboarding@resend.dev email address as the from email unless the user requests otherwise.
 
-If you want to send emails to real addresses, you need to disable \`testMode\`.
-You can do this in \`ResendOptions\`, [as detailed below](#resend-component-options-and-going-into-production).
-
-While the setup we have so far will reliably send emails, you don't have any feedback
-on anything delivering, bouncing, or triggering spam complaints. For that, we need
-to set up a webhook!
+## Advanced: Setting up a webhook
+Only do this if the user specifically asks for it. This will allow you to get email status updates.
 
 On the Convex side, we need to mount an http endpoint to our project to route it to
-the Resend component in \`convex/http.ts\`:
+the Resend component in \`convex/router.ts\`:
 
 \`\`\`ts
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { resend } from "./sendEmails";
 
-const http = httpRouter();
+... existing code ...
 
 http.route({
   path: "/resend-webhook",
@@ -144,30 +135,6 @@ export const handleEmailEvent = internalMutation({
 /* ... existing email sending code ... */
 \`\`\`
 
-Check out the \`example/\` project in this repo for a full demo.
-
-### Resend component options, and going into production
-
-There is a \`ResendOptions\` argument to the component constructor to help customize
-it's behavior.
-
-Check out the [docstrings](./src/client/index.ts), but notable options include:
-
-- \`apiKey\`: Provide the Resend API key instead of having it read from the environment
-  variable.
-- \`webhookSecret\`: Same thing, but for the webhook secret.
-- \`testMode\`: Only allow delivery to test addresses. To
-  your project, \`testMode\` is default **true**. You need to explicitly set this to
-  \`false\` for the component to allow you to enqueue emails to artibrary addresses.
-- \`onEmailEvent\`: Your email event callback, as outlined above!
-  Check out the [docstrings](./src/client/index.ts) for details on the events that
-  are emitted.
-
-### Optional email sending parameters
-
-In addition to basic from/to/subject and html/plain text bodies, the \`sendEmail\` method
-allows you to provide a list of \`replyTo\` addresses, and other email headers.
-
 ### Tracking, getting status, and cancelling emails
 
 The \`sendEmail\` method returns a branded type, \`EmailId\`. You can use this
@@ -178,11 +145,4 @@ for a few things:
 - To cancel the email using \`resend.cancelEmail(ctx, emailId)\`.
 
 If the email has already been sent to the Resend API, it cannot be cancelled. Cancellations
-do not trigger an email event.
-
-### Data retention
-
-This component retains "finalized" (delivered, cancelled, bounced) emails for seven days
-so you can check on the status of them. Then, a background job clears out those emails
-and their bodies to reclaim database space.
-`;
+do not trigger an email event.`;

@@ -954,4 +954,4 @@ Chef does not have documentation for them. Tell the user that they are unsupport
 `;
 }
 
-const resendComponent = `- \`resend\`: A component for sending emails.`;
+const resendComponent = `- \`resend\`: A component for sending emails. This is the recommended way to send emails.`;
