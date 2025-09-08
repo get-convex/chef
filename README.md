@@ -9,7 +9,7 @@
 [Chef](https://chef.convex.dev) is the only AI app builder that knows backend. It builds full-stack web apps with a built-in database, zero config auth, file uploads,
 real-time UIs, and background workflows.
 
-Chef's capabilities are enabled by being built on top of [Convex](https://convex.dev), the open-source reactive database designed to make life easy for web app developers. 
+Chef's capabilities are enabled by being built on top of [Convex](https://convex.dev), the open-source reactive database designed to make life easy for web app developers.
 
 Development of the Chef is led by the Convex team. We
 [welcome bug fixes](./CONTRIBUTING.md) and
@@ -22,6 +22,7 @@ This project was made in collaboration with the [Bolt](https://bolt.new/) team a
 ## Repository Layout
 
 - `app/` contains all of the client side code and some serverless APIs.
+
   - `components/` defines the UI components
   - `lib/` contains client-side logic for syncing local state with the server
   - `routes/` defines some client and server routes
