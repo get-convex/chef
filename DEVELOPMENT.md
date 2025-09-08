@@ -11,7 +11,7 @@ There are three special branches:
 ### One-time setup
 
 ```
-git clone git@github.com:get-convex/flex-diy.git chef
+git clone git@github.com:get-convex/chef.git
 cd chef
 nvm install
 nvm use
