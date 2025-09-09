@@ -1,0 +1,68 @@
+name: Create System Prompts Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'chef-agent/prompts/**'
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install
+          cd chef-agent && npm install
+
+      - name: Build System Prompts
+        run: |
+          npm run build:system-prompts
+          node dist/build-system-prompts.js
+
+      - name: Create Release
+        id: create_release
+        uses: rymndhng/release-on-push-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          bump_version_scheme: patch
+          tag_prefix: prompts-v
+          release_name: 'Chef System Prompts <RELEASE_VERSION>'
+          release_body: |
+            ## Chef System Prompts Release
+
+            This release contains the compiled system prompts used by the Chef AI assistant.
+
+            ### Files included:
+            - `chef-system-prompts.txt` - Complete system prompts as sent to the AI model
+
+            Generated automatically from the latest prompt changes in the chef-agent.
+
+      - name: Upload Release Assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f "chef-system-prompts.txt" ]; then
+            gh release upload "${{ steps.create_release.outputs.tag_name }}" "chef-system-prompts.txt" --clobber
+            echo "✅ Uploaded chef-system-prompts.txt to release"
+          else
+            echo "❌ chef-system-prompts.txt not found"
+            exit 1
+          fi
