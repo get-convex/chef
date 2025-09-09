@@ -25,4 +25,4 @@ that larger PRs will get the same level of attention.
 
 Instructions for running Chef locally:
 
-- [Building the backend and CLI from source](DEVELOPMENT.md)
+- [Running the web app locally](DEVELOPMENT.md)
