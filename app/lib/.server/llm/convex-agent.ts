@@ -133,6 +133,16 @@ export async function convexAgent(args: {
     };
   }
 
+  if (modelProvider === 'Anthropic') {
+    messagesForDataStream[messagesForDataStream.length - 1].providerOptions = {
+      anthropic: {
+        cacheControl: {
+          type: 'ephemeral',
+        },
+      },
+    };
+  }
+
   const dataStream = createDataStream({
     execute(dataStream) {
       const result = streamText({
