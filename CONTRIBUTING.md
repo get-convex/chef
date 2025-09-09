@@ -4,7 +4,7 @@ Please share any general questions, feature requests, or product feedback in our
 [Convex Discord Community](https://convex.dev/community). We're particularly
 excited to see what you build using Chef!
 
-Please ensure that rust code is formatted with
+Please ensure that JavaScript code is formatted with
 [eslint](https://github.com/eslint/eslint) and markdown files are
 formatted with [prettier](https://prettier.io/).
 
