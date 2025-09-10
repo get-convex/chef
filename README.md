@@ -19,7 +19,7 @@ This project was made in collaboration with the [Bolt](https://bolt.new/) team a
 
 ## Getting Started
 
-Visit our [documentation]() to learn more about Chef and check out our prompting [guide]().
+Visit our [documentation](https://docs.convex.dev/chef) to learn more about Chef and check out our prompting [guide](https://stack.convex.dev/chef-cookbook-tips-working-with-ai-app-builders).
 
 The easiest way to build with Chef is through our hosted [webapp](https://chef.convex.dev), which includes a generous free tier. If you want to
 run Chef locally, you can follow the guide below.
@@ -29,6 +29,7 @@ run Chef locally, you can follow the guide below.
 **1. Set up local environment**
 
 Run the following commands in your terminal:
+
 ```bash
 nvm install
 nvm use
@@ -45,6 +46,7 @@ Go to the Convex [dashboard](https://dashboard.convex.dev/team/settings/applicat
 **3. Set up Convex deployment**
 
 Open the Convex dashboard and go to Settings → Environment Variables. Then, set the following environment variables:
+
 ```env
 BIG_BRAIN_HOST=https://api.convex.dev
 CONVEX_OAUTH_CLIENT_ID=<value from oauth setup>
@@ -54,6 +56,7 @@ CONVEX_OAUTH_CLIENT_SECRET=<value from oauth setup>
 **4. Run Chef backend and frontend**
 
 Run the following commands in your terminal:
+
 ```bash
 pnpm i
 pnpm run dev
