@@ -10,7 +10,7 @@
     "deploy": "npm run build",
     "build": "remix vite:build",
     "build:proxy": "node proxy/build.cjs",
-    "build:system-prompts": "tsc build-system-prompts.ts --outDir dist --module esnext --target es2022 --moduleResolution bundler --allowImportingTsExtensions false",
+    "build:system-prompts": "tsc buildSystemPrompts.ts --outDir dist --module esnext --target es2022 --moduleResolution bundler --allowImportingTsExtensions false",
     "dev": "node depscheck.mjs && remix vite:dev",
     "update-env": "grep -E 'VITE_CONVEX_URL|CONVEX_DEPLOYMENT' .env.local > temp_envars; vercel env pull; cat temp_envars >> .env.local; if [ -s temp_envars ]; then echo '\nAdditionally, preserved existing envars:'; cat temp_envars; fi; rm temp_envars",
     "rebuild-template": "node make-bootstrap-snapshot.js",
