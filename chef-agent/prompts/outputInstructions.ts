@@ -201,12 +201,12 @@ function toolsInstructions(options: SystemPromptOptions) {
       message so that the user has time to add the environment variables before the next message.
     </addEnvironmentVariables_tool>
 
-    ${options.enablePreciseEdits ? preciseToolInstructions(options) : ''}
+    ${preciseToolInstructions()}
   </tools>
   `;
 }
 
-function preciseToolInstructions(_options: SystemPromptOptions) {
+function preciseToolInstructions() {
   return stripIndents`
     <view_tool>
       The environment automatically provides relevant files, but you can ask to see particular files by using the view

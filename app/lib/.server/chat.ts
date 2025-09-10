@@ -65,14 +65,10 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string }
       | undefined;
     shouldDisableTools: boolean;
-    smallFiles: boolean;
     recordRawPromptsForDebugging?: boolean;
     collapsedMessages: boolean;
     promptCharacterCounts?: PromptCharacterCounts;
     featureFlags: {
-      enablePreciseEdits: boolean;
-      smallFiles: boolean;
-      enableEnvironmentVariables?: boolean;
       enableResend?: boolean;
     };
   };
@@ -184,9 +180,6 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       collapsedMessages: body.collapsedMessages,
       promptCharacterCounts: body.promptCharacterCounts,
       featureFlags: {
-        enablePreciseEdits: body.featureFlags.enablePreciseEdits,
-        smallFiles: body.featureFlags.smallFiles,
-        enableEnvironmentVariables: body.featureFlags.enableEnvironmentVariables ?? false,
         enableResend: body.featureFlags.enableResend ?? false,
       },
     });
