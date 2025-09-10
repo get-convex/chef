@@ -26,6 +26,8 @@ run Chef locally, you can follow the guide below.
 
 ### Running Locally
 
+Note: This will use our control plane to provision Convex projects. However, Chef tokens used in this enviroment will not count towards usage in your Convex account.
+
 **1. Set up local environment**
 
 Run the following commands in your terminal:
@@ -52,6 +54,19 @@ BIG_BRAIN_HOST=https://api.convex.dev
 CONVEX_OAUTH_CLIENT_ID=<value from oauth setup>
 CONVEX_OAUTH_CLIENT_SECRET=<value from oauth setup>
 ```
+
+**4. Add API keys for model providers**
+
+Add any of the following API keys in order to enable code generation:
+
+```env
+ANTHROPIC_API_KEY=<your api key>
+GOOGLE_API_KEY=<your api key>
+OPENAI_API_KEY=<your api key>
+XAI_API_KEY=<your api key>
+```
+
+Note: you can also add your own API keys through the settings page.
 
 **4. Run Chef backend and frontend**
 
