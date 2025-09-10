@@ -56,9 +56,6 @@ export async function convexAgent(args: {
   collapsedMessages: boolean;
   promptCharacterCounts?: PromptCharacterCounts;
   featureFlags: {
-    enablePreciseEdits: boolean;
-    smallFiles: boolean;
-    enableEnvironmentVariables: boolean;
     enableResend: boolean;
   };
 }) {
@@ -88,13 +85,11 @@ export async function convexAgent(args: {
   const provider = getProvider(userApiKey, modelProvider, modelChoice);
   const opts: SystemPromptOptions = {
     enableBulkEdits: true,
-    enablePreciseEdits: featureFlags.enablePreciseEdits,
     includeTemplate: true,
     openaiProxyEnabled: getEnv('OPENAI_PROXY_ENABLED') == '1',
     usingOpenAi: modelProvider == 'OpenAI',
     usingGoogle: modelProvider == 'Google',
     resendProxyEnabled: getEnv('RESEND_PROXY_ENABLED') == '1',
-    smallFiles: featureFlags.smallFiles,
     enableResend: featureFlags.enableResend,
   };
   const tools: ConvexToolSet = {
@@ -103,13 +98,9 @@ export async function convexAgent(args: {
     lookupDocs: lookupDocsTool(),
     getConvexDeploymentName: getConvexDeploymentNameTool,
   };
-  if (featureFlags.enableEnvironmentVariables) {
-    tools.addEnvironmentVariables = addEnvironmentVariablesTool();
-  }
-  if (opts.enablePreciseEdits) {
-    tools.view = viewTool;
-    tools.edit = editTool;
-  }
+  tools.addEnvironmentVariables = addEnvironmentVariablesTool();
+  tools.view = viewTool;
+  tools.edit = editTool;
 
   const messagesForDataStream: CoreMessage[] = [
     {
@@ -128,6 +119,16 @@ export async function convexAgent(args: {
       bedrock: {
         cachePoint: {
           type: 'default',
+        },
+      },
+    };
+  }
+
+  if (modelProvider === 'Anthropic') {
+    messagesForDataStream[messagesForDataStream.length - 1].providerOptions = {
+      anthropic: {
+        cacheControl: {
+          type: 'ephemeral',
         },
       },
     };
@@ -160,7 +161,6 @@ export async function convexAgent(args: {
             _startTime: startTime,
             _firstResponseTime: firstResponseTime,
             providerModel: provider.model.modelId,
-            featureFlags,
           });
         },
         onError({ error }) {
@@ -229,7 +229,6 @@ async function onFinishHandler({
   _startTime,
   _firstResponseTime,
   providerModel,
-  featureFlags,
 }: {
   dataStream: DataStreamWriter;
   messages: Messages;
@@ -250,12 +249,6 @@ async function onFinishHandler({
   _startTime: number;
   _firstResponseTime: number | null;
   providerModel: string;
-  featureFlags: {
-    enablePreciseEdits: boolean;
-    smallFiles: boolean;
-    enableEnvironmentVariables: boolean;
-    enableResend: boolean;
-  };
 }) {
   const { providerMetadata } = result;
   // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
@@ -277,9 +270,6 @@ async function onFinishHandler({
     span.setAttribute('usage.completionTokens', usage.completionTokens);
     span.setAttribute('usage.promptTokens', usage.promptTokens);
     span.setAttribute('usage.totalTokens', usage.totalTokens);
-    span.setAttribute('featureFlags.smallFiles', featureFlags.smallFiles);
-    span.setAttribute('featureFlags.enablePreciseEdits', featureFlags.enablePreciseEdits);
-    span.setAttribute('featureFlags.enableEnvironmentVariables', featureFlags.enableEnvironmentVariables);
     span.setAttribute('collapsedMessages', collapsedMessages);
     span.setAttribute('model', providerModel);
 

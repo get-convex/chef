@@ -13,7 +13,6 @@ import { getEnv } from '~/lib/.server/env';
 // workaround for Vercel environment from
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch } from '~/lib/.server/fetch';
-import { GENERAL_SYSTEM_PROMPT_PRELUDE, ROLE_SYSTEM_PROMPT } from 'chef-agent/prompts/system';
 
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
 
@@ -161,8 +160,6 @@ export function getProvider(
       // Falls back to the low Quality-of-Service Anthropic API key if the primary key is rate limited
       const rateLimitAwareFetch = () => {
         return async (input: RequestInfo | URL, init?: RequestInit) => {
-          const enrichedOptions = anthropicInjectCacheControl(init);
-
           const throwIfBad = async (response: Response, isLowQos: boolean) => {
             if (response.ok) {
               return response;
@@ -181,7 +178,7 @@ export function getProvider(
             throw new Error(JSON.stringify({ error: 'The model hit an error. Try sending your message again.' }));
           };
 
-          const response = await fetch(input, enrichedOptions);
+          const response = await fetch(input, init);
 
           if (response.status !== 429 && response.status !== 529) {
             return throwIfBad(response, false);
@@ -201,12 +198,12 @@ export function getProvider(
               response,
             },
           });
-          if (enrichedOptions && enrichedOptions.headers) {
-            const headers = new Headers(enrichedOptions.headers);
+          if (init && init.headers) {
+            const headers = new Headers(init.headers);
             headers.set('x-api-key', lowQosKey);
-            enrichedOptions.headers = headers;
+            init.headers = headers;
           }
-          const lowQosResponse = await fetch(input, enrichedOptions);
+          const lowQosResponse = await fetch(input, init);
           return throwIfBad(lowQosResponse, true);
         };
       };
@@ -228,8 +225,7 @@ export function getProvider(
 
 const userKeyApiFetch = (provider: ModelProvider) => {
   return async (input: RequestInfo | URL, init?: RequestInit) => {
-    const requestInit = provider === 'Anthropic' ? anthropicInjectCacheControl(init) : init;
-    const result = await fetch(input, requestInit);
+    const result = await fetch(input, init);
     if (result.status === 401) {
       const text = await result.text();
       throw new Error(JSON.stringify({ error: 'Invalid API key', details: text }));
@@ -273,56 +269,3 @@ const userKeyApiFetch = (provider: ModelProvider) => {
     return result;
   };
 };
-
-// sujayakar, 2025-03-25: This is mega-hax, but I can't figure out
-// how to get the AI SDK to pass the cache control header to
-// Anthropic with the `streamText` function. Setting
-// `providerOptions.anthropic.cacheControl` doesn't seem to do
-// anything. So, we instead directly inject the cache control
-// header into the body of the request.
-//
-// tom, 2025-04-25: This is still an outstanding bug
-// https://github.com/vercel/ai/issues/5942
-function anthropicInjectCacheControl(options?: RequestInit) {
-  const start = Date.now();
-  if (!options) {
-    return options;
-  }
-  if (options.method !== 'POST') {
-    return options;
-  }
-  const headers = options.headers;
-  if (!headers) {
-    return options;
-  }
-  const contentType = new Headers(headers).get('content-type');
-  if (contentType !== 'application/json') {
-    return options;
-  }
-  if (typeof options.body !== 'string') {
-    throw new Error('Body must be a string');
-  }
-
-  const body = JSON.parse(options.body);
-
-  if (body.system[0].text !== ROLE_SYSTEM_PROMPT) {
-    throw new Error('First system message must be the role system prompt');
-  }
-  if (!body.system[1].text.startsWith(GENERAL_SYSTEM_PROMPT_PRELUDE)) {
-    throw new Error('Second system message must be the general system prompt prelude');
-  }
-  // Cache system prompt.
-  body.system[1].cache_control = { type: 'ephemeral' };
-  // Cache relevant files in system messages that are the same for all LLM requests after a user message.
-  body.system[body.system.length - 1].cache_control = { type: 'ephemeral' };
-
-  // Cache all messages.
-  const lastMessage = body.messages[body.messages.length - 1];
-  const lastMessagePartIndex = lastMessage.content.length - 1;
-  lastMessage.content[lastMessagePartIndex].cache_control = { type: 'ephemeral' };
-  body.messages[body.messages.length - 1].content[lastMessagePartIndex].cache_control = { type: 'ephemeral' };
-
-  const newBody = JSON.stringify(body);
-  console.log(`Injected system messages in ${Date.now() - start}ms`);
-  return { ...options, body: newBody };
-}

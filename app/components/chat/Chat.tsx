@@ -138,13 +138,10 @@ export const Chat = memo(
     };
     const {
       recordRawPromptsForDebugging,
-      smallFiles,
       maxCollapsedMessagesSize,
       maxRelevantFilesSize,
       minCollapsedMessagesSize,
       useGeminiAuto,
-      enablePreciseEdits,
-      enableEnvironmentVariables,
       enableResend,
       useAnthropicFraction,
     } = useLaunchDarkly();
@@ -368,9 +365,6 @@ export const Chat = memo(
           collapsedMessages,
           promptCharacterCounts: characterCounts,
           featureFlags: {
-            enablePreciseEdits,
-            smallFiles,
-            enableEnvironmentVariables,
             enableResend,
           },
         };

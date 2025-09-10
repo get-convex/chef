@@ -97,7 +97,6 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
     };
     const opts: SystemPromptOptions = {
       enableBulkEdits: true,
-      enablePreciseEdits: true,
       includeTemplate: true,
       usingOpenAi: model.name.startsWith('gpt-'),
       usingGoogle: model.name.startsWith('gemini-'),
@@ -108,7 +107,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
       // proxies should never be used in the test kitchen.
       openaiProxyEnabled: true,
       resendProxyEnabled: true,
-      smallFiles: true,
+      enableResend: false,
     };
     const assistantMessage: UIMessage = {
       id: generateId(),
@@ -119,7 +118,7 @@ export async function chefTask(model: ChefModel, outputDir: string, userMessage:
     let numDeploys = 0;
     let success: boolean;
     let lastDeploySuccess = false;
-    let totalUsage: LanguageModelUsage = {
+    const totalUsage: LanguageModelUsage = {
       promptTokens: 0,
       completionTokens: 0,
       totalTokens: 0,
@@ -409,10 +408,8 @@ async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, c
           lookupDocs: lookupDocsTool(),
           getConvexDeploymentName: getConvexDeploymentNameTool,
         };
-        if (opts.enablePreciseEdits) {
-          tools.view = viewTool;
-          tools.edit = editTool;
-        }
+        tools.view = viewTool;
+        tools.edit = editTool;
         const result = await generateText({
           model: model.ai,
           maxTokens: model.maxTokens,

@@ -6,7 +6,7 @@ export function solutionConstraints(options: SystemPromptOptions) {
   return stripIndents`
   <solution_constraints>
 
-    ${options.includeTemplate ? templateInfo(options) : ''}
+    ${options.includeTemplate ? templateInfo() : ''}
 
     <convex_guidelines>
       You MUST use Convex for the database, realtime, file storage, functions, scheduling, HTTP handlers,
@@ -176,27 +176,7 @@ export function solutionConstraints(options: SystemPromptOptions) {
   `;
 }
 
-function appTsxInstructions(systemPromptOptions: SystemPromptOptions) {
-  const { smallFiles } = systemPromptOptions;
-  return smallFiles
-    ? stripIndents`
-    <file path="src/App.tsx">
-      This is the main React component for the app. It starts with a simple login form and a button to add a
-      random number to a list. It uses "src/SignInForm.tsx" and "src/SignOutButton.tsx" for the login and
-      logout functionality. Add new React components to their own files in the 'src' directory to avoid
-      cluttering the main file.
-    </file>
-  `
-    : stripIndents`
-    <file path="src/App.tsx">
-      This is the main React component for the app. It starts with a simple login form and a button to add a
-      random number to a list. It uses "src/SignInForm.tsx" and "src/SignOutButton.tsx" for the login and
-      logout functionality. 
-    </file>
-  `;
-}
-
-function templateInfo(systemPromptOptions: SystemPromptOptions) {
+function templateInfo() {
   return stripIndents`
   <template_info>
     The Chef WebContainer environment starts with a full-stack app template fully loaded at '/home/project',
@@ -241,7 +221,13 @@ function templateInfo(systemPromptOptions: SystemPromptOptions) {
       this file. The \`authTables\` object is imported with \`import { authTables } from "@convex-dev/auth/server";\`.
     </file>
 
-    ${appTsxInstructions(systemPromptOptions)}
+    <file path="src/App.tsx">
+      This is the main React component for the app. It starts with a simple login form and a button to add a
+      random number to a list. It uses "src/SignInForm.tsx" and "src/SignOutButton.tsx" for the login and
+      logout functionality. Add new React components to their own files in the 'src' directory to avoid
+      cluttering the main file.
+    </file>
+
     <file path="src/main.tsx">
       This file is the entry point for the app and sets up the 'ConvexAuthProvider'.
 

@@ -4,15 +4,12 @@ import { kebabCase } from 'lodash';
 const flagDefaults: {
   maintenanceMode: boolean;
   showUsageAnnotations: boolean;
-  smallFiles: boolean;
   recordRawPromptsForDebugging: boolean;
   maxCollapsedMessagesSize: number;
   maxRelevantFilesSize: number;
   minCollapsedMessagesSize: number;
   useGeminiAuto: boolean;
   notionClonePrompt: boolean;
-  enablePreciseEdits: boolean;
-  enableEnvironmentVariables: boolean;
   newChatFeature: boolean;
   minMessagesForNudge: number;
   enableResend: boolean;
@@ -21,15 +18,12 @@ const flagDefaults: {
 } = {
   maintenanceMode: false,
   showUsageAnnotations: false,
-  smallFiles: true,
   recordRawPromptsForDebugging: false,
   maxCollapsedMessagesSize: 65536,
   maxRelevantFilesSize: 8192,
   minCollapsedMessagesSize: 8192,
   useGeminiAuto: false,
   notionClonePrompt: false,
-  enablePreciseEdits: false,
-  enableEnvironmentVariables: false,
   newChatFeature: false,
   minMessagesForNudge: 40,
   enableResend: false,
