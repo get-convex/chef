@@ -34,7 +34,7 @@ jobs:
       - name: Build System Prompts
         run: |
           npm run build:system-prompts
-          node dist/build-system-prompts.js
+          node dist/buildSystemPrompts.js
 
       - name: Create Release
         id: create_release
