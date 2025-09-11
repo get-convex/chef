@@ -43,7 +43,7 @@ npx convex dev --once # follow the steps to create a convex project in your team
 
 **2. Set up Chef OAuth application**
 
-Go to the Convex [dashboard](https://dashboard.convex.dev/team/settings/applications/oauth-apps) and create an OAuth application. Redirect URIs will not matter for Chef, but you can set one to http://127.0.0.1:5173 (or whatever port you’ll run the Chef UI on) so that the form can be submitted. To develop using Chef locally, your OAuth app will need to be verified by the Convex team. Contact a Convex team member or click the “Request Verification” menu option to continue.
+Go to the Convex [dashboard](https://dashboard.convex.dev/team/settings/applications/oauth-apps) and create an OAuth application. Redirect URIs will not matter for Chef, but you can set one to http://127.0.0.1:5173 (or whatever port you’ll run the Chef UI on) so that the form can be submitted.
 
 **3. Set up Convex deployment**
 
