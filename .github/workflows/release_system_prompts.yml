@@ -24,10 +24,6 @@ jobs:
       - name: Setup and Build
         uses: ./.github/actions/setup-and-build
 
-      - name: Install dependencies
-        run: |
-          pnpm install
-
       - name: Build System Prompts
         run: |
           pnpm run build:system-prompts
