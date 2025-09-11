@@ -9,13 +9,13 @@
 [Chef](https://chef.convex.dev) is the only AI app builder that knows backend. It builds full-stack web apps with a built-in database, zero config auth, file uploads,
 real-time UIs, and background workflows. If you want to check out the secret sauce that powers Chef, you can view or download the system prompt [here](https://github.com/get-convex/chef/releases/latest).
 
-Chef's capabilities are enabled by being built on top of [Convex](https://convex.dev), the open-source reactive database designed to make life easy for web app developers.
+Chef's capabilities are enabled by being built on top of [Convex](https://convex.dev), the open-source reactive database designed to make life easy for web app developers. The "magic" in Chef is just the fact that it's using Convex's APIs, which are an ideal fit for codegen.
 
 Development of the Chef is led by the Convex team. We
 [welcome bug fixes](./CONTRIBUTING.md) and
 [love receiving feedback](https://discord.gg/convex).
 
-This project was made in collaboration with the [Bolt](https://bolt.new/) team and is a fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-labs/bolt.diy).
+This project is a fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-labs/bolt.diy).
 
 ## Getting Started
 
@@ -26,7 +26,7 @@ run Chef locally, you can follow the guide below.
 
 ### Running Locally
 
-Note: This will use our control plane to provision Convex projects. However, Chef tokens used in this enviroment will not count towards usage in your Convex account.
+Note: This will use the hosted Convex control plane to provision Convex projects. However, Chef tokens used in this enviroment will not count towards usage in your Convex account.
 
 **1. Set up local environment**
 
