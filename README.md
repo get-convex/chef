@@ -1,9 +1,5 @@
 <p align="center">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://static.convex.dev/logo/convex-logo-light.svg" width="600">
-  <source media="(prefers-color-scheme: light)" srcset="https://static.convex.dev/logo/convex-logo.svg" width="600">
-  <img alt="Convex logo" src="https://static.convex.dev/logo/convex-logo.svg" width="600">
-</picture>
+  <img src="https://github.com/user-attachments/assets/5f010878-1b43-4326-a9fd-bfa74f516657" alt="Chef by Convex" width="258" height="210" />
 </p>
 
 [Chef](https://chef.convex.dev) is the only AI app builder that knows backend. It builds full-stack web apps with a built-in database, zero config auth, file uploads,
