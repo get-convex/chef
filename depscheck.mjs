@@ -23,9 +23,16 @@ function checkNodeVersion() {
 }
 
 function checkEnvVars() {
-  if (!process.env.XAI_API_KEY) {
-    console.error('\x1b[31m❌ XAI_API_KEY environment variable is not set\x1b[0m');
-    console.error("That's just a fairly recent one, but you're probably missing others too.");
+  if (
+    !process.env.XAI_API_KEY &&
+    !process.env.GOOGLE_API_KEY &&
+    !process.env.ANTHROPIC_API_KEY &&
+    !process.env.OPENAI_API_KEY &&
+    !GOOGLE_VERTEX_CREDENTIALS_JSON
+  ) {
+    console.error('\x1b[31m❌ No environment variables for model providers are set\x1b[0m');
+    console.error("Chef won't be functional unless you set at least one of the following environment variables:");
+    console.error('XAI_API_KEY, GOOGLE_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_VERTEX_CREDENTIALS_JSON');
     console.error('Run `pnpm run update-env`');
     process.exit(1);
   }

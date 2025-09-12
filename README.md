@@ -27,7 +27,17 @@ run Chef locally, you can follow the guide below.
 
 Note: This will use the hosted Convex control plane to provision Convex projects. However, Chef tokens used in this enviroment will not count towards usage in your Convex account.
 
-**1. Set up local environment**
+**1. Clone the project**
+
+Clone the GitHub respository and `cd` into the directory by running the following commands:
+
+```bash
+git clone https://github.com/get-convex/chef.git
+cd chef
+```
+
+
+**2. Set up local environment**
 
 Run the following commands in your terminal:
 
@@ -40,23 +50,24 @@ echo 'VITE_CONVEX_URL=placeholder' >> .env.local
 npx convex dev --once # follow the steps to create a convex project in your team
 ```
 
-**2. Set up Chef OAuth application**
+**3. Set up Chef OAuth application**
 
 Go to the Convex [dashboard](https://dashboard.convex.dev/team/settings/applications/oauth-apps) and create an OAuth application. The team you use to create the application will be the only team you can sign-in with on local Chef. Redirect URIs will not matter, but you can set one to http://127.0.0.1:5173 (or whatever port you’ll run the Chef UI on) so that the form can be submitted.
 
-**3. Set up Convex deployment**
+**4. Set up Convex deployment**
 
-Open the Convex dashboard and go to Settings → Environment Variables. Then, set the following environment variables:
+Use `npx convex dashboard` to open the Convex [dashboard](https://dashboard.convex.dev) and go to Settings → Environment Variables. Then, set the following environment variables:
 
 ```env
 BIG_BRAIN_HOST=https://api.convex.dev
 CONVEX_OAUTH_CLIENT_ID=<value from oauth setup>
 CONVEX_OAUTH_CLIENT_SECRET=<value from oauth setup>
+WORKOS_CLIENT_ID=<value from .env.development>
 ```
 
-**4. Add API keys for model providers**
+**5. Add API keys for model providers**
 
-Add any of the following API keys in order to enable code generation:
+Add any of the following API keys in your `.env.local` to enable code generation:
 
 ```env
 ANTHROPIC_API_KEY=<your api key>
@@ -67,12 +78,11 @@ XAI_API_KEY=<your api key>
 
 Note: you can also add your own API keys through the settings page.
 
-**4. Run Chef backend and frontend**
+**6. Run Chef backend and frontend**
 
 Run the following commands in your terminal:
 
 ```bash
-pnpm i
 pnpm run dev
 
 ## in another terminal
