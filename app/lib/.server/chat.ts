@@ -146,7 +146,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     lastMessage: Message | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => {
-    if (!userApiKey && getEnv('LOCAL_DEV') !== '1') {
+    if (!userApiKey && getEnv('DISABLE_USAGE_REPORTING') !== '1') {
       await recordUsage(
         PROVISION_HOST,
         token,
