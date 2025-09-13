@@ -36,7 +36,6 @@ git clone https://github.com/get-convex/chef.git
 cd chef
 ```
 
-
 **2. Set up local environment**
 
 Run the following commands in your terminal:
