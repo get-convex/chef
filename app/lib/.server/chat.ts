@@ -75,6 +75,10 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug, recordRawPromptsForDebugging } =
     body;
 
+  if (getEnv('DISABLE_BEDROCK') === '1' && body.modelProvider === 'Bedrock') {
+    body.modelProvider = 'Anthropic';
+  }
+
   let useUserApiKey = false;
 
   // Use the user's API key if they're set to always mode or if they manually set a model.
