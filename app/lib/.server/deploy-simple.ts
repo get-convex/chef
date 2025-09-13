@@ -8,11 +8,12 @@ export async function deploy({ request }: ActionFunctionArgs) {
     const file = formData.get('file') as File;
     const deploymentName = formData.get('deploymentName') as string;
     let token = formData.get('token') as string;
+    let chefDeploySecret: string | undefined;
 
-    // If it's a project token, great
-    if (!token.includes('project')) {
-      // if not then use our hardcoded project token
-      token = globalThis.process.env.BIG_BRAIN_API_KEY!;
+    token = globalThis.process.env.BIG_BRAIN_API_KEY!;
+
+    if (globalThis.process.env.CHEF_DEPLOY_SECRET) {
+      chefDeploySecret = globalThis.process.env.CHEF_DEPLOY_SECRET;
     }
 
     if (!file) {
@@ -26,11 +27,15 @@ export async function deploy({ request }: ActionFunctionArgs) {
     const PROVISION_HOST = globalThis.process.env.PROVISION_HOST || 'https://api.convex.dev';
     //const PROVISION_HOST = "http://127.0.0.1:8000";
     const Authorization = `Bearer ${token}`;
+    const headers: Record<string, string> = {
+      Authorization,
+    };
+    if (chefDeploySecret) {
+      headers['convex-chef-deploy-secret'] = chefDeploySecret;
+    }
     const response = await fetch(`${PROVISION_HOST}/api/hosting/deploy?deploymentName=${deploymentName}`, {
       method: 'POST',
-      headers: {
-        Authorization,
-      },
+      headers,
       body: file,
     });
 
