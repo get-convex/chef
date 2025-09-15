@@ -99,7 +99,7 @@
     "chefshot": "workspace:*",
     "classnames": "^2.5.1",
     "cloudflare": "^4.2.0",
-    "convex": "1.25.0-alpha.3",
+    "convex": "^1.27.0",
     "convex-helpers": "^0.1.79",
     "date-fns": "^3.6.0",
     "diff": "^5.2.0",
