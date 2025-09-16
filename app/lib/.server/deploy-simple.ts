@@ -7,10 +7,8 @@ export async function deploy({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const deploymentName = formData.get('deploymentName') as string;
-    let token = formData.get('token') as string;
+    const token = formData.get('token') as string;
     let chefDeploySecret: string | undefined;
-
-    token = globalThis.process.env.BIG_BRAIN_API_KEY!;
 
     if (globalThis.process.env.CHEF_DEPLOY_SECRET) {
       chefDeploySecret = globalThis.process.env.CHEF_DEPLOY_SECRET;
