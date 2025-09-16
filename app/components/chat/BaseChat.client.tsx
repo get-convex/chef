@@ -158,7 +158,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     Now you&rsquo;re cooking
                   </h1>
                   <p className="animate-fadeInFromLoading text-balance font-display text-lg font-medium text-content-secondary [animation-delay:200ms] [animation-fill-mode:backwards] md:text-xl">
-                    Open-source app generation powered by Convex
+                    The open-source app generator powered by Convex
                   </p>
                 </div>
               )}
