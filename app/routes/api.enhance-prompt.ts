@@ -1,5 +1,8 @@
 import type { ActionFunctionArgs } from '@vercel/remix';
 import OpenAI from 'openai';
+import { getEnv } from '~/lib/.server/env';
+import { checkTokenUsage } from '~/lib/.server/usage';
+import { disabledText } from '~/lib/convexUsage';
 
 const SYSTEM_PROMPT = `You are an expert prompt engineer. Your task is to enhance and improve user prompts to make them more effective, concise, clear, and focused.
 
@@ -109,6 +112,7 @@ Calendar: A visual monthly view displaying habit completion history with color-c
 Your output should ONLY be the enhanced prompt text without any additional explanation or commentary.`;
 
 export async function action({ request }: ActionFunctionArgs) {
+  const PROVISION_HOST = getEnv('PROVISION_HOST') || 'https://api.convex.dev';
   try {
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -117,7 +121,25 @@ export async function action({ request }: ActionFunctionArgs) {
       });
     }
 
-    const { prompt } = await request.json();
+    const { prompt, token, teamSlug, deploymentName } = await request.json();
+
+    const resp = await checkTokenUsage(PROVISION_HOST, token, teamSlug, deploymentName);
+    if (resp.status === 'error') {
+      return new Response(JSON.stringify({ error: 'Failed to check for tokens' }), {
+        status: resp.httpStatus,
+      });
+    }
+    const { centitokensUsed, centitokensQuota, isTeamDisabled, isPaidPlan } = resp;
+    if (isTeamDisabled) {
+      return new Response(JSON.stringify({ error: disabledText(isPaidPlan) }), {
+        status: 402,
+      });
+    }
+    if (centitokensUsed >= centitokensQuota) {
+      return new Response(JSON.stringify({ error: 'No remaining tokens available for prompt enhancement' }), {
+        status: 402,
+      });
+    }
 
     if (!prompt || typeof prompt !== 'string') {
       return new Response(JSON.stringify({ error: 'Invalid prompt' }), {

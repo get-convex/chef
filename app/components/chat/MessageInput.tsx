@@ -24,8 +24,9 @@ import { ArrowRightIcon, ExclamationTriangleIcon, MagnifyingGlassIcon, StopIcon 
 import { SquaresPlusIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from '@ui/Tooltip';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { convexProjectStore } from '~/lib/stores/convexProject';
 import { useChefAuth } from './ChefAuthWrapper';
-import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { getConvexAuthToken, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { KeyboardShortcut } from '@ui/KeyboardShortcut';
 import { Button } from '@ui/Button';
 import { Spinner } from '@ui/Spinner';
@@ -36,6 +37,7 @@ import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftIcon, DocumentArrowUpIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@workos-inc/authkit-react';
+import { useConvex } from 'convex/react';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
 
@@ -113,6 +115,7 @@ export const MessageInput = memo(function MessageInput({
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chefAuthState = useChefAuth();
   const selectedTeamSlug = useSelectedTeamSlug();
+  const convex = useConvex();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -182,6 +185,10 @@ export const MessageInput = memo(function MessageInput({
     try {
       setIsEnhancing(true);
 
+      const token = getConvexAuthToken(convex);
+      if (!token) {
+        throw new Error('No auth token');
+      }
       const response = await fetch('/api/enhance-prompt', {
         method: 'POST',
         headers: {
@@ -189,11 +196,17 @@ export const MessageInput = memo(function MessageInput({
         },
         body: JSON.stringify({
           prompt: input.trim(),
+          token,
+          teamSlug: selectedTeamSlug,
+          deploymentName: convexProjectStore.get()?.deploymentName,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to enhance prompt');
+        if (response.status === 402) {
+          throw new Error('No remaining tokens available for prompt enhancement');
+        }
+        throw new Error('Failed to enhance prompt. Please try again.');
       }
 
       const data = await response.json();
@@ -207,11 +220,11 @@ export const MessageInput = memo(function MessageInput({
           error,
         },
       });
-      toast.error('Failed to enhance prompt. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to enhance prompt. Please try again.');
     } finally {
       setIsEnhancing(false);
     }
-  }, [input]);
+  }, [input, convex]);
 
   // Helper to insert template and select '[...]'
   const insertTemplate = useCallback(
