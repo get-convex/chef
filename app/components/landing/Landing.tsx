@@ -1,8 +1,8 @@
 export default function Landing() {
   return (
     <div className="max-w-chat flex flex-col my-12">
-      <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
-        <div className="border-b border-neutral-200 dark:border-neutral-800 px-4 py-2 bg-neutral-50 dark:bg-neutral-900 flex items-center">
+      <div className="border border-neutral-2 dark:border-neutral-10 rounded-lg overflow-hidden">
+        <div className="border-b border-neutral-2 dark:border-neutral-10 px-4 py-2 bg-neutral-50 dark:bg-neutral-11 flex items-center">
           <a
             href="https://github.com/get-convex/chef"
             className="flex items-center gap-2 hover:text-neutral-600 dark:hover:text-neutral-300"
