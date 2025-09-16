@@ -24,15 +24,27 @@ export default function Landing() {
         </div>
         <div className="px-4 py-6 flex flex-col gap-6 text-lg text-neutral-9 dark:text-neutral-2">
           <p>
+            Chef is now open-source, check out the GitHub repo{' '}
             <a
-              href="https://chef.convex.dev"
+              href="https://github.com/get-convex/chef"
               className="text-bolt-elements-button-primary-backgroundHover dark:text-white hover:underline font-semibold"
             >
-              Chef
+              here
+            </a>
+            .
+          </p>
+          <p>
+            This is the only AI app builder that knows backend. By applying{' '}
+            <a
+              href="https://convex.dev"
+              className="text-bolt-elements-button-primary-backgroundHover dark:text-white hover:underline font-semibold"
+            >
+              Convex
             </a>{' '}
-            is the only AI app builder that knows backend. It builds full-stack web apps with a built-in database, zero
-            config auth, file uploads, real-time UIs, and background workflows. If you want to check out the secret
-            sauce that powers Chef, you can view or download the system prompt{' '}
+            primitives directly to your code generation, your apps are automatically equipped with optimal backend
+            patterns and best practices. Your full-stack apps come with a built-in database, zero config auth, file
+            uploads, real-time UIs, and background workflows. If you want to check out the secret sauce that powers
+            Chef, you can view or download the system prompt{' '}
             <a
               href="https://github.com/get-convex/chef/releases/latest"
               className="text-bolt-elements-button-primary-backgroundHover dark:text-white hover:underline font-semibold"
@@ -42,7 +54,7 @@ export default function Landing() {
             .
           </p>
           <p>
-            Chef's capabilities are enabled by being built on top of{' '}
+            As mentioned above, Chef's capabilities are enabled by being built on top of{' '}
             <a
               href="https://convex.dev"
               className="text-bolt-elements-button-primary-backgroundHover dark:text-white hover:underline font-semibold"
