@@ -24,7 +24,7 @@ export default function Landing() {
         </div>
         <div className="px-4 py-6 flex flex-col gap-6 text-lg text-neutral-9 dark:text-neutral-2">
           <p>
-            Chef is now open-source, check out the GitHub repo{' '}
+            Chef is open-source, check out the GitHub repo{' '}
             <a
               href="https://github.com/get-convex/chef"
               className="text-bolt-elements-button-primary-backgroundHover dark:text-white hover:underline font-semibold"
@@ -82,8 +82,7 @@ export default function Landing() {
             .
           </p>
           <p>
-            This project is a fork of the{' '}
-            <code className="bg-neutral-2 dark:bg-neutral-11 px-1 py-0.5 rounded">stable</code> branch of{' '}
+            This project is a fork of the stable branch of{' '}
             <a
               href="https://github.com/stackblitz-labs/bolt.diy"
               className="text-bolt-elements-button-primary-backgroundHover dark:text-white hover:underline font-semibold"
