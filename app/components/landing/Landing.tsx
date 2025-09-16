@@ -2,8 +2,11 @@ export default function Landing() {
   return (
     <div className="max-w-chat flex flex-col my-12">
       <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
-        <div className="border-b border-neutral-200 dark:border-neutral-800 px-4 py-2 bg-neutral-50 dark:bg-neutral-900">
-          <div className="flex items-center gap-2">
+        <div className="border-b border-neutral-200 dark:border-neutral-800 px-4 py-2 bg-neutral-50 dark:bg-neutral-900 flex items-center">
+          <a
+            href="https://github.com/get-convex/chef"
+            className="flex items-center gap-2 hover:text-neutral-600 dark:hover:text-neutral-300"
+          >
             <svg
               aria-hidden="true"
               focusable="false"
@@ -17,7 +20,7 @@ export default function Landing() {
               <path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574ZM8.755 4.75l-.004 7.322a3.752 3.752 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25Z" />
             </svg>
             <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">README</span>
-          </div>
+          </a>
         </div>
         <div className="px-4 py-6 flex flex-col gap-6 text-lg text-neutral-9 dark:text-neutral-2">
           <p>
