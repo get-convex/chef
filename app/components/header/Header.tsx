@@ -50,7 +50,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
 
   return (
     <header className={'flex h-[var(--header-height)] items-center overflow-x-auto overflow-y-hidden border-b p-5'}>
-      <div className="z-40 flex cursor-pointer items-center gap-2 text-content-primary">
+      <div className="z-40 flex cursor-pointer items-center gap-4 text-content-primary">
         {showSidebarIcon && (
           <HamburgerMenuIcon
             className="shrink-0"
@@ -64,6 +64,15 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
         <a href="/">
           {/* The logo is shifted up slightly, to visually align it with the hamburger icon. */}
           <img src="/chef.svg" alt="Chef logo" width={72} height={42} className="relative -top-1" />
+        </a>
+        <a
+          href="https://github.com/get-convex/chef"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="animate-fadeInToVar relative select-none items-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:border focus-visible:border-border-selected focus-visible:outline-none text-content-primary gap-1.5 cursor-pointer p-1 border bg-background-secondary hover:bg-background-primary hidden sm:flex"
+        >
+          <img src="/github.svg" alt="GitHub" width={16} height={16} />
+          Star on GitHub
         </a>
       </div>
       <>
