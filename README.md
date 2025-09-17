@@ -92,6 +92,8 @@ npx convex dev
 
 Congratulations, you now have Chef running locally! You can log in to Chef with your existing Convex account.
 
+Note: Chef is accessible at http://127.0.0.1:{port}/ and will not work properly on http://localhost:{port}/.
+
 ## Repository Layout
 
 - `app/` contains all of the client side code and some serverless APIs.
