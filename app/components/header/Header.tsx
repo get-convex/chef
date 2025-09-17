@@ -69,7 +69,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
           href="https://github.com/get-convex/chef"
           target="_blank"
           rel="noopener noreferrer"
-          className="animate-fadeInToVar relative select-none items-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:border focus-visible:border-border-selected focus-visible:outline-none text-content-primary gap-1.5 cursor-pointer p-1 border bg-background-secondary hover:bg-background-primary hidden sm:flex"
+          className="relative hidden cursor-pointer select-none items-center gap-1.5 whitespace-nowrap rounded-md border bg-background-secondary p-1 text-sm font-medium text-content-primary transition-colors hover:bg-background-primary focus-visible:border focus-visible:border-border-selected focus-visible:outline-none sm:flex"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
             <path
