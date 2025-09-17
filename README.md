@@ -46,10 +46,10 @@ nvm use
 npm install -g pnpm
 pnpm i
 echo 'VITE_CONVEX_URL=placeholder' >> .env.local
-npx convex dev --once # follow the steps to create a convex project in your team
+npx convex dev --once # follow the steps to create a Convex project in your team
 ```
 
-Note: `nvm` only works on Mac and Linux. If you are using windows, you may have to find an alternative.
+Note: `nvm` only works on Mac and Linux. If you are using Windows, you may have to find an alternative.
 
 **3. Set up Chef OAuth application**
 
@@ -77,7 +77,7 @@ OPENAI_API_KEY=<your api key>
 XAI_API_KEY=<your api key>
 ```
 
-Note: you can also add your own API keys through the settings page.
+Note: you can also add your own API keys through the Chef settings page.
 
 **6. Run Chef backend and frontend**
 
