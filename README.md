@@ -77,7 +77,7 @@ OPENAI_API_KEY=<your api key>
 XAI_API_KEY=<your api key>
 ```
 
-Note: you can also add your own API keys through the Chef settings page.
+Note: You can also add your own API keys through the Chef settings page.
 
 **6. Run Chef backend and frontend**
 
