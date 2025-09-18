@@ -3,6 +3,8 @@ import { v } from "convex/values";
 import schema from "./schema";
 import { internal } from "./_generated/api";
 
+export const a = 1;
+
 export const deleteFromTable = internalMutation({
   args: { tableName: v.string() },
   handler: async (ctx, { tableName }) => {
