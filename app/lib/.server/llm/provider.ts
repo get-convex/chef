@@ -14,7 +14,7 @@ import { getEnv } from '~/lib/.server/env';
 // https://github.com/vercel/ai/issues/199#issuecomment-1605245593
 import { fetch } from '~/lib/.server/fetch';
 
-const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2'];
+const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-west-2'];
 
 export type ModelProvider = Exclude<ProviderType, 'Unknown'>;
 type Provider = {
