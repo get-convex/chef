@@ -15,6 +15,10 @@ import { atom, computed, map } from 'nanostores';
  */
 const pageLoadChatId = atom<string | undefined>(undefined);
 
+export function getPageLoadChatId() {
+  return pageLoadChatId.get();
+}
+
 export function setPageLoadChatId(chatId: string) {
   const existing = pageLoadChatId.get();
   if (existing !== undefined && existing !== chatId) {
