@@ -47,6 +47,7 @@ import { useReferralCode, useReferralStats } from '~/lib/hooks/useReferralCode';
 import { useUsage } from '~/lib/stores/usage';
 import { hasAnyApiKeySet, hasApiKeySet } from '~/lib/common/apiKey';
 import { chatSyncState } from '~/lib/stores/startup/chatSyncState';
+import { customSystemPromptStore } from '~/lib/stores/customSystemPrompt';
 
 const logger = createScopedLogger('Chat');
 
@@ -348,6 +349,7 @@ export const Chat = memo(
         );
 
         const characterCounts = chatContextManager.current.calculatePromptCharacterCounts(preparedMessages);
+        const customSystemPrompt = customSystemPromptStore.get();
 
         return {
           messages: preparedMessages,
@@ -367,6 +369,7 @@ export const Chat = memo(
           featureFlags: {
             enableResend,
           },
+          customSystemPrompt,
         };
       },
       maxSteps: 64,
