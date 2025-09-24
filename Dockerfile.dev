@@ -1,0 +1,29 @@
+FROM node:20-alpine
+
+WORKDIR /usr/src/app
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+COPY chef-agent/package.json ./chef-agent/package.json
+COPY chefshot/package.json ./chefshot/package.json
+COPY test-kitchen/package.json ./test-kitchen/package.json
+COPY .npmrc ./
+COPY patches ./patches
+
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+RUN pnpm install --frozen-lockfile --prod=false || pnpm install --prod=false
+
+COPY . .
+
+ENV HOST=0.0.0.0
+ENV NODE_ENV=development
+
+ENV CHOKIDAR_USEPOLLING=1
+ENV WATCHPACK_POLLING=true
+
+EXPOSE 5173 24678
+
+CMD ["pnpm", "dev", "--host", "0.0.0.0"]
