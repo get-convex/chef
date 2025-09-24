@@ -22,8 +22,13 @@ export const firstMessage = internalAction({
   args: { chatMessageId: v.id("chatMessagesStorageState"), message: v.string() },
   handler: async (ctx, args) => {
     const { chatMessageId, message } = args;
+    const apiKeyObj = await ctx.runQuery(internal.apiKeys.apiKeyForCurrentMember);
+    const openaiApiKey = apiKeyObj?.openai;
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key required for summarization. Please add it in settings.');
+    }
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: openaiApiKey,
     });
     const response = await openai.chat.completions.create({
       model: "gpt-4.1-mini",

@@ -252,3 +252,24 @@ export const validateXaiApiKey = action({
     return true;
   },
 });
+
+export const getApiKeyForMember = query({
+  args: {
+    memberId: v.id('members'),
+    provider: v.union(v.literal('anthropic'), v.literal('openai'), v.literal('xai'), v.literal('google')),
+  },
+  returns: v.union(v.null(), v.string()),
+  handler: async (ctx, args) => {
+    const member = await ctx.db.get(args.memberId);
+    if (!member?.apiKey) {
+      return null;
+    }
+    switch (args.provider) {
+      case 'anthropic': return member.apiKey.value || null;
+      case 'openai': return member.apiKey.openai || null;
+      case 'xai': return member.apiKey.xai || null;
+      case 'google': return member.apiKey.google || null;
+      default: return null;
+    }
+  },
+});
