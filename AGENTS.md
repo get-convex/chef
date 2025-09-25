@@ -2,7 +2,7 @@
 
 A briefing packet for AI coding agents working on **Chef**.
 
-This file gives setup commands, safe edit zones, prompt system context, and a predictable task playbook. It mirrors the project’s README and avoids surprises.
+This file gives setup commands, safe edit zones, prompt system context, and a predictable task playbook.
 
 ---
 
@@ -162,11 +162,11 @@ Ensure typecheck passes; never commit secrets.
 
 ## Chef as an Agent Research Platform
 
-Chef wasn’t built as a standalone commercial product; it’s a living lab for LLM-driven code generation on Convex. Contributions that improve agent workflows (docs, exports, examples) are welcome and reduce friction for the community.
+Chef wasn’t built as a standalone commercial product, it’s a living lab for LLM-driven code generation on Convex. Contributions that improve agent workflows (docs, exports, examples) are welcome and reduce friction for the community.
 
 ## Conventions for commits/PRs
 
-Small, atomic PRs; docs-only changes are encouraged.
+Small, atomic PRs are encouraged.
 
 Explain scope, surfaces touched, and test steps.
 
@@ -181,7 +181,3 @@ convex/         # database & server functions
 template/       # project bootstrap
 test-kitchen/   # agent harness & eval
 ```
-
-## Why this will be welcomed
-
-It aligns exactly with the current README flow, adds machine-readable guardrails, and highlights Chef’s research posture that Convex themselves emphasize.
