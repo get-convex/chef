@@ -177,7 +177,10 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       modelProvider: body.modelProvider,
       // Only set the requested model choice if we're using a user API key or Claude 4 Sonnet/GPT-5
       modelChoice:
-        userApiKey || body.modelChoice === 'claude-sonnet-4-0' || body.modelChoice === 'gpt-5'
+        userApiKey ||
+        body.modelChoice === 'claude-sonnet-4-0' ||
+        body.modelChoice === 'gpt-5' ||
+        body.modelChoice === 'claude-sonnet-4-5'
           ? body.modelChoice
           : undefined,
       userApiKey,
