@@ -61,7 +61,7 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
 }
 
 function anthropicMaxTokens(modelChoice: string | undefined) {
-  return modelChoice === 'claude-sonnet-4-0' ? 24576 : 8192;
+  return modelChoice === 'claude-sonnet-4-0' || modelChoice === 'claude-sonnet-4-5' ? 24576 : 8192;
 }
 
 export function getProvider(

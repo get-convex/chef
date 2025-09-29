@@ -49,6 +49,12 @@ if (process.env.ANTHROPIC_API_KEY) {
     ai: anthropic('claude-sonnet-4-20250514'),
     maxTokens: 16384,
   });
+  chefEval({
+    name: 'claude-4.5-sonnet',
+    model_slug: 'claude-sonnet-4-5',
+    ai: anthropic('claude-sonnet-4-5'),
+    maxTokens: 16384,
+  });
 }
 
 // Braintrust sets the OPENAI_API_KEY environment variable even if we don't set it, so we need

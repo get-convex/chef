@@ -86,7 +86,10 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   // GPT-5 can be used with our own API key since it has the same pricing as Gemini 2.5 Pro
   if (
     body.userApiKey?.preference === 'always' ||
-    (body.modelChoice && body.modelChoice !== 'claude-sonnet-4-0' && body.modelChoice !== 'gpt-5')
+    (body.modelChoice &&
+      body.modelChoice !== 'claude-sonnet-4-0' &&
+      body.modelChoice !== 'gpt-5' &&
+      body.modelChoice !== 'claude-sonnet-4-5')
   ) {
     useUserApiKey = true;
   }
