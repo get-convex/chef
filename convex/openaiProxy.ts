@@ -9,9 +9,6 @@ export const openaiProxy = httpAction(async (ctx, req) => {
   if (!openaiProxyEnabled()) {
     return new Response("Convex OpenAI proxy is disabled.", { status: 400 });
   }
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is not set");
-  }
   const headers = new Headers(req.headers);
   const authHeader = headers.get("Authorization");
   if (!authHeader) {
@@ -24,6 +21,9 @@ export const openaiProxy = httpAction(async (ctx, req) => {
   const result = await ctx.runMutation(internal.openaiProxy.decrementToken, { token });
   if (!result.success) {
     return new Response(result.error, { status: 401 });
+  }
+  if (!result.apiKey) {
+    return new Response("OpenAI API key not available", { status: 401 });
   }
 
   const url = new URL(req.url);
@@ -91,7 +91,7 @@ export const openaiProxy = httpAction(async (ctx, req) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${result.apiKey}`,
     },
     body: JSON.stringify(proxiedBody),
   });
@@ -145,14 +145,23 @@ export const decrementToken = internalMutation({
       return {
         success: false,
         error:
-          "Convex OPENAI_API_TOKEN has no requests remaining. Go sign up for an OpenAI API key at https://platform.openai.com and update your app to use that.",
+          "Your OpenAI proxy requests are exhausted. Add your own OpenAI API key in settings to continue.",
       };
+    }
+    const member = await ctx.db.get(token.memberId);
+    if (!member) {
+      return { success: false, error: "Member not found" };
+    }
+    const userApiKeyRes = await ctx.runQuery(internal.apiKeys.getApiKeyForMember, { memberId: member._id, provider: 'openai' });
+    const userApiKey = userApiKeyRes;
+    if (!userApiKey) {
+      return { success: false, error: "OpenAI API key required. Please add it in settings." };
     }
     await ctx.db.patch(token._id, {
       requestsRemaining: token.requestsRemaining - 1,
       lastUsedTime: Date.now(),
     });
-    return { success: true };
+    return { success: true, apiKey: userApiKey };
   },
 });
 

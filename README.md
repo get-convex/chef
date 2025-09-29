@@ -1,3 +1,5 @@
+# 🍳 Chef - AI-Powered Full-Stack App Builder
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://chef.convex.dev/github-header-dark.svg">
@@ -5,109 +7,511 @@
   </picture>
 </p>
 
-[Chef](https://chef.convex.dev) is the only AI app builder that knows backend. It builds full-stack web apps with a built-in database, zero config auth, file uploads,
-real-time UIs, and background workflows. If you want to check out the secret sauce that powers Chef, you can view or download the system prompt [here](https://github.com/get-convex/chef/releases/latest).
+<p align="center">
+  <strong>The only AI app builder that truly knows backend development</strong>
+</p>
 
-Chef's capabilities are enabled by being built on top of [Convex](https://convex.dev), the open-source reactive database designed to make life easy for web app developers. The "magic" in Chef is just the fact that it's using Convex's APIs, which are an ideal fit for codegen.
+<p align="center">
+  <a href="#-features">Features</a> •
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-new-features">New Features</a> •
+  <a href="#-detailed-setup">Setup Guide</a> •
+  <a href="#-architecture">Architecture</a> •
+  <a href="#-contributing">Contributing</a>
+</p>
 
-Development of the Chef is led by the Convex team. We
-[welcome bug fixes](./CONTRIBUTING.md) and
-[love receiving feedback](https://discord.gg/convex).
+---
 
-This project is a fork of the `stable` branch of [bolt.diy](https://github.com/stackblitz-labs/bolt.diy).
+## 🚀 What is Chef?
 
-## Getting Started
+[Chef](https://chef.convex.dev) is a revolutionary AI-powered application builder that creates **complete full-stack web applications** with:
 
-Visit our [documentation](https://docs.convex.dev/chef) to learn more about Chef and check out our prompting [guide](https://stack.convex.dev/chef-cookbook-tips-working-with-ai-app-builders).
+- 🗄️ **Built-in Database** - Powered by Convex reactive database
+- 🔐 **Zero-Config Authentication** - User management out of the box
+- 📁 **File Upload System** - Handle media and documents seamlessly
+- ⚡ **Real-time UIs** - Live updates across all connected clients
+- 🔄 **Background Workflows** - Automated tasks and processes
+- 🤖 **AI Code Generation** - Smart, context-aware code creation
 
-The easiest way to build with Chef is through our hosted [webapp](https://chef.convex.dev), which includes a generous free tier. If you want to
-run Chef locally, you can follow the guide below.
+### 🎯 Why Chef is Different
 
-### Running Locally
+Unlike other AI code generators that only create frontend mockups, Chef understands and builds **complete backend systems**. It leverages [Convex](https://convex.dev)'s powerful APIs to create production-ready applications with real databases, authentication, and server-side logic.
 
-Note: This will use the hosted Convex control plane to provision Convex projects. However, Chef tokens used in this enviroment will not count towards usage in your Convex account.
+---
 
-**1. Clone the project**
+## ✨ Features
 
-Clone the GitHub respository and `cd` into the directory by running the following commands:
+### 🎨 **Frontend Capabilities**
+- **React/TypeScript** - Modern, type-safe frontend development
+- **Responsive Design** - Mobile-first, adaptive layouts
+- **Component Library** - Reusable UI components with Tailwind CSS
+- **Real-time Updates** - Live data synchronization
+- **File Management** - Drag-and-drop file uploads
+
+### 🔧 **Backend Power**
+- **Convex Database** - Reactive, real-time database
+- **Authentication** - Secure user management with OAuth
+- **API Functions** - Serverless backend functions
+- **File Storage** - Secure file upload and management
+- **Background Jobs** - Scheduled tasks and workflows
+
+### 🤖 **AI Integration**
+- **Multi-Provider Support** - OpenAI, Anthropic, Google, xAI
+- **Context-Aware Generation** - Understands your entire codebase
+- **Incremental Development** - Build and iterate on existing projects
+- **Smart Debugging** - AI-powered error detection and fixes
+
+---
+
+## 🆕 New Features (Latest Update)
+
+This fork includes three major enhancements:
+
+### 1. 🔑 **Enhanced API Key Management**
+- **Visual Interface** - Manage all API keys through a clean UI
+- **Multiple Providers** - Support for Anthropic, Google, OpenAI, and xAI
+- **Secure Storage** - Encrypted key storage in Convex database
+- **Validation** - Real-time API key validation
+- **No Environment Setup** - Add keys directly through settings page
+
+### 2. 🐙 **GitHub Integration**
+- **OAuth Authentication** - Secure GitHub account connection
+- **Repository Browser** - View and select existing repositories
+- **Project Import** - Continue work on existing GitHub projects
+- **Seamless Workflow** - Import, modify, and deploy GitHub repos
+
+### 3. 🔗 **Unified Architecture**
+- **Single URL Access** - Frontend and backend served from one endpoint
+- **Simplified Deployment** - No separate backend deployment needed
+- **Development Efficiency** - Streamlined local development setup
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Node.js 20+** - [Download here](https://nodejs.org/)
+- **pnpm** - Fast, disk space efficient package manager
+- **Git** - Version control
+
+### 1-Minute Setup
 
 ```bash
-git clone https://github.com/get-convex/chef.git
+# Clone the repository
+git clone https://github.com/somdipto/chef.git
 cd chef
+
+# Install dependencies
+npm install -g pnpm
+pnpm install
+
+# Set up environment
+echo 'VITE_CONVEX_URL=placeholder' > .env.local
+
+# Start development
+pnpm dev
 ```
 
-**2. Set up local environment**
+🎉 **That's it!** Chef will start without requiring any API keys upfront. Add them through the UI at `http://127.0.0.1:5173/settings`.
 
-Run the following commands in your terminal:
+---
+
+## 📋 Detailed Setup
+
+### Step 1: Environment Setup
 
 ```bash
+# Install Node Version Manager (if not installed)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# Use the correct Node version
 nvm install
 nvm use
+
+# Install pnpm globally
 npm install -g pnpm
-pnpm i
-echo 'VITE_CONVEX_URL=placeholder' >> .env.local
-npx convex dev --once # follow the steps to create a Convex project in your team
+
+# Install project dependencies
+pnpm install
 ```
 
-Note: `nvm` only works on Mac and Linux. If you are using Windows, you may have to find an alternative.
-
-**3. Set up Chef OAuth application**
-
-Go to the Convex [dashboard](https://dashboard.convex.dev/team/settings/applications/oauth-apps) and create an OAuth application. The team you use to create the application will be the only team you can sign-in with on local Chef. Redirect URIs will not matter, but you can set one to http://127.0.0.1:5173 (or whatever port you’ll run the Chef UI on) so that the form can be submitted.
-
-**4. Set up Convex deployment**
-
-Use `npx convex dashboard` to open the Convex [dashboard](https://dashboard.convex.dev) and go to Settings → Environment Variables. Then, set the following environment variables:
-
-```env
-BIG_BRAIN_HOST=https://api.convex.dev
-CONVEX_OAUTH_CLIENT_ID=<value from oauth setup>
-CONVEX_OAUTH_CLIENT_SECRET=<value from oauth setup>
-WORKOS_CLIENT_ID=<value from .env.development>
-```
-
-**5. Add API keys for model providers**
-
-Add any of the following API keys in your `.env.local` to enable code generation:
-
-```env
-ANTHROPIC_API_KEY=<your api key>
-GOOGLE_API_KEY=<your api key>
-OPENAI_API_KEY=<your api key>
-XAI_API_KEY=<your api key>
-```
-
-Note: You can also add your own API keys through the Chef settings page.
-
-**6. Run Chef backend and frontend**
-
-Run the following commands in your terminal:
+### Step 2: Convex Database Setup
 
 ```bash
-pnpm run dev
+# Initialize Convex (follow interactive prompts)
+npx convex dev --once
 
-## in another terminal
-npx convex dev
+# This will:
+# 1. Create a Convex account (or login)
+# 2. Set up a new project
+# 3. Generate your CONVEX_URL
+# 4. Update .env.local automatically
 ```
 
-Congratulations, you now have Chef running locally! You can log in to Chef with your existing Convex account.
+### Step 3: Configure Environment Variables
 
-Note: Chef is accessible at http://127.0.0.1:{port}/ and will not work properly on http://localhost:{port}/.
+Create or update `.env.local`:
 
-## Repository Layout
+```env
+# Convex (auto-generated by convex dev)
+VITE_CONVEX_URL=https://your-deployment.convex.cloud
 
-- `app/` contains all of the client side code and some serverless APIs.
+# GitHub Integration (optional)
+GITHUB_CLIENT_ID=your_github_oauth_app_id
+GITHUB_CLIENT_SECRET=your_github_oauth_app_secret
+VITE_APP_URL=http://127.0.0.1:5173
 
-  - `components/` defines the UI components
-  - `lib/` contains client-side logic for syncing local state with the server
-  - `routes/` defines some client and server routes
+# API Keys (optional - can be added via UI)
+ANTHROPIC_API_KEY=your_anthropic_key
+GOOGLE_API_KEY=your_google_key  
+OPENAI_API_KEY=your_openai_key
+XAI_API_KEY=your_xai_key
+```
 
-- `chef-agent/` handles the agentic loop by injecting system prompts, defining tools, and calling out to model providers.
+### Step 4: GitHub Integration Setup (Optional)
 
-- `chefshot/` defines a CLI interface for interacting with the Chef webapp.
+1. **Create GitHub OAuth App**:
+   - Go to GitHub Settings → Developer settings → OAuth Apps
+   - Click "New OAuth App"
+   - **Application name**: `Chef Local Development`
+   - **Homepage URL**: `http://127.0.0.1:5173`
+   - **Authorization callback URL**: `http://127.0.0.1:5173/settings`
 
-- `convex/` contains the database that stores chats and user metadata.
+2. **Add credentials to `.env.local`**:
+   ```env
+   GITHUB_CLIENT_ID=your_client_id_here
+   GITHUB_CLIENT_SECRET=your_client_secret_here
+   ```
 
-- `template/` contains the template that we use to start all Chef projects.
+### Step 5: Start Development
 
-- `test-kitchen/` contains a test harness for the Chef agent loop.
+```bash
+# Terminal 1: Start Convex backend
+npx convex dev
+
+# Terminal 2: Start frontend (in new terminal)
+pnpm dev
+```
+
+🌐 **Access your app**: http://127.0.0.1:5173
+
+---
+
+## 🏗️ Architecture
+
+### Frontend Stack
+```
+React 18 + TypeScript
+├── Remix (Full-stack framework)
+├── Tailwind CSS (Styling)
+├── Radix UI (Component primitives)
+├── Convex React (Real-time data)
+└── AI SDK (LLM integration)
+```
+
+### Backend Stack
+```
+Convex Platform
+├── Reactive Database
+├── Authentication (OAuth)
+├── File Storage
+├── Serverless Functions
+└── Real-time Subscriptions
+```
+
+### AI Integration
+```
+Multi-Provider Support
+├── OpenAI (GPT-4, GPT-3.5)
+├── Anthropic (Claude 3.5 Sonnet)
+├── Google (Gemini Pro)
+└── xAI (Grok)
+```
+
+---
+
+## 📁 Project Structure
+
+```
+chef/
+├── 📁 app/                    # Frontend application
+│   ├── 📁 components/         # React components
+│   │   ├── 📁 settings/       # Settings page components
+│   │   │   ├── ApiKeyCard.tsx # API key management
+│   │   │   └── GitHubCard.tsx # GitHub integration
+│   │   └── 📁 ui/             # Reusable UI components
+│   ├── 📁 lib/                # Client-side utilities
+│   ├── 📁 routes/             # Remix routes
+│   │   ├── settings.tsx       # Settings page
+│   │   └── api.github.oauth.ts # GitHub OAuth handler
+│   └── 📁 styles/             # CSS and styling
+│
+├── 📁 convex/                 # Backend functions & schema
+│   ├── schema.ts              # Database schema
+│   ├── apiKeys.ts             # API key management
+│   ├── github.ts              # GitHub integration
+│   ├── messages.ts            # Chat functionality
+│   └── auth.config.ts         # Authentication config
+│
+├── 📁 chef-agent/             # AI agent logic
+│   ├── 📁 prompts/            # System prompts
+│   └── 📁 tools/              # AI tools and functions
+│
+├── 📁 template/               # Project templates
+├── 📁 public/                 # Static assets
+└── 📄 SETUP_FEATURES.md       # Feature setup guide
+```
+
+---
+
+## 🎮 Usage Guide
+
+### Adding API Keys
+
+1. **Navigate to Settings**: http://127.0.0.1:5173/settings
+2. **Choose Provider**: Click "Add [Provider] API Key"
+3. **Enter Key**: Paste your API key
+4. **Validate**: Chef automatically validates the key
+5. **Save**: Keys are encrypted and stored securely
+
+### GitHub Integration
+
+1. **Connect Account**: Click "Connect GitHub" in settings
+2. **Authorize**: Complete OAuth flow
+3. **Browse Repos**: View your repositories
+4. **Import Project**: Select a repo to continue working on it
+
+### Creating Applications
+
+1. **Start Chat**: Begin describing your application
+2. **Iterate**: Refine requirements through conversation
+3. **Deploy**: Chef generates complete full-stack code
+4. **Customize**: Continue development with AI assistance
+
+---
+
+## 🔧 Configuration Options
+
+### API Key Preferences
+
+```typescript
+// Set in UI: Settings → API Keys
+{
+  preference: "always" | "quotaExhausted", // When to use your keys
+  anthropic: "sk-ant-...",                 // Claude models
+  openai: "sk-...",                        // GPT models  
+  google: "AIza...",                       // Gemini models
+  xai: "xai-..."                          // Grok models
+}
+```
+
+### GitHub Integration
+
+```typescript
+// Stored securely in Convex
+{
+  accessToken: "ghp_...",    // GitHub access token
+  username: "your-username", // GitHub username
+  avatarUrl: "https://..."   // Profile picture
+}
+```
+
+---
+
+## 🚀 Deployment
+
+### Vercel Deployment
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+
+# Set environment variables in Vercel dashboard
+# - VITE_CONVEX_URL
+# - GITHUB_CLIENT_ID  
+# - GITHUB_CLIENT_SECRET
+# - API keys (optional)
+```
+
+### Netlify Deployment
+
+```bash
+# Build for production
+pnpm build
+
+# Deploy build/ directory to Netlify
+# Configure environment variables in Netlify dashboard
+```
+
+### Docker Deployment
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install -g pnpm && pnpm install
+COPY . .
+RUN pnpm build
+EXPOSE 3000
+CMD ["pnpm", "start"]
+```
+
+---
+
+## 🧪 Development
+
+### Running Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run specific test file
+pnpm test messages.test.ts
+```
+
+### Linting & Formatting
+
+```bash
+# Lint code
+pnpm lint
+
+# Fix linting issues
+pnpm lint:fix
+
+# Format code
+prettier --write .
+```
+
+### Database Migrations
+
+```bash
+# Create migration
+npx convex migration new add_github_integration
+
+# Run migrations
+npx convex migration run
+```
+
+---
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+**Port 5173 already in use**
+```bash
+# Kill existing process
+lsof -ti:5173 | xargs kill -9
+pnpm dev
+```
+
+**Convex authentication errors**
+```bash
+# Re-authenticate
+npx convex auth
+npx convex dev --once
+```
+
+**API key validation fails**
+- Check key format and permissions
+- Ensure sufficient credits/quota
+- Verify network connectivity
+
+**GitHub OAuth not working**
+- Verify callback URL matches exactly
+- Check client ID and secret
+- Ensure OAuth app is active
+
+### Debug Mode
+
+```bash
+# Enable debug logging
+DEBUG=chef:* pnpm dev
+
+# Convex debug mode
+npx convex dev --debug
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how to get started:
+
+### Development Setup
+
+```bash
+# Fork and clone the repository
+git clone https://github.com/your-username/chef.git
+cd chef
+
+# Create feature branch
+git checkout -b feature/amazing-feature
+
+# Make changes and test
+pnpm dev
+pnpm test
+
+# Commit and push
+git commit -m "Add amazing feature"
+git push origin feature/amazing-feature
+
+# Create Pull Request
+```
+
+### Contribution Guidelines
+
+- **Code Style**: Follow existing patterns and use Prettier
+- **Testing**: Add tests for new features
+- **Documentation**: Update README and inline docs
+- **Commits**: Use conventional commit messages
+- **Issues**: Check existing issues before creating new ones
+
+### Areas for Contribution
+
+- 🐛 **Bug Fixes** - Help improve stability
+- ✨ **New Features** - Add AI providers, integrations
+- 📚 **Documentation** - Improve guides and examples
+- 🧪 **Testing** - Increase test coverage
+- 🎨 **UI/UX** - Enhance user experience
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Convex Team** - For the amazing reactive database platform
+- **Bolt.diy** - Original inspiration and foundation
+- **AI Providers** - OpenAI, Anthropic, Google, xAI for powerful models
+- **Open Source Community** - For continuous improvements and feedback
+
+---
+
+## 📞 Support & Community
+
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/somdipto/chef/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/somdipto/chef/discussions)
+- 📧 **Email**: [Contact maintainer](mailto:your-email@example.com)
+- 🐦 **Twitter**: [@your-handle](https://twitter.com/your-handle)
+
+---
+
+<p align="center">
+  <strong>Built with ❤️ by developers, for developers</strong>
+</p>
+
+<p align="center">
+  <a href="#-chef---ai-powered-full-stack-app-builder">⬆️ Back to Top</a>
+</p>

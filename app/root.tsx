@@ -14,6 +14,7 @@ import { AuthKitProvider, useAuth } from '@workos-inc/authkit-react';
 import { ConvexProviderWithAuthKit } from '@convex-dev/workos';
 import { ConvexReactClient } from 'convex/react';
 import globalStyles from './styles/index.css?url';
+import modernStyles from './styles/modern.css?url';
 import '@convex-dev/design-system/styles/shared.css';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 import posthog from 'posthog-js';
@@ -42,6 +43,7 @@ export const links: LinksFunction = () => [
     type: 'image/svg+xml',
   },
   { rel: 'stylesheet', href: globalStyles },
+  { rel: 'stylesheet', href: modernStyles },
   { rel: 'stylesheet', href: xtermStyles },
   {
     rel: 'preconnect',

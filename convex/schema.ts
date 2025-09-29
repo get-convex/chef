@@ -12,6 +12,12 @@ export const apiKeyValidator = v.object({
   google: v.optional(v.string()),
 });
 
+export const githubIntegrationValidator = v.object({
+  accessToken: v.string(),
+  username: v.string(),
+  avatarUrl: v.optional(v.string()),
+});
+
 // A stable-enough way to store token usage.
 export const usageRecordValidator = v.object({
   completionTokens: v.number(),
@@ -38,6 +44,7 @@ export default defineSchema({
   convexMembers: defineTable({
     tokenIdentifier: v.string(),
     apiKey: v.optional(apiKeyValidator),
+    githubIntegration: v.optional(githubIntegrationValidator),
     convexMemberId: v.optional(v.string()),
     softDeletedForWorkOSMerge: v.optional(v.boolean()),
     // Not authoritative, just a cache of the user's profile from WorkOS/provision host.

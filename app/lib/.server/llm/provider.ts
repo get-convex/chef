@@ -78,25 +78,11 @@ export function getProvider(
       let google;
       if (userApiKey) {
         google = createGoogleGenerativeAI({
-          apiKey: userApiKey || getEnv('GOOGLE_API_KEY'),
+          apiKey: userApiKey!,
           fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
         });
       } else {
-        const credentials = JSON.parse(getEnv('GOOGLE_VERTEX_CREDENTIALS_JSON')!);
-        google = createVertex({
-          project: credentials.project_id,
-          // Use global endpoint for higher availability
-          baseURL: `https://aiplatform.googleapis.com/v1/projects/${credentials.project_id}/locations/global/publishers/google`,
-          location: 'global',
-          googleAuthOptions: {
-            credentials: {
-              client_email: credentials.client_email,
-              private_key_id: credentials.private_key_id,
-              private_key: credentials.private_key,
-            },
-          },
-          fetch,
-        });
+        throw new Error('Google API key required from UI settings for Gemini models.');
       }
       provider = {
         model: google(model),
@@ -107,7 +93,7 @@ export function getProvider(
     case 'XAI': {
       model = modelForProvider(modelProvider, modelChoice);
       const xai = createXai({
-        apiKey: userApiKey || getEnv('XAI_API_KEY'),
+        apiKey: userApiKey!,
         fetch: userApiKey ? userKeyApiFetch('XAI') : fetch,
       });
       provider = {
@@ -124,7 +110,7 @@ export function getProvider(
     case 'OpenAI': {
       model = modelForProvider(modelProvider, modelChoice);
       const openai = createOpenAI({
-        apiKey: userApiKey || getEnv('OPENAI_API_KEY'),
+        apiKey: userApiKey!,
         fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
         compatibility: 'strict',
       });
@@ -184,32 +170,12 @@ export function getProvider(
             return throwIfBad(response, false);
           }
 
-          const lowQosKey = getEnv('ANTHROPIC_LOW_QOS_API_KEY');
-          if (!lowQosKey) {
-            captureException('Anthropic low qos api key not set', { level: 'error' });
-            console.error('Anthropic low qos api key not set');
-            return throwIfBad(response, false);
-          }
-
-          logger.error(`Falling back to low QoS API key...`);
-          captureException('Rate limited by Anthropic, switching to low QoS API key', {
-            level: 'warning',
-            extra: {
-              response,
-            },
-          });
-          if (init && init.headers) {
-            const headers = new Headers(init.headers);
-            headers.set('x-api-key', lowQosKey);
-            init.headers = headers;
-          }
-          const lowQosResponse = await fetch(input, init);
-          return throwIfBad(lowQosResponse, true);
+          // No low QoS fallback; use user's key and handle rate limits via error
         };
       };
       const anthropic = createAnthropic({
-        apiKey: userApiKey || getEnv('ANTHROPIC_API_KEY'),
-        fetch: userApiKey ? userKeyApiFetch('Anthropic') : rateLimitAwareFetch(),
+        apiKey: userApiKey!,
+        fetch: userKeyApiFetch('Anthropic'),
       });
 
       provider = {

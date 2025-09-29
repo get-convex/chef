@@ -2,8 +2,7 @@ import { json } from '@vercel/remix';
 import type { LoaderFunctionArgs } from '@vercel/remix';
 import type { LinksFunction, MetaFunction } from '@vercel/remix';
 import { ClientOnly } from 'remix-utils/client-only';
-import { Header } from '~/components/header/Header';
-import { Homepage } from '~/components/Homepage.client';
+import { ModernHomepage } from '~/components/ModernHomepage.client';
 
 export const meta: MetaFunction = () => {
   return [
@@ -35,24 +34,11 @@ export const loader = async (args: LoaderFunctionArgs) => {
   return json({ code });
 };
 
-// Home page that asks the user to login and provide an initial prompt. After
-// starting the chat, all of the globals' in-memory state is preserved as it
-// switches to the chat view (we do *not* do a full page reload and go to the
-// chat route). This route is optimized for making the initial experience
-// really seamless.
-//
-// It's critical that going back to the homepage or to other chats use a `<a>`
-// tag so all in-memory state is rebuilt from scratch.
+// Modern home page with Lovable.dev inspired design that provides a seamless
+// experience from landing page to chat interface to workbench. The new design
+// features a clean, modern aesthetic with smooth transitions and improved UX.
 export default function Index() {
-  /*
-  const location = useLocation();
-  const experience = chooseExperience(navigator.userAgent, new URLSearchParams(location.search));
-  */
-
   return (
-    <div className="flex size-full flex-col bg-bolt-elements-background-depth-1">
-      <Header />
-      <ClientOnly>{() => <Homepage />}</ClientOnly>
-    </div>
+    <ClientOnly>{() => <ModernHomepage />}</ClientOnly>
   );
 }

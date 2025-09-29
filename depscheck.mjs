@@ -30,11 +30,8 @@ function checkEnvVars() {
     !process.env.OPENAI_API_KEY &&
     !process.env.GOOGLE_VERTEX_CREDENTIALS_JSON
   ) {
-    console.error('\x1b[31m❌ No environment variables for model providers are set\x1b[0m');
-    console.error("Chef won't be functional unless you set at least one of the following environment variables:");
-    console.error('XAI_API_KEY, GOOGLE_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_VERTEX_CREDENTIALS_JSON');
-    console.error('Run `pnpm run update-env`');
-    process.exit(1);
+    console.log('\x1b[33m⚠️ No environment variables for model providers are set. Using UI-entered API keys.\x1b[0m');
+    console.log('Chef will use API keys entered in the UI settings page.');
   }
 }
 

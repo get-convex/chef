@@ -67,7 +67,7 @@ export function ApiKeyCard() {
         <h2 className="mb-2 text-xl font-semibold text-content-primary">API Keys</h2>
 
         <p className="mb-1 max-w-prose text-sm text-content-secondary">
-          You can use your own API keys to cook with Chef.
+          You can use your own API keys to cook with Chef. Supported providers: Anthropic, Google, OpenAI, and xAI.
         </p>
         <p className="mb-4 max-w-prose text-sm text-content-secondary">
           By default, Chef will use tokens built into your Convex plan.
