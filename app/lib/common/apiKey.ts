@@ -18,6 +18,7 @@ export function hasApiKeySet(
       return !!apiKey.value?.trim();
     case 'claude-3-5-haiku':
     case 'claude-4-sonnet':
+    case 'claude-4.5-sonnet':
       return !!apiKey.value?.trim();
     case 'gpt-4.1':
     case 'gpt-4.1-mini':
