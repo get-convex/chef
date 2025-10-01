@@ -53,6 +53,8 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
       return getEnv('XAI_MODEL') || 'grok-3-mini';
     case 'Google':
       return getEnv('GOOGLE_MODEL') || 'gemini-2.5-pro';
+    case 'OpenRouter':
+      return getEnv('OPENROUTER_MODEL') || 'x-ai/grok-4-fast:free';
     default: {
       const _exhaustiveCheck: never = provider;
       throw new Error(`Unknown provider: ${_exhaustiveCheck}`);
@@ -215,6 +217,19 @@ export function getProvider(
       provider = {
         model: anthropic(model),
         maxTokens: anthropicMaxTokens(modelChoice),
+      };
+      break;
+    }
+    case 'OpenRouter': {
+      model = modelForProvider(modelProvider, modelChoice);
+      const openrouter = createOpenAI({
+        apiKey: userApiKey || getEnv('OPENROUTER_API_KEY'),
+        baseURL: 'https://openrouter.ai/api/v1',
+        fetch: userApiKey ? userKeyApiFetch('OpenRouter') : fetch,
+      });
+      provider = {
+        model: openrouter(model),
+        maxTokens: 8192,
       };
       break;
     }

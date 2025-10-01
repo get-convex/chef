@@ -26,6 +26,8 @@ export function hasApiKeySet(
       return !!apiKey.openai?.trim();
     case 'grok-3-mini':
       return !!apiKey.xai?.trim();
+    case 'grok-free':
+      return !!apiKey.openrouter?.trim();
     case 'gemini-2.5-pro':
       return !!apiKey.google?.trim();
     default: {

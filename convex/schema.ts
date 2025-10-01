@@ -10,6 +10,7 @@ export const apiKeyValidator = v.object({
   openai: v.optional(v.string()),
   xai: v.optional(v.string()),
   google: v.optional(v.string()),
+  openrouter: v.optional(v.string()),
 });
 
 // A stable-enough way to store token usage.

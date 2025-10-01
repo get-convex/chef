@@ -33,6 +33,7 @@ export type ModelSelection =
   | 'gpt-4.1-mini'
   | 'gpt-5'
   | 'grok-3-mini'
+  | 'grok-free'
   | 'gemini-2.5-pro';
 
 export const MAX_CONSECUTIVE_DEPLOY_ERRORS = 5;

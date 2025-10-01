@@ -39,6 +39,7 @@ export function MissingApiKey({ provider, requireKey, resetDisableChatMessage }:
         openai: apiKey?.openai || undefined,
         xai: apiKey?.xai || undefined,
         google: apiKey?.google || undefined,
+        openrouter: apiKey?.openrouter || undefined,
       };
 
       switch (provider) {
@@ -53,6 +54,9 @@ export function MissingApiKey({ provider, requireKey, resetDisableChatMessage }:
           break;
         case 'xai':
           apiKeyMutation.xai = newKeyValue.trim();
+          break;
+        case 'openrouter':
+          apiKeyMutation.openrouter = newKeyValue.trim();
           break;
         case 'auto':
           if (useGeminiAuto) {

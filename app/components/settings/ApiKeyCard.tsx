@@ -26,6 +26,7 @@ export function ApiKeyCard() {
           openai: apiKey?.openai,
           xai: apiKey?.xai,
           google: apiKey?.google,
+          openrouter: apiKey?.openrouter,
         },
       });
       toast.success('Preference updated.', { id: value ? 'always' : 'quotaExhausted' });
@@ -35,7 +36,7 @@ export function ApiKeyCard() {
     }
   };
 
-  const hasAnyKey = apiKey && (apiKey.value || apiKey.openai || apiKey.xai || apiKey.google);
+  const hasAnyKey = apiKey && (apiKey.value || apiKey.openai || apiKey.xai || apiKey.google || apiKey.openrouter);
 
   const validateAnthropicApiKey = async (apiKey: string) => {
     return await convex.action(api.apiKeys.validateAnthropicApiKey, {

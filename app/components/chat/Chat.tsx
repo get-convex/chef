@@ -195,7 +195,7 @@ export const Chat = memo(
 
         // Map models to their respective providers
         const MODEL_TO_PROVIDER_MAP: {
-          [K in ModelSelection]: { providerName: ModelProvider; apiKeyField: 'value' | 'openai' | 'xai' | 'google' };
+          [K in ModelSelection]: { providerName: ModelProvider; apiKeyField: 'value' | 'openai' | 'xai' | 'google' | 'openrouter' };
         } = {
           auto: { providerName: 'anthropic', apiKeyField: 'value' },
           'claude-4-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
@@ -203,6 +203,7 @@ export const Chat = memo(
           'gpt-4.1': { providerName: 'openai', apiKeyField: 'openai' },
           'gpt-5': { providerName: 'openai', apiKeyField: 'openai' },
           'grok-3-mini': { providerName: 'xai', apiKeyField: 'xai' },
+          'grok-free': { providerName: 'openrouter', apiKeyField: 'openrouter' },
           'gemini-2.5-pro': { providerName: 'google', apiKeyField: 'google' },
           'claude-3-5-haiku': { providerName: 'anthropic', apiKeyField: 'value' },
           'gpt-4.1-mini': { providerName: 'openai', apiKeyField: 'openai' },
@@ -312,6 +313,9 @@ export const Chat = memo(
           modelChoice = 'claude-sonnet-4-5';
         } else if (modelSelection === 'grok-3-mini') {
           modelProvider = 'XAI';
+        } else if (modelSelection === 'grok-free') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'x-ai/grok-4-fast:free';
         } else if (modelSelection === 'gemini-2.5-pro') {
           modelProvider = 'Google';
         } else if (modelSelection === 'gpt-4.1-mini') {
