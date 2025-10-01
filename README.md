@@ -23,6 +23,14 @@ Visit our [documentation](https://docs.convex.dev/chef) to learn more about Chef
 The easiest way to build with Chef is through our hosted [webapp](https://chef.convex.dev), which includes a generous free tier. If you want to
 run Chef locally, you can follow the guide below.
 
+### Disclaimer
+
+Chef is provided as-is, using an authentication configuration specific to Convex. If you are planning on developing a fork of Chef for production use or re-distribution, your fork will need to replace the existing authentication system.
+
+In this scenario, we'd recommend:
+- Replacing Chef's authentication system with your own
+- Having your fork use Convex's be an [OAuth Application](https://docs.convex.dev/platform-apis/oauth-applications) using Conve's [Platform APIs](https://docs.convex.dev/platform-apis)
+
 ### Running Locally
 
 Note: This will use the hosted Convex control plane to provision Convex projects. However, Chef tokens used in this enviroment will not count towards usage in your Convex account.
