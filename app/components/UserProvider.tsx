@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { setExtra, setUser } from '@sentry/remix';
-import { useConvex } from 'convex/react';
+import { useConvex, useQuery } from 'convex/react';
 import { useConvexSessionIdOrNullOrLoading, getConvexAuthToken } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
 import { setProfile } from '~/lib/stores/profile';
@@ -19,6 +19,7 @@ export const UserProvider = withLDProvider<any>({
 function UserProviderInner({ children }: { children: React.ReactNode }) {
   const launchdarkly = useLDClient();
   const { user } = useAuth();
+  const convexMemberId = useQuery(api.sessions.convexMemberId);
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const chatId = useChatId();
   const convex = useConvex();
@@ -39,11 +40,11 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
     async function updateProfile() {
       if (user) {
         launchdarkly?.identify({
-          key: user.id ?? '',
+          key: convexMemberId ?? '',
           email: user.email ?? '',
         });
         setUser({
-          id: user.id,
+          id: convexMemberId ?? '',
           username: user.firstName ? (user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName) : '',
           email: user.email ?? undefined,
         });
@@ -81,7 +82,7 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
     }
     void updateProfile();
     // Including tokenValue is important here even though it's not a direct dependency
-  }, [launchdarkly, user, convex, tokenValue]);
+  }, [launchdarkly, user, convex, tokenValue, convexMemberId]);
 
   return children;
 }
