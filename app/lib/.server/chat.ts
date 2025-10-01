@@ -68,12 +68,21 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     recordRawPromptsForDebugging?: boolean;
     collapsedMessages: boolean;
     promptCharacterCounts?: PromptCharacterCounts;
+    customSystemPrompt?: string | null;
     featureFlags: {
       enableResend?: boolean;
     };
   };
-  const { messages, firstUserMessage, chatInitialId, deploymentName, token, teamSlug, recordRawPromptsForDebugging } =
-    body;
+  const {
+    messages,
+    firstUserMessage,
+    chatInitialId,
+    deploymentName,
+    token,
+    teamSlug,
+    recordRawPromptsForDebugging,
+    customSystemPrompt,
+  } = body;
 
   if (getEnv('DISABLE_BEDROCK') === '1' && body.modelProvider === 'Bedrock') {
     body.modelProvider = 'Anthropic';
@@ -192,6 +201,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       featureFlags: {
         enableResend: body.featureFlags.enableResend ?? false,
       },
+      customSystemPrompt: typeof customSystemPrompt === 'string' ? customSystemPrompt : undefined,
     });
 
     return new Response(dataStream, {

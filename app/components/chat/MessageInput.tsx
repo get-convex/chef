@@ -35,11 +35,21 @@ import { toast } from 'sonner';
 import { captureException } from '@sentry/remix';
 import { Menu as MenuComponent, MenuItem as MenuItemComponent } from '@ui/Menu';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
-import { ChatBubbleLeftIcon, DocumentArrowUpIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import {
+  AdjustmentsHorizontalIcon,
+  ChatBubbleLeftIcon,
+  DocumentArrowUpIcon,
+  InformationCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useAuth } from '@workos-inc/authkit-react';
 import { useConvex } from 'convex/react';
+import { api } from '@convex/_generated/api';
+import { customSystemPromptStore } from '~/lib/stores/customSystemPrompt';
+import { chatIdStore } from '~/lib/stores/chatId';
+import { Modal } from '@ui/Modal';
 
 const PROMPT_LENGTH_WARNING_THRESHOLD = 2000;
+const CUSTOM_SYSTEM_PROMPT_MAX_LENGTH = 2000;
 
 type Highlight = {
   text: string; // must be lowercase
@@ -116,10 +126,76 @@ export const MessageInput = memo(function MessageInput({
   const chefAuthState = useChefAuth();
   const selectedTeamSlug = useSelectedTeamSlug();
   const convex = useConvex();
+  const customSystemPrompt = useStore(customSystemPromptStore);
+  const chatId = useStore(chatIdStore);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const input = useStore(messageInputStore);
+
+  const [isCustomPromptModalOpen, setIsCustomPromptModalOpen] = useState(false);
+  const [customPromptDraft, setCustomPromptDraft] = useState('');
+  const [isSavingCustomPrompt, setIsSavingCustomPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!isCustomPromptModalOpen) {
+      setCustomPromptDraft(customSystemPrompt ?? '');
+    }
+  }, [customSystemPrompt, isCustomPromptModalOpen]);
+
+  const customPromptLength = customPromptDraft.length;
+  const isCustomPromptTooLong = customPromptLength > CUSTOM_SYSTEM_PROMPT_MAX_LENGTH;
+  const hasCustomPrompt = !!customSystemPrompt && customSystemPrompt.trim().length > 0;
+  const customPromptButtonDisabled = !sessionId || !chatId;
+
+  const openCustomPromptModal = useCallback(() => {
+    setCustomPromptDraft(customSystemPrompt ?? '');
+    setIsCustomPromptModalOpen(true);
+  }, [customSystemPrompt]);
+
+  const closeCustomPromptModal = useCallback(() => {
+    setIsCustomPromptModalOpen(false);
+    setCustomPromptDraft(customSystemPrompt ?? '');
+  }, [customSystemPrompt]);
+
+  const handleCustomPromptChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCustomPromptDraft(event.target.value);
+  }, []);
+
+  const handleSaveCustomPrompt = useCallback(async () => {
+    if (isCustomPromptTooLong) {
+      toast.error(`Custom instructions must be ${CUSTOM_SYSTEM_PROMPT_MAX_LENGTH} characters or fewer.`);
+      return;
+    }
+    if (!chatId) {
+      toast.error('Chat Id is not available');
+      return;
+    }
+    if (!sessionId) {
+      toast.error('Session is not ready yet.');
+      return;
+    }
+
+    try {
+      setIsSavingCustomPrompt(true);
+      const trimmedPrompt = customPromptDraft.trim();
+      await convex.mutation(api.messages.setCustomSystemPrompt, {
+        id: chatId,
+        sessionId,
+        customSystemPrompt: trimmedPrompt.length > 0 ? trimmedPrompt : null,
+      });
+      customSystemPromptStore.set(trimmedPrompt.length > 0 ? trimmedPrompt : undefined);
+      toast.success(trimmedPrompt.length > 0 ? 'Custom instructions saved' : 'Custom instructions cleared');
+      setIsCustomPromptModalOpen(false);
+      setCustomPromptDraft(trimmedPrompt);
+    } catch (error) {
+      captureException(error);
+      console.error('Failed to update custom system prompt:', error);
+      toast.error('Failed to update custom instructions. Please try again.');
+    } finally {
+      setIsSavingCustomPrompt(false);
+    }
+  }, [chatId, convex, customPromptDraft, isCustomPromptTooLong, sessionId]);
 
   // Set the initial input value
   const [searchParams] = useSearchParams();
@@ -224,7 +300,7 @@ export const MessageInput = memo(function MessageInput({
     } finally {
       setIsEnhancing(false);
     }
-  }, [input, convex]);
+  }, [input, convex, selectedTeamSlug]);
 
   // Helper to insert template and select '[...]'
   const insertTemplate = useCallback(
@@ -251,136 +327,209 @@ export const MessageInput = memo(function MessageInput({
   );
 
   return (
-    <div className="relative z-20 mx-auto w-full max-w-chat rounded-xl shadow transition-all duration-200">
-      <div className="rounded-xl bg-background-primary/75 backdrop-blur-md">
-        <div className="rounded-t-xl border transition-all has-[textarea:focus]:border-border-selected">
-          <TextareaWithHighlights
-            onKeyDown={handleKeyDown}
-            onChange={handleChange}
-            value={input}
-            chatStarted={chatStarted}
-            minHeight={100}
-            maxHeight={chatStarted ? 400 : 200}
-            placeholder={
-              chatStarted
-                ? numMessages !== undefined && numMessages > 0
-                  ? 'Request changes by sending another message…'
-                  : 'Send a prompt for a new feature…'
-                : 'What app do you want to serve?'
-            }
-            disabled={disabled}
-            highlights={HIGHLIGHTS}
-          />
-        </div>
-        <div
-          className={classNames(
-            'flex items-center gap-2 border rounded-b-xl border-t-0 bg-background-secondary/80 p-1.5 text-sm flex-wrap',
-          )}
-        >
-          {chefAuthState.kind === 'fullyLoggedIn' && (
-            <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} size="sm" />
-          )}
-          {!chatStarted && sessionId && (
-            <TeamSelector
-              description="Your project will be created in this Convex team"
-              selectedTeamSlug={selectedTeamSlug}
-              setSelectedTeamSlug={setSelectedTeamSlug}
-              size="sm"
+    <>
+      <div className="relative z-20 mx-auto w-full max-w-chat rounded-xl shadow transition-all duration-200">
+        <div className="rounded-xl bg-background-primary/75 backdrop-blur-md">
+          <div className="rounded-t-xl border transition-all has-[textarea:focus]:border-border-selected">
+            <TextareaWithHighlights
+              onKeyDown={handleKeyDown}
+              onChange={handleChange}
+              value={input}
+              chatStarted={chatStarted}
+              minHeight={100}
+              maxHeight={chatStarted ? 400 : 200}
+              placeholder={
+                chatStarted
+                  ? numMessages !== undefined && numMessages > 0
+                    ? 'Request changes by sending another message…'
+                    : 'Send a prompt for a new feature…'
+                  : 'What app do you want to serve?'
+              }
+              disabled={disabled}
+              highlights={HIGHLIGHTS}
             />
-          )}
-          {chatStarted && <ConvexConnection />}
-          {input.length > 3 && input.length <= PROMPT_LENGTH_WARNING_THRESHOLD && <NewLineShortcut />}
-          {input.length > PROMPT_LENGTH_WARNING_THRESHOLD && <CharacterWarning />}
-          <div className="ml-auto flex items-center gap-1">
-            {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
-            {chefAuthState.kind === 'fullyLoggedIn' && (
-              <MenuComponent
-                buttonProps={{
-                  variant: 'neutral',
-                  tip: 'Use a recipe',
-                  inline: true,
-                  icon: (
-                    <div className="text-lg">
-                      <SquaresPlusIcon className="size-4" />
-                    </div>
-                  ),
-                }}
-                placement="top-start"
-              >
-                <div className="ml-3 flex items-center gap-1">
-                  <h2 className="text-sm font-bold">Use a recipe</h2>
-                  <Tooltip tip="Recipes are Chef prompts that add powerful full-stack features to your app." side="top">
-                    <span className="cursor-help text-content-tertiary">
-                      <InformationCircleIcon className="size-4" />
-                    </span>
-                  </Tooltip>
-                </div>
-                <MenuItemComponent action={() => insertTemplate('Make a collaborative text editor that ...')}>
-                  <div className="flex w-full items-center gap-2">
-                    <PencilSquareIcon className="size-4 text-content-secondary" />
-                    Make a collaborative text editor
-                  </div>
-                </MenuItemComponent>
-                <MenuItemComponent action={() => insertTemplate('Add AI chat to ...')}>
-                  <div className="flex w-full items-center gap-2">
-                    <ChatBubbleLeftIcon className="size-4 text-content-secondary" />
-                    Add AI chat
-                  </div>
-                </MenuItemComponent>
-                <MenuItemComponent action={() => insertTemplate('Add file upload to ...')}>
-                  <div className="flex w-full items-center gap-2">
-                    <DocumentArrowUpIcon className="size-4 text-content-secondary" />
-                    Add file upload
-                  </div>
-                </MenuItemComponent>
-                <MenuItemComponent action={() => insertTemplate('Add full text search to ...')}>
-                  <div className="flex w-full items-center gap-2">
-                    <MagnifyingGlassIcon className="size-4 text-content-secondary" />
-                    Add full text search
-                  </div>
-                </MenuItemComponent>
-              </MenuComponent>
+          </div>
+          <div
+            className={classNames(
+              'flex items-center gap-2 border rounded-b-xl border-t-0 bg-background-secondary/80 p-1.5 text-sm flex-wrap',
             )}
+          >
             {chefAuthState.kind === 'fullyLoggedIn' && (
-              <EnhancePromptButton
-                isEnhancing={isEnhancing}
-                disabled={!selectedTeamSlug || disabled || input.length === 0}
-                onClick={enhancePrompt}
+              <ModelSelector modelSelection={modelSelection} setModelSelection={setModelSelection} size="sm" />
+            )}
+            {!chatStarted && sessionId && (
+              <TeamSelector
+                description="Your project will be created in this Convex team"
+                selectedTeamSlug={selectedTeamSlug}
+                setSelectedTeamSlug={setSelectedTeamSlug}
+                size="sm"
               />
             )}
-            <Button
-              disabled={
-                (!isStreaming && input.length === 0) ||
-                !selectedTeamSlug ||
-                chefAuthState.kind === 'loading' ||
-                sendMessageInProgress ||
-                disabled
-              }
-              tip={
-                chefAuthState.kind === 'unauthenticated'
-                  ? 'Please sign in to continue'
-                  : !selectedTeamSlug
-                    ? 'Please select a team to continue'
-                    : undefined
-              }
-              onClick={handleClickButton}
-              size="xs"
-              className="ml-2 h-[1.625rem]"
-              aria-label={isStreaming ? 'Stop' : 'Send'}
-              icon={
-                sendMessageInProgress ? (
-                  <Spinner className="text-white" />
-                ) : !isStreaming ? (
-                  <ArrowRightIcon />
-                ) : (
-                  <StopIcon />
-                )
-              }
-            />
+            {chatStarted && <ConvexConnection />}
+            {input.length > 3 && input.length <= PROMPT_LENGTH_WARNING_THRESHOLD && <NewLineShortcut />}
+            {input.length > PROMPT_LENGTH_WARNING_THRESHOLD && <CharacterWarning />}
+            <div className="ml-auto flex items-center gap-1">
+              {chefAuthState.kind === 'unauthenticated' && <SignInButton />}
+              {chefAuthState.kind === 'fullyLoggedIn' && (
+                <MenuComponent
+                  buttonProps={{
+                    variant: 'neutral',
+                    tip: 'Use a recipe',
+                    inline: true,
+                    icon: (
+                      <div className="text-lg">
+                        <SquaresPlusIcon className="size-4" />
+                      </div>
+                    ),
+                  }}
+                  placement="top-start"
+                >
+                  <div className="ml-3 flex items-center gap-1">
+                    <h2 className="text-sm font-bold">Use a recipe</h2>
+                    <Tooltip
+                      tip="Recipes are Chef prompts that add powerful full-stack features to your app."
+                      side="top"
+                    >
+                      <span className="cursor-help text-content-tertiary">
+                        <InformationCircleIcon className="size-4" />
+                      </span>
+                    </Tooltip>
+                  </div>
+                  <MenuItemComponent action={() => insertTemplate('Make a collaborative text editor that ...')}>
+                    <div className="flex w-full items-center gap-2">
+                      <PencilSquareIcon className="size-4 text-content-secondary" />
+                      Make a collaborative text editor
+                    </div>
+                  </MenuItemComponent>
+                  <MenuItemComponent action={() => insertTemplate('Add AI chat to ...')}>
+                    <div className="flex w-full items-center gap-2">
+                      <ChatBubbleLeftIcon className="size-4 text-content-secondary" />
+                      Add AI chat
+                    </div>
+                  </MenuItemComponent>
+                  <MenuItemComponent action={() => insertTemplate('Add file upload to ...')}>
+                    <div className="flex w-full items-center gap-2">
+                      <DocumentArrowUpIcon className="size-4 text-content-secondary" />
+                      Add file upload
+                    </div>
+                  </MenuItemComponent>
+                  <MenuItemComponent action={() => insertTemplate('Add full text search to ...')}>
+                    <div className="flex w-full items-center gap-2">
+                      <MagnifyingGlassIcon className="size-4 text-content-secondary" />
+                      Add full text search
+                    </div>
+                  </MenuItemComponent>
+                </MenuComponent>
+              )}
+              {chefAuthState.kind === 'fullyLoggedIn' && (
+                <Button
+                  variant={hasCustomPrompt ? 'primary' : 'neutral'}
+                  inline
+                  onClick={openCustomPromptModal}
+                  disabled={customPromptButtonDisabled}
+                  tip={
+                    !sessionId
+                      ? 'Please sign in to customize Chef'
+                      : !chatId
+                        ? 'Chat is not ready yet'
+                        : "Customize Chef's instructions for this chat"
+                  }
+                >
+                  <div className="flex items-center gap-1">
+                    <AdjustmentsHorizontalIcon className="size-4" />
+                    <span className="text-xs font-medium">Custom instructions</span>
+                    {hasCustomPrompt && <span className="ml-1 size-2 rounded-full bg-emerald-500" aria-hidden />}
+                  </div>
+                </Button>
+              )}
+              {chefAuthState.kind === 'fullyLoggedIn' && (
+                <EnhancePromptButton
+                  isEnhancing={isEnhancing}
+                  disabled={!selectedTeamSlug || disabled || input.length === 0}
+                  onClick={enhancePrompt}
+                />
+              )}
+              <Button
+                disabled={
+                  (!isStreaming && input.length === 0) ||
+                  !selectedTeamSlug ||
+                  chefAuthState.kind === 'loading' ||
+                  sendMessageInProgress ||
+                  disabled
+                }
+                tip={
+                  chefAuthState.kind === 'unauthenticated'
+                    ? 'Please sign in to continue'
+                    : !selectedTeamSlug
+                      ? 'Please select a team to continue'
+                      : undefined
+                }
+                onClick={handleClickButton}
+                size="xs"
+                className="ml-2 h-[1.625rem]"
+                aria-label={isStreaming ? 'Stop' : 'Send'}
+                icon={
+                  sendMessageInProgress ? (
+                    <Spinner className="text-white" />
+                  ) : !isStreaming ? (
+                    <ArrowRightIcon />
+                  ) : (
+                    <StopIcon />
+                  )
+                }
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      {isCustomPromptModalOpen && (
+        <Modal
+          onClose={closeCustomPromptModal}
+          title="Custom system prompt"
+          description="Chef will include these instructions with every request in this chat."
+          size="md"
+        >
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSaveCustomPrompt();
+            }}
+          >
+            <textarea
+              className="mt-2 min-h-40 w-full resize-y rounded-lg border bg-background-primary p-3 text-sm text-content-primary shadow-sm focus:border-border-selected focus:outline-none"
+              placeholder="Add any extra context or instructions for Chef…"
+              value={customPromptDraft}
+              onChange={handleCustomPromptChange}
+              disabled={isSavingCustomPrompt}
+            />
+            <p className="text-sm text-content-secondary">
+              Tailor Chef&apos;s behavior for this project. Leave the field empty to reset to the default system prompt.
+            </p>
+            <div className="flex items-center justify-between text-xs text-content-secondary">
+              <span>
+                {hasCustomPrompt ? 'Custom instructions are currently enabled.' : 'No custom instructions yet.'}
+              </span>
+              <span className={classNames('font-medium', isCustomPromptTooLong ? 'text-red-500' : undefined)}>
+                {customPromptLength}/{CUSTOM_SYSTEM_PROMPT_MAX_LENGTH}
+              </span>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="neutral" type="button" onClick={closeCustomPromptModal} disabled={isSavingCustomPrompt}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSavingCustomPrompt || isCustomPromptTooLong || customPromptButtonDisabled}
+                loading={isSavingCustomPrompt}
+              >
+                Save instructions
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
   );
 });
 
