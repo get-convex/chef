@@ -224,7 +224,7 @@ export const MessageInput = memo(function MessageInput({
     } finally {
       setIsEnhancing(false);
     }
-  }, [input, convex]);
+  }, [input, convex, selectedTeamSlug]);
 
   // Helper to insert template and select '[...]'
   const insertTemplate = useCallback(
