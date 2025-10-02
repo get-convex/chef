@@ -29,7 +29,7 @@ Chef is provided as-is, using an authentication configuration specific to Convex
 
 If you are planning on developing a fork of Chef for production use or re-distribution, your fork will need to replace the existing authentication system with your own. We recommend using the [OAuth Authorization Code Grant](https://docs.convex.dev/platform-apis/oauth-applications#implementing-oauth) flow to authorize access to Convex teams or projects. [Read more about available Platform APIs](https://docs.convex.dev/platform-apis).
 
-Chef is still easy to use for local development without changes, read on for instructions for using Chef locally.
+Chef is easy to use for local development without changes. Read on for instructions for using Chef locally.
 
 ### Running Locally
 
