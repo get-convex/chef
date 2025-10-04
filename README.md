@@ -82,6 +82,7 @@ ANTHROPIC_API_KEY=<your api key>
 GOOGLE_API_KEY=<your api key>
 OPENAI_API_KEY=<your api key>
 XAI_API_KEY=<your api key>
+OPENROUTER_API_KEY=<your api key>
 ```
 
 Note: You can also add your own API keys through the Chef settings page.

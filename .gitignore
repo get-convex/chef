@@ -1,3 +1,6 @@
+/.cursor
+/.cursorrules
+convex_rules.mdc
 logs
 *.log
 npm-debug.log*
