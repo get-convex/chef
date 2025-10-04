@@ -191,6 +191,21 @@ async function getOrCreateCurrentMember(ctx: MutationCtx) {
   });
 }
 
+export const convexMemberId = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+    const existingMember = await ctx.db
+      .query("convexMembers")
+      .withIndex("byConvexMemberId", (q) => q.eq("convexMemberId", identity.convex_member_id as string))
+      .first();
+
+    return existingMember?.convexMemberId;
+  },
+});
+
 export async function getCurrentMember(ctx: QueryCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
