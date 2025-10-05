@@ -326,6 +326,24 @@ export const Chat = memo(
         } else if (modelSelection === 'gpt-5') {
           modelProvider = 'OpenAI';
           modelChoice = 'gpt-5';
+        } else if (modelSelection === 'qwen-coder') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'qwen/qwen3-coder:free';
+        } else if (modelSelection === 'qwen-2.5-coder-32b') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'qwen/qwen-2.5-coder-32b-instruct:free';
+        } else if (modelSelection === 'gemini-2.0-flash-exp') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'google/gemini-2.0-flash-exp:free';
+        } else if (modelSelection === 'deepseek-coder') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'deepseek/deepseek-coder:free';
+        } else if (modelSelection === 'llama-3.3-70b') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'meta-llama/llama-3.3-70b-instruct:free';
+        } else if (modelSelection === 'codestral-latest') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'mistralai/codestral-latest:free';
         } else {
           const _exhaustiveCheck: never = modelSelection;
           throw new Error(`Unknown model: ${_exhaustiveCheck}`);

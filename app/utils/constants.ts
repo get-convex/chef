@@ -34,6 +34,12 @@ export type ModelSelection =
   | 'gpt-5'
   | 'grok-3-mini'
   | 'grok-free'
-  | 'gemini-2.5-pro';
+  | 'gemini-2.5-pro'
+  | 'qwen-coder'
+  | 'qwen-2.5-coder-32b'
+  | 'gemini-2.0-flash-exp'
+  | 'deepseek-coder'
+  | 'llama-3.3-70b'
+  | 'codestral-latest';
 
 export const MAX_CONSECUTIVE_DEPLOY_ERRORS = 5;

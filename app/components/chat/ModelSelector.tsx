@@ -147,6 +147,36 @@ export const models: Partial<
     provider: 'openai',
     requireKey: true,
   },
+  'qwen-coder': {
+    name: 'Qwen3 Coder',
+    provider: 'openrouter',
+    requireKey: true,
+  },
+  'qwen-2.5-coder-32b': {
+    name: 'Qwen 2.5 Coder 32B',
+    provider: 'openrouter',
+    requireKey: true,
+  },
+  'gemini-2.0-flash-exp': {
+    name: 'Gemini 2.0 Flash Exp',
+    provider: 'openrouter',
+    requireKey: true,
+  },
+  'deepseek-coder': {
+    name: 'DeepSeek Coder',
+    provider: 'openrouter',
+    requireKey: true,
+  },
+  'llama-3.3-70b': {
+    name: 'Llama 3.3 70B',
+    provider: 'openrouter',
+    requireKey: true,
+  },
+  'codestral-latest': {
+    name: 'Codestral Latest',
+    provider: 'openrouter',
+    requireKey: true,
+  },
 } as const;
 
 export const ModelSelector = React.memo(function ModelSelector({
