@@ -17,6 +17,79 @@ import { fetch } from '~/lib/.server/fetch';
 const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-west-2'];
 
 export type ModelProvider = Exclude<ProviderType, 'Unknown'>;
+
+/**
+ * RETRY LOGIC FOR RATE LIMITS
+ * 
+ * All API calls now automatically retry on rate limit errors (429, RESOURCE_EXHAUSTED, etc.)
+ * with exponential backoff:
+ * - Max 3 retries
+ * - Base delay: 30 seconds
+ * - Exponential backoff: 30s, 60s, 120s
+ * - Uses API-suggested retry delays when available
+ * - Works with all providers: Google, OpenAI, Anthropic, XAI, OpenRouter, Bedrock
+ */
+
+/**
+ * Retry function with exponential backoff for rate limit errors
+ */
+async function retryWithExponentialBackoff<T>(
+  fn: () => Promise<T>,
+  provider: ModelProvider,
+  maxRetries: number = 3,
+  baseDelay: number = 30000, // 30 seconds
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if this is a rate limit error (429 or RESOURCE_EXHAUSTED)
+      const isRateLimitError = 
+        error.message?.includes('rate limiting') ||
+        error.message?.includes('429') ||
+        error.message?.includes('RESOURCE_EXHAUSTED') ||
+        error.message?.includes('quota') ||
+        error.message?.includes('limit') ||
+        error.message?.includes('overloaded');
+      
+      // If it's not a rate limit error or we've exhausted retries, throw immediately
+      if (!isRateLimitError || attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Try to extract retry delay from error message (some APIs include this)
+      let delay = baseDelay * Math.pow(2, attempt);
+      
+      // Check if the error contains a retry-after hint
+      const retryAfterMatch = error.message?.match(/retry.*?(\d+)\s*(?:seconds?|minutes?|hours?)/i);
+      if (retryAfterMatch) {
+        const retryAfterValue = parseInt(retryAfterMatch[1]);
+        const retryAfterUnit = retryAfterMatch[0].toLowerCase();
+        
+        if (retryAfterUnit.includes('hour')) {
+          delay = retryAfterValue * 60 * 60 * 1000;
+        } else if (retryAfterUnit.includes('minute')) {
+          delay = retryAfterValue * 60 * 1000;
+        } else {
+          delay = retryAfterValue * 1000;
+        }
+        
+        logger.info(`${provider} API suggested retry delay: ${delay}ms`);
+      }
+      
+      logger.warn(`${provider} rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError!;
+}
 type Provider = {
   maxTokens: number;
   model: LanguageModelV1;
@@ -81,7 +154,7 @@ export function getProvider(
       if (userApiKey) {
         google = createGoogleGenerativeAI({
           apiKey: userApiKey || getEnv('GOOGLE_API_KEY'),
-          fetch: userApiKey ? userKeyApiFetch('Google') : fetch,
+          fetch: userKeyApiFetch('Google'),
         });
       } else {
         const credentials = JSON.parse(getEnv('GOOGLE_VERTEX_CREDENTIALS_JSON')!);
@@ -97,7 +170,7 @@ export function getProvider(
               private_key: credentials.private_key,
             },
           },
-          fetch,
+          fetch: createRetryFetch('Google'),
         });
       }
       provider = {
@@ -110,7 +183,7 @@ export function getProvider(
       model = modelForProvider(modelProvider, modelChoice);
       const xai = createXai({
         apiKey: userApiKey || getEnv('XAI_API_KEY'),
-        fetch: userApiKey ? userKeyApiFetch('XAI') : fetch,
+        fetch: userApiKey ? userKeyApiFetch('XAI') : createRetryFetch('XAI'),
       });
       provider = {
         model: xai(model),
@@ -127,7 +200,7 @@ export function getProvider(
       model = modelForProvider(modelProvider, modelChoice);
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv('OPENAI_API_KEY'),
-        fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
+        fetch: userApiKey ? userKeyApiFetch('OpenAI') : createRetryFetch('OpenAI'),
         compatibility: 'strict',
       });
       provider = {
@@ -148,7 +221,7 @@ export function getProvider(
         credentialProvider: awsCredentialsProvider({
           roleArn: getEnv('AWS_ROLE_ARN')!,
         }),
-        fetch,
+        fetch: createRetryFetch('Bedrock'),
       });
       provider = {
         model: bedrock(model),
@@ -225,7 +298,7 @@ export function getProvider(
       const openrouter = createOpenAI({
         apiKey: userApiKey || getEnv('OPENROUTER_API_KEY'),
         baseURL: 'https://openrouter.ai/api/v1',
-        fetch: userApiKey ? userKeyApiFetch('OpenRouter') : fetch,
+        fetch: userApiKey ? userKeyApiFetch('OpenRouter') : createRetryFetch('OpenRouter'),
       });
       provider = {
         model: openrouter(model),
@@ -238,49 +311,72 @@ export function getProvider(
   return provider;
 }
 
-const userKeyApiFetch = (provider: ModelProvider) => {
+/**
+ * Creates a fetch function with automatic retry logic for rate limit errors.
+ * 
+ * Features:
+ * - Detects 429, RESOURCE_EXHAUSTED, and quota/limit errors
+ * - Retries up to 3 times with exponential backoff (30s, 60s, 120s)
+ * - Uses API-suggested retry delays when available
+ * - Works with all AI providers (Google, OpenAI, Anthropic, etc.)
+ */
+const createRetryFetch = (provider: ModelProvider) => {
   return async (input: RequestInfo | URL, init?: RequestInit) => {
-    const result = await fetch(input, init);
-    if (result.status === 401) {
-      const text = await result.text();
-      throw new Error(JSON.stringify({ error: 'Invalid API key', details: text }));
-    }
-    if (result.status === 413) {
-      const text = await result.text();
-      throw new Error(
-        JSON.stringify({
-          error: 'Request exceeds the maximum allowed number of bytes.',
-          details: text,
-        }),
-      );
-    }
-    if (result.status === 429) {
-      const text = await result.text();
-      throw new Error(
-        JSON.stringify({
-          error: `${provider} is rate limiting your requests`,
-          details: text,
-        }),
-      );
-    }
-    if (result.status === 529) {
-      const text = await result.text();
-      throw new Error(
-        JSON.stringify({
-          error: `${provider}'s API is temporarily overloaded`,
-          details: text,
-        }),
-      );
-    }
-    if (!result.ok) {
-      const text = await result.text();
-      throw new Error(
-        JSON.stringify({
-          error: `${provider} returned an error (${result.status} ${result.statusText}) when using your provided API key: ${text}`,
-          details: text,
-        }),
-      );
-    }
-    return result;
+    return await retryWithExponentialBackoff(async () => {
+      const result = await fetch(input, init);
+      
+      if (result.status === 401) {
+        const text = await result.text();
+        throw new Error(JSON.stringify({ error: 'Invalid API key', details: text }));
+      }
+      if (result.status === 413) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({
+            error: 'Request exceeds the maximum allowed number of bytes.',
+            details: text,
+          }),
+        );
+      }
+      if (result.status === 429) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({
+            error: `${provider} is rate limiting your requests`,
+            details: text,
+          }),
+        );
+      }
+      if (result.status === 529) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({
+            error: `${provider}'s API is temporarily overloaded`,
+            details: text,
+          }),
+        );
+      }
+      if (!result.ok) {
+        const text = await result.text();
+        throw new Error(
+          JSON.stringify({
+            error: `${provider} returned an error (${result.status} ${result.statusText}) when using your provided API key: ${text}`,
+            details: text,
+          }),
+        );
+      }
+      return result;
+    }, provider);
   };
 };
+
+/**
+ * Creates a fetch function with automatic retry logic for rate limit errors.
+ * 
+ * Features:
+ * - Detects 429, RESOURCE_EXHAUSTED, and quota/limit errors
+ * - Retries up to 3 times with exponential backoff (30s, 60s, 120s)
+ * - Uses API-suggested retry delays when available
+ * - Works with all AI providers (Google, OpenAI, Anthropic, etc.)
+ */
+const userKeyApiFetch = (provider: ModelProvider) => createRetryFetch(provider);
