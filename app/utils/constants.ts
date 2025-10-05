@@ -40,6 +40,10 @@ export type ModelSelection =
   | 'gemini-2.0-flash-exp'
   | 'deepseek-coder'
   | 'llama-3.3-70b'
-  | 'codestral-latest';
+  | 'codestral-latest'
+  | 'nemotron-nano-9b-v2'
+  | 'kimi-k2'
+  | 'devstral-small-2505'
+  | 'mai-ds-r1';
 
 export const MAX_CONSECUTIVE_DEPLOY_ERRORS = 5;

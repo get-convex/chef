@@ -2,7 +2,8 @@
 /convex
 convex
 _generated
-
+.cursorignore
+.cursor
 /.cursor
 /.cursorrules
 convex_rules.mdc

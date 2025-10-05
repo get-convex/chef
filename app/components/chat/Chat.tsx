@@ -207,6 +207,16 @@ export const Chat = memo(
           'gemini-2.5-pro': { providerName: 'google', apiKeyField: 'google' },
           'claude-3-5-haiku': { providerName: 'anthropic', apiKeyField: 'value' },
           'gpt-4.1-mini': { providerName: 'openai', apiKeyField: 'openai' },
+          'qwen-coder': { providerName: 'openrouter', apiKeyField: 'openrouter' },
+          'qwen-2.5-coder-32b': { providerName: 'openrouter', apiKeyField: 'openrouter' },
+          'gemini-2.0-flash-exp': { providerName: 'openrouter', apiKeyField: 'openrouter' },
+          'deepseek-coder': { providerName: 'openrouter', apiKeyField: 'openrouter' },
+          'llama-3.3-70b': { providerName: 'openrouter', apiKeyField: 'openrouter' },
+          'codestral-latest': { providerName: 'openrouter', apiKeyField: 'openrouter' },
+          'nemotron-nano-9b-v2': { providerName: 'openrouter', apiKeyField: 'openrouter' },
+          'kimi-k2': { providerName: 'openrouter', apiKeyField: 'openrouter' },
+          'devstral-small-2505': { providerName: 'openrouter', apiKeyField: 'openrouter' },
+          'mai-ds-r1': { providerName: 'openrouter', apiKeyField: 'openrouter' },
         };
 
         // Get provider info for the current model
@@ -318,6 +328,7 @@ export const Chat = memo(
           modelChoice = 'x-ai/grok-4-fast:free';
         } else if (modelSelection === 'gemini-2.5-pro') {
           modelProvider = 'Google';
+          modelChoice = 'gemini-2.5-pro';
         } else if (modelSelection === 'gpt-4.1-mini') {
           modelProvider = 'OpenAI';
           modelChoice = 'gpt-4.1-mini';
@@ -344,11 +355,30 @@ export const Chat = memo(
         } else if (modelSelection === 'codestral-latest') {
           modelProvider = 'OpenRouter';
           modelChoice = 'mistralai/codestral-latest:free';
+        } else if (modelSelection === 'nemotron-nano-9b-v2') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'nvidia/nemotron-nano-9b-v2:free';
+        } else if (modelSelection === 'kimi-k2') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'moonshotai/kimi-k2:free';
+        } else if (modelSelection === 'devstral-small-2505') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'mistralai/devstral-small-2505:free';
+        } else if (modelSelection === 'mai-ds-r1') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'microsoft/mai-ds-r1:free';
         } else {
           const _exhaustiveCheck: never = modelSelection;
           throw new Error(`Unknown model: ${_exhaustiveCheck}`);
         }
         let shouldDisableTools = false;
+        
+        // Disable tools for ALL OpenRouter free models (most don't support tool use)
+        // If you want full tool support, use Google Gemini API directly instead
+        if (modelProvider === 'OpenRouter') {
+          shouldDisableTools = true;
+        }
+        
         if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
           const lastSystemMessage = messages[messages.length - 1];
           const toolCalls = lastSystemMessage.parts.filter(

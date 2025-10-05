@@ -30,6 +30,17 @@ export function hasApiKeySet(
       return !!apiKey.openrouter?.trim();
     case 'gemini-2.5-pro':
       return !!apiKey.google?.trim();
+    case 'qwen-coder':
+    case 'qwen-2.5-coder-32b':
+    case 'gemini-2.0-flash-exp':
+    case 'deepseek-coder':
+    case 'llama-3.3-70b':
+    case 'codestral-latest':
+    case 'nemotron-nano-9b-v2':
+    case 'kimi-k2':
+    case 'devstral-small-2505':
+    case 'mai-ds-r1':
+      return !!apiKey.openrouter?.trim();
     default: {
       const _exhaustiveCheck: never = modelSelection;
       return false;
