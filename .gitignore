@@ -1,7 +1,7 @@
+# Convex generated files
+convex/_generated/
+_generated/
 /_generated
-/convex
-convex
-_generated
 .cursorignore
 .cursor
 /.cursor
