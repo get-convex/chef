@@ -27,7 +27,7 @@ const applicationTables = {
         productId: v.id("products"),
         quantity: v.number(),
         priceAtPurchase: v.number(),
-      })
+      }),
     ),
     total: v.number(),
     status: v.string(), // 'pending', 'paid', 'shipped'

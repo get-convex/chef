@@ -32,7 +32,9 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
   return (
     <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow bg-white">
       <img
-        src={product.image || "https://via.placeholder.com/300x200?text=Product"}
+        src={
+          product.image || "https://via.placeholder.com/300x200?text=Product"
+        }
         alt={product.title}
         className="h-48 w-full object-cover rounded mb-3"
       />

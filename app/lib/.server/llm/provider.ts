@@ -20,7 +20,7 @@ export type ModelProvider = Exclude<ProviderType, 'Unknown'>;
 
 /**
  * RETRY LOGIC FOR RATE LIMITS
- * 
+ *
  * All API calls now automatically retry on rate limit errors (429, RESOURCE_EXHAUSTED, etc.)
  * with exponential backoff:
  * - Max 3 retries
@@ -40,36 +40,36 @@ async function retryWithExponentialBackoff<T>(
   baseDelay: number = 30000, // 30 seconds
 ): Promise<T> {
   let lastError: Error;
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
     } catch (error: any) {
       lastError = error;
-      
+
       // Check if this is a rate limit error (429 or RESOURCE_EXHAUSTED)
-      const isRateLimitError = 
+      const isRateLimitError =
         error.message?.includes('rate limiting') ||
         error.message?.includes('429') ||
         error.message?.includes('RESOURCE_EXHAUSTED') ||
         error.message?.includes('quota') ||
         error.message?.includes('limit') ||
         error.message?.includes('overloaded');
-      
+
       // If it's not a rate limit error or we've exhausted retries, throw immediately
       if (!isRateLimitError || attempt === maxRetries) {
         throw error;
       }
-      
+
       // Try to extract retry delay from error message (some APIs include this)
       let delay = baseDelay * Math.pow(2, attempt);
-      
+
       // Check if the error contains a retry-after hint
       const retryAfterMatch = error.message?.match(/retry.*?(\d+)\s*(?:seconds?|minutes?|hours?)/i);
       if (retryAfterMatch) {
         const retryAfterValue = parseInt(retryAfterMatch[1]);
         const retryAfterUnit = retryAfterMatch[0].toLowerCase();
-        
+
         if (retryAfterUnit.includes('hour')) {
           delay = retryAfterValue * 60 * 60 * 1000;
         } else if (retryAfterUnit.includes('minute')) {
@@ -77,17 +77,17 @@ async function retryWithExponentialBackoff<T>(
         } else {
           delay = retryAfterValue * 1000;
         }
-        
+
         logger.info(`${provider} API suggested retry delay: ${delay}ms`);
       }
-      
+
       logger.warn(`${provider} rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
-      
+
       // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
-  
+
   throw lastError!;
 }
 type Provider = {
@@ -313,7 +313,7 @@ export function getProvider(
 
 /**
  * Creates a fetch function with automatic retry logic for rate limit errors.
- * 
+ *
  * Features:
  * - Detects 429, RESOURCE_EXHAUSTED, and quota/limit errors
  * - Retries up to 3 times with exponential backoff (30s, 60s, 120s)
@@ -324,7 +324,7 @@ const createRetryFetch = (provider: ModelProvider) => {
   return async (input: RequestInfo | URL, init?: RequestInit) => {
     return await retryWithExponentialBackoff(async () => {
       const result = await fetch(input, init);
-      
+
       if (result.status === 401) {
         const text = await result.text();
         throw new Error(JSON.stringify({ error: 'Invalid API key', details: text }));
@@ -372,7 +372,7 @@ const createRetryFetch = (provider: ModelProvider) => {
 
 /**
  * Creates a fetch function with automatic retry logic for rate limit errors.
- * 
+ *
  * Features:
  * - Detects 429, RESOURCE_EXHAUSTED, and quota/limit errors
  * - Retries up to 3 times with exponential backoff (30s, 60s, 120s)

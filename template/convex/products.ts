@@ -36,7 +36,10 @@ export const createProduct = mutation({
         .unique()
     )?.role;
     if (role !== "admin") throw new Error("Forbidden");
-    return await ctx.db.insert("products", { ...product, createdAt: Date.now() });
+    return await ctx.db.insert("products", {
+      ...product,
+      createdAt: Date.now(),
+    });
   },
 });
 

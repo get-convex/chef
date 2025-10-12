@@ -23,9 +23,7 @@ export function OrdersPage() {
           <div key={order._id} className="border rounded-lg p-6 bg-white">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-sm text-secondary">
-                  Order ID: {order._id}
-                </p>
+                <p className="text-sm text-secondary">Order ID: {order._id}</p>
                 <p className="text-sm text-secondary">
                   Placed: {new Date(order.createdAt).toLocaleDateString()}
                 </p>
@@ -39,8 +37,8 @@ export function OrdersPage() {
                     order.status === "pending"
                       ? "bg-yellow-100 text-yellow-800"
                       : order.status === "paid"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-blue-100 text-blue-800"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-blue-100 text-blue-800"
                   }`}
                 >
                   {order.status}

@@ -186,7 +186,9 @@ export function AdminDashboard() {
               >
                 <div className="flex-1">
                   <h3 className="font-semibold">{product.title}</h3>
-                  <p className="text-sm text-secondary">{product.description}</p>
+                  <p className="text-sm text-secondary">
+                    {product.description}
+                  </p>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
@@ -197,7 +199,7 @@ export function AdminDashboard() {
                       onChange={(e) =>
                         handleUpdatePrice(
                           product._id,
-                          parseFloat(e.target.value)
+                          parseFloat(e.target.value),
                         )
                       }
                       className="w-20 px-2 py-1 border rounded"
@@ -222,7 +224,9 @@ export function AdminDashboard() {
             <div key={order._id} className="p-6 border rounded bg-white">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <p className="text-sm text-secondary">Order ID: {order._id}</p>
+                  <p className="text-sm text-secondary">
+                    Order ID: {order._id}
+                  </p>
                   <p className="text-sm text-secondary">
                     Customer: {order.userId}
                   </p>

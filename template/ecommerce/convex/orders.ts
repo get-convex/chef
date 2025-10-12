@@ -22,7 +22,7 @@ export const placeOrder = mutation({
         productId: v.id("products"),
         quantity: v.number(),
         priceAtPurchase: v.number(),
-      })
+      }),
     ),
     total: v.number(),
   },

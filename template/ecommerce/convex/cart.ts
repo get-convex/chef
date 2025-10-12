@@ -23,7 +23,7 @@ export const addToCart = mutation({
     const existing = await ctx.db
       .query("cart")
       .withIndex("by_user_and_product", (q) =>
-        q.eq("userId", userId).eq("productId", productId)
+        q.eq("userId", userId).eq("productId", productId),
       )
       .unique();
     if (existing) {

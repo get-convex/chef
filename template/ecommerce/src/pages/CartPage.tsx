@@ -16,7 +16,7 @@ export function CartPage({ setCurrentPage }: CartPageProps) {
 
   // Fetch product details for each cart item
   const productQueries = cart.map((item) =>
-    useQuery(api.products.getProduct, { id: item.productId })
+    useQuery(api.products.getProduct, { id: item.productId }),
   );
 
   const cartWithProducts = cart.map((item, idx) => ({
@@ -26,7 +26,7 @@ export function CartPage({ setCurrentPage }: CartPageProps) {
 
   const total = cartWithProducts.reduce(
     (sum, item) => sum + (item.product?.price ?? 0) * item.quantity,
-    0
+    0,
   );
 
   const handleRemove = async (id: string) => {
@@ -103,9 +103,7 @@ export function CartPage({ setCurrentPage }: CartPageProps) {
                 className="w-24 h-24 object-cover rounded"
               />
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">
-                  {item.product?.title}
-                </h3>
+                <h3 className="font-semibold text-lg">{item.product?.title}</h3>
                 <p className="text-secondary text-sm mb-2">
                   {item.product?.description}
                 </p>

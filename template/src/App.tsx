@@ -12,7 +12,8 @@ import type { Id } from "../convex/_generated/dataModel";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<string>("home");
-  const [selectedProductId, setSelectedProductId] = useState<Id<"products"> | null>(null);
+  const [selectedProductId, setSelectedProductId] =
+    useState<Id<"products"> | null>(null);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -25,12 +26,14 @@ export default function App() {
               setSelectedProductId={setSelectedProductId}
             />
           )}
-          {currentPage === "cart" && <CartPage setCurrentPage={setCurrentPage} />}
+          {currentPage === "cart" && (
+            <CartPage setCurrentPage={setCurrentPage} />
+          )}
           {currentPage === "orders" && <OrdersPage />}
           {currentPage === "admin" && <AdminDashboard />}
         </main>
       </Authenticated>
-      
+
       <Unauthenticated>
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="w-full max-w-md mx-auto">
@@ -39,14 +42,16 @@ export default function App() {
                 <h1 className="text-5xl font-bold text-primary mb-4">
                   🛒 Chef Store
                 </h1>
-                <p className="text-xl text-secondary">Sign in to start shopping</p>
+                <p className="text-xl text-secondary">
+                  Sign in to start shopping
+                </p>
               </div>
               <SignInForm />
             </div>
           </div>
         </div>
       </Unauthenticated>
-      
+
       <Toaster />
     </div>
   );

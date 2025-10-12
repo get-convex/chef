@@ -8,7 +8,10 @@ interface HomePageProps {
   setSelectedProductId: (id: Id<"products"> | null) => void;
 }
 
-export function HomePage({ setCurrentPage, setSelectedProductId }: HomePageProps) {
+export function HomePage({
+  setCurrentPage,
+  setSelectedProductId,
+}: HomePageProps) {
   const products = useQuery(api.products.listProducts) ?? [];
 
   const handleViewDetails = (productId: Id<"products">) => {

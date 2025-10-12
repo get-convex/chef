@@ -195,7 +195,10 @@ export const Chat = memo(
 
         // Map models to their respective providers
         const MODEL_TO_PROVIDER_MAP: {
-          [K in ModelSelection]: { providerName: ModelProvider; apiKeyField: 'value' | 'openai' | 'xai' | 'google' | 'openrouter' };
+          [K in ModelSelection]: {
+            providerName: ModelProvider;
+            apiKeyField: 'value' | 'openai' | 'xai' | 'google' | 'openrouter';
+          };
         } = {
           auto: { providerName: 'anthropic', apiKeyField: 'value' },
           'claude-4-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
@@ -372,13 +375,13 @@ export const Chat = memo(
           throw new Error(`Unknown model: ${_exhaustiveCheck}`);
         }
         let shouldDisableTools = false;
-        
+
         // Disable tools for ALL OpenRouter free models (most don't support tool use)
         // If you want full tool support, use Google Gemini API directly instead
         if (modelProvider === 'OpenRouter') {
           shouldDisableTools = true;
         }
-        
+
         if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
           const lastSystemMessage = messages[messages.length - 1];
           const toolCalls = lastSystemMessage.parts.filter(

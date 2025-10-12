@@ -8,7 +8,7 @@ A complete e-commerce application template built with Vite, React, and Convex.
 - **Shopping Cart**: Add/remove items, update quantities, and checkout
 - **Order Management**: View order history and track order status
 - **Role-Based Access Control**: User and admin roles
-- **Admin Dashboard**: 
+- **Admin Dashboard**:
   - Create, update, and delete products
   - View and manage all orders
   - Update order status (pending, paid, shipped)
@@ -55,11 +55,12 @@ After registering and signing in:
 
 ```javascript
 // In browser console
-const { useMutation } = await import('convex/react');
+const { useMutation } = await import("convex/react");
 // Or call it via the Convex dashboard
 ```
 
 Alternatively, use the Convex dashboard to run:
+
 ```
 npx convex run roles:seedMyAdmin
 ```
@@ -79,12 +80,14 @@ This grants admin privileges to your current user account.
 ## Roles & Permissions
 
 ### User Role (default)
+
 - Browse products
 - Add items to cart
 - Place orders
 - View own orders
 
 ### Admin Role
+
 - All user permissions
 - Create, update, and delete products
 - View all orders
@@ -129,6 +132,7 @@ template/ecommerce/
 ### Adding Products
 
 As an admin, use the Admin Dashboard to:
+
 1. Navigate to "Manage Products"
 2. Fill in product details (title, description, price, stock, image URL)
 3. Click "Create Product"
@@ -136,6 +140,7 @@ As an admin, use the Admin Dashboard to:
 ### Styling
 
 The app uses TailwindCSS with custom theme colors defined in `tailwind.config.js`:
+
 - Primary: Indigo (#4F46E5)
 - Secondary: Gray (#6B7280)
 - Accent: Purple (#8B5CF6)
@@ -153,6 +158,7 @@ Modify these in `tailwind.config.js` to match your brand.
 ## Deployment
 
 When deployed via Chef, the app is automatically configured with:
+
 - Convex backend deployment
 - Environment variables
 - Authentication setup
@@ -162,6 +168,7 @@ For manual deployment, follow the [Convex deployment guide](https://docs.convex.
 ## Support
 
 For issues or questions:
+
 - [Convex Documentation](https://docs.convex.dev)
 - [Chef Documentation](https://chef.convex.dev)
 
