@@ -62,7 +62,14 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     modelProvider: ModelProvider;
     modelChoice: string | undefined;
     userApiKey:
-      | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string; openrouter?: string }
+      | {
+          preference: 'always' | 'quotaExhausted';
+          value?: string;
+          openai?: string;
+          xai?: string;
+          google?: string;
+          openrouter?: string;
+        }
       | undefined;
     shouldDisableTools: boolean;
     recordRawPromptsForDebugging?: boolean;
@@ -225,7 +232,14 @@ export async function chatAction({ request }: ActionFunctionArgs) {
 // Returns whether or not the user has an API key set for a given provider
 function hasApiKeySetForProvider(
   userApiKey:
-    | { preference: 'always' | 'quotaExhausted'; value?: string; openai?: string; xai?: string; google?: string; openrouter?: string }
+    | {
+        preference: 'always' | 'quotaExhausted';
+        value?: string;
+        openai?: string;
+        xai?: string;
+        google?: string;
+        openrouter?: string;
+      }
     | undefined,
   provider: ModelProvider,
 ) {

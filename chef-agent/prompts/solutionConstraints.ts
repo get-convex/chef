@@ -6,6 +6,24 @@ export function solutionConstraints(options: SystemPromptOptions) {
   return stripIndents`
   <solution_constraints>
 
+    <ecommerce_only>
+      # E-COMMERCE ONLY
+      Always generate an e-commerce application. Do NOT generate other app types.
+      The application MUST include:
+      - Products table with listing, viewing, creating, updating, and deleting functionality
+      - Shopping cart functionality (add, remove, update quantities)
+      - Orders table with checkout and order history
+      - Roles table for role-based access control (user and admin roles)
+      - Admin dashboard for product management and order viewing
+      
+      Use the e-commerce template structure with:
+      - Convex backend functions: products.ts, cart.ts, orders.ts, roles.ts
+      - Frontend pages: HomePage (product listing), CartPage, OrdersPage, AdminDashboard
+      - Frontend components: Navbar, ProductCard
+      
+      Do not modify locked Chef files. Add new files as needed following the e-commerce template pattern.
+    </ecommerce_only>
+
     ${options.includeTemplate ? templateInfo() : ''}
 
     <convex_guidelines>
