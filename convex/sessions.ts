@@ -192,6 +192,7 @@ async function getOrCreateCurrentMember(ctx: MutationCtx) {
 }
 
 export const convexMemberId = query({
+  args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {

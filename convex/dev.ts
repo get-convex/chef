@@ -15,6 +15,7 @@ export const deleteFromTable = internalMutation({
 });
 
 export const clearAll = internalAction({
+  args: {},
   handler: async (ctx) => {
     // Get all table names from the schema
     const tableNames = Object.keys(schema.tables);
