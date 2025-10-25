@@ -1,0 +1,122 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const sqlite3 = require('sqlite3').verbose();
+
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({ secret: 'secret123', resave: false, saveUninitialized: true }));
+
+// قاعدة بيانات SQLite
+const db = new sqlite3.Database(':memory:'); // مؤقت، احفظ البيانات لاحقاً في ملف
+
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    national_id TEXT UNIQUE,
+    password TEXT,
+    role TEXT,
+    salary REAL DEFAULT 0
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    type TEXT,
+    description TEXT,
+    status TEXT DEFAULT 'pending',
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )`);
+
+  // إضافة مدير افتراضي
+  db.run(`INSERT INTO users(national_id,password,role,salary) VALUES('0001','admin','manager',0)`);
+});
+
+// صفحة تسجيل الدخول
+app.get('/', (req,res) => {
+  res.send(`
+    <h2>تسجيل الدخول</h2>
+    <form action="/login" method="post">
+      <input name="national_id" placeholder="رقم الهويه"><br>
+      <input name="password" placeholder="كلمة المرور" type="password"><br>
+      <button>دخول</button>
+    </form>
+  `);
+});
+
+// تسجيل الدخول
+app.post('/login', (req,res) => {
+  const { national_id, password } = req.body;
+  db.get(`SELECT * FROM users WHERE national_id=? AND password=?`, [national_id,password], (err,user) => {
+    if(user){
+      req.session.user = user;
+      res.redirect(user.role==='manager'?'/manager':'/dashboard');
+    }else res.send('رقم الهويه أو كلمة المرور خاطئة');
+  });
+});
+
+// صفحة الموظف
+app.get('/dashboard', (req,res)=>{
+  if(!req.session.user || req.session.user.role==='manager') return res.redirect('/');
+  res.send(`
+    <h2>مرحباً ${req.session.user.national_id}</h2>
+    <p>الراتب: ${req.session.user.salary} ريال</p>
+
+    <h3>إرسال طلب</h3>
+    <form action="/request" method="post">
+      <select name="type">
+        <option value="help">طلب مساعدة</option>
+        <option value="promotion">طلب ترقيه</option>
+      </select><br>
+      <input name="description" placeholder="الوصف"><br>
+      <button>ارسال</button>
+    </form>
+  `);
+});
+
+// إرسال الطلب
+app.post('/request', (req,res)=>{
+  const { type, description } = req.body;
+  db.run(`INSERT INTO requests(user_id,type,description) VALUES(?,?,?)`,
+    [req.session.user.id, type, description], ()=> res.redirect('/dashboard'));
+});
+
+// صفحة المدير
+app.get('/manager', (req,res)=>{
+  if(!req.session.user || req.session.user.role!=='manager') return res.send('غير مسموح');
+  
+  db.all(`SELECT r.id, u.national_id, r.type, r.description, r.status FROM requests r JOIN users u ON r.user_id=u.id`, [], (err, requests)=>{
+    let html = '<h2>صفحة المدير</h2>';
+    
+    // إضافة موظف
+    html += `<h3>اضافة موظف</h3>
+    <form action="/add-user" method="post">
+      <input name="national_id" placeholder="رقم الهويه"><br>
+      <input name="password" placeholder="كلمة المرور" type="password"><br>
+      <input name="salary" placeholder="الراتب"><br>
+      <button>إضافة</button>
+    </form>`;
+
+    html += '<h3>الطلبات</h3><ul>';
+    requests.forEach(r => {
+      html += `<li>${r.national_id} - ${r.type} - ${r.description} - ${r.status} 
+               <a href="/approve/${r.id}">اعتماد</a></li>`;
+    });
+    html += '</ul>';
+    res.send(html);
+  });
+});
+
+// إضافة موظف
+app.post('/add-user', (req,res)=>{
+  const { national_id, password, salary } = req.body;
+  db.run(`INSERT INTO users(national_id,password,role,salary) VALUES(?,?,?,?)`,
+    [national_id,password,'employee',salary], ()=> res.redirect('/manager'));
+});
+
+// اعتماد الطلب
+app.get('/approve/:id', (req,res)=>{
+  db.run(`UPDATE requests SET status='approved' WHERE id=?`, [req.params.id], ()=> res.redirect('/manager'));
+});
+
+app.listen(3000, ()=>console.log('Server running on http://localhost:3000'));
