@@ -1,16 +1,15 @@
 export const SUGGESTIONS = [
   {
     title: 'E-Commerce Store',
-    prompt: `Build a fully-featured online store with product listing, shopping cart, checkout, order management, and admin dashboard. Include the following features:
-
-- Product catalog with search and filtering
-- Shopping cart with add/remove items and quantity updates
-- Checkout process that creates orders
-- User order history
-- Admin dashboard for product management (create, update, delete)
-- Admin dashboard for viewing and managing all orders
-- Role-based access control (user and admin roles)
-- Real-time updates for product availability and order status`,
+    prompt: `I want to customize the e-commerce store. Can you show me what's already implemented and help me make some changes?`,
+  },
+  {
+    title: 'Product Categories',
+    prompt: `Add product categories to the e-commerce store so products can be organized and filtered by category.`,
+  },
+  {
+    title: 'Product Search',
+    prompt: `Add a search feature to the product listing page so users can search for products by name or description.`,
   },
 ];
 
@@ -24,8 +23,13 @@ export const PREWARM_PATHS = [
   `${WORK_DIR}/convex/cart.ts`,
   `${WORK_DIR}/convex/orders.ts`,
   `${WORK_DIR}/convex/roles.ts`,
+  `${WORK_DIR}/convex/router.ts`,
   `${WORK_DIR}/src/App.tsx`,
   `${WORK_DIR}/src/pages/HomePage.tsx`,
+  `${WORK_DIR}/src/pages/CartPage.tsx`,
+  `${WORK_DIR}/src/pages/OrdersPage.tsx`,
+  `${WORK_DIR}/src/pages/AdminDashboard.tsx`,
+  `${WORK_DIR}/src/components/Navbar.tsx`,
   `${WORK_DIR}/src/components/ProductCard.tsx`,
   `${WORK_DIR}/src/index.css`,
 ];
