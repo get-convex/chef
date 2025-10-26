@@ -1,9 +1,14 @@
 # Chef E-Commerce Template - Quick Reference
 
-## ✅ Problem Fixed
+## ✅ Problems Fixed
 
-**Before:** Agent created e-commerce files from scratch  
-**After:** Agent recognizes and edits existing template files
+**Problem 1 - Agent Behavior:** Agent created e-commerce files from scratch  
+**Solution:** Regenerated snapshot and updated system prompts  
+**Status:** ✅ Fixed
+
+**Problem 2 - Duplicate Files:** Convex build errors due to duplicate files in `template/ecommerce/`  
+**Solution:** Removed duplicate `template/ecommerce/` folder  
+**Status:** ✅ Fixed
 
 ## 🔧 What Was Changed
 
@@ -190,8 +195,14 @@ chefSetLogLevel('debug')  // More detailed logs
 
 ✅ **New snapshot created:**
 ```bash
-ls -lh public/template-snapshot-885ee88c.bin
-# Should show ~177KB file
+ls -lh public/template-snapshot-202a6ff0.bin
+# Should show ~133KB file (reduced from 177KB)
+```
+
+✅ **No duplicate files:**
+```bash
+ls template/ecommerce
+# Should show: directory does not exist
 ```
 
 ✅ **Agent uses view tool:**
@@ -250,7 +261,8 @@ node make-bootstrap-snapshot.js
 ---
 
 **Status:** ✅ Fixed  
-**Snapshot:** template-snapshot-885ee88c.bin (177KB)  
+**Snapshot:** template-snapshot-202a6ff0.bin (133KB)  
+**Files in Snapshot:** 40  
 **Files Prewarmed:** 15  
 **Files Locked:** 7  
 **Last Updated:** October 27, 2025
