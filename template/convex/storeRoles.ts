@@ -46,6 +46,7 @@ export const assignRole = mutation({
 /**
  * Utility: seed initial admin role for the current auth user.
  * Call once from the web UI after creating an account, or run from your admin console.
+ * This allows new users to assign themselves as admin during signup.
  */
 export const seedMyAdmin = mutation({
   handler: async (ctx) => {
@@ -55,7 +56,34 @@ export const seedMyAdmin = mutation({
       .query("roles")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .unique();
+    // If user already has a role, don't change it
     if (existing) return existing;
+    // Otherwise, assign admin role
     return await ctx.db.insert("roles", { userId, role: "admin" });
+  },
+});
+
+/**
+ * Allow users to set their initial role during first login.
+ * Can only be called once - if a role already exists, it won't change.
+ */
+export const setInitialRole = mutation({
+  args: { role: v.string() },
+  handler: async (ctx, { role }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    
+    // Check if user already has a role
+    const existing = await ctx.db
+      .query("roles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+    
+    // Only set role if it doesn't exist yet
+    if (existing) return existing;
+    
+    // Validate role
+    const validRole = role === "admin" ? "admin" : "user";
+    return await ctx.db.insert("roles", { userId, role: validRole });
   },
 });
