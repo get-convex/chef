@@ -1,5 +1,5 @@
 import { auth } from "./auth";
-import router from "./storeRouter";
+import router from "./router";
 
 const http = router;
 

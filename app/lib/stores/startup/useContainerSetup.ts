@@ -23,7 +23,7 @@ import { chatSyncState } from './chatSyncState';
 import { FILE_EVENTS_DEBOUNCE_MS } from '~/lib/stores/files';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 
-const TEMPLATE_URL = '/template-snapshot-a72bdec1.bin';
+const TEMPLATE_URL = '/template-snapshot-fbfada58.bin';
 
 export function useNewChatContainerSetup() {
   const convex = useConvex();
@@ -82,6 +82,20 @@ async function setupContainer(
 
   const container = await webcontainer;
   await container.mount(decompressed);
+
+  // Clean up Convex build cache directories to prevent stale bundler state
+  try {
+    await container.fs.rm('.convex', { recursive: true, force: true });
+    console.log('Cleaned up .convex directory');
+  } catch (error) {
+    // Directory might not exist, which is fine
+  }
+  try {
+    await container.fs.rm('node_modules/.convex', { recursive: true, force: true });
+    console.log('Cleaned up node_modules/.convex directory');
+  } catch (error) {
+    // Directory might not exist, which is fine
+  }
 
   // After loading the snapshot, we need to load the files into the FilesStore since
   // we won't receive file events for snapshot files.

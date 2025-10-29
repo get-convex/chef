@@ -23,7 +23,7 @@ export const PREWARM_PATHS = [
   `${WORK_DIR}/convex/storeCart.ts`,
   `${WORK_DIR}/convex/storeOrders.ts`,
   `${WORK_DIR}/convex/storeRoles.ts`,
-  `${WORK_DIR}/convex/storeRouter.ts`,
+  `${WORK_DIR}/convex/router.ts`,
   `${WORK_DIR}/src/App.tsx`,
   `${WORK_DIR}/src/pages/HomePage.tsx`,
   `${WORK_DIR}/src/pages/CartPage.tsx`,
@@ -38,6 +38,7 @@ export const PREWARM_PATHS = [
 export const EXCLUDED_FILE_PATHS = [
   'convex/auth.ts',
   'convex/http.ts',
+  'convex/router.ts',
   'src/main.tsx',
   'src/SignInForm.tsx',
   'src/SignOutButton.tsx',
