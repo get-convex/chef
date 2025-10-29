@@ -180,6 +180,18 @@ function toolsInstructions(options: SystemPromptOptions) {
 
       If the deploy tool fails, do NOT overly apologize, be sycophantic, or repeatedly say the same message. Instead,
       SUCCINCTLY explain the issue and how you intend to fix it in one sentence.
+
+      CRITICAL: Do NOT call the deploy tool multiple times in a row unless:
+      1. The previous deploy explicitly failed with an error message, OR
+      2. The user has explicitly asked you to deploy again, OR
+      3. You have made NEW code changes that need to be deployed
+
+      If the user says they cannot see the preview, DO NOT redeploy. Instead, tell them to:
+      1. Check if a preview tab/window is already open
+      2. Look for the preview iframe in the workbench
+      3. Wait a few seconds for the preview to load
+      
+      Only redeploy if there is an actual deployment error, not just because the user hasn't seen the preview yet.
     </deploy_tool>
 
     <npmInstall_tool>
