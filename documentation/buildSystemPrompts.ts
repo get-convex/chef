@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { writeFileSync } from 'fs';
-import { ROLE_SYSTEM_PROMPT, generalSystemPrompt } from './chef-agent/prompts/system.js';
-import type { SystemPromptOptions } from './chef-agent/types.js';
+import { ROLE_SYSTEM_PROMPT, generalSystemPrompt } from '../chef-agent/prompts/system.js';
+import type { SystemPromptOptions } from '../chef-agent/types.js';
 
 console.log('Building chef system prompts release...');
 
