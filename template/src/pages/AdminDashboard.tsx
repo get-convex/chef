@@ -4,13 +4,13 @@ import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 
 export function AdminDashboard() {
-  const role = useQuery(api.roles.getMyRole);
-  const products = useQuery(api.products.listProducts) ?? [];
-  const orders = useQuery(api.orders.listAllOrders) ?? [];
-  const createProduct = useMutation(api.products.createProduct);
-  const updateProduct = useMutation(api.products.updateProduct);
-  const deleteProduct = useMutation(api.products.deleteProduct);
-  const updateOrderStatus = useMutation(api.orders.updateOrderStatus);
+  const role = useQuery(api.storeRoles.getMyRole);
+  const products = useQuery(api.storeProducts.listProducts) ?? [];
+  const orders = useQuery(api.storeOrders.listAllOrders) ?? [];
+  const createProduct = useMutation(api.storeProducts.createProduct);
+  const updateProduct = useMutation(api.storeProducts.updateProduct);
+  const deleteProduct = useMutation(api.storeProducts.deleteProduct);
+  const updateOrderStatus = useMutation(api.storeOrders.updateOrderStatus);
 
   const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
   const [newProduct, setNewProduct] = useState({

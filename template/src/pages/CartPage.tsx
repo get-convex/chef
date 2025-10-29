@@ -8,15 +8,15 @@ interface CartPageProps {
 }
 
 export function CartPage({ setCurrentPage }: CartPageProps) {
-  const cart = useQuery(api.cart.getCart) ?? [];
-  const removeFromCart = useMutation(api.cart.removeFromCart);
-  const updateCartItem = useMutation(api.cart.updateCartItem);
-  const placeOrder = useMutation(api.orders.placeOrder);
+  const cart = useQuery(api.storeCart.getCart) ?? [];
+  const removeFromCart = useMutation(api.storeCart.removeFromCart);
+  const updateCartItem = useMutation(api.storeCart.updateCartItem);
+  const placeOrder = useMutation(api.storeOrders.placeOrder);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   // Fetch product details for each cart item
   const productQueries = cart.map((item) =>
-    useQuery(api.products.getProduct, { id: item.productId }),
+    useQuery(api.storeProducts.getProduct, { id: item.productId }),
   );
 
   const cartWithProducts = cart.map((item, idx) => ({

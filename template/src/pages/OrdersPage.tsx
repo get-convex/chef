@@ -2,7 +2,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 export function OrdersPage() {
-  const orders = useQuery(api.orders.listOrdersForUser) ?? [];
+  const orders = useQuery(api.storeOrders.listOrdersForUser) ?? [];
 
   if (orders.length === 0) {
     return (

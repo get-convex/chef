@@ -15,11 +15,11 @@ export function solutionConstraints(options: SystemPromptOptions) {
       
       **Backend (convex/):**
       - convex/schema.ts - Database schema with products, cart, orders, roles tables (ALREADY EXISTS)
-      - convex/products.ts - Product CRUD operations (ALREADY EXISTS)
-      - convex/cart.ts - Shopping cart operations (ALREADY EXISTS)
-      - convex/orders.ts - Order management (ALREADY EXISTS)
-      - convex/roles.ts - Role-based access control (ALREADY EXISTS)
-      - convex/router.ts - HTTP router (ALREADY EXISTS)
+      - convex/storeProducts.ts - Product CRUD operations (ALREADY EXISTS)
+      - convex/storeCart.ts - Shopping cart operations (ALREADY EXISTS)
+      - convex/storeOrders.ts - Order management (ALREADY EXISTS)
+      - convex/storeRoles.ts - Role-based access control (ALREADY EXISTS)
+      - convex/storeRouter.ts - HTTP router (ALREADY EXISTS)
       - convex/auth.ts - Auth configuration (LOCKED - DO NOT MODIFY)
       - convex/http.ts - HTTP handlers (LOCKED - DO NOT MODIFY)
       

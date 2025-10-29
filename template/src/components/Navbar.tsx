@@ -9,8 +9,8 @@ interface NavbarProps {
 
 export function Navbar({ currentPage, setCurrentPage }: NavbarProps) {
   const loggedInUser = useQuery(api.auth.loggedInUser);
-  const role = useQuery(api.roles.getMyRole);
-  const cart = useQuery(api.cart.getCart) ?? [];
+  const role = useQuery(api.storeRoles.getMyRole);
+  const cart = useQuery(api.storeCart.getCart) ?? [];
 
   return (
     <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b shadow-sm">

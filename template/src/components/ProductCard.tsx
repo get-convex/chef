@@ -18,7 +18,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onViewDetails }: ProductCardProps) {
-  const addToCart = useMutation(api.cart.addToCart);
+  const addToCart = useMutation(api.storeCart.addToCart);
 
   const handleAddToCart = async () => {
     try {

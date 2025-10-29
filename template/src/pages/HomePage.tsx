@@ -12,7 +12,7 @@ export function HomePage({
   setCurrentPage,
   setSelectedProductId,
 }: HomePageProps) {
-  const products = useQuery(api.products.listProducts) ?? [];
+  const products = useQuery(api.storeProducts.listProducts) ?? [];
 
   const handleViewDetails = (productId: Id<"products">) => {
     setSelectedProductId(productId);
