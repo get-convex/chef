@@ -9,76 +9,92 @@ interface NavbarProps {
 
 export function Navbar({ currentPage, setCurrentPage }: NavbarProps) {
   const loggedInUser = useQuery(api.auth.loggedInUser);
-  const role = useQuery(api.roles.getMyRole);
-  const cart = useQuery(api.cart.getCart) ?? [];
+  const role = useQuery(api.storeRoles.getMyRole);
+  const cart = useQuery(api.storeCart.getCart) ?? [];
 
   return (
-    <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b shadow-sm">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-6">
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
+      <div className="container mx-auto px-6 py-4">
+        <div className="flex justify-between items-center">
+          {/* Logo */}
           <button
             onClick={() => setCurrentPage("home")}
-            className="text-2xl font-bold text-primary hover:text-primary-hover"
+            className="flex items-center gap-3 group"
           >
-            🛒 Chef Store
+            <span className="text-3xl group-hover:scale-110 transition-transform">🛒</span>
+            <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Chef Store
+            </span>
           </button>
-          <nav className="flex gap-4">
+
+          {/* Navigation */}
+          <nav className="flex items-center gap-2">
             <button
               onClick={() => setCurrentPage("home")}
-              className={`px-3 py-2 rounded ${
+              className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${
                 currentPage === "home"
-                  ? "bg-primary text-white"
-                  : "text-secondary hover:text-primary"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-700 hover:bg-gray-100"
               }`}
             >
-              Shop
+              🏠 Home
             </button>
             <button
               onClick={() => setCurrentPage("cart")}
-              className={`px-3 py-2 rounded flex items-center gap-2 ${
+              className={`px-5 py-2.5 rounded-lg font-semibold transition-all relative ${
                 currentPage === "cart"
-                  ? "bg-primary text-white"
-                  : "text-secondary hover:text-primary"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-700 hover:bg-gray-100"
               }`}
             >
-              Cart
+              🛒 Cart
               {cart.length > 0 && (
-                <span className="bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg animate-pulse">
                   {cart.length}
                 </span>
               )}
             </button>
             <button
               onClick={() => setCurrentPage("orders")}
-              className={`px-3 py-2 rounded ${
+              className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${
                 currentPage === "orders"
-                  ? "bg-primary text-white"
-                  : "text-secondary hover:text-primary"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-700 hover:bg-gray-100"
               }`}
             >
-              My Orders
+              📦 Orders
             </button>
             {role === "admin" && (
               <button
                 onClick={() => setCurrentPage("admin")}
-                className={`px-3 py-2 rounded ${
+                className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${
                   currentPage === "admin"
-                    ? "bg-primary text-white"
-                    : "text-secondary hover:text-primary"
+                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
+                    : "text-gray-700 hover:bg-gray-100 border border-amber-300"
                 }`}
               >
-                Admin Dashboard
+                👨‍💼 Admin
               </button>
             )}
           </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          {loggedInUser && (
-            <span className="text-sm text-secondary">
-              {loggedInUser.email || "Guest"}
-            </span>
-          )}
-          <SignOutButton />
+
+          {/* User Info */}
+          <div className="flex items-center gap-4">
+            {loggedInUser && (
+              <div className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg">
+                <span className="text-xl">👤</span>
+                <span className="text-sm font-medium text-gray-700">
+                  {loggedInUser.email || "Guest"}
+                </span>
+                {role === "admin" && (
+                  <span className="ml-2 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    ADMIN
+                  </span>
+                )}
+              </div>
+            )}
+            <SignOutButton />
+          </div>
         </div>
       </div>
     </header>

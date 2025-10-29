@@ -4,13 +4,13 @@ import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 
 export function AdminDashboard() {
-  const role = useQuery(api.roles.getMyRole);
-  const products = useQuery(api.products.listProducts) ?? [];
-  const orders = useQuery(api.orders.listAllOrders) ?? [];
-  const createProduct = useMutation(api.products.createProduct);
-  const updateProduct = useMutation(api.products.updateProduct);
-  const deleteProduct = useMutation(api.products.deleteProduct);
-  const updateOrderStatus = useMutation(api.orders.updateOrderStatus);
+  const role = useQuery(api.storeRoles.getMyRole);
+  const products = useQuery(api.storeProducts.listProducts) ?? [];
+  const orders = useQuery(api.storeOrders.listAllOrders) ?? [];
+  const createProduct = useMutation(api.storeProducts.createProduct);
+  const updateProduct = useMutation(api.storeProducts.updateProduct);
+  const deleteProduct = useMutation(api.storeProducts.deleteProduct);
+  const updateOrderStatus = useMutation(api.storeOrders.updateOrderStatus);
 
   const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
   const [newProduct, setNewProduct] = useState({
@@ -23,12 +23,18 @@ export function AdminDashboard() {
 
   if (role !== "admin") {
     return (
-      <main className="container mx-auto p-8">
-        <div className="text-center py-12">
-          <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
-          <p className="text-secondary">
-            You don't have permission to access this page.
-          </p>
+      <main className="flex-1 bg-gradient-to-br from-red-50 to-orange-50">
+        <div className="container mx-auto px-8 py-20">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="bg-white rounded-3xl shadow-xl p-16 border border-red-100">
+              <div className="text-8xl mb-6">🚫</div>
+              <h1 className="text-4xl font-bold mb-4 text-gray-900">Access Denied</h1>
+              <p className="text-gray-600 text-lg">
+                You don't have permission to access the admin dashboard.
+                This area is restricted to administrators only.
+              </p>
+            </div>
+          </div>
         </div>
       </main>
     );
@@ -79,83 +85,58 @@ export function AdminDashboard() {
   };
 
   return (
-    <main className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+    <main className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="container mx-auto px-8 py-12">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-4xl">👨‍💼</span>
+            <h1 className="text-4xl font-bold text-gray-900">Admin Dashboard</h1>
+          </div>
+          <p className="text-gray-600">Manage your store, products, and orders</p>
+        </div>
 
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => setActiveTab("products")}
-          className={`px-6 py-3 rounded font-semibold ${
-            activeTab === "products"
-              ? "bg-primary text-white"
-              : "bg-gray-200 text-secondary hover:bg-gray-300"
-          }`}
-        >
-          Manage Products
-        </button>
-        <button
-          onClick={() => setActiveTab("orders")}
-          className={`px-6 py-3 rounded font-semibold ${
-            activeTab === "orders"
-              ? "bg-primary text-white"
-              : "bg-gray-200 text-secondary hover:bg-gray-300"
-          }`}
-        >
-          View Orders
-        </button>
-      </div>
+        {/* Tab Navigation */}
+        <div className="flex gap-4 mb-8">
+          <button
+            onClick={() => setActiveTab("products")}
+            className={`px-8 py-4 rounded-xl font-bold transition-all ${
+              activeTab === "products"
+                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+            }`}
+          >
+            📦 Manage Products
+          </button>
+          <button
+            onClick={() => setActiveTab("orders")}
+            className={`px-8 py-4 rounded-xl font-bold transition-all ${
+              activeTab === "orders"
+                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+            }`}
+          >
+            📋 View Orders
+          </button>
+        </div>
 
       {activeTab === "products" ? (
         <div>
-          <div className="bg-white p-6 rounded-lg border mb-6">
-            <h2 className="text-xl font-bold mb-4">Create New Product</h2>
-            <form onSubmit={handleCreateProduct} className="space-y-4">
-              <input
-                type="text"
-                placeholder="Product Title"
-                value={newProduct.title}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, title: e.target.value })
-                }
-                className="w-full px-4 py-2 border rounded"
-                required
-              />
-              <textarea
-                placeholder="Description"
-                value={newProduct.description}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, description: e.target.value })
-                }
-                className="w-full px-4 py-2 border rounded"
-                rows={3}
-                required
-              />
-              <div className="grid grid-cols-3 gap-4">
+          {/* Create Product Form */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 mb-8">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-2">
+              <span>➕</span> Create New Product
+            </h2>
+            <form onSubmit={handleCreateProduct} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <input
-                  type="number"
-                  placeholder="Price"
-                  value={newProduct.price}
+                  type="text"
+                  placeholder="Product Title"
+                  value={newProduct.title}
                   onChange={(e) =>
-                    setNewProduct({
-                      ...newProduct,
-                      price: parseFloat(e.target.value),
-                    })
+                    setNewProduct({ ...newProduct, title: e.target.value })
                   }
-                  className="px-4 py-2 border rounded"
-                  step="0.01"
-                  required
-                />
-                <input
-                  type="number"
-                  placeholder="Stock"
-                  value={newProduct.stock}
-                  onChange={(e) =>
-                    setNewProduct({
-                      ...newProduct,
-                      stock: parseInt(e.target.value),
-                    })
-                  }
-                  className="px-4 py-2 border rounded"
+                  className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
                   required
                 />
                 <input
@@ -165,34 +146,81 @@ export function AdminDashboard() {
                   onChange={(e) =>
                     setNewProduct({ ...newProduct, image: e.target.value })
                   }
-                  className="px-4 py-2 border rounded"
+                  className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
                 />
+              </div>
+              <textarea
+                placeholder="Product Description"
+                value={newProduct.description}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, description: e.target.value })
+                }
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                rows={3}
+                required
+              />
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Price ($)</label>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={newProduct.price}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        price: parseFloat(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Stock Quantity</label>
+                  <input
+                    type="number"
+                    placeholder="10"
+                    value={newProduct.stock}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        stock: parseInt(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                    required
+                  />
+                </div>
               </div>
               <button
                 type="submit"
-                className="px-6 py-3 bg-primary text-white rounded hover:bg-primary-hover"
+                className="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 Create Product
               </button>
             </form>
           </div>
 
+          {/* Products List */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">All Products</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">📦 All Products ({products.length})</h2>
             {products.map((product) => (
               <div
                 key={product._id}
-                className="flex justify-between items-center p-4 border rounded bg-white"
+                className="flex justify-between items-center p-6 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100"
               >
                 <div className="flex-1">
-                  <h3 className="font-semibold">{product.title}</h3>
-                  <p className="text-sm text-secondary">
+                  <h3 className="font-bold text-xl text-gray-900 mb-1">{product.title}</h3>
+                  <p className="text-gray-600 text-sm">
                     {product.description}
                   </p>
+                  <p className="text-sm text-gray-500 mt-2">Stock: {product.stock || 0} units</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm">$</span>
+                    <span className="text-lg font-semibold text-gray-700">$</span>
                     <input
                       type="number"
                       value={product.price}
@@ -202,15 +230,15 @@ export function AdminDashboard() {
                           parseFloat(e.target.value),
                         )
                       }
-                      className="w-20 px-2 py-1 border rounded"
+                      className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 outline-none font-bold text-gray-900"
                       step="0.01"
                     />
                   </div>
                   <button
                     onClick={() => handleDeleteProduct(product._id)}
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                    className="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
                   >
-                    Delete
+                    🗑️ Delete
                   </button>
                 </div>
               </div>
@@ -218,50 +246,63 @@ export function AdminDashboard() {
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold">All Orders</h2>
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">📋 All Orders ({orders.length})</h2>
           {orders.map((order) => (
-            <div key={order._id} className="p-6 border rounded bg-white">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <p className="text-sm text-secondary">
-                    Order ID: {order._id}
+            <div key={order._id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-8 border border-gray-100">
+              <div className="flex justify-between items-start mb-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-gray-500">ORDER ID</span>
+                    <span className="text-sm text-gray-600 font-mono bg-gray-50 px-3 py-1 rounded-lg">
+                      {order._id.slice(-8).toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="text-gray-600">
+                    <span className="font-semibold">Customer:</span> {order.userId.slice(-8)}
                   </p>
-                  <p className="text-sm text-secondary">
-                    Customer: {order.userId}
-                  </p>
-                  <p className="text-sm text-secondary">
-                    Date: {new Date(order.createdAt).toLocaleString()}
+                  <p className="text-gray-600">
+                    <span className="font-semibold">Date:</span> {new Date(order.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold">${order.total.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-indigo-600 mb-3">${order.total.toFixed(2)}</p>
                   <select
                     value={order.status}
                     onChange={(e) =>
                       handleUpdateOrderStatus(order._id, e.target.value)
                     }
-                    className="mt-2 px-3 py-1 border rounded"
+                    className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-indigo-500 outline-none font-semibold text-gray-700"
                   >
-                    <option value="pending">Pending</option>
-                    <option value="paid">Paid</option>
-                    <option value="shipped">Shipped</option>
+                    <option value="pending">⌛ Pending</option>
+                    <option value="paid">✅ Paid</option>
+                    <option value="shipped">🚚 Shipped</option>
                   </select>
                 </div>
               </div>
-              <div>
-                <h4 className="font-semibold mb-2">Items:</h4>
-                {order.items.map((item, idx) => (
-                  <p key={idx} className="text-sm">
-                    {item.productId} - Quantity: {item.quantity} - $
-                    {item.priceAtPurchase.toFixed(2)}
-                  </p>
-                ))}
+              <div className="bg-gray-50 rounded-xl p-6">
+                <h4 className="font-bold mb-4 text-gray-900 text-lg">Order Items</h4>
+                <div className="space-y-2">
+                  {order.items.map((item, idx) => (
+                    <div key={idx} className="bg-white rounded-lg p-4 border border-gray-100 flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-indigo-100 text-indigo-600 font-bold px-3 py-2 rounded-lg">
+                          x{item.quantity}
+                        </div>
+                        <span className="font-medium text-gray-700">{item.productId.slice(-8)}</span>
+                      </div>
+                      <span className="font-bold text-gray-900">
+                        ${item.priceAtPurchase.toFixed(2)} each
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
+      </div>
     </main>
   );
 }

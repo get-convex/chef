@@ -7,17 +7,25 @@ export function SignInForm() {
   const { signIn } = useAuthActions();
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [submitting, setSubmitting] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<"customer" | "admin">("customer");
 
   return (
     <div className="w-full">
       <form
         className="flex flex-col gap-form-field"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           setSubmitting(true);
           const formData = new FormData(e.target as HTMLFormElement);
           formData.set("flow", flow);
-          void signIn("password", formData).catch((error) => {
+          try {
+            await signIn("password", formData);
+            // Role will be assigned on first load via App.tsx
+            if (flow === "signUp") {
+              // Store the selected role in localStorage for the App to pick up
+              localStorage.setItem("pendingRole", selectedRole === "admin" ? "admin" : "user");
+            }
+          } catch (error: any) {
             let toastTitle = "";
             if (error.message.includes("Invalid password")) {
               toastTitle = "Invalid password. Please try again.";
@@ -29,7 +37,7 @@ export function SignInForm() {
             }
             toast.error(toastTitle);
             setSubmitting(false);
-          });
+          }
         }}
       >
         <input
@@ -46,6 +54,41 @@ export function SignInForm() {
           placeholder="Password"
           required
         />
+        {flow === "signUp" && (
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700">
+              I want to sign up as:
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedRole("customer")}
+                className={`px-4 py-3 rounded-lg border-2 transition-all ${
+                  selectedRole === "customer"
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <div className="text-2xl mb-1">🛍️</div>
+                <div className="font-semibold text-sm">Customer</div>
+                <div className="text-xs text-secondary mt-1">Shop & buy products</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRole("admin")}
+                className={`px-4 py-3 rounded-lg border-2 transition-all ${
+                  selectedRole === "admin"
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <div className="text-2xl mb-1">👨‍💼</div>
+                <div className="font-semibold text-sm">Admin</div>
+                <div className="text-xs text-secondary mt-1">Manage store</div>
+              </button>
+            </div>
+          </div>
+        )}
         <button className="auth-button" type="submit" disabled={submitting}>
           {flow === "signIn" ? "Sign in" : "Sign up"}
         </button>

@@ -1,11 +1,17 @@
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "module": "ESNext",
+    "target": "ESNext",
     "lib": ["ES2021"],
-    "types": ["node"],
+    "module": "ESNext",
     "moduleResolution": "Bundler",
-    "skipLibCheck": true
+    "types": ["node"],
+    "skipLibCheck": true,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "noEmit": true
   },
-  "include": ["."]
+  "include": ["."],
+  "exclude": ["../*"]
 }

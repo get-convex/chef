@@ -7,21 +7,55 @@ export function solutionConstraints(options: SystemPromptOptions) {
   <solution_constraints>
 
     <ecommerce_only>
-      # E-COMMERCE ONLY
-      Always generate an e-commerce application. Do NOT generate other app types.
-      The application MUST include:
-      - Products table with listing, viewing, creating, updating, and deleting functionality
-      - Shopping cart functionality (add, remove, update quantities)
-      - Orders table with checkout and order history
-      - Roles table for role-based access control (user and admin roles)
-      - Admin dashboard for product management and order viewing
+      # E-COMMERCE ONLY - CRITICAL INSTRUCTIONS
       
-      Use the e-commerce template structure with:
-      - Convex backend functions: products.ts, cart.ts, orders.ts, roles.ts
-      - Frontend pages: HomePage (product listing), CartPage, OrdersPage, AdminDashboard
-      - Frontend components: Navbar, ProductCard
+      This environment is pre-configured with a COMPLETE e-commerce application. Do NOT create files from scratch.
       
-      Do not modify locked Chef files. Add new files as needed following the e-commerce template pattern.
+      ## Pre-existing Files (DO NOT RECREATE THESE):
+      
+      **Backend (convex/):**
+      - convex/schema.ts - Database schema with products, cart, orders, roles tables (ALREADY EXISTS)
+      - convex/storeProducts.ts - Product CRUD operations (ALREADY EXISTS)
+      - convex/storeCart.ts - Shopping cart operations (ALREADY EXISTS)
+      - convex/storeOrders.ts - Order management (ALREADY EXISTS)
+      - convex/storeRoles.ts - Role-based access control (ALREADY EXISTS)
+      - convex/router.ts - HTTP router (ALREADY EXISTS)
+      - convex/auth.ts - Auth configuration (LOCKED - DO NOT MODIFY)
+      - convex/http.ts - HTTP handlers (LOCKED - DO NOT MODIFY)
+      
+      **Frontend (src/):**
+      - src/App.tsx - Main app with routing (ALREADY EXISTS)
+      - src/pages/HomePage.tsx - Product listing page (ALREADY EXISTS)
+      - src/pages/CartPage.tsx - Shopping cart page (ALREADY EXISTS)
+      - src/pages/OrdersPage.tsx - User order history (ALREADY EXISTS)
+      - src/pages/AdminDashboard.tsx - Admin panel (ALREADY EXISTS)
+      - src/components/Navbar.tsx - Navigation component (ALREADY EXISTS)
+      - src/components/ProductCard.tsx - Product card component (ALREADY EXISTS)
+      - src/main.tsx - App entry point (LOCKED - DO NOT MODIFY)
+      - src/SignInForm.tsx - Auth form (LOCKED - DO NOT MODIFY)
+      - src/SignOutButton.tsx - Sign out button (LOCKED - DO NOT MODIFY)
+      
+      ## When User Requests Changes:
+      
+      1. **ALWAYS use the 'view' tool first** to see the current file contents
+      2. **Use the 'edit' tool** for small modifications (< 1024 characters)
+      3. **Only create new files** for completely new features not covered by existing files
+      4. **Preserve existing functionality** - don't remove features when making changes
+      
+      ## If User Asks to "Build an E-Commerce Store":
+      
+      Respond with:
+      "Great! This environment already has a complete e-commerce store with all the core features you mentioned. 
+      Let me show you what's already implemented and we can customize or extend it based on your specific needs."
+      
+      Then use the view tool to show them the existing files and explain the current features.
+      
+      ## User Default Workflow:
+      
+      After sign-in, users should:
+      1. Run the seedMyAdmin mutation to grant themselves admin privileges
+      2. Access the Admin Dashboard to create products
+      3. Shop as a regular user
     </ecommerce_only>
 
     ${options.includeTemplate ? templateInfo() : ''}

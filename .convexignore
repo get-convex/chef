@@ -1,0 +1,27 @@
+# Exclude template directory from Convex deployment
+template/
+template/**
+
+# Exclude test directories
+test-kitchen/
+chefshot/
+chef-agent/
+
+# Exclude build artifacts
+dist/
+build/
+.cache/
+
+# Exclude documentation
+*.md
+docs/
+
+# Exclude IDE and editor files
+.vscode/
+.idea/
+.cursor/
+
+# Exclude logs
+logs/
+*.log
+
