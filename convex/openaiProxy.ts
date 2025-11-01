@@ -99,6 +99,7 @@ export const openaiProxy = httpAction(async (ctx, req) => {
 });
 
 export const issueOpenAIToken = mutation({
+  args: {},
   handler: async (ctx) => {
     if (!openaiProxyEnabled()) {
       return null;

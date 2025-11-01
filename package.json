@@ -59,7 +59,7 @@
     "@codemirror/view": "^6.35.0",
     "@convex-dev/ai-sdk-google": "1.2.17",
     "@convex-dev/design-system": "0.1.11",
-    "@convex-dev/eslint-plugin": "0.0.1-alpha.4",
+    "@convex-dev/eslint-plugin": "^1.0.0",
     "@convex-dev/migrations": "^0.2.8",
     "@convex-dev/rate-limiter": "^0.2.9",
     "@convex-dev/workos": "^0.0.1",

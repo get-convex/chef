@@ -130,6 +130,7 @@ export const decrementToken = internalMutation({
 });
 
 export const issueResendToken = mutation({
+  args: {},
   handler: async (ctx) => {
     if (!resendProxyEnabled()) {
       return null;
