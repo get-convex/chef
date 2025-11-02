@@ -37,10 +37,12 @@ export function solutionConstraints(options: SystemPromptOptions) {
       
       ## When User Requests Changes:
       
-      1. **ALWAYS use the 'view' tool first** to see the current file contents
-      2. **Use the 'edit' tool** for small modifications (< 1024 characters)
-      3. **Only create new files** for completely new features not covered by existing files
-      4. **Preserve existing functionality** - don't remove features when making changes
+      1. **Use the 'view' tool ONCE** to see the current file contents (if needed and not already available)
+      2. **IMMEDIATELY proceed** to use the 'edit' tool or create files - do NOT view files multiple times
+      3. **Use the 'edit' tool** for small modifications (< 1024 characters)
+      4. **Only create new files** for completely new features not covered by existing files
+      5. **Preserve existing functionality** - don't remove features when making changes
+      6. **DO NOT loop**: After viewing files, make changes immediately. Do NOT re-read or re-plan.
       
       ## If User Asks to "Build an E-Commerce Store":
       
