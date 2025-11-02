@@ -34,40 +34,52 @@ export class PreviewsStore {
   async #init() {
     const webcontainer = await this.#webcontainer;
 
-    // Listen for server ready events
-    webcontainer.on('server-ready', (port, url) => {
-      console.log('[Preview] Server ready on port:', port, url);
-    });
-
-    // Listen for port events
-    webcontainer.on('port', (port, type, url) => {
+    // Helper function to add/update a preview
+    const addOrUpdatePreview = (port: number, url: string, ready: boolean = true) => {
       if (this.#proxies.has(port)) {
-        if (type === 'open') {
+        if (ready) {
           this.#proxies.get(port)?.start({ proxyUrl: url });
         }
         return;
       }
 
       let previewInfo = this.#availablePreviews.get(port);
-
-      if (type === 'close' && previewInfo) {
-        this.#availablePreviews.delete(port);
-        this.previews.set(this.previews.get().filter((preview) => preview.port !== port));
-        return;
-      }
-
       const previews = this.previews.get();
 
       if (!previewInfo) {
-        previewInfo = { port, ready: type === 'open', baseUrl: url, iframe: null };
+        previewInfo = { port, ready, baseUrl: url, iframe: null };
         this.#availablePreviews.set(port, previewInfo);
         previews.push(previewInfo);
+      } else {
+        previewInfo.ready = ready;
+        previewInfo.baseUrl = url;
       }
 
-      previewInfo.ready = type === 'open';
-      previewInfo.baseUrl = url;
-
       this.previews.set([...previews]);
+    };
+
+    // Listen for server ready events - also add preview if port event hasn't fired
+    webcontainer.on('server-ready', (port, url) => {
+      console.log('[Preview] Server ready on port:', port, url);
+      // Always add/update preview from server-ready event
+      // This ensures previews appear even if port event doesn't fire
+      addOrUpdatePreview(port, url, true);
+      console.log('[Preview] Added preview for port', port, 'Total previews:', this.previews.get().length);
+    });
+
+    // Listen for port events
+    webcontainer.on('port', (port, type, url) => {
+      if (type === 'close') {
+        const previewInfo = this.#availablePreviews.get(port);
+        if (previewInfo) {
+          this.#availablePreviews.delete(port);
+          this.previews.set(this.previews.get().filter((preview) => preview.port !== port));
+        }
+        return;
+      }
+
+      // type === 'open'
+      addOrUpdatePreview(port, url, true);
     });
   }
 

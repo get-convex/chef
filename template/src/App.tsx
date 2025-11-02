@@ -6,6 +6,7 @@ import { HomePage } from "./pages/HomePage";
 import { CartPage } from "./pages/CartPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { ProductsPage } from "./pages/ProductsPage";
 import { Toaster } from "sonner";
 import { useState, useEffect } from "react";
 
@@ -17,7 +18,7 @@ export default function App() {
 
   // Handle role assignment for new users
   useEffect(() => {
-    if (currentUser && !userRole) {
+    if (currentUser && (userRole === "user" || userRole === null)) {
       const pendingRole = localStorage.getItem("pendingRole");
       if (pendingRole) {
         setInitialRole({ role: pendingRole }).catch(console.error);
@@ -33,6 +34,9 @@ export default function App() {
         <main className="flex-1">
           {currentPage === "home" && (
             <HomePage setCurrentPage={setCurrentPage} />
+          )}
+          {currentPage === "products" && (
+            <ProductsPage setCurrentPage={setCurrentPage} />
           )}
           {currentPage === "cart" && (
             <CartPage setCurrentPage={setCurrentPage} />

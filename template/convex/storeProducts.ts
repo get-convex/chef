@@ -2,10 +2,34 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+/** Generate upload URL for product images */
+export const generateUploadUrl = mutation({
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 /** List all products (public) */
 export const listProducts = query({
   handler: async (ctx) => {
-    return await ctx.db.query("products").collect();
+    const products = await ctx.db.query("products").collect();
+    return Promise.all(
+      products.map(async (product) => {
+        // If image is a storage ID (starts with specific format or check if it's a valid storage ID pattern)
+        // For now, we'll check if it looks like a URL. If not, assume it might be a storage ID
+        let imageUrl = product.image;
+        if (imageUrl && !imageUrl.startsWith("http") && !imageUrl.startsWith("https")) {
+          // Try to get URL from storage
+          try {
+            const url = await ctx.storage.getUrl(imageUrl as any);
+            if (url) imageUrl = url;
+          } catch {
+            // If it fails, keep the original value
+          }
+        }
+        return { ...product, image: imageUrl };
+      }),
+    );
   },
 });
 
@@ -13,7 +37,19 @@ export const listProducts = query({
 export const getProduct = query({
   args: { id: v.id("products") },
   handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+    const product = await ctx.db.get(id);
+    if (!product) return null;
+    // Resolve storage ID to URL if needed
+    let imageUrl = product.image;
+    if (imageUrl && !imageUrl.startsWith("http") && !imageUrl.startsWith("https")) {
+      try {
+        const url = await ctx.storage.getUrl(imageUrl as any);
+        if (url) imageUrl = url;
+      } catch {
+        // If it fails, keep the original value
+      }
+    }
+    return { ...product, image: imageUrl };
   },
 });
 

@@ -30,22 +30,36 @@ async function main() {
   console.log(`Writing snapshot (${compressed.length} bytes) to ${filename}...`);
   await fs.writeFile(`public/${filename}`, compressed);
 
-  // Update TEMPLATE_URL in useContainerSetup.ts
-  console.log('Updating TEMPLATE_URL in useContainerSetup.ts...');
+  // Update DEFAULT_TEMPLATE_URL in useContainerSetup.ts (fallback value)
+  console.log('Updating DEFAULT_TEMPLATE_URL in useContainerSetup.ts...');
   const setupFilePath = 'app/lib/stores/startup/useContainerSetup.ts';
   let setupFileContent = await fs.readFile(setupFilePath, 'utf8');
+  // Update the DEFAULT_TEMPLATE_URL constant
   setupFileContent = setupFileContent.replace(
-    /const TEMPLATE_URL = ['"]\/template-snapshot-[a-f0-9]+\.bin['"];/,
-    `const TEMPLATE_URL = '/${filename}';`,
+    /const DEFAULT_TEMPLATE_URL = ['"]\/template-snapshot-[a-f0-9]+\.bin['"];/,
+    `const DEFAULT_TEMPLATE_URL = '/${filename}';`,
   );
   await fs.writeFile(setupFilePath, setupFileContent);
+  console.log(`Updated DEFAULT_TEMPLATE_URL to ${filename}`);
+
+  // Write manifest file for runtime lookup
+  const manifestPath = 'public/template-snapshot-manifest.json';
+  const manifest = {
+    latest: filename,
+    timestamp: new Date().toISOString(),
+    sha256: sha256,
+  };
+  await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
+  console.log(`Wrote manifest to ${manifestPath}`);
 
   console.log('Done!');
 }
 
 async function getSnapshotFiles(dir) {
   try {
-    const { stdout } = await exec('git ls-files', {
+    // Use git ls-files with -c flag to include cached/staged files
+    // This ensures newly added files are included even if not yet committed
+    const { stdout } = await exec('git ls-files -c', {
       cwd: dir,
       encoding: 'utf8',
     });
@@ -56,6 +70,25 @@ async function getSnapshotFiles(dir) {
       .trim()
       .split('\n')
       .filter((file) => file.length > 0);
+    
+    // Also check for staged files explicitly
+    const { stdout: stagedStdout } = await exec('git diff --cached --name-only', {
+      cwd: dir,
+      encoding: 'utf8',
+    });
+    if (stagedStdout) {
+      const stagedFiles = stagedStdout
+        .trim()
+        .split('\n')
+        .filter((file) => file.length > 0 && existsSync(path.join(dir, file)));
+      // Add staged files that aren't already in the list
+      stagedFiles.forEach((file) => {
+        if (!unignoredFiles.includes(file)) {
+          unignoredFiles.push(file);
+        }
+      });
+    }
+    
     const packageLockFile = 'package-lock.json';
     if (!existsSync(path.join(dir, packageLockFile))) {
       throw new Error('package-lock.json not found');

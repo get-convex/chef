@@ -1,6 +1,7 @@
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { SignOutButton } from "../SignOutButton";
+import { toast } from "sonner";
 
 interface NavbarProps {
   currentPage: string;
@@ -11,6 +12,7 @@ export function Navbar({ currentPage, setCurrentPage }: NavbarProps) {
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const role = useQuery(api.storeRoles.getMyRole);
   const cart = useQuery(api.storeCart.getCart) ?? [];
+  const seedMyAdmin = useMutation(api.storeRoles.seedMyAdmin);
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
@@ -38,6 +40,16 @@ export function Navbar({ currentPage, setCurrentPage }: NavbarProps) {
               }`}
             >
               🏠 Home
+            </button>
+            <button
+              onClick={() => setCurrentPage("products")}
+              className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${
+                currentPage === "products"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              🛍️ Products
             </button>
             <button
               onClick={() => setCurrentPage("cart")}
@@ -92,6 +104,21 @@ export function Navbar({ currentPage, setCurrentPage }: NavbarProps) {
                   </span>
                 )}
               </div>
+            )}
+            {loggedInUser && role !== "admin" && (
+              <button
+                onClick={async () => {
+                  try {
+                    await seedMyAdmin();
+                    toast.success("You are now an admin!");
+                  } catch (error: any) {
+                    toast.error(error.message || "Failed to become admin");
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors"
+              >
+                Become Admin
+              </button>
             )}
             <SignOutButton />
           </div>

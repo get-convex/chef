@@ -277,6 +277,15 @@ function preciseToolInstructions() {
 
       CRITICAL: Always use the view tool first to see the exact content of the file before using the edit tool.
       This ensures you can provide the exact text to replace.
+      
+      ABSOLUTELY CRITICAL - NO HTML ENTITIES IN CODE:
+      When using the edit tool, NEVER use HTML entities like \`&amp;\`, \`&lt;\`, or \`&gt;\` in your code strings.
+      ALWAYS use actual JavaScript/TypeScript operators: \`&&\`, \`<\`, \`>\`, \`<=\`, \`>=\`
+      - WRONG: \`if (user &amp;&amp; role)\` ❌
+      - CORRECT: \`if (user && role)\` ✅
+      - WRONG: \`if (value &lt; 10)\` ❌  
+      - CORRECT: \`if (value < 10)\` ✅
+      HTML entities will cause syntax errors and break the code.
     </edit_tool>
   `;
 }

@@ -104,7 +104,7 @@ export function HomePage({ setCurrentPage }: HomePageProps) {
             Browse our collection and find exactly what you're looking for.
           </p>
           <button
-            onClick={() => setCurrentPage("cart")}
+            onClick={() => setCurrentPage("products")}
             className="px-10 py-5 bg-white text-indigo-600 rounded-xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-2xl hover:shadow-3xl transform hover:-translate-y-1"
           >
             Explore Products →
