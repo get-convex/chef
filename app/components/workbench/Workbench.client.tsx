@@ -81,9 +81,13 @@ export const Workbench = memo(function Workbench({
 
   useEffect(() => {
     if (hasPreview) {
+      // Ensure workbench is visible when preview becomes available
+      if (!showWorkbench) {
+        workbenchStore.showWorkbench.set(true);
+      }
       setSelectedView('preview');
     }
-  }, [hasPreview]);
+  }, [hasPreview, showWorkbench]);
 
   useEffect(() => {
     workbenchStore.setDocuments(files);

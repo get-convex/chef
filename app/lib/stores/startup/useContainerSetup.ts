@@ -23,7 +23,32 @@ import { chatSyncState } from './chatSyncState';
 import { FILE_EVENTS_DEBOUNCE_MS } from '~/lib/stores/files';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 
-const TEMPLATE_URL = '/template-snapshot-a219b1b0.bin';
+// This will be updated by make-bootstrap-snapshot.js, but we also try to load from manifest
+// to ensure we always use the latest snapshot
+const DEFAULT_TEMPLATE_URL = '/template-snapshot-0932d55c.bin';
+
+// Function to get the latest template URL (loads from manifest if available)
+async function getTemplateUrl(): Promise<string> {
+  if (typeof window === 'undefined') {
+    return DEFAULT_TEMPLATE_URL;
+  }
+  
+  try {
+    const resp = await fetch('/template-snapshot-manifest.json');
+    if (resp.ok) {
+      const manifest = await resp.json();
+      if (manifest?.latest) {
+        console.log(`Loaded latest template snapshot from manifest: ${manifest.latest}`);
+        return `/${manifest.latest}`;
+      }
+    }
+  } catch (error) {
+    // Manifest doesn't exist or failed to load, use hardcoded value
+    console.log(`Manifest not available, using default template snapshot: ${DEFAULT_TEMPLATE_URL}`);
+  }
+  
+  return DEFAULT_TEMPLATE_URL;
+}
 
 export function useNewChatContainerSetup() {
   const convex = useConvex();
@@ -31,7 +56,8 @@ export function useNewChatContainerSetup() {
     const runSetup = async () => {
       try {
         await waitForBootStepCompleted(ContainerBootState.STARTING);
-        await setupContainer(convex, { snapshotUrl: TEMPLATE_URL, allowNpmInstallFailure: false });
+        const snapshotUrl = await getTemplateUrl();
+        await setupContainer(convex, { snapshotUrl, allowNpmInstallFailure: false });
       } catch (error: any) {
         toast.error('Failed to setup Chef environment. Try reloading the page.');
         setContainerBootState(ContainerBootState.ERROR, error);
@@ -57,7 +83,7 @@ export function useExistingChatContainerSetup(loadedChatId: string | undefined) 
         let snapshotUrl = await convex.query(api.snapshot.getSnapshotUrl, { chatId: loadedChatId, sessionId });
         if (!snapshotUrl) {
           console.warn(`Existing chat ${loadedChatId} has no snapshot. Loading the base template.`);
-          snapshotUrl = TEMPLATE_URL;
+          snapshotUrl = await getTemplateUrl();
         }
         await setupContainer(convex, { snapshotUrl, allowNpmInstallFailure: true });
       } catch (error: any) {
