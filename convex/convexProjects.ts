@@ -274,7 +274,9 @@ async function _connectConvexProjectForMember(
     const text = await response.text();
     const defaultProvisioningError = new ConvexError({
       code: "ProvisioningError",
-      message: `Failed to create project: ${response.status}`,
+      message: text.includes("SSORequired")
+        ? "You must log in with Single Sign-on to access this team."
+        : `Failed to create project: ${response.status}`,
       details: text,
     });
     if (response.status !== 400) {
@@ -327,7 +329,9 @@ async function _connectConvexProjectForMember(
     const text = await projectDeployKeyResponse.text();
     throw new ConvexError({
       code: "ProvisioningError",
-      message: `Failed to create project deploy key: ${projectDeployKeyResponse.status}`,
+      message: text.includes("SSORequired")
+        ? "You must log in with Single Sign-on to access this team."
+        : `Failed to create project deploy key: ${projectDeployKeyResponse.status}`,
       details: text,
     });
   }
