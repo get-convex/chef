@@ -643,6 +643,8 @@ async function tryDeleteProject(args: {
       const error = JSON.parse(text);
       if (error.code === "TeamNotFound") {
         return { kind: "error", error: `Team not found: ${teamSlug}` };
+      } else if (error.code === "SSORequired") {
+        return { kind: "error", error: `You must log in with Single Sign-on to access this team.` };
       }
       return { kind: "error", error: `Failed to fetch team projects: ${projectsResponse.statusText} ${text}` };
     } catch (_e) {
@@ -663,7 +665,12 @@ async function tryDeleteProject(args: {
 
     if (!response.ok) {
       const text = await response.text();
-      return { kind: "error", error: `Failed to delete project: ${response.statusText} ${text}` };
+      return {
+        kind: "error",
+        error: text.includes("SSORequired")
+          ? `You must log in with Single Sign-on to delete this project.`
+          : `Failed to delete project: ${response.statusText} ${text}`,
+      };
     }
   }
 
