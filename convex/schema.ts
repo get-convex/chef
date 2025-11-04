@@ -40,6 +40,7 @@ export default defineSchema({
     apiKey: v.optional(apiKeyValidator),
     convexMemberId: v.optional(v.string()),
     softDeletedForWorkOSMerge: v.optional(v.boolean()),
+    isDeletedAccount: v.optional(v.boolean()),
     // Not authoritative, just a cache of the user's profile from WorkOS/provision host.
     cachedProfile: v.optional(
       v.object({
@@ -51,7 +52,8 @@ export default defineSchema({
     ),
   })
     .index("byTokenIdentifier", ["tokenIdentifier"])
-    .index("byConvexMemberId", ["convexMemberId", "softDeletedForWorkOSMerge"]),
+    .index("byConvexMemberId", ["convexMemberId", "softDeletedForWorkOSMerge"])
+    .index("byIsDeletedAccount", ["isDeletedAccount"]),
 
   /*
    * Admin status means being on the convex team on the provision host.
@@ -115,7 +117,9 @@ export default defineSchema({
     teamSlug: v.string(),
     memberId: v.optional(v.id("convexMembers")),
     projectDeployKey: v.string(),
-  }).index("bySlugs", ["teamSlug", "projectSlug"]),
+  })
+    .index("bySlugs", ["teamSlug", "projectSlug"])
+    .index("byMemberId", ["memberId"]),
   chatMessagesStorageState: defineTable({
     chatId: v.id("chats"),
     storageId: v.union(v.id("_storage"), v.null()),

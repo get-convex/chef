@@ -10,4 +10,8 @@ crons.daily(
   { forReal: true, shouldScheduleNext: true, daysInactive: 14 },
 );
 
+crons.(
+  "delete inactive users and chats"
+)
+
 export default crons;
