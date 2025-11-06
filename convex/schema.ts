@@ -76,6 +76,7 @@ export default defineSchema({
     initialId: v.string(),
     urlId: v.optional(v.string()),
     description: v.optional(v.string()),
+    customSystemPrompt: v.optional(v.string()),
     timestamp: v.string(),
     metadata: v.optional(v.any()), // TODO migration to remove this column
     snapshotId: v.optional(v.id("_storage")),

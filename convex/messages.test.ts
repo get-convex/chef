@@ -157,6 +157,28 @@ describe("messages", () => {
     await expect(
       t.mutation(api.messages.setDescription, { sessionId, id: chatId, description: "test" }),
     ).rejects.toThrow();
+    await expect(
+      t.mutation(api.messages.setCustomSystemPrompt, { sessionId, id: chatId, customSystemPrompt: "Prompt" }),
+    ).rejects.toThrow();
+  });
+
+  test("set custom system prompt", async () => {
+    const { sessionId, chatId } = await createChat(t);
+
+    const prompt = "Use concise language.";
+    await t.mutation(api.messages.setCustomSystemPrompt, { sessionId, id: chatId, customSystemPrompt: prompt });
+
+    const chatWithPrompt = await t.query(api.messages.get, { sessionId, id: chatId });
+    expect(chatWithPrompt?.customSystemPrompt).toBe(prompt);
+
+    await t.mutation(api.messages.setCustomSystemPrompt, { sessionId, id: chatId, customSystemPrompt: null });
+    const chatWithoutPrompt = await t.query(api.messages.get, { sessionId, id: chatId });
+    expect(chatWithoutPrompt?.customSystemPrompt).toBeUndefined();
+
+    const tooLongPrompt = "a".repeat(2001);
+    await expect(
+      t.mutation(api.messages.setCustomSystemPrompt, { sessionId, id: chatId, customSystemPrompt: tooLongPrompt }),
+    ).rejects.toThrow("Custom system prompt must be at most 2000 characters long");
   });
 
   test("store chat without snapshot", async () => {

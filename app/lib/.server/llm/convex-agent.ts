@@ -58,6 +58,7 @@ export async function convexAgent(args: {
   featureFlags: {
     enableResend: boolean;
   };
+  customSystemPrompt?: string;
 }) {
   const {
     chatInitialId,
@@ -73,6 +74,7 @@ export async function convexAgent(args: {
     collapsedMessages,
     promptCharacterCounts,
     featureFlags,
+    customSystemPrompt,
   } = args;
   console.debug('Starting agent with model provider', modelProvider);
   if (userApiKey) {
@@ -111,8 +113,17 @@ export async function convexAgent(args: {
       role: 'system' as const,
       content: generalSystemPrompt(opts),
     },
-    ...cleanupAssistantMessages(messages),
   ];
+
+  const trimmedCustomPrompt = customSystemPrompt?.trim();
+  if (trimmedCustomPrompt) {
+    messagesForDataStream.push({
+      role: 'system' as const,
+      content: trimmedCustomPrompt,
+    });
+  }
+
+  messagesForDataStream.push(...cleanupAssistantMessages(messages));
 
   if (modelProvider === 'Bedrock') {
     messagesForDataStream[messagesForDataStream.length - 1].providerOptions = {

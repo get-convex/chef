@@ -23,6 +23,8 @@ export type SerializedMessage = Omit<AIMessage, "createdAt" | "content"> & {
 
 export const CHAT_NOT_FOUND_ERROR = new ConvexError({ code: "NotFound", message: "Chat not found" });
 
+const MAX_CUSTOM_SYSTEM_PROMPT_LENGTH = 2000;
+
 export const initializeChat = mutation({
   args: {
     sessionId: v.id("sessions"),
@@ -102,6 +104,36 @@ export const setDescription = mutation({
   },
 });
 
+export const setCustomSystemPrompt = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    id: v.string(),
+    customSystemPrompt: v.union(v.string(), v.null()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { id, customSystemPrompt } = args;
+    const existing = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId: args.sessionId });
+
+    if (!existing) {
+      throw CHAT_NOT_FOUND_ERROR;
+    }
+
+    const normalizedPrompt = customSystemPrompt === null ? "" : customSystemPrompt.trim();
+
+    if (normalizedPrompt.length > MAX_CUSTOM_SYSTEM_PROMPT_LENGTH) {
+      throw new ConvexError({
+        code: "InvalidArgument",
+        message: `Custom system prompt must be at most ${MAX_CUSTOM_SYSTEM_PROMPT_LENGTH} characters long`,
+      });
+    }
+
+    await ctx.db.patch(existing._id, {
+      customSystemPrompt: normalizedPrompt.length > 0 ? normalizedPrompt : undefined,
+    });
+  },
+});
+
 export async function getChat(ctx: QueryCtx, id: string, sessionId: Id<"sessions">) {
   const chat = await getChatByIdOrUrlIdEnsuringAccess(ctx, { id, sessionId });
 
@@ -114,6 +146,7 @@ export async function getChat(ctx: QueryCtx, id: string, sessionId: Id<"sessions
     initialId: chat.initialId,
     urlId: chat.urlId,
     description: chat.description,
+    customSystemPrompt: chat.customSystemPrompt,
     timestamp: chat.timestamp,
     snapshotId: chat.snapshotId,
     subchatIndex: chat.lastSubchatIndex,
@@ -131,6 +164,7 @@ export const get = query({
       initialId: v.string(),
       urlId: v.optional(v.string()),
       description: v.optional(v.string()),
+      customSystemPrompt: v.optional(v.string()),
       timestamp: v.string(),
       snapshotId: v.optional(v.id("_storage")),
       subchatIndex: v.optional(v.number()),
