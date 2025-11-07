@@ -1,0 +1,52 @@
+services:
+  backend:
+    image: ghcr.io/get-convex/convex-backend:be8a4f397810ce3d04dc3cb32bc81969fe64685a
+    ports:
+      - '${PORT:-3210}:3210'
+      - '${SITE_PROXY_PORT:-3211}:3211'
+    volumes:
+      - data:/convex/data
+    environment:
+      - CONVEX_CLOUD_ORIGIN=http://backend:3210
+      - CONVEX_SITE_ORIGIN=http://backend:3211
+      - RUST_LOG=info
+    healthcheck:
+      test: curl -f http://localhost:3210/version || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  dashboard:
+    image: ghcr.io/get-convex/convex-dashboard:161e32648a971fb8ef591e61212f7b9fb7ff4f2c
+    ports:
+      - '${DASHBOARD_PORT:-6791}:6791'
+    environment:
+      - NEXT_PUBLIC_DEPLOYMENT_URL=http://backend:3210
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  chef-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/usr/src/app:delegated
+      - /usr/src/app/node_modules
+    ports:
+      - '5173:5173'
+      - '24678:24678'
+    environment:
+      - VITE_CONVEX_URL=http://backend:3210
+      - HOST=0.0.0.0
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=1
+      - WATCHPACK_POLLING=true
+    depends_on:
+      backend:
+        condition: service_healthy
+    tty: true
+
+volumes:
+  data:
