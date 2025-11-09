@@ -71,13 +71,8 @@ export default function ChatAlert({ alert, clearAlert, postMessage }: Props) {
               <div className={classNames(' flex gap-2')}>
                 <button
                   onClick={() => {
-                    // Format the error message based on error type
-                    const isCompilationError = title === 'Compilation Error' || description.includes('does not exist') || description.includes('postcss') || description.includes('vite');
-                    const language = isCompilationError ? 'css' : isPreview ? 'js' : 'sh';
-                    const errorMessage = isCompilationError
-                      ? `*Fix this compilation error*\n\n\`\`\`${language}\n${description}\n\n${content}\n\`\`\`\n`
-                      : `*Fix this ${isPreview ? 'preview' : 'terminal'} error*\n\`\`\`${language}\n${description}\n${content}\n\`\`\`\n`;
-                    postMessage(errorMessage);
+                    const language = isPreview ? 'js' : 'sh';
+                    postMessage(`*Fix this ${isPreview ? 'preview' : 'terminal'} error*\n\`\`\`${language}\n${description}\n${content}\n\`\`\`\n`);
                   }}
                   className={classNames(
                     `px-2 py-1.5 rounded-md text-sm font-medium`,
