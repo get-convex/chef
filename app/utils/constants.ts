@@ -44,6 +44,7 @@ export type ModelSelection =
   | 'nemotron-nano-9b-v2'
   | 'kimi-k2'
   | 'devstral-small-2505'
-  | 'mai-ds-r1';
+  | 'mai-ds-r1'
+  | 'minimax-m2';
 
 export const MAX_CONSECUTIVE_DEPLOY_ERRORS = 5;

@@ -183,7 +183,12 @@ export const models: Partial<
     requireKey: true,
   },
   'mai-ds-r1': {
-    name: 'MAI DS R1',
+    name: 'MAI DS R1 (No Tools)',
+    provider: 'openrouter',
+    requireKey: true,
+  },
+  'minimax-m2': {
+    name: 'MiniMax M2 (Free, No Tools)',
     provider: 'openrouter',
     requireKey: true,
   },

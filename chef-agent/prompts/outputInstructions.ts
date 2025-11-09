@@ -23,6 +23,15 @@ export function outputInstructions(options: SystemPromptOptions) {
         4. Update the React app to use the Convex functions.
 
         Let's start now.
+        
+        User: "Build an e-commerce store for handmade pottery with categories and reviews"
+        Assistant: "I'll create a custom pottery e-commerce store by:
+        1. Extending the schema with categories and reviews tables
+        2. Adding category filtering and product review functionality
+        3. Customizing the UI for the pottery niche with appropriate styling
+        4. Implementing the review system in product pages
+        
+        Let's build it now.
 
         [Write files to the filesystem using artifacts]
         [Deploy the app and get type errors]
@@ -40,6 +49,12 @@ export function outputInstructions(options: SystemPromptOptions) {
         Now you can use the collaborative to-do list app by adding and completing tasks.
 
       ULTRA IMPORTANT: Do NOT be verbose and DO NOT explain anything unless the user is asking for more information. That is VERY important.
+      
+      E-COMMERCE SPECIFIC COMMUNICATION:
+      - When building e-commerce sites, briefly mention key features you're implementing (products, cart, checkout, admin)
+      - If extending the template, state what you're keeping vs. what you're customizing
+      - If building from scratch, explain why the template doesn't fit their specific needs
+      - Keep explanations to 1-2 sentences maximum
       
       🚫🚫🚫 CRITICAL LOOP PREVENTION - HIGHEST PRIORITY 🚫🚫🚫:
       

@@ -220,6 +220,7 @@ export const Chat = memo(
           'kimi-k2': { providerName: 'openrouter', apiKeyField: 'openrouter' },
           'devstral-small-2505': { providerName: 'openrouter', apiKeyField: 'openrouter' },
           'mai-ds-r1': { providerName: 'openrouter', apiKeyField: 'openrouter' },
+          'minimax-m2': { providerName: 'openrouter', apiKeyField: 'openrouter' },
         };
 
         // Get provider info for the current model
@@ -370,15 +371,25 @@ export const Chat = memo(
         } else if (modelSelection === 'mai-ds-r1') {
           modelProvider = 'OpenRouter';
           modelChoice = 'microsoft/mai-ds-r1:free';
+        } else if (modelSelection === 'minimax-m2') {
+          modelProvider = 'OpenRouter';
+          modelChoice = 'minimax/minimax-m2:free';
         } else {
           const _exhaustiveCheck: never = modelSelection;
           throw new Error(`Unknown model: ${_exhaustiveCheck}`);
         }
         let shouldDisableTools = false;
 
-        // Disable tools for ALL OpenRouter free models (most don't support tool use)
-        // If you want full tool support, use Google Gemini API directly instead
-        if (modelProvider === 'OpenRouter') {
+        // Disable tools for OpenRouter free models that don't support tool use well
+        // MiniMax M2 supports tool use but struggles with precision (edit tool failures)
+        const openRouterModelsWithoutTools = [
+          'qwen/qwen3-32b-coder:free',
+          'qwen/qwen-2.5-coder-32b-instruct:free',
+          'meta-llama/llama-3.3-70b-instruct:free',
+          // 'minimax/minimax-m2:free',
+          'microsoft/mai-ds-r1:free',
+        ];
+        if (modelProvider === 'OpenRouter' && modelChoice && openRouterModelsWithoutTools.includes(modelChoice)) {
           shouldDisableTools = true;
         }
 
