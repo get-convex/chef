@@ -357,6 +357,32 @@ function preciseToolInstructions() {
       - WRONG: \`if (value &lt; 10)\` ❌  
       - CORRECT: \`if (value < 10)\` ✅
       HTML entities will cause syntax errors and break the code.
+
+      STYLING GUIDELINES FOR EDIT TOOL:
+      When editing React components, ALWAYS use CSS classes from \`src/index.css\` instead of inline Tailwind classes.
+      
+      Before editing a component:
+      1. Check \`src/index.css\` for existing classes that match your styling needs
+      2. Use semantic CSS classes like \`.btn-primary\`, \`.card-product\`, \`.page-title\` instead of inline Tailwind
+      3. If you need a new style, add it to \`src/index.css\` first, then use it in the component
+      
+      Example CORRECT edit:
+      - Replace: \`className="px-8 py-4 bg-blue-500 text-white rounded-lg"\`
+      - With: \`className="btn-primary"\`
+      
+      Example INCORRECT edit (DO NOT DO THIS):
+      - Adding: \`className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl"\`
+      - Should be: \`className="btn-primary"\`
+      
+      This ensures consistency and makes global style changes easier.
+
+      CRITICAL: When adding CSS classes to \`src/index.css\`:
+      - ONLY use VALID Tailwind classes in \`@apply\` directives
+      - Shadow classes: ONLY \`shadow-sm\`, \`shadow\`, \`shadow-md\`, \`shadow-lg\`, \`shadow-xl\`, \`shadow-2xl\` (NO shadow-3xl or higher)
+      - NEVER use \`group\` in \`@apply\` - Add it directly to HTML: \`className="card-product group"\`
+      - NEVER use \`prose\` in \`@apply\` (Typography plugin)
+      - Verify all Tailwind utilities exist before using them
+      - If deployment fails with "class does not exist" or "@apply should not be used with", fix immediately
     </edit_tool>
   `;
 }

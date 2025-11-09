@@ -67,19 +67,19 @@ export function CartPage({ setCurrentPage }: CartPageProps) {
 
   if (cart.length === 0) {
     return (
-      <main className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="container mx-auto px-8 py-20">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="bg-white rounded-3xl shadow-xl p-16 border border-gray-100">
-              <div className="text-8xl mb-6 animate-pulse">🛒</div>
-              <h1 className="text-4xl font-bold mb-4 text-gray-900">Your Cart is Empty</h1>
-              <p className="text-gray-600 mb-8 text-lg">
+      <main className="page-main">
+        <div className="page-content-lg">
+          <div className="empty-state">
+            <div className="card-empty">
+              <div className="empty-state-icon-pulse">🛒</div>
+              <h1 className="empty-state-title">Your Cart is Empty</h1>
+              <p className="empty-state-description">
                 Looks like you haven't added anything to your cart yet.
                 Start exploring our amazing products!
               </p>
               <button
                 onClick={() => setCurrentPage("home")}
-                className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="btn-primary"
               >
                 Start Shopping
               </button>
@@ -91,18 +91,18 @@ export function CartPage({ setCurrentPage }: CartPageProps) {
   }
 
   return (
-    <main className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="container mx-auto px-8 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-gray-900">Shopping Cart</h1>
-          <p className="text-gray-600">Review your items before checkout</p>
+    <main className="page-main">
+      <div className="page-content">
+        <div className="page-header">
+          <h1 className="page-title">Shopping Cart</h1>
+          <p className="page-subtitle">Review your items before checkout</p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
+        <div className="cart-grid">
+          <div className="cart-items">
             {cartWithProducts.map((item) => (
               <div
                 key={item._id}
-                className="flex gap-6 p-6 rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+                className="card-cart-item"
               >
                 <img
                   src={
@@ -110,40 +110,40 @@ export function CartPage({ setCurrentPage }: CartPageProps) {
                     "https://via.placeholder.com/120?text=Product"
                   }
                   alt={item.product?.title}
-                  className="w-28 h-28 object-cover rounded-xl"
+                  className="cart-item-image"
                 />
-                <div className="flex-1">
-                  <h3 className="font-bold text-xl mb-2 text-gray-900">{item.product?.title}</h3>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                <div className="cart-item-info">
+                  <h3 className="cart-item-title">{item.product?.title}</h3>
+                  <p className="cart-item-description">
                     {item.product?.description}
                   </p>
-                  <p className="font-bold text-2xl text-indigo-600">
+                  <p className="cart-item-price">
                     ${item.product?.price.toFixed(2)}
                   </p>
                 </div>
                 <div className="flex flex-col justify-between items-end">
                   <button
                     onClick={() => handleRemove(item._id)}
-                    className="text-red-500 hover:text-red-700 font-medium text-sm px-3 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                    className="btn-remove"
                   >
                     Remove
                   </button>
-                  <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-2">
+                  <div className="cart-quantity-controls">
                     <button
                       onClick={() =>
                         handleUpdateQuantity(item._id, item.quantity - 1)
                       }
                       disabled={item.quantity <= 1}
-                      className="px-3 py-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-gray-700"
+                      className="btn-quantity"
                     >
                       -
                     </button>
-                    <span className="w-12 text-center font-bold text-gray-900">{item.quantity}</span>
+                    <span className="cart-quantity-value">{item.quantity}</span>
                     <button
                       onClick={() =>
                         handleUpdateQuantity(item._id, item.quantity + 1)
                       }
-                      className="px-3 py-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 font-bold text-gray-700"
+                      className="btn-quantity"
                     >
                       +
                     </button>
@@ -152,39 +152,39 @@ export function CartPage({ setCurrentPage }: CartPageProps) {
               </div>
             ))}
           </div>
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 sticky top-8">
+          <div className="cart-summary">
+            <div className="card-order-summary">
               <h2 className="text-2xl font-bold mb-6 text-gray-900">Order Summary</h2>
               <div className="space-y-4 mb-6">
-                <div className="flex justify-between text-lg">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold text-gray-900">${total.toFixed(2)}</span>
+                <div className="order-summary-row">
+                  <span className="order-summary-label">Subtotal</span>
+                  <span className="order-summary-value">${total.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-lg">
-                  <span className="text-gray-600">Shipping</span>
+                <div className="order-summary-row">
+                  <span className="order-summary-label">Shipping</span>
                   <span className="font-semibold text-green-600">Free</span>
                 </div>
-                <div className="flex justify-between text-lg">
-                  <span className="text-gray-600">Tax</span>
-                  <span className="font-semibold text-gray-900">$0.00</span>
+                <div className="order-summary-row">
+                  <span className="order-summary-label">Tax</span>
+                  <span className="order-summary-value">$0.00</span>
                 </div>
                 <hr className="my-4 border-gray-200" />
-                <div className="flex justify-between text-2xl font-bold">
-                  <span className="text-gray-900">Total</span>
-                  <span className="text-indigo-600">${total.toFixed(2)}</span>
+                <div className="order-summary-total">
+                  <span className="order-summary-total-label">Total</span>
+                  <span className="order-summary-total-value">${total.toFixed(2)}</span>
                 </div>
               </div>
               <button
                 onClick={handleCheckout}
                 disabled={isCheckingOut}
-                className="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 text-lg"
+                className="btn-checkout"
               >
                 {isCheckingOut ? "Processing..." : "Proceed to Checkout"}
               </button>
               <div className="mt-6 text-center">
                 <button
                   onClick={() => setCurrentPage("home")}
-                  className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+                  className="btn-link"
                 >
                   ← Continue Shopping
                 </button>

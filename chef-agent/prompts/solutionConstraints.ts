@@ -42,6 +42,7 @@ export function solutionConstraints(options: SystemPromptOptions) {
       - src/pages/AdminDashboard.tsx - Admin panel
       - src/components/Navbar.tsx - Navigation component
       - src/components/ProductCard.tsx - Product card component
+      - src/index.css - Global CSS with reusable classes (USE THIS FOR STYLING)
       - src/main.tsx - App entry point (LOCKED - DO NOT MODIFY)
       - src/SignInForm.tsx - Auth form (LOCKED - DO NOT MODIFY)
       - src/SignOutButton.tsx - Sign out button (LOCKED - DO NOT MODIFY)
@@ -247,6 +248,102 @@ export function solutionConstraints(options: SystemPromptOptions) {
         
         Always make sure you are using the correct arguments for convex functions. If arguments are not optional, make sure they are not null.
       </client_guidelines>
+
+      <styling_guidelines>
+        CRITICAL: ALWAYS use CSS classes from \`src/index.css\` instead of inline Tailwind classes.
+        
+        The template includes comprehensive CSS classes organized by component type:
+        - Layout: \`.page-container\`, \`.page-main\`, \`.page-content\`, \`.page-header\`, \`.page-title\`, \`.page-subtitle\`
+        - Buttons: \`.btn-primary\`, \`.btn-secondary\`, \`.btn-success\`, \`.btn-danger\`, \`.btn-outline\`, \`.btn-link\`, etc.
+        - Cards: \`.card\`, \`.card-product\`, \`.card-order\`, \`.card-admin\`, etc.
+        - Forms: \`.form-input\`, \`.form-textarea\`, \`.form-label\`, \`.form-select\`, etc.
+        - Products: \`.product-grid\`, \`.product-image-container\`, \`.product-title\`, \`.product-price\`, etc.
+        - Cart: \`.cart-grid\`, \`.cart-item-image\`, \`.cart-quantity-controls\`, etc.
+        - Orders: \`.orders-list\`, \`.order-header\`, \`.order-status\`, etc.
+        - Admin: \`.admin-tabs\`, \`.admin-form-grid\`, \`.admin-product-list\`, etc.
+        - Empty states: \`.empty-state\`, \`.empty-state-icon\`, \`.empty-state-title\`, etc.
+        
+        When modifying or creating pages/components:
+        1. FIRST check \`src/index.css\` for existing classes that match your needs
+        2. USE existing CSS classes instead of writing inline Tailwind classes
+        3. If a class doesn't exist, ADD it to \`src/index.css\` using \`@apply\` directives
+        4. NEVER use inline Tailwind classes like \`className="px-4 py-2 bg-blue-500"\` - use \`className="btn-primary"\` instead
+        5. For conditional styling, combine CSS classes: \`className={\`card \${isActive ? 'card-active' : ''}\`}\`
+        
+        Example CORRECT usage:
+        \`\`\`tsx
+        <button className="btn-primary">Click me</button>
+        <div className="card-product">
+          <h3 className="product-title">Product Name</h3>
+          <p className="product-price">$29.99</p>
+        </div>
+        \`\`\`
+        
+        Example INCORRECT usage (DO NOT DO THIS):
+        \`\`\`tsx
+        <button className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl">Click me</button>
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <h3 className="font-bold text-xl mb-2">Product Name</h3>
+          <p className="font-bold text-2xl text-indigo-600">$29.99</p>
+        </div>
+        \`\`\`
+        
+        This approach makes styling consistent, maintainable, and easier to modify globally.
+
+        <tailwind_validation_guidelines>
+          CRITICAL: When adding new CSS classes to \`src/index.css\` using \`@apply\`, you MUST only use VALID Tailwind CSS classes.
+          
+          COMMON INVALID CLASSES TO AVOID:
+          - Shadow sizes: \`shadow-3xl\`, \`shadow-4xl\`, \`shadow-5xl\` (ONLY \`shadow-sm\`, \`shadow\`, \`shadow-md\`, \`shadow-lg\`, \`shadow-xl\`, \`shadow-2xl\` exist)
+          - Custom spacing: \`gap-section\`, \`p-section\`, \`m-section\` (unless defined in tailwind.config.js)
+          - Non-existent utilities: Always verify the utility exists in Tailwind's default configuration
+          
+          UTILITIES THAT CANNOT BE USED IN @APPLY:
+          - \`group\` - Cannot be used in \`@apply\`. Add it directly to the HTML element: \`className="card-product group"\`
+          - \`prose\` - Cannot be used in \`@apply\` (Typography plugin)
+          - \`container\` - CAN be used in \`@apply\` (this is fine)
+          
+          If you need \`group\` functionality:
+          - Remove \`group\` from \`@apply\` directive
+          - Add \`group\` class directly to the HTML element alongside your CSS class
+          - Example: \`className="card-product group"\` instead of \`@apply ... group;\`
+          
+          VALID TAILWIND SHADOW CLASSES:
+          - \`shadow-sm\` - Small shadow
+          - \`shadow\` - Default shadow
+          - \`shadow-md\` - Medium shadow
+          - \`shadow-lg\` - Large shadow
+          - \`shadow-xl\` - Extra large shadow
+          - \`shadow-2xl\` - 2X extra large shadow (MAXIMUM - no shadow-3xl or higher)
+          
+          VALIDATION RULES:
+          1. Before using any Tailwind class in \`@apply\`, verify it exists in Tailwind's default configuration
+          2. For shadow utilities, ONLY use: shadow-sm, shadow, shadow-md, shadow-lg, shadow-xl, shadow-2xl
+          3. For spacing, use standard Tailwind spacing scale (0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72, 80, 96)
+          4. If you need a custom value, check \`tailwind.config.js\` first to see if it's already defined
+          5. If deploying fails with "class does not exist" error, check the error message and replace with a valid class
+          
+          Example CORRECT \`@apply\` usage:
+          \`\`\`css
+          .btn-primary {
+            @apply px-8 py-4 bg-blue-500 text-white rounded-xl shadow-lg hover:shadow-xl;
+          }
+          \`\`\`
+          
+          Example INCORRECT \`@apply\` usage (DO NOT DO THIS):
+          \`\`\`css
+          .btn-primary {
+            @apply px-8 py-4 bg-blue-500 text-white rounded-xl shadow-2xl hover:shadow-3xl; /* shadow-3xl doesn't exist! */
+          }
+          \`\`\`
+          
+          If you encounter a "class does not exist" error during deployment:
+          1. Read the error message carefully to identify the invalid class
+          2. Replace it with the closest valid Tailwind class
+          3. For shadows, use \`shadow-2xl\` as the maximum (not shadow-3xl or higher)
+          4. Re-deploy and verify the error is fixed
+        </tailwind_validation_guidelines>
+      </styling_guidelines>
     </convex_guidelines>
   </solution_constraints>
   `;

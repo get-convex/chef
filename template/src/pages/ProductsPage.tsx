@@ -42,18 +42,18 @@ export function ProductsPage({ setCurrentPage }: ProductsPageProps) {
 
   if (products.length === 0) {
     return (
-      <main className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="container mx-auto px-8 py-20">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="bg-white rounded-3xl shadow-xl p-16 border border-gray-100">
-              <div className="text-8xl mb-6">📦</div>
-              <h1 className="text-4xl font-bold mb-4 text-gray-900">No Products Available</h1>
-              <p className="text-gray-600 mb-8 text-lg">
+      <main className="page-main">
+        <div className="page-content-lg">
+          <div className="empty-state">
+            <div className="card-empty">
+              <div className="empty-state-icon">📦</div>
+              <h1 className="empty-state-title">No Products Available</h1>
+              <p className="empty-state-description">
                 There are no products in the store yet. Check back later!
               </p>
               <button
                 onClick={() => setCurrentPage("home")}
-                className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="btn-primary"
               >
                 ← Back to Home
               </button>
@@ -65,12 +65,12 @@ export function ProductsPage({ setCurrentPage }: ProductsPageProps) {
   }
 
   return (
-    <main className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="container mx-auto px-8 py-12">
+    <main className="page-main">
+      <div className="page-content">
         {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-gray-900">Our Products</h1>
-          <p className="text-gray-600 mb-6">
+        <div className="page-header">
+          <h1 className="page-title">Our Products</h1>
+          <p className="page-subtitle mb-6">
             Discover our curated collection of premium products
           </p>
           
@@ -82,13 +82,13 @@ export function ProductsPage({ setCurrentPage }: ProductsPageProps) {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white"
+                className="search-input"
               />
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
+              <span className="search-icon">🔍</span>
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="search-clear"
                 >
                   ✕
                 </button>
@@ -104,21 +104,21 @@ export function ProductsPage({ setCurrentPage }: ProductsPageProps) {
 
         {/* Products Grid */}
         {filteredProducts.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm p-16 border border-gray-100 text-center">
-            <div className="text-6xl mb-4">🔍</div>
-            <h2 className="text-2xl font-bold mb-2 text-gray-900">No products found</h2>
-            <p className="text-gray-600 mb-6">
+          <div className="empty-state-no-results">
+            <div className="empty-state-no-results-icon">🔍</div>
+            <h2 className="empty-state-no-results-title">No products found</h2>
+            <p className="empty-state-no-results-description">
               Try adjusting your search terms
             </p>
             <button
               onClick={() => setSearchQuery("")}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+              className="btn-outline"
             >
               Clear Search
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="product-grid">
             {filteredProducts.map((product) => {
               const isInCart = cartProductIds.has(product._id);
               const isOutOfStock = (product.stock ?? 0) === 0;
@@ -126,49 +126,49 @@ export function ProductsPage({ setCurrentPage }: ProductsPageProps) {
               return (
                 <div
                   key={product._id}
-                  className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all border border-gray-100 overflow-hidden group"
+                  className="card-product group"
                 >
                   {/* Product Image */}
-                  <div className="relative aspect-square bg-gradient-to-br from-indigo-50 to-purple-50 overflow-hidden">
+                  <div className="product-image-container">
                     <img
                       src={
                         product.image ||
                         "https://via.placeholder.com/400?text=Product"
                       }
                       alt={product.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      className="product-image"
                     />
                     {isOutOfStock && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-lg">
+                      <div className="product-out-of-stock">
+                        <span className="product-out-of-stock-badge">
                           Out of Stock
                         </span>
                       </div>
                     )}
                     {isInCart && !isOutOfStock && (
-                      <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg">
+                      <div className="product-badge">
                         <span>✓</span> In Cart
                       </div>
                     )}
                   </div>
 
                   {/* Product Info */}
-                  <div className="p-6">
-                    <h3 className="font-bold text-xl mb-2 text-gray-900 line-clamp-2">
+                  <div className="product-info">
+                    <h3 className="product-title">
                       {product.title}
                     </h3>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3 min-h-[60px]">
+                    <p className="product-description">
                       {product.description || "No description available"}
                     </p>
                     
                     {/* Price and Stock */}
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="font-bold text-2xl text-indigo-600">
+                        <p className="product-price">
                           ${product.price.toFixed(2)}
                         </p>
                         {product.stock !== undefined && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="product-stock">
                             {product.stock > 0
                               ? `${product.stock} in stock`
                               : "Out of stock"}
@@ -181,13 +181,13 @@ export function ProductsPage({ setCurrentPage }: ProductsPageProps) {
                     <button
                       onClick={() => handleAddToCart(product._id)}
                       disabled={isOutOfStock || addingToCart === product._id}
-                      className={`w-full px-6 py-3 rounded-xl font-semibold transition-all ${
+                      className={`btn-add-cart ${
                         isOutOfStock
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          ? "btn-add-cart-disabled"
                           : isInCart
-                          ? "bg-green-500 hover:bg-green-600 text-white"
-                          : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                      } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+                          ? "btn-add-cart-active"
+                          : "btn-add-cart-default"
+                      }`}
                     >
                       {addingToCart === product._id
                         ? "Adding..."
@@ -207,4 +207,3 @@ export function ProductsPage({ setCurrentPage }: ProductsPageProps) {
     </main>
   );
 }
-

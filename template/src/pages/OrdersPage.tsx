@@ -6,13 +6,13 @@ export function OrdersPage() {
 
   if (orders.length === 0) {
     return (
-      <main className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="container mx-auto px-8 py-20">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="bg-white rounded-3xl shadow-xl p-16 border border-gray-100">
-              <div className="text-8xl mb-6">📦</div>
-              <h1 className="text-4xl font-bold mb-4 text-gray-900">No Orders Yet</h1>
-              <p className="text-gray-600 text-lg">
+      <main className="page-main">
+        <div className="page-content-lg">
+          <div className="empty-state">
+            <div className="card-empty">
+              <div className="empty-state-icon">📦</div>
+              <h1 className="empty-state-title">No Orders Yet</h1>
+              <p className="empty-state-description">
                 You haven't placed any orders yet. Start shopping to see your order history here!
               </p>
             </div>
@@ -23,26 +23,26 @@ export function OrdersPage() {
   }
 
   return (
-    <main className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="container mx-auto px-8 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-gray-900">My Orders</h1>
-          <p className="text-gray-600">Track and manage your orders</p>
+    <main className="page-main">
+      <div className="page-content">
+        <div className="page-header">
+          <h1 className="page-title">My Orders</h1>
+          <p className="page-subtitle">Track and manage your orders</p>
         </div>
-        <div className="space-y-6">
+        <div className="orders-list">
           {orders.map((order) => (
-            <div key={order._id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-8 border border-gray-100">
-              <div className="flex justify-between items-start mb-6">
+            <div key={order._id} className="card-order">
+              <div className="order-header">
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-gray-500">ORDER ID</span>
-                    <span className="text-sm text-gray-600 font-mono bg-gray-50 px-3 py-1 rounded-lg">
+                    <span className="order-id-label">ORDER ID</span>
+                    <span className="order-id-value">
                       {order._id.slice(-8).toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-gray-600 flex items-center gap-2">
-                    <span className="text-2xl">📅</span>
-                    <span className="font-medium">
+                  <p className="order-date">
+                    <span className="order-date-icon">📅</span>
+                    <span className="order-date-text">
                       {new Date(order.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
@@ -52,16 +52,16 @@ export function OrdersPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-indigo-600 mb-2">
+                  <p className="order-total">
                     ${order.total.toFixed(2)}
                   </p>
                   <span
-                    className={`inline-block px-4 py-2 rounded-xl text-sm font-bold ${
+                    className={`order-status ${
                       order.status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
+                        ? "order-status-pending"
                         : order.status === "paid"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-blue-100 text-blue-800"
+                          ? "order-status-paid"
+                          : "order-status-shipped"
                     }`}
                   >
                     {order.status === "pending" && "⌛ "}
@@ -71,18 +71,18 @@ export function OrdersPage() {
                   </span>
                 </div>
               </div>
-              <div className="bg-gray-50 rounded-xl p-6">
-                <h3 className="font-bold text-lg mb-4 text-gray-900">Order Items</h3>
+              <div className="order-items-container">
+                <h3 className="order-items-title">Order Items</h3>
                 <div className="space-y-3">
                   {order.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center bg-white rounded-lg p-4 border border-gray-100">
+                    <div key={idx} className="order-item">
                       <div className="flex items-center gap-3">
-                        <div className="bg-indigo-100 text-indigo-600 font-bold px-3 py-2 rounded-lg">
+                        <div className="order-item-quantity">
                           x{item.quantity}
                         </div>
-                        <span className="text-gray-700 font-medium">Product ID: {item.productId.slice(-6)}</span>
+                        <span className="order-item-product">Product ID: {item.productId.slice(-6)}</span>
                       </div>
-                      <span className="font-bold text-gray-900">
+                      <span className="order-item-price">
                         ${item.priceAtPurchase.toFixed(2)} each
                       </span>
                     </div>

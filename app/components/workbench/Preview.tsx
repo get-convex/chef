@@ -240,6 +240,32 @@ export const Preview = memo(function Preview({ showClose, onClose }: { showClose
     (node: HTMLIFrameElement | null) => {
       iframeRef.current = node;
       workbenchStore.setPreviewIframe(activePreviewIndex, node);
+
+      // Listen for Vite compilation errors from the iframe
+      // The Vite plugin (chef-error-forwarder) injects a script that posts these messages
+      if (node?.contentWindow) {
+        const handleMessage = (event: MessageEvent) => {
+          // Only accept messages from the iframe
+          if (event.source !== node.contentWindow) return;
+
+          if (event.data?.type === 'VITE_COMPILATION_ERROR') {
+            const { error, file, line, column, message, stack } = event.data;
+            workbenchStore.actionAlert.set({
+              type: 'preview',
+              title: 'Compilation Error',
+              description: message || error || 'A compilation error occurred',
+              content: `File: ${file || 'Unknown'}\nLine: ${line || 'Unknown'}, Column: ${column || 'Unknown'}\n\n${stack || error || message || ''}`,
+              source: 'preview',
+            });
+          }
+        };
+
+        window.addEventListener('message', handleMessage);
+
+        return () => {
+          window.removeEventListener('message', handleMessage);
+        };
+      }
     },
     [activePreviewIndex],
   );

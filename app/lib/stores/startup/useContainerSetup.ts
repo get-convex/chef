@@ -25,7 +25,7 @@ import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
 
 // This will be updated by make-bootstrap-snapshot.js, but we also try to load from manifest
 // to ensure we always use the latest snapshot
-const DEFAULT_TEMPLATE_URL = '/template-snapshot-0932d55c.bin';
+const DEFAULT_TEMPLATE_URL = '/template-snapshot-a7890310.bin';
 
 // Function to get the latest template URL (loads from manifest if available)
 async function getTemplateUrl(): Promise<string> {

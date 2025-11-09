@@ -47,21 +47,21 @@ export default function App() {
       </Authenticated>
 
       <Unauthenticated>
-        <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-          <div className="w-full max-w-md mx-auto">
-            <div className="flex flex-col gap-section">
-              <div className="text-center">
-                <div className="mb-6">
-                  <div className="text-7xl mb-4 animate-bounce">🛒</div>
-                  <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
+        <div className="auth-page">
+          <div className="auth-container">
+            <div className="auth-header">
+              <div className="auth-branding">
+                <div className="auth-logo">
+                  <div className="auth-logo-icon">🛒</div>
+                  <h1 className="auth-logo-title">
                     Chef Store
                   </h1>
-                  <p className="text-xl text-gray-600">
+                  <p className="auth-logo-subtitle">
                     Your premium shopping destination
                   </p>
                 </div>
               </div>
-              <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-gray-100">
+              <div className="auth-form-container">
                 <SignInForm />
               </div>
             </div>

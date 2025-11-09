@@ -62,3 +62,687 @@ html {
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out;
 }
+
+/* ============================================
+   LAYOUT CLASSES
+   ============================================ */
+
+.page-container {
+  @apply flex-1;
+}
+
+.page-main {
+  @apply flex-1 bg-gradient-to-br from-gray-50 to-gray-100;
+}
+
+.page-content {
+  @apply container mx-auto px-8 py-12;
+}
+
+.page-content-lg {
+  @apply container mx-auto px-8 py-20;
+}
+
+.page-header {
+  @apply mb-8;
+}
+
+.page-title {
+  @apply text-4xl font-bold mb-2 text-gray-900;
+}
+
+.page-subtitle {
+  @apply text-gray-600;
+}
+
+.section-container {
+  @apply container mx-auto px-8;
+}
+
+.section-container-lg {
+  @apply container mx-auto px-8 py-24;
+}
+
+/* ============================================
+   BUTTON CLASSES
+   ============================================ */
+
+.btn-primary {
+  @apply px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+}
+
+.btn-primary-lg {
+  @apply px-10 py-5 bg-white text-indigo-600 rounded-xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-2xl hover:shadow-2xl transform hover:-translate-y-1;
+}
+
+.btn-secondary {
+  @apply px-8 py-4 bg-indigo-500/30 backdrop-blur-sm text-white rounded-xl font-semibold hover:bg-indigo-500/40 transition-all border border-white/20;
+}
+
+.btn-white {
+  @apply px-8 py-4 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+}
+
+.btn-success {
+  @apply px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold transition-all;
+}
+
+.btn-danger {
+  @apply px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold;
+}
+
+.btn-amber {
+  @apply px-8 py-4 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 transition-all shadow-lg;
+}
+
+.btn-outline {
+  @apply px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors;
+}
+
+.btn-link {
+  @apply text-indigo-600 hover:text-indigo-700 font-medium text-sm;
+}
+
+.btn-remove {
+  @apply text-red-500 hover:text-red-700 font-medium text-sm px-3 py-1 rounded-lg hover:bg-red-50 transition-colors;
+}
+
+.btn-quantity {
+  @apply px-3 py-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-gray-700;
+}
+
+.btn-checkout {
+  @apply w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 text-lg;
+}
+
+.btn-add-cart {
+  @apply w-full px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+}
+
+.btn-add-cart-active {
+  @apply bg-green-500 hover:bg-green-600 text-white;
+}
+
+.btn-add-cart-default {
+  @apply bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white;
+}
+
+.btn-add-cart-disabled {
+  @apply bg-gray-300 text-gray-500 cursor-not-allowed;
+}
+
+.btn-tab {
+  @apply px-8 py-4 rounded-xl font-bold transition-all;
+}
+
+.btn-tab-active {
+  @apply bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg;
+}
+
+.btn-tab-inactive {
+  @apply bg-white text-gray-700 hover:bg-gray-50 border border-gray-200;
+}
+
+/* ============================================
+   CARD CLASSES
+   ============================================ */
+
+.card {
+  @apply bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100;
+}
+
+.card-lg {
+  @apply bg-white rounded-3xl shadow-xl p-16 border border-gray-100;
+}
+
+.card-empty {
+  @apply bg-white rounded-3xl shadow-xl p-16 border border-gray-100;
+}
+
+.card-product {
+  @apply bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all border border-gray-100 overflow-hidden;
+}
+
+.card-stats {
+  @apply text-center p-8 rounded-2xl border;
+}
+
+.card-stats-blue {
+  @apply bg-gradient-to-br from-blue-50 to-indigo-50 border-indigo-100;
+}
+
+.card-stats-purple {
+  @apply bg-gradient-to-br from-purple-50 to-pink-50 border-purple-100;
+}
+
+.card-stats-pink {
+  @apply bg-gradient-to-br from-pink-50 to-rose-50 border-pink-100;
+}
+
+.card-feature {
+  @apply bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-shadow border border-gray-100;
+}
+
+.card-cart-item {
+  @apply flex gap-6 p-6 rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100;
+}
+
+.card-order {
+  @apply bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-8 border border-gray-100;
+}
+
+.card-order-summary {
+  @apply bg-white rounded-2xl shadow-lg p-8 border border-gray-100 sticky top-8;
+}
+
+.card-admin {
+  @apply bg-white rounded-2xl shadow-lg p-8 border border-gray-100;
+}
+
+.card-product-admin {
+  @apply flex justify-between items-center p-6 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100;
+}
+
+/* ============================================
+   HERO SECTION CLASSES
+   ============================================ */
+
+.hero-section {
+  @apply bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white;
+}
+
+.hero-content {
+  @apply max-w-3xl;
+}
+
+.hero-title {
+  @apply text-6xl font-bold mb-6 leading-tight;
+}
+
+.hero-description {
+  @apply text-xl mb-8 text-indigo-100;
+}
+
+.hero-actions {
+  @apply flex gap-4;
+}
+
+.cta-section {
+  @apply py-20 bg-gradient-to-r from-indigo-600 to-purple-600 text-white;
+}
+
+.cta-content {
+  @apply container mx-auto px-8 text-center;
+}
+
+.cta-title {
+  @apply text-4xl font-bold mb-6;
+}
+
+.cta-description {
+  @apply text-xl mb-8 text-indigo-100 max-w-2xl mx-auto;
+}
+
+/* ============================================
+   STATS SECTION CLASSES
+   ============================================ */
+
+.stats-section {
+  @apply py-16 bg-white;
+}
+
+.stats-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-8;
+}
+
+.stats-icon {
+  @apply text-5xl mb-4;
+}
+
+.stats-value {
+  @apply text-4xl font-bold mb-2;
+}
+
+.stats-value-blue {
+  @apply text-indigo-600;
+}
+
+.stats-value-purple {
+  @apply text-purple-600;
+}
+
+.stats-value-pink {
+  @apply text-pink-600;
+}
+
+.stats-label {
+  @apply text-gray-600 font-medium;
+}
+
+/* ============================================
+   FEATURES SECTION CLASSES
+   ============================================ */
+
+.features-section {
+  @apply py-20 bg-gray-50;
+}
+
+.features-header {
+  @apply text-center mb-16;
+}
+
+.features-title {
+  @apply text-4xl font-bold mb-4 text-gray-900;
+}
+
+.features-subtitle {
+  @apply text-xl text-gray-600;
+}
+
+.features-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8;
+}
+
+.feature-icon {
+  @apply text-4xl mb-4;
+}
+
+.feature-title {
+  @apply text-xl font-bold mb-3 text-gray-900;
+}
+
+.feature-description {
+  @apply text-gray-600;
+}
+
+/* ============================================
+   FORM CLASSES
+   ============================================ */
+
+.form-input {
+  @apply px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all;
+}
+
+.form-input-disabled {
+  @apply disabled:bg-gray-100 disabled:text-gray-400;
+}
+
+.form-textarea {
+  @apply w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all;
+}
+
+.form-label {
+  @apply block text-sm font-semibold text-gray-700 mb-2;
+}
+
+.form-file-upload {
+  @apply flex-1 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-indigo-500 transition-colors text-center text-gray-600 hover:text-indigo-600;
+}
+
+.form-select {
+  @apply px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-indigo-500 outline-none font-semibold text-gray-700;
+}
+
+.search-input {
+  @apply w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white;
+}
+
+.search-icon {
+  @apply absolute left-4 top-1/2 -translate-y-1/2 text-xl;
+}
+
+.search-clear {
+  @apply absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600;
+}
+
+/* ============================================
+   PRODUCT CLASSES
+   ============================================ */
+
+.product-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+}
+
+.product-image-container {
+  @apply relative aspect-square bg-gradient-to-br from-indigo-50 to-purple-50 overflow-hidden;
+}
+
+.product-image {
+  @apply w-full h-full object-cover group-hover:scale-110 transition-transform duration-300;
+}
+
+.product-info {
+  @apply p-6;
+}
+
+.product-title {
+  @apply font-bold text-xl mb-2 text-gray-900 line-clamp-2;
+}
+
+.product-description {
+  @apply text-gray-600 text-sm mb-4 line-clamp-3 min-h-[60px];
+}
+
+.product-price {
+  @apply font-bold text-2xl text-indigo-600;
+}
+
+.product-stock {
+  @apply text-xs text-gray-500 mt-1;
+}
+
+.product-badge {
+  @apply absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg;
+}
+
+.product-out-of-stock {
+  @apply absolute inset-0 bg-black/50 flex items-center justify-center;
+}
+
+.product-out-of-stock-badge {
+  @apply bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-lg;
+}
+
+/* ============================================
+   CART CLASSES
+   ============================================ */
+
+.cart-grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-8;
+}
+
+.cart-items {
+  @apply lg:col-span-2 space-y-4;
+}
+
+.cart-summary {
+  @apply lg:col-span-1;
+}
+
+.cart-item-image {
+  @apply w-28 h-28 object-cover rounded-xl;
+}
+
+.cart-item-info {
+  @apply flex-1;
+}
+
+.cart-item-title {
+  @apply font-bold text-xl mb-2 text-gray-900;
+}
+
+.cart-item-description {
+  @apply text-gray-600 text-sm mb-3 line-clamp-2;
+}
+
+.cart-item-price {
+  @apply font-bold text-2xl text-indigo-600;
+}
+
+.cart-quantity-controls {
+  @apply flex items-center gap-3 bg-gray-50 rounded-xl p-2;
+}
+
+.cart-quantity-value {
+  @apply w-12 text-center font-bold text-gray-900;
+}
+
+.order-summary-row {
+  @apply flex justify-between text-lg;
+}
+
+.order-summary-label {
+  @apply text-gray-600;
+}
+
+.order-summary-value {
+  @apply font-semibold text-gray-900;
+}
+
+.order-summary-total {
+  @apply flex justify-between text-2xl font-bold;
+}
+
+.order-summary-total-label {
+  @apply text-gray-900;
+}
+
+.order-summary-total-value {
+  @apply text-indigo-600;
+}
+
+/* ============================================
+   ORDER CLASSES
+   ============================================ */
+
+.orders-list {
+  @apply space-y-6;
+}
+
+.order-header {
+  @apply flex justify-between items-start mb-6;
+}
+
+.order-id-label {
+  @apply text-sm font-semibold text-gray-500;
+}
+
+.order-id-value {
+  @apply text-sm text-gray-600 font-mono bg-gray-50 px-3 py-1 rounded-lg;
+}
+
+.order-date {
+  @apply text-gray-600 flex items-center gap-2;
+}
+
+.order-date-icon {
+  @apply text-2xl;
+}
+
+.order-date-text {
+  @apply font-medium;
+}
+
+.order-total {
+  @apply text-3xl font-bold text-indigo-600 mb-2;
+}
+
+.order-status {
+  @apply inline-block px-4 py-2 rounded-xl text-sm font-bold;
+}
+
+.order-status-pending {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.order-status-paid {
+  @apply bg-green-100 text-green-800;
+}
+
+.order-status-shipped {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.order-items-container {
+  @apply bg-gray-50 rounded-xl p-6;
+}
+
+.order-items-title {
+  @apply font-bold text-lg mb-4 text-gray-900;
+}
+
+.order-item {
+  @apply flex justify-between items-center bg-white rounded-lg p-4 border border-gray-100;
+}
+
+.order-item-quantity {
+  @apply bg-indigo-100 text-indigo-600 font-bold px-3 py-2 rounded-lg;
+}
+
+.order-item-product {
+  @apply text-gray-700 font-medium;
+}
+
+.order-item-price {
+  @apply font-bold text-gray-900;
+}
+
+/* ============================================
+   ADMIN CLASSES
+   ============================================ */
+
+.admin-access-denied {
+  @apply flex-1 bg-gradient-to-br from-red-50 to-orange-50;
+}
+
+.admin-access-denied-card {
+  @apply bg-white rounded-3xl shadow-xl p-16 border border-red-100;
+}
+
+.admin-tabs {
+  @apply flex gap-4 mb-8;
+}
+
+.admin-form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.admin-form-grid-2 {
+  @apply grid grid-cols-2 gap-6;
+}
+
+.admin-product-list {
+  @apply space-y-4;
+}
+
+.admin-product-item {
+  @apply flex-1;
+}
+
+.admin-product-title {
+  @apply font-bold text-xl text-gray-900 mb-1;
+}
+
+.admin-product-description {
+  @apply text-gray-600 text-sm;
+}
+
+.admin-product-stock {
+  @apply text-sm text-gray-500 mt-2;
+}
+
+.admin-product-actions {
+  @apply flex items-center gap-6;
+}
+
+.admin-price-input {
+  @apply w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 outline-none font-bold text-gray-900;
+}
+
+.admin-order-customer {
+  @apply text-gray-600;
+}
+
+.admin-order-customer-label {
+  @apply font-semibold;
+}
+
+/* ============================================
+   EMPTY STATE CLASSES
+   ============================================ */
+
+.empty-state {
+  @apply max-w-2xl mx-auto text-center;
+}
+
+.empty-state-icon {
+  @apply text-8xl mb-6;
+}
+
+.empty-state-icon-pulse {
+  @apply text-8xl mb-6 animate-pulse;
+}
+
+.empty-state-title {
+  @apply text-4xl font-bold mb-4 text-gray-900;
+}
+
+.empty-state-description {
+  @apply text-gray-600 mb-8 text-lg;
+}
+
+.empty-state-no-results {
+  @apply bg-white rounded-2xl shadow-sm p-16 border border-gray-100 text-center;
+}
+
+.empty-state-no-results-icon {
+  @apply text-6xl mb-4;
+}
+
+.empty-state-no-results-title {
+  @apply text-2xl font-bold mb-2 text-gray-900;
+}
+
+.empty-state-no-results-description {
+  @apply text-gray-600 mb-6;
+}
+
+/* ============================================
+   ADMIN QUICK ACCESS CLASSES
+   ============================================ */
+
+.admin-quick-access {
+  @apply py-12 bg-amber-50 border-t-4 border-amber-400;
+}
+
+.admin-quick-access-content {
+  @apply flex items-center justify-between;
+}
+
+.admin-quick-access-title {
+  @apply text-2xl font-bold text-amber-900 mb-2;
+}
+
+.admin-quick-access-description {
+  @apply text-amber-700;
+}
+
+/* ============================================
+   AUTH PAGE CLASSES
+   ============================================ */
+
+.auth-page {
+  @apply flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-indigo-50 via-white to-purple-50;
+}
+
+.auth-container {
+  @apply w-full max-w-md mx-auto;
+}
+
+.auth-header {
+  @apply flex flex-col gap-8;
+}
+
+.auth-branding {
+  @apply text-center;
+}
+
+.auth-logo {
+  @apply mb-6;
+}
+
+.auth-logo-icon {
+  @apply text-7xl mb-4 animate-bounce;
+}
+
+.auth-logo-title {
+  @apply text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4;
+}
+
+.auth-logo-subtitle {
+  @apply text-xl text-gray-600;
+}
+
+.auth-form-container {
+  @apply bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-gray-100;
+}
