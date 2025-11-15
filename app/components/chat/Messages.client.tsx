@@ -155,6 +155,29 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                     <ResetIcon className="size-4 text-content-primary" />
                   </Button>
                 )}
+              {earliestRewindableMessageRank !== undefined &&
+                earliestRewindableMessageRank !== null &&
+                isUserMessage &&
+                index === 0 &&
+                messages.length > 1 &&
+                currentSubchatIndex !== undefined &&
+                lastSubchatIndex !== undefined &&
+                currentSubchatIndex === lastSubchatIndex && (
+                  <Button
+                    className="absolute bottom-[-5px] right-[-5px] bg-bolt-elements-background-depth-2 hover:bg-bolt-elements-background-depth-3"
+                    onClick={() => {
+                      setIsModalOpen(true);
+                      setSelectedMessageIndex(index);
+                      setSelectedSubchatIndex(currentSubchatIndex);
+                    }}
+                    variant="neutral"
+                    size="xs"
+                    tip="Rewind to before the first response"
+                    title="Rewind to here"
+                  >
+                    <ResetIcon className="size-4 text-content-primary" />
+                  </Button>
+                )}
             </div>
           );
         })
