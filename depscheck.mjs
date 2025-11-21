@@ -2,7 +2,17 @@
 
 import { existsSync } from 'fs';
 import process from 'process';
-import * as dotenv from 'dotenv';
+
+// Try to import dotenv, and print a friendly error if it fails
+let dotenv;
+try {
+  dotenv = await import('dotenv');
+} catch (e) {
+  console.error('\x1b[31m❌ Dependencies are not installed.\x1b[0m');
+  console.error('Cannot find package "dotenv".');
+  console.error('Please run \x1b[1mpnpm install\x1b[0m to install dependencies.');
+  process.exit(1);
+}
 
 // Load environment variables from .env.local if it exists
 if (existsSync('.env.local')) {
@@ -14,7 +24,9 @@ if (existsSync('.env.local')) {
 }
 
 function checkNodeVersion() {
-  const version = process.version.match(/^v(\d+)/)[1];
+  const match = process.version.match(/^v(\d+)/);
+  if (!match) return; // Should not happen
+  const version = match[1];
   if (parseInt(version) < 20) {
     console.error('\x1b[31m❌ Node.js 20 or greater is required. Current version:', process.version, '\x1b[0m');
     console.error("Run `nvm use`, and if that doesn't work run `nvm install; nvm use`.");
