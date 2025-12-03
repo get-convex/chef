@@ -14,8 +14,8 @@
     "@convex-dev/auth": "^0.0.80",
     "clsx": "^2.1.1",
     "convex": "^1.24.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.1.0"
   },
