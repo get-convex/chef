@@ -1,4 +1,4 @@
-import type { Message } from 'ai';
+import type { LegacyCompatibleMessage } from '~/lib/common/messageHelpers';
 import { useConvex, useQuery, type ConvexReactClient } from 'convex/react';
 import { useConvexSessionIdOrNullOrLoading, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { getFileUpdateCounter, waitForFileUpdateCounterChanged } from '~/lib/stores/fileUpdateCounter';
@@ -25,7 +25,11 @@ const logger = createScopedLogger('history');
 
 const BACKUP_DEBOUNCE_MS = 1000;
 
-export function useBackupSyncState(chatId: string, loadedSubchatIndex?: number, initialMessages?: Message[]) {
+export function useBackupSyncState(
+  chatId: string,
+  loadedSubchatIndex?: number,
+  initialMessages?: LegacyCompatibleMessage[],
+) {
   const convex = useConvex();
   const subchatIndex = useStore(subchatIndexStore);
   const sessionId = useConvexSessionIdOrNullOrLoading();

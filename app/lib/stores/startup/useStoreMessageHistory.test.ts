@@ -1,5 +1,4 @@
 import { describe, expect, test, vi } from 'vitest';
-import type { Message } from '@ai-sdk/react';
 import { getLastCompletePart } from './useStoreMessageHistory';
 
 vi.mock('lz4-wasm', () => ({
@@ -7,7 +6,8 @@ vi.mock('lz4-wasm', () => ({
   decompress: (data: Uint8Array) => data,
 }));
 
-function createMessage(overrides: Partial<Message> = {}): Message {
+// Using any for backwards compatibility with legacy message format
+function createMessage(overrides: any = {}): any {
   return {
     id: `test-${Math.random()}`,
     role: 'user',

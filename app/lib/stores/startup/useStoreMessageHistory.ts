@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
-import type { Message } from '@ai-sdk/react';
+import type { LegacyCompatibleMessage } from '~/lib/common/messageHelpers';
 import { lastCompleteMessageInfoStore } from '~/lib/stores/startup/messages';
+import { isToolUIPart } from 'ai';
 
 /**
  * This returns a function that takes in `messages` and `streamStatus` and updates
@@ -13,34 +14,37 @@ import { lastCompleteMessageInfoStore } from '~/lib/stores/startup/messages';
  * state to prevent the user from closing the tab too early.
  */
 export function useStoreMessageHistory() {
-  return useCallback(async (messages: Message[], streamStatus: 'streaming' | 'submitted' | 'ready' | 'error') => {
-    if (messages.length === 0) {
-      return;
-    }
+  return useCallback(
+    async (messages: LegacyCompatibleMessage[], streamStatus: 'streaming' | 'submitted' | 'ready' | 'error') => {
+      if (messages.length === 0) {
+        return;
+      }
 
-    const lastCompleteMessageInfo = getLastCompletePart(messages, streamStatus);
-    if (lastCompleteMessageInfo === null) {
-      return;
-    }
-    const currentLastCompleteMessageInfo = lastCompleteMessageInfoStore.get();
-    if (
-      currentLastCompleteMessageInfo !== null &&
-      lastCompleteMessageInfo.messageIndex === currentLastCompleteMessageInfo.messageIndex &&
-      lastCompleteMessageInfo.partIndex === currentLastCompleteMessageInfo.partIndex
-    ) {
-      return;
-    }
-    lastCompleteMessageInfoStore.set({
-      messageIndex: lastCompleteMessageInfo.messageIndex,
-      partIndex: lastCompleteMessageInfo.partIndex,
-      allMessages: messages,
-      hasNextPart: lastCompleteMessageInfo.hasNextPart,
-    });
-  }, []);
+      const lastCompleteMessageInfo = getLastCompletePart(messages, streamStatus);
+      if (lastCompleteMessageInfo === null) {
+        return;
+      }
+      const currentLastCompleteMessageInfo = lastCompleteMessageInfoStore.get();
+      if (
+        currentLastCompleteMessageInfo !== null &&
+        lastCompleteMessageInfo.messageIndex === currentLastCompleteMessageInfo.messageIndex &&
+        lastCompleteMessageInfo.partIndex === currentLastCompleteMessageInfo.partIndex
+      ) {
+        return;
+      }
+      lastCompleteMessageInfoStore.set({
+        messageIndex: lastCompleteMessageInfo.messageIndex,
+        partIndex: lastCompleteMessageInfo.partIndex,
+        allMessages: messages,
+        hasNextPart: lastCompleteMessageInfo.hasNextPart,
+      });
+    },
+    [],
+  );
 }
 
 function getPreceedingPart(
-  messages: Message[],
+  messages: LegacyCompatibleMessage[],
   args: { messageIndex: number; partIndex: number },
 ): { messageIndex: number; partIndex: number } | null {
   if (messages.length === 0) {
@@ -78,7 +82,7 @@ function getPreceedingPart(
 
 // Exported for testing
 export function getLastCompletePart(
-  messages: Message[],
+  messages: LegacyCompatibleMessage[],
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
 ): { messageIndex: number; partIndex: number; hasNextPart: boolean } | null {
   if (messages.length === 0) {
@@ -94,8 +98,11 @@ export function getLastCompletePart(
     throw new Error('Last part is null');
   }
 
-  const isLastPartComplete =
-    lastPart.type === 'tool-invocation' ? lastPart.toolInvocation.state === 'result' : streamStatus !== 'streaming';
+  // In AI SDK 5, tool parts are checked via isToolUIPart and have state directly on part
+  // State 'output-available' is equivalent to old 'result' state
+  const isLastPartComplete = isToolUIPart(lastPart)
+    ? lastPart.state === 'output-available' || lastPart.state === 'output-error'
+    : streamStatus !== 'streaming';
   if (isLastPartComplete) {
     return {
       messageIndex: lastPartIndices.messageIndex,

@@ -1,9 +1,9 @@
 import type { WebContainer } from '@webcontainer/api';
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 
 type ChefDebug = {
-  messages?: Message[];
-  parsedMessages?: Message[];
+  messages?: UIMessage[];
+  parsedMessages?: UIMessage[];
   webcontainer?: WebContainer;
   setLogLevel?: (level: any) => void;
   chatInitialId?: string;

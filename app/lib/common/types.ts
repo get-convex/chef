@@ -1,4 +1,3 @@
-import type { ToolCallUnion } from 'ai';
 import type { npmInstallToolParameters } from 'chef-agent/tools/npmInstall';
 import type { editToolParameters } from 'chef-agent/tools/edit';
 import type { addEnvironmentVariablesParameters } from 'chef-agent/tools/addEnvironmentVariables';
@@ -8,7 +7,18 @@ import type { lookupDocsParameters } from 'chef-agent/tools/lookupDocs';
 import type { ConvexToolSet, EmptyArgs } from 'chef-agent/types';
 import type { getConvexDeploymentNameParameters } from 'chef-agent/tools/getConvexDeploymentName';
 
-type ConvexToolCall = ToolCallUnion<ConvexToolSet>;
+// In AI SDK 5, ToolCallUnion is removed. We define the tool call type inline.
+type ConvexToolCall = {
+  [K in keyof ConvexToolSet]: {
+    toolCallId: string;
+    toolName: K;
+    args: ConvexToolSet[K] extends { inputSchema: infer S }
+      ? S extends { parse: (v: unknown) => infer R }
+        ? R
+        : unknown
+      : unknown;
+  };
+}[keyof ConvexToolSet];
 
 export type ConvexToolName = keyof ConvexToolSet;
 

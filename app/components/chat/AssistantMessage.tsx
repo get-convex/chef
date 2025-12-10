@@ -1,6 +1,18 @@
 import { memo, useMemo } from 'react';
 import { Markdown } from './Markdown';
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
+import { isToolUIPart } from 'ai';
+
+// Helper to extract text content from UIMessage parts
+function getMessageContent(message: UIMessage): string {
+  if (!message.parts) {
+    return '';
+  }
+  return message.parts
+    .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+    .map((p) => p.text)
+    .join('');
+}
 import { ToolCall } from './ToolCall';
 import { makePartId, type PartId } from 'chef-agent/partId.js';
 import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
@@ -10,16 +22,19 @@ import { calculateChefTokens, usageFromGeneration, type ChefTokenBreakdown } fro
 import { captureMessage } from '@sentry/remix';
 
 interface AssistantMessageProps {
-  message: Message;
+  message: UIMessage;
 }
 
 export const AssistantMessage = memo(function AssistantMessage({ message }: AssistantMessageProps) {
   const { showUsageAnnotations } = useLaunchDarkly();
-  const parsedAnnotations = useMemo(() => parseAnnotations(message.annotations), [message.annotations]);
+  // TODO: In AI SDK 5, annotations are handled differently - they're now in message.metadata
+  // or sent as custom data parts. For now, access via any cast for backwards compatibility.
+  const messageAny = message as any;
+  const parsedAnnotations = useMemo(() => parseAnnotations(messageAny.annotations ?? []), [messageAny.annotations]);
   if (!message.parts) {
     return (
       <div className="w-full overflow-hidden">
-        <Markdown html>{message.content}</Markdown>
+        <Markdown html>{getMessageContent(message)}</Markdown>
       </div>
     );
   }
@@ -64,22 +79,23 @@ function AssistantMessagePart({
   partId,
   parsedAnnotations,
 }: {
-  part: NonNullable<Message['parts']>[number];
+  part: NonNullable<UIMessage['parts']>[number];
   showUsageAnnotations: boolean;
   partId: PartId;
   parsedAnnotations: ReturnType<typeof parseAnnotations>;
 }) {
-  if (part.type === 'tool-invocation') {
+  // In AI SDK 5, tool parts have type `tool-${toolName}` and properties directly on the part
+  if (isToolUIPart(part)) {
     return (
       <>
         {showUsageAnnotations &&
           displayModelAndUsage({
-            model: parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId],
-            usageAnnotation: parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId] ?? undefined,
+            model: parsedAnnotations.modelForToolCall[part.toolCallId],
+            usageAnnotation: parsedAnnotations.usageForToolCall[part.toolCallId] ?? undefined,
             showUsageAnnotations,
           })}
 
-        <ToolCall partId={partId} toolCallId={part.toolInvocation.toolCallId} />
+        <ToolCall partId={partId} toolCallId={part.toolCallId} />
       </>
     );
   }

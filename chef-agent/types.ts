@@ -1,4 +1,4 @@
-import type { ToolInvocation } from 'ai';
+import type { UIToolInvocation } from 'ai';
 import type { AbsolutePath, RelativePath } from './utils/workDir.js';
 import type { Tool } from 'ai';
 import type { npmInstallToolParameters } from './tools/npmInstall.js';
@@ -45,7 +45,9 @@ export interface FileAction {
 export interface ToolUseAction {
   type: 'toolUse';
   toolName: string;
-  parsedContent: ToolInvocation;
+  // In AI SDK 5, UIToolInvocation is the type for tool invocations
+  // For backwards compatibility, we accept any here since stored data may use old format
+  parsedContent: UIToolInvocation<any> | any;
   // Serialized content to use for de-duping
   content: string;
 }

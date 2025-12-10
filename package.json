@@ -32,13 +32,13 @@
     "node": ">=18.18.0"
   },
   "dependencies": {
-    "@ai-sdk/amazon-bedrock": "^2.2.9",
-    "@ai-sdk/anthropic": "^1.2.12",
-    "@ai-sdk/google": "^1.2.11",
-    "@ai-sdk/google-vertex": "^2.2.24",
-    "@ai-sdk/openai": "^1.3.6",
-    "@ai-sdk/react": "^1.2.5",
-    "@ai-sdk/xai": "^1.2.13",
+    "@ai-sdk/amazon-bedrock": "^3.0.68",
+    "@ai-sdk/anthropic": "^2.0.54",
+    "@ai-sdk/google": "^2.0.45",
+    "@ai-sdk/google-vertex": "^3.0.88",
+    "@ai-sdk/openai": "^2.0.80",
+    "@ai-sdk/react": "^2.0.109",
+    "@ai-sdk/xai": "^2.0.39",
     "@aws-sdk/credential-providers": "^3.782.0",
     "@aws-sdk/rds-signer": "^3.782.0",
     "@codemirror/autocomplete": "^6.18.3",
@@ -57,7 +57,6 @@
     "@codemirror/search": "^6.5.8",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.35.0",
-    "@convex-dev/ai-sdk-google": "1.2.17",
     "@convex-dev/design-system": "0.1.11",
     "@convex-dev/migrations": "^0.2.8",
     "@convex-dev/rate-limiter": "^0.2.9",
@@ -91,7 +90,7 @@
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-web-links": "^0.11.0",
     "@xterm/xterm": "^5.5.0",
-    "ai": "^4.3.2",
+    "ai": "^5.0.108",
     "allotment": "^1.20.3",
     "chart.js": "^4.4.9",
     "chef-agent": "workspace:*",
@@ -190,18 +189,14 @@
     "vite-plugin-optimize-css-modules": "^1.1.0",
     "vite-tsconfig-paths": "^4.3.2",
     "vitest": "^2.1.9",
-    "zod": "^3.24.1"
+    "zod": "^3.25.76"
   },
   "resolutions": {
     "@typescript-eslint/utils": "^8.0.0-alpha.30"
   },
   "pnpm": {
     "overrides": {
-      "@remix-run/cloudflare": "npm:@remix-run/node@2.15.3",
-      "@ai-sdk/google": "npm:@convex-dev/ai-sdk-google@1.2.17"
-    },
-    "patchedDependencies": {
-      "@ai-sdk/openai@1.3.6": "patches/@ai-sdk__openai@1.3.6.patch"
+      "@remix-run/cloudflare": "npm:@remix-run/node@2.15.3"
     }
   },
   "packageManager": "pnpm@9.5.0"

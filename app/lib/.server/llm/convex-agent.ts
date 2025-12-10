@@ -1,14 +1,17 @@
 import {
-  createDataStream,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
   streamText,
+  stepCountIs,
+  isToolUIPart,
+  getToolName,
   type CoreAssistantMessage,
   type CoreMessage,
   type CoreToolMessage,
-  type DataStreamWriter,
+  type UIMessageStreamWriter,
   type LanguageModelUsage,
-  type Message,
+  type UIMessage,
   type ProviderMetadata,
-  type StepResult,
 } from 'ai';
 import { ROLE_SYSTEM_PROMPT, generalSystemPrompt } from 'chef-agent/prompts/system';
 import { deployTool } from 'chef-agent/tools/deploy';
@@ -37,7 +40,7 @@ import { addEnvironmentVariablesTool } from 'chef-agent/tools/addEnvironmentVari
 import { getConvexDeploymentNameTool } from 'chef-agent/tools/getConvexDeploymentName';
 import type { PromptCharacterCounts } from 'chef-agent/ChatContextManager';
 
-type Messages = Message[];
+type Messages = UIMessage[];
 
 export async function convexAgent(args: {
   chatInitialId: string;
@@ -49,7 +52,7 @@ export async function convexAgent(args: {
   userApiKey: string | undefined;
   shouldDisableTools: boolean;
   recordUsageCb: (
-    lastMessage: Message | undefined,
+    lastMessage: UIMessage | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => Promise<void>;
   recordRawPromptsForDebugging: boolean;
@@ -92,15 +95,17 @@ export async function convexAgent(args: {
     resendProxyEnabled: getEnv('RESEND_PROXY_ENABLED') == '1',
     enableResend: featureFlags.enableResend,
   };
-  const tools: ConvexToolSet = {
+  // Cast tools to ConvexToolSet - the chef-agent package needs to be updated
+  // to use AI SDK 5 inputSchema syntax (parameters → inputSchema)
+  const tools = {
     deploy: deployTool,
     npmInstall: npmInstallTool,
     lookupDocs: lookupDocsTool(),
     getConvexDeploymentName: getConvexDeploymentNameTool,
-  };
-  tools.addEnvironmentVariables = addEnvironmentVariablesTool();
-  tools.view = viewTool;
-  tools.edit = editTool;
+    addEnvironmentVariables: addEnvironmentVariablesTool(),
+    view: viewTool,
+    edit: editTool,
+  } as ConvexToolSet;
 
   const messagesForDataStream: CoreMessage[] = [
     {
@@ -134,20 +139,21 @@ export async function convexAgent(args: {
     };
   }
 
-  const dataStream = createDataStream({
-    execute(dataStream) {
+  const stream = createUIMessageStream({
+    execute: async ({ writer }) => {
       const result = streamText({
         model: provider.model,
-        maxTokens: provider.maxTokens,
+        maxOutputTokens: provider.maxTokens,
         providerOptions: provider.options,
         messages: messagesForDataStream,
         tools,
         toolChoice: shouldDisableTools ? 'none' : 'auto',
-        onFinish: (result) => {
+        stopWhen: stepCountIs(64),
+        onFinish: (finishResult) => {
           onFinishHandler({
-            dataStream,
+            writer,
             messages,
-            result,
+            result: finishResult,
             tracer,
             chatInitialId,
             recordUsageCb,
@@ -160,7 +166,7 @@ export async function convexAgent(args: {
             promptCharacterCounts,
             _startTime: startTime,
             _firstResponseTime: firstResponseTime,
-            providerModel: provider.model.modelId,
+            providerModel: (provider.model as any).modelId ?? 'unknown',
           });
         },
         onError({ error }) {
@@ -203,17 +209,26 @@ export async function convexAgent(args: {
         }
       })();
 
-      result.mergeIntoDataStream(dataStream);
+      // Merge the streamText result into the UI message stream
+      writer.merge(result.toUIMessageStream());
     },
-    onError(error: any) {
+    onError: (error: any) => {
       return error.message;
     },
   });
-  return dataStream;
+  return createUIMessageStreamResponse({
+    status: 200,
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      Connection: 'keep-alive',
+      'Cache-Control': 'no-cache',
+    },
+    stream,
+  });
 }
 
 async function onFinishHandler({
-  dataStream,
+  writer,
   messages,
   result,
   tracer,
@@ -230,13 +245,15 @@ async function onFinishHandler({
   _firstResponseTime,
   providerModel,
 }: {
-  dataStream: DataStreamWriter;
+  writer: UIMessageStreamWriter;
   messages: Messages;
-  result: Omit<StepResult<any>, 'stepType' | 'isContinued'>;
+  // In AI SDK 5, the onFinish result is a StepResult which has a different structure
+  // We use a flexible type here to accommodate the changes
+  result: any;
   tracer: Tracer | null;
   chatInitialId: string;
   recordUsageCb: (
-    lastMessage: Message | undefined,
+    lastMessage: UIMessage | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => Promise<void>;
   recordRawPromptsForDebugging: boolean;
@@ -251,11 +268,14 @@ async function onFinishHandler({
   providerModel: string;
 }) {
   const { providerMetadata } = result;
-  // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
+  // This usage accumulates across multiple /api/chat calls until finishReason of 'stop'.
+  // In AI SDK 5, usage is from final step; totalUsage is cumulative. Use totalUsage for billing.
+  const totalUsage = result.totalUsage;
+  // Convert AI SDK 5 property names to legacy names for Convex storage compatibility
   const usage = {
-    completionTokens: normalizeUsage(result.usage.completionTokens),
-    promptTokens: normalizeUsage(result.usage.promptTokens),
-    totalTokens: normalizeUsage(result.usage.totalTokens),
+    completionTokens: normalizeUsage(totalUsage.outputTokens ?? 0),
+    promptTokens: normalizeUsage(totalUsage.inputTokens ?? 0),
+    totalTokens: normalizeUsage(totalUsage.totalTokens ?? 0),
   };
   console.log('Finished streaming', {
     finishReason: result.finishReason,
@@ -304,13 +324,20 @@ async function onFinishHandler({
     if (result.finishReason === 'stop' || result.finishReason === 'unknown') {
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.role === 'assistant') {
-        // This field is deprecated, but for some reason, the new field "parts", does not contain all of the tool calls. This is likely a
-        // vercel bug. We do this at the end end the request because it's when we have the results from all of the tool calls.
-        const toolCalls = lastMessage.toolInvocations?.filter((t) => t.toolName === 'deploy' && t.state === 'result');
+        // In AI SDK 5, tool parts use type `tool-${toolName}` and have properties directly on the part
+        const toolParts = lastMessage.parts?.filter(
+          (p) => isToolUIPart(p) && getToolName(p) === 'deploy' && p.state === 'output-available',
+        );
         const successfulDeploys =
-          toolCalls?.filter((t) => t.state === 'result' && !t.result.startsWith('Error:')).length ?? 0;
+          toolParts?.filter(
+            (t) =>
+              isToolUIPart(t) &&
+              t.state === 'output-available' &&
+              typeof t.output === 'string' &&
+              !t.output.startsWith('Error:'),
+          ).length ?? 0;
         span.setAttribute('tools.successfulDeploys', successfulDeploys);
-        span.setAttribute('tools.failedDeploys', toolCalls ? toolCalls.length - successfulDeploys : 0);
+        span.setAttribute('tools.failedDeploys', toolParts ? toolParts.length - successfulDeploys : 0);
       }
       span.setAttribute('tools.disabledFromRepeatedErrors', toolsDisabledFromRepeatedErrors ? 'true' : 'false');
     }
@@ -318,7 +345,8 @@ async function onFinishHandler({
   }
 
   if (toolsDisabledFromRepeatedErrors) {
-    dataStream.writeMessageAnnotation({ type: 'failure', reason: REPEATED_ERROR_REASON });
+    // Write custom data part for failure annotation
+    writer.write({ type: 'data-annotation', data: { type: 'failure', reason: REPEATED_ERROR_REASON } });
   }
 
   let toolCallId: { kind: 'tool-call'; toolCallId: string } | { kind: 'final' } | undefined;
@@ -337,15 +365,28 @@ async function onFinishHandler({
     toolCallId = { kind: 'final' };
   }
   if (toolCallId) {
-    const annotation = encodeUsageAnnotation(toolCallId, usage, providerMetadata);
-    dataStream.writeMessageAnnotation({ type: 'usage', usage: annotation });
+    // encodeUsageAnnotation expects the legacy usage format with promptTokens/completionTokens
+    const legacyUsage = {
+      promptTokens: usage.promptTokens,
+      completionTokens: usage.completionTokens,
+      totalTokens: usage.totalTokens,
+    };
+    const annotation = encodeUsageAnnotation(toolCallId, legacyUsage, providerMetadata);
+    // Write custom data parts for usage and model annotations
+    writer.write({ type: 'data-usage', data: { type: 'usage', usage: annotation } });
     const modelAnnotation = encodeModelAnnotation(toolCallId, providerMetadata, modelChoice);
-    dataStream.writeMessageAnnotation({ type: 'model', ...modelAnnotation });
+    writer.write({ type: 'data-model', data: { type: 'model', ...modelAnnotation } });
   }
 
   // Record usage once we've generated the final part.
+  // Convert usage to LanguageModelUsage format (AI SDK 5 format) for the callback
+  const usageForCallback: LanguageModelUsage = {
+    inputTokens: usage.promptTokens,
+    outputTokens: usage.completionTokens,
+    totalTokens: usage.totalTokens,
+  };
   if (result.finishReason === 'stop') {
-    await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata });
+    await recordUsageCb(messages[messages.length - 1], { usage: usageForCallback, providerMetadata });
   }
   if (recordRawPromptsForDebugging) {
     const responseCoreMessages = result.response.messages as (CoreAssistantMessage | CoreToolMessage)[];
@@ -357,7 +398,7 @@ async function onFinishHandler({
         responseCoreMessages,
         result,
         {
-          usage,
+          usage: usageForCallback,
           providerMetadata,
         },
         modelProvider,
@@ -439,7 +480,7 @@ async function storeDebugPrompt(
   promptCoreMessages: CoreMessage[],
   chatInitialId: string,
   responseCoreMessages: CoreMessage[],
-  result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
+  result: { finishReason: string; response: { modelId?: string; messages: CoreMessage[] } },
   generation: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   modelProvider: ModelProvider,
 ) {

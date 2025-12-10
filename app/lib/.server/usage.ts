@@ -1,4 +1,4 @@
-import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
+import type { LanguageModelUsage, UIMessage, ProviderMetadata } from 'ai';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
 import type { ProviderType, UsageAnnotation } from '~/lib/common/annotations';
@@ -26,9 +26,16 @@ export async function checkTokenUsage(
   return tokenUsage;
 }
 
+// Legacy usage format for Convex storage compatibility
+interface LegacyUsage {
+  completionTokens: number;
+  promptTokens: number;
+  totalTokens: number;
+}
+
 export function encodeUsageAnnotation(
   toolCallId: { kind: 'tool-call'; toolCallId: string | undefined } | { kind: 'final' },
-  usage: LanguageModelUsage,
+  usage: LegacyUsage,
   providerMetadata: ProviderMetadata | undefined,
 ) {
   const payload: UsageAnnotation = {
@@ -74,7 +81,7 @@ export async function recordUsage(
   modelProvider: ModelProvider,
   teamSlug: string,
   deploymentName: string | undefined,
-  lastMessage: Message | undefined,
+  lastMessage: UIMessage | undefined,
   finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
 ) {
   const totalUsageBilledFor = await calculateTotalBilledUsageForMessage(lastMessage, finalGeneration);

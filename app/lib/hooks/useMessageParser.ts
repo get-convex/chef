@@ -1,10 +1,12 @@
-import type { Message, UIMessage } from 'ai';
+import type { UIMessage } from 'ai';
+import { isToolUIPart } from 'ai';
 import { useCallback, useRef, useState } from 'react';
 import { StreamingMessageParser } from 'chef-agent/message-parser';
 import { workbenchStore } from '~/lib/stores/workbench.client';
 import { makePartId, type PartId } from 'chef-agent/partId';
 import type { BoltAction } from 'chef-agent/types';
 import { EXCLUDED_FILE_PATHS } from 'chef-agent/constants';
+import type { LegacyCompatibleMessage } from '~/lib/common/messageHelpers';
 
 export const messageParser = new StreamingMessageParser({
   callbacks: {
@@ -37,24 +39,31 @@ export const messageParser = new StreamingMessageParser({
   },
 });
 
-export type PartCache = Map<PartId, { original: Part; parsed: Part }>;
+// Part type - using UIMessage parts from AI SDK 5
+type LegacyPart = UIMessage['parts'][number];
 
-function isPartMaybeEqual(a: Part, b: Part): boolean {
+export type PartCache = Map<PartId, { original: LegacyPart; parsed: LegacyPart }>;
+
+function isPartMaybeEqual(a: LegacyPart, b: LegacyPart): boolean {
   if (a.type === 'text' && b.type === 'text') {
     return a.text === b.text;
   }
-  if (a.type === 'tool-invocation' && b.type === 'tool-invocation') {
-    if (a.toolInvocation.state === 'result' && b.toolInvocation.state === 'result') {
-      return a.toolInvocation.toolCallId === b.toolInvocation.toolCallId;
+  // Handle AI SDK 5 tool parts (type starts with 'tool-')
+  if (isToolUIPart(a as any) && isToolUIPart(b as any)) {
+    const aToolPart = a as any;
+    const bToolPart = b as any;
+    // Consider equal if same toolCallId and both have output available
+    if (aToolPart.state === 'output-available' && bToolPart.state === 'output-available') {
+      return aToolPart.toolCallId === bToolPart.toolCallId;
     }
   }
   return false;
 }
 
 export function processMessage(
-  message: Message,
+  message: LegacyCompatibleMessage,
   previousParts: PartCache,
-): { message: Message; hitRate: [number, number] } {
+): { message: LegacyCompatibleMessage; hitRate: [number, number] } {
   if (message.role === 'user') {
     return { message, hitRate: [0, 0] };
   }
@@ -73,49 +82,65 @@ export function processMessage(
       continue;
     }
     let newPart;
-    switch (part.type) {
-      case 'text': {
-        let prevContent = '';
-        if (cacheEntry && cacheEntry.parsed.type === 'text') {
-          prevContent = cacheEntry.parsed.text;
-        }
-        const delta = messageParser.parse(partId, part.text);
-        newPart = {
-          type: 'text' as const,
-          text: prevContent + delta,
-        };
-        break;
+    // Check for AI SDK 5 tool parts (type: 'tool-${toolName}')
+    if (isToolUIPart(part)) {
+      // AI SDK 5 format: type is 'tool-${toolName}', properties are input/output
+      const toolPart = part as any;
+      const toolName = toolPart.type.replace(/^tool-/, '');
+
+      // Convert AI SDK 5 state to legacy state format for compatibility
+      let legacyState: 'partial-call' | 'call' | 'result';
+      if (toolPart.state === 'input-streaming') {
+        legacyState = 'partial-call';
+      } else if (toolPart.state === 'input-available') {
+        legacyState = 'call';
+      } else {
+        // output-available or output-error
+        legacyState = 'result';
       }
-      case 'tool-invocation': {
-        const { toolInvocation } = part;
-        workbenchStore.addArtifact({
-          id: partId,
-          partId,
-          title: 'Editing files...',
-        });
-        const data = {
-          artifactId: partId,
-          partId,
-          actionId: toolInvocation.toolCallId,
-          action: {
-            type: 'toolUse' as const,
-            toolName: toolInvocation.toolName,
-            parsedContent: toolInvocation,
-            content: JSON.stringify(toolInvocation),
-          },
-        };
-        workbenchStore.addAction(data);
-        if (toolInvocation.state === 'call' || toolInvocation.state === 'result') {
-          workbenchStore.runAction(data);
-        }
-        newPart = {
-          type: 'tool-invocation' as const,
-          toolInvocation,
-        };
+
+      // Create a legacy-compatible toolInvocation object
+      const toolInvocation = {
+        toolCallId: toolPart.toolCallId,
+        toolName,
+        state: legacyState,
+        args: toolPart.input,
+        result: toolPart.output != null ? String(toolPart.output) : undefined,
+      };
+
+      workbenchStore.addArtifact({
+        id: partId,
+        partId,
+        title: 'Editing files...',
+      });
+      const data = {
+        artifactId: partId,
+        partId,
+        actionId: toolInvocation.toolCallId,
+        action: {
+          type: 'toolUse' as const,
+          toolName: toolInvocation.toolName,
+          parsedContent: toolInvocation,
+          content: JSON.stringify(toolInvocation),
+        },
+      };
+      workbenchStore.addAction(data);
+      if (legacyState === 'call' || legacyState === 'result') {
+        workbenchStore.runAction(data);
       }
-      default: {
-        newPart = part;
+      newPart = part; // Keep the original part for rendering
+    } else if (part.type === 'text') {
+      let prevContent = '';
+      if (cacheEntry && cacheEntry.parsed.type === 'text') {
+        prevContent = cacheEntry.parsed.text;
       }
+      const delta = messageParser.parse(partId, part.text);
+      newPart = {
+        type: 'text' as const,
+        text: prevContent + delta,
+      };
+    } else {
+      newPart = part;
     }
     parsedParts.push(newPart);
     previousParts.set(partId, { original: part, parsed: newPart });
@@ -123,22 +148,20 @@ export function processMessage(
   return {
     message: {
       ...message,
-      parts: parsedParts,
+      parts: parsedParts as any,
     },
-    hitRate: [hits, message.parts.length],
+    hitRate: [hits, (message.parts ?? []).length],
   };
 }
 
-type Part = UIMessage['parts'][number];
-
 export function useMessageParser(partCache: PartCache) {
-  const [parsedMessages, setParsedMessages] = useState<Message[]>([]);
+  const [parsedMessages, setParsedMessages] = useState<LegacyCompatibleMessage[]>([]);
 
-  const previousMessages = useRef<{ original: Message; parsed: Message }[]>([]);
+  const previousMessages = useRef<{ original: LegacyCompatibleMessage; parsed: LegacyCompatibleMessage }[]>([]);
   const previousParts = useRef<PartCache>(partCache);
 
-  const parseMessages = useCallback((messages: Message[]) => {
-    const nextPrevMessages: { original: Message; parsed: Message }[] = [];
+  const parseMessages = useCallback((messages: LegacyCompatibleMessage[]) => {
+    const nextPrevMessages: { original: LegacyCompatibleMessage; parsed: LegacyCompatibleMessage }[] = [];
 
     for (let i = 0; i < messages.length; i++) {
       const prev = previousMessages.current[i];

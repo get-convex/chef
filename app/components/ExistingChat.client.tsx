@@ -10,6 +10,7 @@ import { useReloadMessages } from '~/lib/stores/startup/reloadMessages';
 import { useSplines } from '~/lib/splines';
 import { UserProvider } from '~/components/UserProvider';
 import { Toaster } from '~/components/ui/Toaster';
+import { isToolUIPart, getToolName } from 'ai';
 
 export function ExistingChat({ chatId }: { chatId: string }) {
   // Fill in the chatID store from props early in app initialization. If this
@@ -74,7 +75,9 @@ function ExistingChatWrapper({ chatId }: { chatId: string }) {
   const hadSuccessfulDeploy = initialMessages?.some(
     (message) =>
       message.role === 'assistant' &&
-      message.parts?.some((part) => part.type === 'tool-invocation' && part.toolInvocation.toolName === 'deploy'),
+      // In AI SDK 5, tool parts are identified via isToolUIPart helper
+      // toolName is accessed via getToolName() helper
+      message.parts?.some((part) => isToolUIPart(part) && getToolName(part) === 'deploy'),
   );
 
   if (initialMessages === null) {
