@@ -1,4 +1,3 @@
-import type { Message } from '@ai-sdk/react';
 import { atom } from 'nanostores';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { getKnownUrlId, setKnownInitialId, setKnownUrlId } from '~/lib/stores/chatId';
@@ -8,12 +7,13 @@ import { api } from '@convex/_generated/api';
 import { description as descriptionStore } from '~/lib/stores/description';
 import { compressWithLz4 } from '~/lib/compression';
 import { stripMetadata } from '~/components/chat/UserMessage';
+import { type LegacyCompatibleMessage, getMessageContent } from '~/lib/common/messageHelpers';
 
 type CompleteMessageInfo = {
   messageIndex: number;
   partIndex: number;
   hasNextPart: boolean;
-  allMessages: Message[];
+  allMessages: LegacyCompatibleMessage[];
 };
 
 export const lastCompleteMessageInfoStore = atom<CompleteMessageInfo | null>(null);
@@ -44,7 +44,7 @@ export async function prepareMessageHistory(args: {
   url.searchParams.set('lastMessageRank', messageIndex.toString());
   url.searchParams.set('partIndex', partIndex.toString());
   url.searchParams.set('lastSubchatIndex', args.subchatIndex.toString());
-  const firstMessage = allMessages.length > 0 ? stripMetadata(allMessages[0].content) : undefined;
+  const firstMessage = allMessages.length > 0 ? stripMetadata(getMessageContent(allMessages[0])) : undefined;
   if (messageIndex === persistedMessageInfo.messageIndex && partIndex === persistedMessageInfo.partIndex) {
     // No changes
     return { url, update: null };
@@ -98,7 +98,7 @@ export async function waitForNewMessages(messageIndex: number, partIndex: number
   });
 }
 
-function extractUrlHintAndDescription(messages: Message[]) {
+function extractUrlHintAndDescription(messages: LegacyCompatibleMessage[]) {
   /*
    * This replicates the original bolt.diy behavior of client-side assigning a URL + description
    * based on the first artifact registered.
@@ -122,7 +122,7 @@ function extractUrlHintAndDescription(messages: Message[]) {
   return null;
 }
 
-export function serializeMessageForConvex(message: Message) {
+export function serializeMessageForConvex(message: LegacyCompatibleMessage) {
   // `content` + `toolInvocations` are legacy fields that are duplicated in `parts`.
   // We should avoid storing them since we already store `parts`.
   const { content: _content, toolInvocations: _toolInvocations, ...rest } = message;
@@ -134,7 +134,11 @@ export function serializeMessageForConvex(message: Message) {
   };
 }
 
-async function compressMessages(messages: Message[], lastMessageRank: number, partIndex: number): Promise<Uint8Array> {
+async function compressMessages(
+  messages: LegacyCompatibleMessage[],
+  lastMessageRank: number,
+  partIndex: number,
+): Promise<Uint8Array> {
   const slicedMessages = messages.slice(0, lastMessageRank + 1);
   slicedMessages[lastMessageRank].parts = slicedMessages[lastMessageRank].parts?.slice(0, partIndex + 1);
   const serialized = slicedMessages.map(serializeMessageForConvex);

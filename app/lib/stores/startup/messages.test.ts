@@ -1,5 +1,4 @@
 import { expect, test, describe, vi } from 'vitest';
-import type { Message } from '@ai-sdk/react';
 import { serializeMessageForConvex } from './messages';
 
 vi.mock('lz4-wasm', () => ({
@@ -9,7 +8,8 @@ vi.mock('lz4-wasm', () => ({
 
 describe('serializeMessageForConvex', () => {
   test('preserves non-text parts', () => {
-    const message: Message = {
+    // Using any for backwards compatibility with legacy message format
+    const message: any = {
       id: 'test',
       role: 'user',
       content: '',

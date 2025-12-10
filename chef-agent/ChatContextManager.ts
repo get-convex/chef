@@ -1,4 +1,4 @@
-import { type ToolInvocation, type UIMessage } from 'ai';
+import { type UIToolInvocation, type UIMessage, isToolUIPart, getToolName } from 'ai';
 import { type AbsolutePath, getAbsolutePath } from './utils/workDir.js';
 import { type Dirent, type EditorDocument, type FileMap } from './types.js';
 import { PREWARM_PATHS, WORK_DIR } from './constants.js';
@@ -15,6 +15,13 @@ const MAX_RELEVANT_FILES = 16;
 
 type UIMessagePart = UIMessage['parts'][number];
 
+// Legacy message type with content string for backwards compatibility
+interface LegacyUIMessage extends UIMessage {
+  content?: string;
+  createdAt?: Date;
+  annotations?: unknown[];
+}
+
 export type PromptCharacterCounts = {
   messageHistoryChars: number;
   currentTurnChars: number;
@@ -26,9 +33,9 @@ type ParsedAssistantMessage = {
 };
 
 export class ChatContextManager {
-  assistantMessageCache: WeakMap<UIMessage, ParsedAssistantMessage> = new WeakMap();
-  messageSizeCache: WeakMap<UIMessage, number> = new WeakMap();
-  partSizeCache: WeakMap<UIMessagePart, number> = new WeakMap();
+  assistantMessageCache: WeakMap<LegacyUIMessage, ParsedAssistantMessage> = new WeakMap();
+  messageSizeCache: WeakMap<LegacyUIMessage, number> = new WeakMap();
+  partSizeCache: WeakMap<any, number> = new WeakMap();
   messageIndex: number = -1;
   partIndex: number = -1;
 
@@ -61,10 +68,10 @@ export class ChatContextManager {
    *    by the full fidelity recent chat history, up to maxCollapsedMessagesSize.
    */
   prepareContext(
-    messages: UIMessage[],
+    messages: LegacyUIMessage[],
     maxCollapsedMessagesSize: number,
     minCollapsedMessagesSize: number,
-  ): { messages: UIMessage[]; collapsedMessages: boolean; promptCharacterCounts?: PromptCharacterCounts } {
+  ): { messages: LegacyUIMessage[]; collapsedMessages: boolean; promptCharacterCounts?: PromptCharacterCounts } {
     // If the last message is a user message this is the first LLM call that includes that user message.
     // Only update the relevant files and the message cutoff indices if the last message is a user message to avoid clearing the cache as the agent makes changes.
     let collapsedMessages = false;
@@ -89,7 +96,7 @@ export class ChatContextManager {
   /**
    * Calculate character counts for different parts of the prompt
    */
-  calculatePromptCharacterCounts(messages: UIMessage[], systemPrompts?: string[]): PromptCharacterCounts {
+  calculatePromptCharacterCounts(messages: LegacyUIMessage[], systemPrompts?: string[]): PromptCharacterCounts {
     // Calculate message history character count (excluding current turn)
     let messageHistoryChars = 0;
     const lastMessage = messages[messages.length - 1];
@@ -125,22 +132,24 @@ export class ChatContextManager {
     };
   }
 
-  private messageSize(message: UIMessage): number {
+  private messageSize(message: LegacyUIMessage): number {
     const cached = this.messageSizeCache.get(message);
     if (cached !== undefined) {
       return cached;
     }
 
-    let size = message.content.length;
-    for (const part of message.parts) {
-      size += this.partSize(part);
+    // In AI SDK 5, UIMessage doesn't have content string directly
+    // Use legacy content property or compute from parts
+    let size = (message.content ?? '').length;
+    for (const part of message.parts ?? []) {
+      size += this.partSize(part as any);
     }
 
     this.messageSizeCache.set(message, size);
     return size;
   }
 
-  relevantFiles(messages: UIMessage[], id: string, maxRelevantFilesSize: number): UIMessage {
+  relevantFiles(messages: LegacyUIMessage[], id: string, maxRelevantFilesSize: number): LegacyUIMessage {
     const currentDocument = this.getCurrentDocument();
     const cache = this.getFiles();
     const allPaths = Object.keys(cache).sort();
@@ -170,7 +179,7 @@ export class ChatContextManager {
         const lastUsedTime = (createdAt ?? partCounter) + partIndex;
         lastUsed.set(absPath, lastUsedTime);
       }
-      partCounter += message.parts.length;
+      partCounter += (message.parts ?? []).length;
     }
 
     for (const [path, lastUsedTime] of this.getUserWrites().entries()) {
@@ -222,40 +231,46 @@ export class ChatContextManager {
         content: '',
         role: 'user',
         parts: [],
-      };
+      } as LegacyUIMessage;
     }
     return makeUserMessage(fileActions, id);
   }
 
-  private collapseMessages(messages: UIMessage[]): UIMessage[] {
-    const fullMessages = [];
+  private collapseMessages(messages: LegacyUIMessage[]): LegacyUIMessage[] {
+    const fullMessages: LegacyUIMessage[] = [];
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i];
       if (i < this.messageIndex) {
         continue;
       } else if (i === this.messageIndex) {
-        const filteredParts = message.parts.filter((p, j) => {
-          if (p.type !== 'tool-invocation' || p.toolInvocation.state !== 'result') {
+        const filteredParts = (message.parts ?? []).filter((p: any, j: number) => {
+          // In AI SDK 5, tool parts are checked via isToolUIPart and have state directly
+          // Handle both new format and legacy format with toolInvocation
+          if (isToolUIPart(p)) {
+            if (p.state !== 'output-available' && p.state !== 'output-error') {
+              return true;
+            }
+          } else if (p.type === 'tool-invocation' && p.toolInvocation?.state !== 'result') {
+            return true;
+          } else if (p.type !== 'tool-invocation' && !isToolUIPart(p)) {
             return true;
           }
           return j > this.partIndex;
         });
-        const remainingMessage = {
+        const remainingMessage: LegacyUIMessage = {
           ...message,
-          content: StreamingMessageParser.stripArtifacts(message.content),
-          parts: filteredParts,
+          content: StreamingMessageParser.stripArtifacts(message.content ?? ''),
+          parts: filteredParts as any,
         };
         fullMessages.push(remainingMessage);
       } else {
         fullMessages.push(message);
       }
     }
-    const result: UIMessage[] = [];
-    result.push(...fullMessages);
-    return result;
+    return fullMessages;
   }
 
-  shouldSendRelevantFiles(messages: UIMessage[], maxCollapsedMessagesSize: number): boolean {
+  shouldSendRelevantFiles(messages: LegacyUIMessage[], maxCollapsedMessagesSize: number): boolean {
     // Always send files on the first message
     if (messages.length === 0) {
       return true;
@@ -270,7 +285,7 @@ export class ChatContextManager {
     // Check if any previous messages contain file artifacts with non-empty content
     for (const message of messages) {
       if (message.role === 'user') {
-        for (const part of message.parts) {
+        for (const part of message.parts ?? []) {
           if (part.type === 'text' && part.text.includes('title="Relevant Files"')) {
             // Check if there's actual content between the boltAction tags
             // We used to strip out the file content when serializing messages to store in Convex
@@ -287,13 +302,19 @@ export class ChatContextManager {
     return true;
   }
 
-  private messagePartCutoff(messages: UIMessage[], maxCollapsedMessagesSize: number): [number, number] {
+  private messagePartCutoff(messages: LegacyUIMessage[], maxCollapsedMessagesSize: number): [number, number] {
     let remaining = maxCollapsedMessagesSize;
     for (let messageIndex = messages.length - 1; messageIndex >= 0; messageIndex--) {
       const message = messages[messageIndex];
-      for (let partIndex = message.parts.length - 1; partIndex >= 0; partIndex--) {
-        const part = message.parts[partIndex];
-        if (part.type === 'tool-invocation' && part.toolInvocation.state !== 'result') {
+      const parts = message.parts ?? [];
+      for (let partIndex = parts.length - 1; partIndex >= 0; partIndex--) {
+        const part = parts[partIndex] as any;
+        // Handle both new AI SDK 5 format and legacy format
+        if (isToolUIPart(part)) {
+          if (part.state !== 'output-available' && part.state !== 'output-error') {
+            continue;
+          }
+        } else if (part.type === 'tool-invocation' && part.toolInvocation?.state !== 'result') {
           continue;
         }
         const size = this.partSize(part);
@@ -306,7 +327,7 @@ export class ChatContextManager {
     return [-1, -1];
   }
 
-  private parsedAssistantMessage(message: UIMessage): ParsedAssistantMessage | null {
+  private parsedAssistantMessage(message: LegacyUIMessage): ParsedAssistantMessage | null {
     if (message.role !== 'assistant') {
       return null;
     }
@@ -316,33 +337,39 @@ export class ChatContextManager {
     }
 
     const filesTouched = new Map<AbsolutePath, number>();
-    for (const file of extractFileArtifacts(makePartId(message.id, 0), message.content)) {
+    for (const file of extractFileArtifacts(makePartId(message.id, 0), message.content ?? '')) {
       filesTouched.set(getAbsolutePath(file), 0);
     }
-    for (let j = 0; j < message.parts.length; j++) {
-      const part = message.parts[j];
+    const parts = message.parts ?? [];
+    for (let j = 0; j < parts.length; j++) {
+      const part = parts[j] as any;
       if (part.type === 'text') {
         const files = extractFileArtifacts(makePartId(message.id, j), part.text);
         for (const file of files) {
           filesTouched.set(getAbsolutePath(file), j);
         }
       }
-      if (
-        part.type == 'tool-invocation' &&
-        part.toolInvocation.toolName == 'view' &&
-        part.toolInvocation.state !== 'partial-call'
-      ) {
-        const args = loggingSafeParse(viewParameters, part.toolInvocation.args);
+      // Handle both new AI SDK 5 format (isToolUIPart) and legacy format (type === 'tool-invocation')
+      const isViewTool = isToolUIPart(part)
+        ? getToolName(part) === 'view' && part.state !== 'input-streaming'
+        : part.type === 'tool-invocation' &&
+          part.toolInvocation?.toolName === 'view' &&
+          part.toolInvocation?.state !== 'partial-call';
+      if (isViewTool) {
+        const toolInput = isToolUIPart(part) ? part.input : part.toolInvocation?.args;
+        const args = loggingSafeParse(viewParameters, toolInput);
         if (args.success) {
           filesTouched.set(getAbsolutePath(args.data.path), j);
         }
       }
-      if (
-        part.type == 'tool-invocation' &&
-        part.toolInvocation.toolName == 'edit' &&
-        part.toolInvocation.state !== 'partial-call'
-      ) {
-        const args = loggingSafeParse(editToolParameters, part.toolInvocation.args);
+      const isEditTool = isToolUIPart(part)
+        ? getToolName(part) === 'edit' && part.state !== 'input-streaming'
+        : part.type === 'tool-invocation' &&
+          part.toolInvocation?.toolName === 'edit' &&
+          part.toolInvocation?.state !== 'partial-call';
+      if (isEditTool) {
+        const toolInput = isToolUIPart(part) ? part.input : part.toolInvocation?.args;
+        const args = loggingSafeParse(editToolParameters, toolInput);
         if (args.success) {
           filesTouched.set(getAbsolutePath(args.data.path), j);
         }
@@ -355,44 +382,65 @@ export class ChatContextManager {
     return result;
   }
 
-  private partSize(part: UIMessagePart) {
+  private partSize(part: any) {
     const cached = this.partSizeCache.get(part);
     if (cached) {
       return cached;
     }
     let result = 0;
-    switch (part.type) {
-      case 'text':
-        result = part.text.length;
-        break;
-      case 'file':
-        result += part.data.length;
-        result += part.mimeType.length;
-        break;
-      case 'reasoning':
-        result += part.reasoning.length;
-        break;
-      case 'tool-invocation':
-        result += JSON.stringify(part.toolInvocation.args).length;
-        if (part.toolInvocation.state === 'result') {
-          result += JSON.stringify(part.toolInvocation.result).length;
-        }
-        break;
-      case 'source':
-        result += (part.source.title ?? '').length;
-        result += part.source.url.length;
-        break;
-      case 'step-start':
-        break;
-      default:
-        throw new Error(`Unknown part type: ${JSON.stringify(part)}`);
+    // Handle AI SDK 5 tool parts first
+    if (isToolUIPart(part)) {
+      result += JSON.stringify(part.input ?? {}).length;
+      if (part.state === 'output-available') {
+        result += JSON.stringify(part.output ?? '').length;
+      }
+    } else {
+      switch (part.type) {
+        case 'text':
+          result = part.text?.length ?? 0;
+          break;
+        case 'file':
+          // AI SDK 5 file parts have url instead of data, mediaType instead of mimeType
+          result += part.data?.length ?? part.url?.length ?? 0;
+          result += part.mimeType?.length ?? part.mediaType?.length ?? 0;
+          break;
+        case 'reasoning':
+          // AI SDK 5 reasoning parts use 'content' not 'reasoning'
+          result += part.content?.length ?? part.reasoning?.length ?? 0;
+          break;
+        case 'tool-invocation':
+          // Legacy format with toolInvocation property
+          if (part.toolInvocation) {
+            result += JSON.stringify(part.toolInvocation.args ?? {}).length;
+            if (part.toolInvocation.state === 'result') {
+              result += JSON.stringify(part.toolInvocation.result ?? '').length;
+            }
+          }
+          break;
+        case 'source':
+          // Legacy source type
+          result += (part.source?.title ?? '').length;
+          result += (part.source?.url ?? '').length;
+          break;
+        case 'source-url':
+        case 'source-document':
+          // AI SDK 5 source types
+          result += (part.title ?? '').length;
+          result += (part.url ?? '').length;
+          break;
+        case 'step-start':
+          break;
+        default:
+          // Don't throw for unknown types - just skip
+          break;
+      }
     }
     this.partSizeCache.set(part, result);
     return result;
   }
 }
 
-function makeUserMessage(content: string[], id: string): UIMessage {
+function makeUserMessage(content: string[], id: string): LegacyUIMessage {
   const parts: UIMessagePart[] = content.map((c) => ({
     type: 'text',
     // N.B. Do not change this title "Relevant Files" without also updating `extractUrlHintAndDescription`. It's super jank
@@ -405,7 +453,7 @@ ${c}
     content: '',
     role: 'user',
     parts,
-  };
+  } as LegacyUIMessage;
 }
 
 function estimateSize(entry: Dirent): number {
@@ -416,17 +464,24 @@ function estimateSize(entry: Dirent): number {
   }
 }
 
-function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
-  if (toolInvocation.state !== 'result') {
+// In AI SDK 5, UIToolInvocation is the tool invocation type
+// We accept any for backwards compatibility with stored data using legacy format
+function abbreviateToolInvocation(toolInvocation: any): string {
+  // Handle both legacy 'result' state and new 'output-available' state
+  const isComplete = toolInvocation.state === 'result' || toolInvocation.state === 'output-available';
+  if (!isComplete) {
     throw new Error(`Invalid tool invocation state: ${toolInvocation.state}`);
   }
-  const wasError = toolInvocation.result.startsWith('Error:');
+  // Handle both legacy 'result' property and new 'output' property
+  const result = toolInvocation.result ?? String(toolInvocation.output ?? '');
+  const wasError = result.startsWith('Error:');
   let toolCall: string;
   switch (toolInvocation.toolName) {
     case 'view': {
-      const args = loggingSafeParse(viewParameters, toolInvocation.args);
+      // Handle both legacy 'args' property and new 'input' property
+      const args = loggingSafeParse(viewParameters, toolInvocation.args ?? toolInvocation.input);
       let verb = 'viewed';
-      if (toolInvocation.result.startsWith('Directory:')) {
+      if (result.startsWith('Directory:')) {
         verb = 'listed';
       }
       toolCall = `${verb} ${args?.data?.path || 'unknown file'}`;
@@ -437,7 +492,8 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       break;
     }
     case 'npmInstall': {
-      const args = loggingSafeParse(npmInstallToolParameters, toolInvocation.args);
+      // Handle both legacy 'args' property and new 'input' property
+      const args = loggingSafeParse(npmInstallToolParameters, toolInvocation.args ?? toolInvocation.input);
       if (args.success) {
         toolCall = `installed the dependencies ${args.data.packages}`;
       } else {
@@ -446,7 +502,8 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       break;
     }
     case 'edit': {
-      const args = loggingSafeParse(editToolParameters, toolInvocation.args);
+      // Handle both legacy 'args' property and new 'input' property
+      const args = loggingSafeParse(editToolParameters, toolInvocation.args ?? toolInvocation.input);
       if (args.success) {
         toolCall = `edited the file ${args.data.path}`;
       } else {

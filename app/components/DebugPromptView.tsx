@@ -114,10 +114,12 @@ function getMessageCharCount(message: CoreMessage): number {
       if (isTextPart(part)) return sum + part.text.length;
       if (isFilePart(part) && typeof part.data === 'string') return sum + part.data.length;
       if (isToolCallPart(part)) {
-        return sum + part.toolName.length + part.toolCallId.length + JSON.stringify(part.args).length;
+        // AI SDK 5: args renamed to input
+        return sum + part.toolName.length + part.toolCallId.length + JSON.stringify(part.input).length;
       }
       if (part.type === 'tool-result') {
-        return sum + part.toolName.length + part.toolCallId.length + JSON.stringify(part.result).length;
+        // AI SDK 5: result renamed to output
+        return sum + part.toolName.length + part.toolCallId.length + JSON.stringify(part.output).length;
       }
       return sum;
     }, 0);
@@ -320,7 +322,7 @@ function MessageContentView({ content, showRawJson = false }: MessageContentView
             const fileData = typeof part.data === 'string' ? part.data : '[Binary Data]';
             return (
               <div key={idx} className="rounded bg-purple-50 p-2 dark:bg-purple-900/10">
-                <div className="text-xs font-medium text-purple-500">file: {part.filename || part.mimeType}</div>
+                <div className="text-xs font-medium text-purple-500">file: {part.filename || part.mediaType}</div>
                 <div className="whitespace-pre-wrap font-mono text-sm">{fileData}</div>
               </div>
             );

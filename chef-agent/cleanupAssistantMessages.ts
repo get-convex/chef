@@ -1,12 +1,20 @@
-import { convertToCoreMessages } from 'ai';
-import type { Message } from 'ai';
+import { convertToCoreMessages, isToolUIPart, type UIMessage } from 'ai';
 import { EXCLUDED_FILE_PATHS } from './constants.js';
 
-export function cleanupAssistantMessages(messages: Message[]) {
+// Legacy message type for backwards compatibility with stored data
+type LegacyMessage = UIMessage & {
+  content?: string;
+  annotations?: unknown[];
+  toolInvocations?: unknown[];
+};
+
+export function cleanupAssistantMessages(messages: LegacyMessage[]) {
   let processedMessages = messages.map((message) => {
     if (message.role == 'assistant') {
-      let content = cleanMessage(message.content);
-      let parts = message.parts?.map((part) => {
+      // Get content from parts or legacy content property
+      const originalContent = message.content ?? '';
+      let content = cleanMessage(originalContent);
+      let parts = message.parts?.map((part: any) => {
         if (part.type === 'text') {
           part.text = cleanMessage(part.text);
         }
@@ -18,13 +26,16 @@ export function cleanupAssistantMessages(messages: Message[]) {
     }
   });
   // Filter out empty messages and messages with empty parts
+  // In AI SDK 5, tool parts use isToolUIPart helper instead of type === 'tool-invocation'
   processedMessages = processedMessages.filter(
     (message) =>
-      message.content.trim() !== '' ||
+      (message.content ?? '').trim() !== '' ||
       (message.parts &&
-        message.parts.filter((part) => part.type === 'text' || part.type === 'tool-invocation').length > 0),
+        message.parts.filter(
+          (part: any) => part.type === 'text' || isToolUIPart(part) || part.type === 'tool-invocation',
+        ).length > 0),
   );
-  return convertToCoreMessages(processedMessages).filter((message) => message.content.length > 0);
+  return convertToCoreMessages(processedMessages as any).filter((message) => message.content.length > 0);
 }
 
 function cleanMessage(message: string) {

@@ -1,16 +1,33 @@
-import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
+import type { LanguageModelUsage, UIMessage, ProviderMetadata } from 'ai';
+import { isToolUIPart } from 'ai';
 import { type ProviderType, type Usage, type UsageAnnotation, parseAnnotations } from '~/lib/common/annotations';
 import { captureMessage } from '@sentry/remix';
 
-export function usageFromGeneration(generation: {
-  usage: LanguageModelUsage;
-  providerMetadata?: ProviderMetadata;
-}): Usage {
+// In AI SDK 5, tool parts have state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
+// We consider 'output-available' the equivalent of the old 'result' state
+
+// In AI SDK 5, LanguageModelUsage uses inputTokens/outputTokens
+// For backwards compatibility, we accept objects with either format
+type UsageInput = {
+  inputTokens?: number;
+  outputTokens?: number;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+};
+
+export function usageFromGeneration(generation: { usage: UsageInput; providerMetadata?: ProviderMetadata }): Usage {
   const bedrockUsage = generation.providerMetadata?.bedrock?.usage as any;
+  // In AI SDK 5, usage properties are renamed:
+  // - promptTokens -> inputTokens
+  // - completionTokens -> outputTokens
+  const inputTokens = generation.usage.inputTokens ?? generation.usage.promptTokens ?? 0;
+  const outputTokens = generation.usage.outputTokens ?? generation.usage.completionTokens ?? 0;
+  const totalTokens = generation.usage.totalTokens ?? inputTokens + outputTokens;
   return {
-    completionTokens: generation.usage.completionTokens,
-    promptTokens: generation.usage.promptTokens,
-    totalTokens: generation.usage.totalTokens,
+    completionTokens: outputTokens,
+    promptTokens: inputTokens,
+    totalTokens,
     providerMetadata: generation.providerMetadata,
     anthropicCacheCreationInputTokens: Number(generation.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0),
     anthropicCacheReadInputTokens: Number(generation.providerMetadata?.anthropic?.cacheReadInputTokens ?? 0),
@@ -39,14 +56,21 @@ export function initializeUsage(): Usage {
   };
 }
 
-export function getFailedToolCalls(message: Message): Set<string> {
+export function getFailedToolCalls(message: UIMessage): Set<string> {
   const failedToolCalls: Set<string> = new Set();
   for (const part of message.parts ?? []) {
-    if (part.type !== 'tool-invocation') {
+    if (!isToolUIPart(part)) {
       continue;
     }
-    if (part.toolInvocation.state === 'result' && part.toolInvocation.result.startsWith('Error:')) {
-      failedToolCalls.add(part.toolInvocation.toolCallId);
+    // In AI SDK 5, tool parts have state: 'output-available' or 'output-error'
+    // Check for output-available with error result, or output-error state
+    if (part.state === 'output-error') {
+      failedToolCalls.add(part.toolCallId);
+    } else if (part.state === 'output-available') {
+      const output = String(part.output ?? '');
+      if (output.startsWith('Error:')) {
+        failedToolCalls.add(part.toolCallId);
+      }
     }
   }
   return failedToolCalls;
@@ -73,10 +97,13 @@ export function calculateTotalUsage(args: {
 }
 
 export async function calculateTotalBilledUsageForMessage(
-  lastMessage: Message | undefined,
+  lastMessage: UIMessage | undefined,
   finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
 ): Promise<Usage> {
-  const { usageForToolCall } = parseAnnotations(lastMessage?.annotations ?? []);
+  // TODO: In AI SDK 5, annotations are handled differently - they're now in message.metadata
+  // or sent as custom data parts. For now, access via any cast for backwards compatibility.
+  const messageAny = lastMessage as any;
+  const { usageForToolCall } = parseAnnotations(messageAny?.annotations ?? []);
   // If there's an annotation for the final part, start with an empty usage, otherwise, create a
   // usage object from the passed in final generation.
   const startUsage = usageForToolCall.final ? initializeUsage() : usageFromGeneration(finalGeneration);

@@ -1,4 +1,3 @@
-import type { Message } from 'ai';
 import { z } from 'zod';
 
 // This is added as a message annotation by the server when the agent has
@@ -82,18 +81,20 @@ export const annotationValidator = z.discriminatedUnion('type', [
   }),
 ]);
 
-export const failedDueToRepeatedErrors = (annotations: Message['annotations']) => {
+// In AI SDK 5, annotations are handled differently (via data parts or metadata)
+// We accept unknown[] for backwards compatibility with stored data
+export const failedDueToRepeatedErrors = (annotations: unknown[] | undefined) => {
   if (!annotations) {
     return false;
   }
-  return annotations.some((annotation) => {
+  return annotations.some((annotation: unknown) => {
     const parsed = annotationValidator.safeParse(annotation);
     return parsed.success && parsed.data.type === 'failure' && parsed.data.reason === REPEATED_ERROR_REASON;
   });
 };
 
 export const parseAnnotations = (
-  annotations: Message['annotations'],
+  annotations: unknown[] | undefined,
 ): {
   failedDueToRepeatedErrors: boolean;
   usageForToolCall: Record<string, UsageAnnotation | null>;

@@ -1,4 +1,3 @@
-import type { Message } from 'ai';
 import { useEffect, useState } from 'react';
 import { makePartId } from 'chef-agent/partId';
 import { toast } from 'sonner';
@@ -6,12 +5,15 @@ import { workbenchStore } from '~/lib/stores/workbench.client';
 import { messageParser, processMessage, type PartCache } from '~/lib/hooks/useMessageParser';
 import { subchatIndexStore } from '~/lib/stores/subchats';
 import { useStore } from '@nanostores/react';
+import type { LegacyCompatibleMessage } from '~/lib/common/messageHelpers';
 
 export type ReloadedMessages = {
   partCache: PartCache;
 };
 
-export function useReloadMessages(initialMessages: Message[] | undefined): ReloadedMessages | undefined {
+export function useReloadMessages(
+  initialMessages: LegacyCompatibleMessage[] | undefined,
+): ReloadedMessages | undefined {
   const [reloadState, setReloadState] = useState<ReloadedMessages | undefined>(undefined);
   const subchatIndex = useStore(subchatIndexStore);
   useEffect(() => {

@@ -48,6 +48,36 @@ export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId:
   const artifacts = useStore(workbenchStore.artifacts);
   const artifact = artifacts[partId];
 
+  // Early return if artifact doesn't exist - must check before using artifact.runner
+  if (!artifact || !artifact.runner) {
+    return null;
+  }
+
+  return (
+    <ToolCallInner
+      toolCallId={toolCallId}
+      artifact={artifact}
+      userToggledAction={userToggledAction}
+      showAction={showAction}
+      setShowAction={setShowAction}
+    />
+  );
+});
+
+// Inner component that can safely use hooks requiring artifact.runner
+const ToolCallInner = memo(function ToolCallInner({
+  toolCallId,
+  artifact,
+  userToggledAction,
+  showAction,
+  setShowAction,
+}: {
+  toolCallId: string;
+  artifact: ArtifactState;
+  userToggledAction: React.MutableRefObject<boolean>;
+  showAction: boolean;
+  setShowAction: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const actions = useStore(artifact.runner.actions);
   const pair = Object.entries(actions).find(([actionId]) => actionId === toolCallId);
   const action = pair && pair[1];
@@ -63,11 +93,6 @@ export const ToolCall = memo(function ToolCall({ partId, toolCallId }: { partId:
 
   const title = action && toolTitle(parsed);
   const icon = action && statusIcon(action.status, parsed);
-
-  // Early return if artifact doesn't exist
-  if (!artifact) {
-    return null;
-  }
 
   if (!action) {
     return null;

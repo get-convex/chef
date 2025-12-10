@@ -7,7 +7,7 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
-import type { Message as AIMessage } from "ai";
+import type { UIMessage } from "ai";
 import { ConvexError, v } from "convex/values";
 import type { Infer } from "convex/values";
 import { isValidSession } from "./sessions";
@@ -16,9 +16,13 @@ import { ensureEnvVar, startProvisionConvexProjectHelper } from "./convexProject
 import { internal } from "./_generated/api";
 import { assertIsConvexAdmin } from "./admin";
 
-export type SerializedMessage = Omit<AIMessage, "createdAt" | "content"> & {
+// In AI SDK 5, UIMessage doesn't have content string directly.
+// For serialization/backwards compatibility, we extend with optional content.
+export type SerializedMessage = Omit<UIMessage, "createdAt"> & {
   createdAt: number | undefined;
   content?: string;
+  annotations?: unknown[];
+  toolInvocations?: unknown[];
 };
 
 export const CHAT_NOT_FOUND_ERROR = new ConvexError({ code: "NotFound", message: "Chat not found" });

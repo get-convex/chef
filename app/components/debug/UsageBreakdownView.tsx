@@ -1,5 +1,5 @@
-import type { Message } from 'ai';
-
+import type { UIMessage } from 'ai';
+import { isToolUIPart } from 'ai';
 import { useEffect } from 'react';
 
 import { useState } from 'react';
@@ -89,7 +89,7 @@ export function UsageBreakdownView({
   fileContent: Blob | null;
   convexSiteUrl: string;
 }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<UIMessage[]>([]);
   const [usageData, setUsageData] = useState<DebugUsageData | null>(null);
   const convex = useConvex();
   useEffect(() => {
@@ -295,7 +295,7 @@ function BreakdownView({
     </div>
   );
 }
-async function getUsageBreakdown(messages: Message[]) {
+async function getUsageBreakdown(messages: UIMessage[]) {
   const chatTotalRawUsage = {
     completionTokens: 0,
     promptTokens: 0,
@@ -373,7 +373,10 @@ async function getUsageBreakdown(messages: Message[]) {
     if (message.role !== 'assistant') {
       continue;
     }
-    const parsedAnnotations = parseAnnotations(message.annotations);
+    // TODO: In AI SDK 5, annotations are handled differently - they're now in message.metadata
+    // or sent as custom data parts. For now, access via any cast for backwards compatibility.
+    const messageAny = message as any;
+    const parsedAnnotations = parseAnnotations(messageAny.annotations ?? []);
     const failedToolCalls = getFailedToolCalls(message);
     const { totalRawUsage, totalUsageBilledFor } = await calculateTotalUsage({
       startUsage: null,
@@ -394,7 +397,8 @@ async function getUsageBreakdown(messages: Message[]) {
       chefBreakdown: breakdown,
       messageSummaryInfo: {
         numParts: message.parts?.length ?? 0,
-        numToolInvocations: message.parts?.filter((p) => p.type === 'tool-invocation').length ?? 0,
+        // In AI SDK 5, tool parts are identified via isToolUIPart helper
+        numToolInvocations: message.parts?.filter((p) => isToolUIPart(p)).length ?? 0,
         numFailedToolInvocations: failedToolCalls.size,
       },
     });
@@ -417,7 +421,7 @@ function getPartInfos({
   usageAnnotationsForToolCalls,
   providerAnnotationsForToolCalls,
 }: {
-  message: Message;
+  message: UIMessage;
   usageAnnotationsForToolCalls: Record<string, UsageAnnotation | null>;
   providerAnnotationsForToolCalls: Record<string, { provider: ProviderType; model: string | undefined }>;
 }) {
@@ -440,20 +444,25 @@ function getPartInfos({
         partText: part.text,
         usageInfo: null,
       });
-    } else if (part.type === 'tool-invocation') {
-      const provider = providerAnnotationsForToolCalls[part.toolInvocation.toolCallId]?.provider ?? 'Anthropic';
-      const rawUsageForPart = usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]
+    } else if (isToolUIPart(part)) {
+      // In AI SDK 5, tool parts have properties directly (toolCallId, toolName, state, output)
+      const provider = providerAnnotationsForToolCalls[part.toolCallId]?.provider ?? 'Anthropic';
+      const rawUsageForPart = usageAnnotationsForToolCalls[part.toolCallId]
         ? usageFromGeneration({
-            usage: usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]!,
-            providerMetadata: usageAnnotationsForToolCalls[part.toolInvocation.toolCallId]?.providerMetadata,
+            usage: usageAnnotationsForToolCalls[part.toolCallId]!,
+            providerMetadata: usageAnnotationsForToolCalls[part.toolCallId]?.providerMetadata,
           })
         : initializeUsage();
       const billedUsageForPart = rawUsageForPart;
       const { chefTokens, breakdown } = calculateChefTokens(billedUsageForPart, provider);
+      // In AI SDK 5, state is 'output-available' instead of 'result'
+      const outputText = part.state === 'output-available' ? String(part.output ?? '') : '(incomplete call)';
+      // In AI SDK 5, tool name is encoded in the type field as 'tool-{toolName}'
+      const toolName = part.type.replace(/^tool-/, '');
       partInfos.push({
         partIdx: idx,
-        partType: 'tool-invocation',
-        partText: `Tool invocation: ${part.toolInvocation.toolName} (${part.toolInvocation.toolCallId})\n\n${part.toolInvocation.state === 'result' ? part.toolInvocation.result : '(incomplete call)'}`,
+        partType: 'tool',
+        partText: `Tool invocation: ${toolName} (${part.toolCallId})\n\n${outputText}`,
         usageInfo: {
           rawUsage: rawUsageForPart,
           billedUsage: billedUsageForPart,

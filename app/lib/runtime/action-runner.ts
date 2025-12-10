@@ -5,7 +5,7 @@ import type { ActionAlert, FileHistory } from '~/types/actions';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { unreachable } from 'chef-agent/utils/unreachable';
 import type { ActionCallbackData } from 'chef-agent/message-parser';
-import type { ToolInvocation } from 'ai';
+import type { UIToolInvocation } from 'ai';
 import { viewParameters } from 'chef-agent/tools/view';
 import { renderDirectory } from 'chef-agent/utils/renderDirectory';
 import { renderFile } from 'chef-agent/utils/renderFile';
@@ -324,7 +324,9 @@ export class ActionRunner {
       unreachable('Expected tool use action');
     }
 
-    const parsed: ToolInvocation = action.parsedContent;
+    // In AI SDK 5, tool invocations use UIToolInvocation type
+    // We accept any here for backwards compatibility with stored data
+    const parsed: UIToolInvocation<any> | any = action.parsedContent;
 
     if (parsed.state === 'result') {
       return;
