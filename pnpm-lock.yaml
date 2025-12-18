@@ -101,13 +101,13 @@ importers:
         version: 0.1.11(@popperjs/core@2.11.8)(@radix-ui/react-icons@1.3.2(react@18.3.1))(@tailwindcss/forms@0.5.10(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@22.14.0)(typescript@5.7.3))))(@types/react-dom@18.3.6(@types/react@18.3.20))(@types/react@18.3.20)(react@18.3.1)(tailwind-scrollbar@3.0.3(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@22.14.0)(typescript@5.7.3))))(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@22.14.0)(typescript@5.7.3)))
       '@convex-dev/migrations':
         specifier: ^0.2.8
-        version: 0.2.9(convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))
+        version: 0.2.9(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))
       '@convex-dev/rate-limiter':
         specifier: ^0.2.9
-        version: 0.2.9(convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(react@18.3.1)
+        version: 0.2.9(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@convex-dev/workos':
         specifier: ^0.0.1
-        version: 0.0.1(@edge-runtime/vm@5.0.0)(@types/debug@4.1.12)(@types/node@22.14.0)(convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(jsdom@26.0.0)(react@18.3.1)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(typescript@5.7.3)
+        version: 0.0.1(@edge-runtime/vm@5.0.0)(@types/debug@4.1.12)(@types/node@22.14.0)(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(jsdom@26.0.0)(react@18.3.1)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(typescript@5.7.3)
       '@fast-check/vitest':
         specifier: ^0.2.1
         version: 0.2.1(vitest@2.1.9(@edge-runtime/vm@5.0.0)(@types/node@22.14.0)(jsdom@26.0.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3)))
@@ -217,11 +217,11 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
       convex:
-        specifier: ^1.27.0
-        version: 1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+        specifier: ^1.31.0
+        version: 1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       convex-helpers:
         specifier: ^0.1.79
-        version: 0.1.79(convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(react@18.3.1)(typescript@5.7.3)(zod@3.24.1)
+        version: 0.1.79(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(react@18.3.1)(typescript@5.7.3)(zod@3.24.1)
       date-fns:
         specifier: ^3.6.0
         version: 3.6.0
@@ -356,8 +356,8 @@ importers:
         specifier: 0.1.0
         version: 0.1.0(jiti@2.4.2)(prettier@3.5.0)(typescript@5.7.3)
       '@convex-dev/eslint-plugin':
-        specifier: ^1.0.0
-        version: 1.0.0(eslint@9.20.1(jiti@2.4.2))(typescript@5.7.3)
+        specifier: ^1.1.1
+        version: 1.1.1(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(eslint@9.20.1(jiti@2.4.2))(typescript@5.7.3)
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
@@ -405,7 +405,7 @@ importers:
         version: 6.0.3
       convex-test:
         specifier: ^0.0.36
-        version: 0.0.36(convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))
+        version: 0.0.36(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))
       esbuild:
         specifier: ^0.25.3
         version: 0.25.3
@@ -1161,8 +1161,10 @@ packages:
       tailwind-scrollbar: ^3.0.0
       tailwindcss: ^3.0.0
 
-  '@convex-dev/eslint-plugin@1.0.0':
-    resolution: {integrity: sha512-ublJRBKcLCioNaf1ylkCHD2KzAqWE2RIQ6DA/UgXAXQW5qg4vZSWY8wy+EK11yJkSSxcGfFXDWaE1+cHaWJvNA==}
+  '@convex-dev/eslint-plugin@1.1.1':
+    resolution: {integrity: sha512-4NsTWNJJLPbti10LZsV1/7UkbaMPFxNz5Ekd3yW5bDkaoU1I0b4TJxk0V+ShbNFTJ2fSqTxm+iGy9XSNCmAoVA==}
+    peerDependencies:
+      convex: ^1.31.0
 
   '@convex-dev/migrations@0.2.9':
     resolution: {integrity: sha512-HfIv6/F8VbtJ1NVT2bQRTumJGdaqROl/+s5IOnubHm7vvgie0RjcfO6YiB7JoLFWwS19vjDQDKl63ihoA08zOA==}
@@ -5247,8 +5249,8 @@ packages:
     peerDependencies:
       convex: ^1.16.4
 
-  convex@1.27.0:
-    resolution: {integrity: sha512-IHkqZX3GtY4nKFPTAR4mvWHHhDiQX9PM7EjpEv0pJWoMoq0On6oOL3iZ7Xz4Ls96dF7WJd4AjfitJsg2hUnLSQ==}
+  convex@1.31.2:
+    resolution: {integrity: sha512-RFuJOwlL2bM5X63egvBI5ZZZH6wESREpAbHsLjODxzDeJuewTLKrEnbvHV/NWp1uJYpgEFJziuGHmZ0tnAmmJg==}
     engines: {node: '>=18.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
@@ -6873,10 +6875,6 @@ packages:
 
   jws@4.0.0:
     resolution: {integrity: sha512-KDncfTmOZoOMTFG4mBlG0qUIOlc03fmzH+ru6RgYVZhPkyiy/92Owlt/8UEN+a4TXR1FQetfIpJE8ApdvdVxTg==}
-
-  jwt-decode@4.0.0:
-    resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
-    engines: {node: '>=18'}
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -10958,28 +10956,29 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@convex-dev/eslint-plugin@1.0.0(eslint@9.20.1(jiti@2.4.2))(typescript@5.7.3)':
+  '@convex-dev/eslint-plugin@1.1.1(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(eslint@9.20.1(jiti@2.4.2))(typescript@5.7.3)':
     dependencies:
       '@typescript-eslint/utils': 8.24.0(eslint@9.20.1(jiti@2.4.2))(typescript@5.7.3)
+      convex: 1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
     transitivePeerDependencies:
       - eslint
       - supports-color
       - typescript
 
-  '@convex-dev/migrations@0.2.9(convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))':
+  '@convex-dev/migrations@0.2.9(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))':
     dependencies:
-      convex: 1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      convex: 1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
 
-  '@convex-dev/rate-limiter@0.2.9(convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(react@18.3.1)':
+  '@convex-dev/rate-limiter@0.2.9(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(react@18.3.1)':
     dependencies:
-      convex: 1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      convex: 1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
     optionalDependencies:
       react: 18.3.1
 
-  '@convex-dev/workos@0.0.1(@edge-runtime/vm@5.0.0)(@types/debug@4.1.12)(@types/node@22.14.0)(convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(jsdom@26.0.0)(react@18.3.1)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(typescript@5.7.3)':
+  '@convex-dev/workos@0.0.1(@edge-runtime/vm@5.0.0)(@types/debug@4.1.12)(@types/node@22.14.0)(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(jsdom@26.0.0)(react@18.3.1)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))(typescript@5.7.3)':
     dependencies:
       '@workos-inc/authkit-react': 0.11.0(react@18.3.1)
-      convex: 1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      convex: 1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       tsdown: 0.12.9(typescript@5.7.3)
       vitest: 3.2.4(@edge-runtime/vm@5.0.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jsdom@26.0.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))
@@ -15111,22 +15110,21 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-helpers@0.1.79(convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(react@18.3.1)(typescript@5.7.3)(zod@3.24.1):
+  convex-helpers@0.1.79(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))(react@18.3.1)(typescript@5.7.3)(zod@3.24.1):
     dependencies:
-      convex: 1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      convex: 1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
     optionalDependencies:
       react: 18.3.1
       typescript: 5.7.3
       zod: 3.24.1
 
-  convex-test@0.0.36(convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)):
+  convex-test@0.0.36(convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)):
     dependencies:
-      convex: 1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      convex: 1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
 
-  convex@1.27.0(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
+  convex@1.31.2(@auth0/auth0-react@2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
     dependencies:
       esbuild: 0.25.4
-      jwt-decode: 4.0.0
       prettier: 3.5.3
     optionalDependencies:
       '@auth0/auth0-react': 2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -17078,8 +17076,6 @@ snapshots:
     dependencies:
       jwa: 2.0.1
       safe-buffer: 5.2.1
-
-  jwt-decode@4.0.0: {}
 
   keyv@4.5.4:
     dependencies:
