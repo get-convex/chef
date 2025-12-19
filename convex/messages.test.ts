@@ -86,7 +86,7 @@ async function createSocialShare(t: TestConvex, chatId: string, sessionId: Id<"s
       chatId: (await getChatByIdOrUrlIdEnsuringAccess(ctx, { id: chatId, sessionId }))!._id,
       code,
       allowForkFromLatest: true,
-      shared: true,
+      shared: "shared",
       allowShowInGallery: true,
       linkToDeployed: true,
     });
