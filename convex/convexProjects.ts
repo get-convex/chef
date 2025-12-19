@@ -388,7 +388,9 @@ export const checkConnection = internalMutation({
     if (chat.convexProject?.kind !== "connecting") {
       return;
     }
-    await ctx.db.patch("chats", chat._id, { convexProject: { kind: "failed", errorMessage: "Failed to connect to project" } });
+    await ctx.db.patch("chats", chat._id, {
+      convexProject: { kind: "failed", errorMessage: "Failed to connect to project" },
+    });
   },
 });
 

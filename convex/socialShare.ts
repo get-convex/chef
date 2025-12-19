@@ -107,7 +107,9 @@ async function getSocialShareInner(ctx: QueryCtx, code: string) {
   }
 
   const session = await ctx.db.get("sessions", chat.creatorId);
-  const authorProfile = session?.memberId ? ((await ctx.db.get("convexMembers", session.memberId))?.cachedProfile ?? null) : null;
+  const authorProfile = session?.memberId
+    ? ((await ctx.db.get("convexMembers", session.memberId))?.cachedProfile ?? null)
+    : null;
 
   const chatHasBeenDeployed = !!chat.hasBeenDeployed;
 

@@ -891,7 +891,9 @@ export const eraseMessageHistory = internalMutation({
       mostRecentFilesystemSnapshot,
     );
     if (!dryRun) {
-      await ctx.db.patch("chatMessagesStorageState", latestEarlyStorageState._id, { snapshotId: mostRecentFilesystemSnapshot });
+      await ctx.db.patch("chatMessagesStorageState", latestEarlyStorageState._id, {
+        snapshotId: mostRecentFilesystemSnapshot,
+      });
     }
 
     // Rewind the chat to look at the lastMessageRank of the earliestMessageWithSnapshot
