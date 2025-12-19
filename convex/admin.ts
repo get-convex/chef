@@ -53,7 +53,7 @@ export const updateAdminStatus = internalMutation({
       .unique();
 
     if (existing) {
-      await ctx.db.patch(existing._id, {
+      await ctx.db.patch("convexAdmins", existing._id, {
         wasAdmin: args.wasAdmin,
         lastCheckedForAdminStatus: Date.now(),
       });

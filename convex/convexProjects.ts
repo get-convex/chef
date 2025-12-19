@@ -114,7 +114,7 @@ export async function startProvisionConvexProjectHelper(
   if (!chat) {
     throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
   }
-  const session = await ctx.db.get(args.sessionId);
+  const session = await ctx.db.get("sessions", args.sessionId);
   if (!session) {
     console.error(`Session not found: ${args.sessionId}`);
     throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
@@ -138,7 +138,7 @@ export async function startProvisionConvexProjectHelper(
     sessionId: args.sessionId,
     chatId: args.chatId,
   });
-  await ctx.db.patch(chat._id, { convexProject: { kind: "connecting", checkConnectionJobId: jobId } });
+  await ctx.db.patch("chats", chat._id, { convexProject: { kind: "connecting", checkConnectionJobId: jobId } });
   return;
 }
 
@@ -171,7 +171,7 @@ export const recordProvisionedConvexProjectCredentials = internalMutation({
         await ctx.scheduler.cancel(jobId);
       }
     }
-    await ctx.db.patch(chat._id, {
+    await ctx.db.patch("chats", chat._id, {
       convexProject: {
         kind: "connected",
         projectSlug: args.projectSlug,
@@ -368,7 +368,7 @@ export const recordFailedConvexProjectConnection = internalMutation({
         await ctx.scheduler.cancel(jobId);
       }
     }
-    await ctx.db.patch(chat._id, {
+    await ctx.db.patch("chats", chat._id, {
       convexProject: { kind: "failed", errorMessage: args.errorMessage },
     });
   },
@@ -388,7 +388,7 @@ export const checkConnection = internalMutation({
     if (chat.convexProject?.kind !== "connecting") {
       return;
     }
-    await ctx.db.patch(chat._id, { convexProject: { kind: "failed", errorMessage: "Failed to connect to project" } });
+    await ctx.db.patch("chats", chat._id, { convexProject: { kind: "failed", errorMessage: "Failed to connect to project" } });
   },
 });
 
@@ -417,7 +417,7 @@ export const disconnectConvexProject = mutation({
     if (!chat) {
       throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
     }
-    await ctx.db.patch(chat._id, { convexProject: undefined });
+    await ctx.db.patch("chats", chat._id, { convexProject: undefined });
   },
 });
 

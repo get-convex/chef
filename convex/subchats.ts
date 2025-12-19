@@ -87,7 +87,7 @@ export const create = mutation({
       latestStorageState: latestStorageState?._id,
     });
 
-    await ctx.db.patch(chat._id, {
+    await ctx.db.patch("chats", chat._id, {
       lastSubchatIndex: newSubchatIndex,
     });
     return newSubchatIndex;

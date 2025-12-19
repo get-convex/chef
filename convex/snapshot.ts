@@ -15,7 +15,7 @@ export const saveSnapshot = internalMutation({
     if (!chat) {
       throw new Error("Chat not found");
     }
-    await ctx.db.patch(chat._id, {
+    await ctx.db.patch("chats", chat._id, {
       snapshotId: storageId,
     });
   },

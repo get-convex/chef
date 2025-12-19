@@ -71,7 +71,7 @@ export const setUrlId = mutation({
     }
     if (existing.urlId === undefined) {
       const urlId = await _allocateUrlId(ctx, { urlHint, sessionId: args.sessionId });
-      await ctx.db.patch(existing._id, {
+      await ctx.db.patch("chats", existing._id, {
         urlId,
         description: existing.description ?? description,
       });
@@ -96,7 +96,7 @@ export const setDescription = mutation({
       throw CHAT_NOT_FOUND_ERROR;
     }
 
-    await ctx.db.patch(existing._id, {
+    await ctx.db.patch("chats", existing._id, {
       description,
     });
   },
@@ -279,7 +279,7 @@ export const updateStorageState = internalMutation({
       if (snapshotId === null) {
         throw new Error("Received null snapshotId for message that is already saved and has no storageId");
       }
-      await ctx.db.patch(previous._id, {
+      await ctx.db.patch("chatMessagesStorageState", previous._id, {
         snapshotId,
       });
       return null;
@@ -316,7 +316,7 @@ export const updateStorageState = internalMutation({
           await ctx.storage.delete(previous.snapshotId);
         }
       }
-      await ctx.db.patch(previous._id, {
+      await ctx.db.patch("chatMessagesStorageState", previous._id, {
         storageId,
         partIndex,
         snapshotId: snapshotId ?? previous.snapshotId,
@@ -390,7 +390,7 @@ async function deleteSnapshotIdIfUnused(ctx: MutationCtx, snapshotId: Id<"_stora
 }
 
 export async function deleteStorageState(ctx: MutationCtx, storageState: Doc<"chatMessagesStorageState">) {
-  await ctx.db.delete(storageState._id);
+  await ctx.db.delete("chatMessagesStorageState", storageState._id);
   const chatStorageId = storageState.storageId;
   if (chatStorageId) {
     await deleteChatStorageIdIfUnused(ctx, chatStorageId);
@@ -429,7 +429,7 @@ async function deletePreviousStorageStates(
     for (const storageState of storageStatesToDelete) {
       await deleteStorageState(ctx, storageState);
     }
-    ctx.db.patch(chat._id, { lastMessageRank: undefined });
+    ctx.db.patch("chats", chat._id, { lastMessageRank: undefined });
   }
 }
 
@@ -521,7 +521,7 @@ export const rewindChat = mutation({
         },
       });
     }
-    await ctx.db.patch(chat._id, {
+    await ctx.db.patch("chats", chat._id, {
       lastSubchatIndex: subchatIndex,
       lastMessageRank: latestStorageState.lastMessageRank,
     });
@@ -698,10 +698,10 @@ export const removeChat = internalMutation({
         )
         .unique();
       if (credentials !== null) {
-        await ctx.db.delete(credentials._id);
+        await ctx.db.delete("convexProjectCredentials", credentials._id);
       }
     }
-    await ctx.db.patch(existing._id, {
+    await ctx.db.patch("chats", existing._id, {
       isDeleted: true,
     });
   },
@@ -747,7 +747,7 @@ export async function createNewChat(
     throw new ConvexError({ code: "InvalidState", message: "Chat already exists" });
   }
 
-  const session = await ctx.db.get(sessionId);
+  const session = await ctx.db.get("sessions", sessionId);
   if (!session) {
     throw new Error(`Invalid state -- session should exist: ${sessionId}`);
   }
@@ -828,7 +828,7 @@ export const eraseMessageHistory = internalMutation({
       throw new ConvexError({ code: "NotFound", message: "Share not found" });
     }
     console.log("ChatId for share is", share.chatId);
-    const chat = await ctx.db.get(share.chatId);
+    const chat = await ctx.db.get("chats", share.chatId);
     if (chat === null) {
       throw CHAT_NOT_FOUND_ERROR;
     }
@@ -891,13 +891,13 @@ export const eraseMessageHistory = internalMutation({
       mostRecentFilesystemSnapshot,
     );
     if (!dryRun) {
-      await ctx.db.patch(latestEarlyStorageState._id, { snapshotId: mostRecentFilesystemSnapshot });
+      await ctx.db.patch("chatMessagesStorageState", latestEarlyStorageState._id, { snapshotId: mostRecentFilesystemSnapshot });
     }
 
     // Rewind the chat to look at the lastMessageRank of the earliestMessageWithSnapshot
     console.log("Rewinding chat to lastMessageRank", earliestMessageWithSnapshot.lastMessageRank);
     if (!dryRun) {
-      await ctx.db.patch(share.chatId, {
+      await ctx.db.patch("chats", share.chatId, {
         lastMessageRank: earliestMessageWithSnapshot.lastMessageRank,
       });
     }

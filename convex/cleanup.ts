@@ -36,7 +36,7 @@ export const deleteDebugFilesForInactiveChats = internalMutation({
         const lastActiveDate = new Date(storageState._creationTime).toISOString();
         if (forReal) {
           ctx.storage.delete(doc.promptCoreMessagesStorageId);
-          await ctx.db.delete(doc._id);
+          await ctx.db.delete("debugChatApiRequestLog", doc._id);
           console.log(`Deleted debug file for chat ${doc.chatId} last active at ${lastActiveDate}`);
         } else {
           console.log(`Would delete debug file for chat ${doc.chatId} last active at ${lastActiveDate}`);
@@ -161,7 +161,7 @@ export const deleteOldStorageStatesForLastMessageRank = internalMutation({
       const storageState = storageStates[i];
       if (storageState.storageId !== null) {
         if (forReal) {
-          await ctx.db.delete(storageState._id);
+          await ctx.db.delete("chatMessagesStorageState", storageState._id);
           console.log(
             `Deleted storageState ${storageState._id} for chat ${chatId} and lastMessageRank ${lastMessageRank}`,
           );
@@ -280,18 +280,18 @@ export const deleteOrphanedFiles = internalMutation({
       }
     }
 
-    const migration = await ctx.db.get(migrationId);
+    const migration = await ctx.db.get("migrations", migrationId);
     if (!migration) {
       throw new Error(`Migration ${migrationId} not found`);
     }
-    await ctx.db.patch(migrationId, {
+    await ctx.db.patch("migrations", migrationId, {
       processed: page.length + migration.processed,
       cursor: continueCursor,
       isDone: isDone,
       numDeleted: numDeleted + migration.numDeleted,
     });
     if (isDone) {
-      await ctx.db.patch(migrationId, {
+      await ctx.db.patch("migrations", migrationId, {
         latestEnd: Date.now(),
       });
     }

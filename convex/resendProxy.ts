@@ -121,7 +121,7 @@ export const decrementToken = internalMutation({
         error: `The Convex Resend API Proxy only supports sending email to your own verified email address (${token.verifiedEmail}).`,
       };
     }
-    await ctx.db.patch(token._id, {
+    await ctx.db.patch("resendTokens", token._id, {
       requestsRemaining: token.requestsRemaining - 1,
       lastUsedTime: Date.now(),
     });
@@ -155,7 +155,7 @@ export const issueResendToken = mutation({
       .unique();
     if (existing) {
       if (existing.verifiedEmail !== identity.email) {
-        await ctx.db.patch(existing._id, {
+        await ctx.db.patch("resendTokens", existing._id, {
           verifiedEmail: identity.email,
         });
       }

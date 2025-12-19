@@ -9,7 +9,7 @@ export const setDefaultDeletedFalse = migrations.define({
   table: "chats",
   migrateOne: async (ctx, doc) => {
     if (doc.isDeleted === undefined) {
-      await ctx.db.patch(doc._id, { isDeleted: false });
+      await ctx.db.patch("chats", doc._id, { isDeleted: false });
     }
   },
 });
@@ -20,7 +20,7 @@ export const addLastSubchatIndex = migrations.define({
   table: "chats",
   migrateOne: async (ctx, doc) => {
     if (doc.lastSubchatIndex === undefined) {
-      await ctx.db.patch(doc._id, { lastSubchatIndex: 0 });
+      await ctx.db.patch("chats", doc._id, { lastSubchatIndex: 0 });
     }
   },
 });
@@ -31,7 +31,7 @@ export const addSubchatIndex = migrations.define({
   table: "chatMessagesStorageState",
   migrateOne: async (ctx, doc) => {
     if (doc.subchatIndex === undefined) {
-      await ctx.db.patch(doc._id, { subchatIndex: 0 });
+      await ctx.db.patch("chatMessagesStorageState", doc._id, { subchatIndex: 0 });
     }
   },
 });
@@ -42,7 +42,7 @@ export const addLastSubchatIndexToShares = migrations.define({
   table: "shares",
   migrateOne: async (ctx, doc) => {
     if (doc.lastSubchatIndex === undefined) {
-      await ctx.db.patch(doc._id, { lastSubchatIndex: 0 });
+      await ctx.db.patch("shares", doc._id, { lastSubchatIndex: 0 });
     }
   },
 });
@@ -53,7 +53,7 @@ export const addSubchatIndexToDebugChatApiRequestLog = migrations.define({
   table: "debugChatApiRequestLog",
   migrateOne: async (ctx, doc) => {
     if (doc.subchatIndex === undefined) {
-      await ctx.db.patch(doc._id, { subchatIndex: 0 });
+      await ctx.db.patch("debugChatApiRequestLog", doc._id, { subchatIndex: 0 });
     }
   },
 });
@@ -66,7 +66,7 @@ export const addConvexMemberIdToConvexMembers = migrations.define({
   table: "convexMembers",
   migrateOne: async (ctx, doc) => {
     if (doc.convexMemberId === undefined && doc.cachedProfile !== undefined) {
-      await ctx.db.patch(doc._id, { convexMemberId: (doc as Doc<"convexMembers">).cachedProfile?.id });
+      await ctx.db.patch("convexMembers", doc._id, { convexMemberId: (doc as Doc<"convexMembers">).cachedProfile?.id });
     }
   },
 });

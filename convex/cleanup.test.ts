@@ -81,7 +81,7 @@ describe("cleanup", () => {
 
     // Verify the debug log entry was deleted
     const logEntry = await t.run(async (ctx) => {
-      return await ctx.db.get(logId);
+      return await ctx.db.get("debugChatApiRequestLog", logId);
     });
     expect(logEntry).toBeNull();
 
@@ -93,12 +93,12 @@ describe("cleanup", () => {
 
     // Verify the chat and storage state were NOT deleted
     const chat = await t.run(async (ctx) => {
-      return await ctx.db.get(chatId);
+      return await ctx.db.get("chats", chatId);
     });
     expect(chat).not.toBeNull();
 
     const storageState = await t.run(async (ctx) => {
-      return await ctx.db.get(storageStateId);
+      return await ctx.db.get("chatMessagesStorageState", storageStateId);
     });
     expect(storageState).not.toBeNull();
   });
@@ -121,7 +121,7 @@ describe("cleanup", () => {
 
     // Verify nothing was deleted
     const logEntry = await t.run(async (ctx) => {
-      return await ctx.db.get(logId);
+      return await ctx.db.get("debugChatApiRequestLog", logId);
     });
     expect(logEntry).not.toBeNull();
 
@@ -131,12 +131,12 @@ describe("cleanup", () => {
     expect(storageFile).not.toBeNull();
 
     const chat = await t.run(async (ctx) => {
-      return await ctx.db.get(chatId);
+      return await ctx.db.get("chats", chatId);
     });
     expect(chat).not.toBeNull();
 
     const storageState = await t.run(async (ctx) => {
-      return await ctx.db.get(storageStateId);
+      return await ctx.db.get("chatMessagesStorageState", storageStateId);
     });
     expect(storageState).not.toBeNull();
   });
@@ -210,7 +210,7 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
     await t.run(async (ctx) => {
       for (let i = 0; i < storageStates.length - 1; i++) {
         const { state, storageId, snapshotId } = storageStates[i];
-        const storageState = await ctx.db.get(state);
+        const storageState = await ctx.db.get("chatMessagesStorageState", state);
         expect(storageState).toBeNull();
         const storageFile = await ctx.storage.getUrl(storageId!);
         expect(storageFile).toBeNull();
@@ -386,7 +386,7 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
 
     // Verify the storage state still exists
     const state = await t.run(async (ctx) => {
-      return await ctx.db.get(stateId);
+      return await ctx.db.get("chatMessagesStorageState", stateId);
     });
     expect(state).not.toBeNull();
 
@@ -446,7 +446,7 @@ describe("deleteOldStorageStatesForLastMessageRank", () => {
     const storageFiles = await t.run(async (ctx) => {
       const files = [];
       for (const state of storageStates) {
-        const storageState = await ctx.db.get(state);
+        const storageState = await ctx.db.get("chatMessagesStorageState", state);
         if (storageState) {
           const storageFile = await ctx.storage.getUrl(storageState.storageId!);
           const snapshotFile = await ctx.storage.getUrl(storageState.snapshotId!);
@@ -483,7 +483,7 @@ describe("file cleanup tests", () => {
 
     // Run the cleanup function
     const result = await t.run(async (ctx) => {
-      return await ctx.db.system.get(storageId);
+      return await ctx.db.system.get("_storage", storageId);
     });
     expect(result).not.toBeNull();
 
@@ -594,7 +594,7 @@ describe("file cleanup tests", () => {
     await t.mutation(api.share.create, { sessionId, id: chatId });
     await t.run(async (ctx) => {
       for (const doc of await ctx.db.query("chatMessagesStorageState").collect()) {
-        await ctx.db.delete(doc._id);
+        await ctx.db.delete("chatMessagesStorageState", doc._id);
       }
     });
 
@@ -620,7 +620,7 @@ describe("file cleanup tests", () => {
       chatId,
     });
     await t.run(async (ctx) => {
-      await ctx.db.patch(socialShareId, {
+      await ctx.db.patch("socialShares", socialShareId, {
         thumbnailImageStorageId: storageId,
       });
     });

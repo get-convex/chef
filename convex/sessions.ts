@@ -17,7 +17,7 @@ export const verifySession = query({
     if (!sessionId) {
       return false;
     }
-    const session = await ctx.db.get(sessionId);
+    const session = await ctx.db.get("sessions", sessionId);
     if (!session || !session.memberId) {
       return false;
     }
@@ -26,7 +26,7 @@ export const verifySession = query({
 });
 
 export async function isValidSession(ctx: QueryCtx, args: { sessionId: Id<"sessions"> }) {
-  const session = await ctx.db.get(args.sessionId);
+  const session = await ctx.db.get("sessions", args.sessionId);
   if (!session || !session.memberId) {
     return false;
   }
@@ -37,7 +37,7 @@ async function isValidSessionForConvexOAuth(
   ctx: QueryCtx,
   args: { sessionId: Id<"sessions">; memberId: Id<"convexMembers"> },
 ): Promise<boolean> {
-  const member = await ctx.db.get(args.memberId);
+  const member = await ctx.db.get("convexMembers", args.memberId);
   if (!member) {
     return false;
   }
@@ -68,11 +68,11 @@ export const registerConvexOAuthConnection = internalMutation({
     if (!chat) {
       throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
     }
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session || !session.memberId) {
       throw new ConvexError({ code: "NotAuthorized", message: "Chat not found" });
     }
-    await ctx.db.patch(args.chatId, {
+    await ctx.db.patch("chats", args.chatId, {
       convexProject: {
         kind: "connected",
         projectSlug: args.projectSlug,
@@ -155,7 +155,7 @@ async function getOrCreateCurrentMember(ctx: MutationCtx) {
           .withIndex("byCreatorAndId", (q) => q.eq("creatorId", sessionForExtraMember._id))
           .take(CHATS_TO_CHECK);
         if (chatsForExtraMember.length === 0) {
-          await ctx.db.patch(extraMember._id, {
+          await ctx.db.patch("convexMembers", extraMember._id, {
             softDeletedForWorkOSMerge: true,
           });
         }
@@ -163,20 +163,20 @@ async function getOrCreateCurrentMember(ctx: MutationCtx) {
           console.warn("Too many chats to migrate in one go for member", extraMember.convexMemberId);
         }
         for (const chat of chatsForExtraMember) {
-          await ctx.db.patch(chat._id, {
+          await ctx.db.patch("chats", chat._id, {
             creatorId: sessionForExistingMember._id,
             urlId: chat.urlId ? chat.urlId + "-" + extraMember._id.slice(0, 8) : undefined,
           });
         }
       } else {
         console.log("no session for member", extraMember.convexMemberId);
-        await ctx.db.patch(extraMember._id, {
+        await ctx.db.patch("convexMembers", extraMember._id, {
           softDeletedForWorkOSMerge: true,
         });
       }
     }
 
-    await ctx.db.patch(existingMember._id, {
+    await ctx.db.patch("convexMembers", existingMember._id, {
       cachedProfile: newCachedProfile,
       apiKey: newApiKey,
     });
@@ -238,7 +238,7 @@ export const saveCachedProfile = internalMutation({
       ...args.profile,
       id: String(args.profile.id),
     };
-    await ctx.db.patch(member._id, {
+    await ctx.db.patch("convexMembers", member._id, {
       cachedProfile: profile,
     });
   },

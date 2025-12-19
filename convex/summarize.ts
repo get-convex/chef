@@ -50,7 +50,7 @@ export const saveMessageSummary = internalMutation({
   args: { chatMessageId: v.id("chatMessagesStorageState"), summary: v.string() },
   handler: async (ctx, args) => {
     const { chatMessageId, summary } = args;
-    await ctx.db.patch(chatMessageId, {
+    await ctx.db.patch("chatMessagesStorageState", chatMessageId, {
       description: summary,
     });
   },

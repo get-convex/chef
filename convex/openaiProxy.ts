@@ -149,7 +149,7 @@ export const decrementToken = internalMutation({
           "Convex OPENAI_API_TOKEN has no requests remaining. Go sign up for an OpenAI API key at https://platform.openai.com and update your app to use that.",
       };
     }
-    await ctx.db.patch(token._id, {
+    await ctx.db.patch("memberOpenAITokens", token._id, {
       requestsRemaining: token.requestsRemaining - 1,
       lastUsedTime: Date.now(),
     });

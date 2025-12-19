@@ -60,12 +60,12 @@ export const deleteDebugPrompt = internalMutation({
 });
 
 async function _deleteDebugPrompt(ctx: MutationCtx, id: Id<"debugChatApiRequestLog">) {
-  const record = await ctx.db.get(id);
+  const record = await ctx.db.get("debugChatApiRequestLog", id);
   if (!record) {
     return;
   }
   await ctx.storage.delete(record.promptCoreMessagesStorageId);
-  await ctx.db.delete(id);
+  await ctx.db.delete("debugChatApiRequestLog", id);
 }
 
 // this is going to fail on big tables, we'll need to use an action

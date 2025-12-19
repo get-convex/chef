@@ -1184,7 +1184,7 @@ describe("eraseMessageHistory", () => {
         .withIndex("byChatId", (q) => q.eq("chatId", chat!._id))
         .collect();
       for (const state of storageStates) {
-        await ctx.db.patch(state._id, { snapshotId: undefined });
+        await ctx.db.patch("chatMessagesStorageState", state._id, { snapshotId: undefined });
       }
     });
 

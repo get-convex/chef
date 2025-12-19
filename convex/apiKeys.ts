@@ -34,7 +34,7 @@ export const setApiKeyForCurrentMember = mutation({
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
-    await ctx.db.patch(existingMember._id, { apiKey: args.apiKey });
+    await ctx.db.patch("convexMembers", existingMember._id, { apiKey: args.apiKey });
   },
 });
 
@@ -53,7 +53,7 @@ export const deleteApiKeyForCurrentMember = mutation({
       throw new ConvexError({ code: "NotAuthorized", message: "Unauthorized" });
     }
 
-    await ctx.db.patch(existingMember._id, { apiKey: undefined });
+    await ctx.db.patch("convexMembers", existingMember._id, { apiKey: undefined });
   },
 });
 
@@ -74,7 +74,7 @@ export const deleteAnthropicApiKeyForCurrentMember = mutation({
     if (!existingMember.apiKey) {
       return;
     }
-    await ctx.db.patch(existingMember._id, {
+    await ctx.db.patch("convexMembers", existingMember._id, {
       apiKey: {
         ...existingMember.apiKey,
         value: undefined,
@@ -100,7 +100,7 @@ export const deleteOpenaiApiKeyForCurrentMember = mutation({
     if (!existingMember.apiKey) {
       return;
     }
-    await ctx.db.patch(existingMember._id, {
+    await ctx.db.patch("convexMembers", existingMember._id, {
       apiKey: {
         ...existingMember.apiKey,
         openai: undefined,
@@ -126,7 +126,7 @@ export const deleteXaiApiKeyForCurrentMember = mutation({
     if (!existingMember.apiKey) {
       return;
     }
-    await ctx.db.patch(existingMember._id, {
+    await ctx.db.patch("convexMembers", existingMember._id, {
       apiKey: {
         ...existingMember.apiKey,
         xai: undefined,
@@ -152,7 +152,7 @@ export const deleteGoogleApiKeyForCurrentMember = mutation({
     if (!existingMember.apiKey) {
       return;
     }
-    await ctx.db.patch(existingMember._id, {
+    await ctx.db.patch("convexMembers", existingMember._id, {
       apiKey: {
         ...existingMember.apiKey,
         google: undefined,

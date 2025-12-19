@@ -12,7 +12,7 @@ export const recordDeploy = mutation({
     if (!chat) {
       throw new ConvexError("Chat not found");
     }
-    await ctx.db.patch(chat._id, { hasBeenDeployed: true });
+    await ctx.db.patch("chats", chat._id, { hasBeenDeployed: true });
   },
 });
 

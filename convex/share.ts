@@ -108,7 +108,7 @@ export const getShareDescription = query({
       if (!getShow) {
         throw new ConvexError("Invalid share link");
       }
-      const chat = await ctx.db.get(getShow.chatId);
+      const chat = await ctx.db.get("chats", getShow.chatId);
       return {
         description: chat?.description,
       };
@@ -141,7 +141,7 @@ export async function cloneShow(
   if (!show.allowForkFromLatest) {
     throw new ConvexError("This show is not allowed to be forked.");
   }
-  const parentChat = await ctx.db.get(show.chatId);
+  const parentChat = await ctx.db.get("chats", show.chatId);
   if (!parentChat) {
     throw new ConvexError({
       code: "NotFound",
@@ -229,7 +229,7 @@ export const clone = mutation({
       return cloneShow(ctx, { showCode: shareCode, sessionId, projectInitParams });
     }
 
-    const parentChat = await ctx.db.get(getShare.chatId);
+    const parentChat = await ctx.db.get("chats", getShare.chatId);
     if (!parentChat) {
       throw new ConvexError({
         code: "NotFound",

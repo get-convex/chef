@@ -48,7 +48,7 @@ export const share = mutation({
       });
       return code;
     } else {
-      await ctx.db.replace(existing._id, {
+      await ctx.db.replace("socialShares", existing._id, {
         ...existing,
         shared,
         allowForkFromLatest,
@@ -101,13 +101,13 @@ async function getSocialShareInner(ctx: QueryCtx, code: string) {
   if (!socialShare) {
     throw new NotASocialShare("Invalid share link");
   }
-  const chat = await ctx.db.get(socialShare.chatId);
+  const chat = await ctx.db.get("chats", socialShare.chatId);
   if (!chat) {
     throw new ConvexError("Invalid chat");
   }
 
-  const session = await ctx.db.get(chat.creatorId);
-  const authorProfile = session?.memberId ? ((await ctx.db.get(session.memberId))?.cachedProfile ?? null) : null;
+  const session = await ctx.db.get("sessions", chat.creatorId);
+  const authorProfile = session?.memberId ? ((await ctx.db.get("convexMembers", session.memberId))?.cachedProfile ?? null) : null;
 
   const chatHasBeenDeployed = !!chat.hasBeenDeployed;
 
@@ -203,7 +203,7 @@ export const saveThumbnail = internalMutation({
         await ctx.storage.delete(existing.thumbnailImageStorageId);
       }
 
-      await ctx.db.patch(existing._id, {
+      await ctx.db.patch("socialShares", existing._id, {
         thumbnailImageStorageId: storageId,
       });
     }
@@ -216,7 +216,7 @@ export const createAdminShare = internalMutation({
     chatId: v.id("chats"),
   },
   handler: async (ctx, { chatId }) => {
-    const chat = await ctx.db.get(chatId);
+    const chat = await ctx.db.get("chats", chatId);
     if (!chat) {
       throw new ConvexError("Chat not found");
     }
