@@ -13,7 +13,7 @@
   "dependencies": {
     "@convex-dev/auth": "^0.0.80",
     "clsx": "^2.1.1",
-    "convex": "^1.24.2",
+    "convex": "^1.31.2",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "sonner": "^2.0.3",
