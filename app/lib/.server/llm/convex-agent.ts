@@ -333,7 +333,7 @@ async function onFinishHandler({
         toolCalls: result.toolCalls,
       });
     }
-  } else if (result.finishReason === 'stop') {
+  } else {
     toolCallId = { kind: 'final' };
   }
   if (toolCallId) {
@@ -344,7 +344,7 @@ async function onFinishHandler({
   }
 
   // Record usage once we've generated the final part.
-  if (result.finishReason === 'stop') {
+  if (result.finishReason !== 'tool-calls') {
     await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata });
   }
   if (recordRawPromptsForDebugging) {
