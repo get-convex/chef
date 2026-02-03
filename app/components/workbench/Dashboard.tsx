@@ -37,15 +37,20 @@ export const Dashboard = memo(function Dashboard() {
         throw new Error('iframe ref not found');
       }
 
-      iframeRef.current.contentWindow?.postMessage(
-        {
-          type: 'dashboard-credentials',
-          adminKey: token,
-          deploymentUrl,
-          deploymentName,
-        },
-        '*',
-      );
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.data.type === "convex-auth-info") {
+        // Let the parent window know about the auth info, but only if we're
+        // in an iframe. Use the event's origin as the target origin instead
+        // of a wildcard to prevent information disclosure.
+        if (window.parent !== window && event.origin) {
+          window.parent.postMessage(event.data, event.origin);
+        }
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
     };
 
     window.addEventListener('message', handleMessage);
