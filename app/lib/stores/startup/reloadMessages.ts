@@ -1,4 +1,4 @@
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import { useEffect, useState } from 'react';
 import { makePartId } from 'chef-agent/partId';
 import { toast } from 'sonner';
@@ -11,7 +11,7 @@ export type ReloadedMessages = {
   partCache: PartCache;
 };
 
-export function useReloadMessages(initialMessages: Message[] | undefined): ReloadedMessages | undefined {
+export function useReloadMessages(initialMessages: UIMessage[] | undefined): ReloadedMessages | undefined {
   const [reloadState, setReloadState] = useState<ReloadedMessages | undefined>(undefined);
   const subchatIndex = useStore(subchatIndexStore);
   useEffect(() => {

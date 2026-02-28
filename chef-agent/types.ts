@@ -1,4 +1,4 @@
-import type { ToolInvocation } from 'ai';
+import type { UIToolInvocation } from 'ai';
 import type { AbsolutePath, RelativePath } from './utils/workDir.js';
 import type { Tool } from 'ai';
 import type { npmInstallToolParameters } from './tools/npmInstall.js';
@@ -45,7 +45,7 @@ export interface FileAction {
 export interface ToolUseAction {
   type: 'toolUse';
   toolName: string;
-  parsedContent: ToolInvocation;
+  parsedContent: UIToolInvocation<any> & { toolName: string; type?: string };
   // Serialized content to use for de-duping
   content: string;
 }

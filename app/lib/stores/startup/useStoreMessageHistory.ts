@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { Message } from '@ai-sdk/react';
+import type { UIMessage } from '@ai-sdk/react';
 import { lastCompleteMessageInfoStore } from '~/lib/stores/startup/messages';
 
 /**
@@ -13,7 +13,7 @@ import { lastCompleteMessageInfoStore } from '~/lib/stores/startup/messages';
  * state to prevent the user from closing the tab too early.
  */
 export function useStoreMessageHistory() {
-  return useCallback(async (messages: Message[], streamStatus: 'streaming' | 'submitted' | 'ready' | 'error') => {
+  return useCallback(async (messages: UIMessage[], streamStatus: 'streaming' | 'submitted' | 'ready' | 'error') => {
     if (messages.length === 0) {
       return;
     }
@@ -40,7 +40,7 @@ export function useStoreMessageHistory() {
 }
 
 function getPreceedingPart(
-  messages: Message[],
+  messages: UIMessage[],
   args: { messageIndex: number; partIndex: number },
 ): { messageIndex: number; partIndex: number } | null {
   if (messages.length === 0) {
@@ -78,7 +78,7 @@ function getPreceedingPart(
 
 // Exported for testing
 export function getLastCompletePart(
-  messages: Message[],
+  messages: UIMessage[],
   streamStatus: 'streaming' | 'submitted' | 'ready' | 'error',
 ): { messageIndex: number; partIndex: number; hasNextPart: boolean } | null {
   if (messages.length === 0) {
@@ -95,7 +95,7 @@ export function getLastCompletePart(
   }
 
   const isLastPartComplete =
-    lastPart.type === 'tool-invocation' ? lastPart.toolInvocation.state === 'result' : streamStatus !== 'streaming';
+    'toolCallId' in lastPart ? (lastPart as any).state === 'output-available' || (lastPart as any).state === 'output-error' : streamStatus !== 'streaming';
   if (isLastPartComplete) {
     return {
       messageIndex: lastPartIndices.messageIndex,

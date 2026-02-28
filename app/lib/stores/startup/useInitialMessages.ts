@@ -3,7 +3,7 @@ import { useConvex } from 'convex/react';
 import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { api } from '@convex/_generated/api';
 import type { SerializedMessage } from '@convex/messages';
-import type { Message } from '@ai-sdk/react';
+import type { UIMessage } from '@ai-sdk/react';
 import { setKnownUrlId } from '~/lib/stores/chatId';
 import { setKnownInitialId } from '~/lib/stores/chatId';
 import { description } from '~/lib/stores/description';
@@ -16,7 +16,7 @@ import { useStore } from '@nanostores/react';
 export interface InitialMessages {
   loadedChatId: string;
   serialized: SerializedMessage[];
-  deserialized: Message[];
+  deserialized: UIMessage[];
   loadedSubchatIndex: number;
 }
 
@@ -80,24 +80,56 @@ export function useInitialMessages(chatId: string | undefined):
         const content = await initialMessagesResponse.arrayBuffer();
         const initialMessages = await decompressMessages(new Uint8Array(content));
 
-        // Transform messages to convert partial-call states to failed states
+        // Transform messages to handle legacy tool invocation states and convert
+        // interrupted calls to error states
         const transformedMessages = initialMessages.map((message) => {
           if (!message.parts) {
             return message;
           }
 
-          const updatedParts = message.parts.map((part) => {
+          const updatedParts = message.parts.map((part: any) => {
+            // Handle legacy tool-invocation format (v4) and convert to v6 format
             if (part.type === 'tool-invocation') {
-              // We could potentially handle these better by making the action runner
-              // handle the interrupted calls, but treat these as failed states for now.
-              if (part.toolInvocation.state === 'partial-call' || part.toolInvocation.state === 'call') {
+              const inv = part.toolInvocation;
+              const toolType = `tool-${inv.toolName}` as const;
+              if (inv.state === 'partial-call' || inv.state === 'call' || inv.state === 'input-streaming' || inv.state === 'input-available') {
+                // Interrupted tool calls become output-available with error
+                return {
+                  type: toolType,
+                  toolCallId: inv.toolCallId,
+                  toolName: inv.toolName,
+                  state: 'output-available' as const,
+                  input: inv.args ?? inv.input ?? {},
+                  output: 'Error: Tool call was interrupted',
+                };
+              }
+              if (inv.state === 'result' || inv.state === 'output-available') {
+                return {
+                  type: toolType,
+                  toolCallId: inv.toolCallId,
+                  toolName: inv.toolName,
+                  state: 'output-available' as const,
+                  input: inv.args ?? inv.input ?? {},
+                  output: inv.result ?? inv.output ?? '',
+                };
+              }
+              // Fallback
+              return {
+                type: toolType,
+                toolCallId: inv.toolCallId,
+                toolName: inv.toolName,
+                state: 'output-available' as const,
+                input: inv.args ?? inv.input ?? {},
+                output: 'Error: Unknown tool state',
+              };
+            }
+            // Handle v6 tool parts that may have been interrupted
+            if ('toolCallId' in part && part.state) {
+              if (part.state === 'input-streaming' || part.state === 'input-available') {
                 return {
                   ...part,
-                  toolInvocation: {
-                    ...part.toolInvocation,
-                    state: 'result' as const,
-                    result: 'Error: Tool call was interrupted',
-                  },
+                  state: 'output-available' as const,
+                  output: 'Error: Tool call was interrupted',
                 };
               }
             }
@@ -129,19 +161,12 @@ export function useInitialMessages(chatId: string | undefined):
   return initialMessages;
 }
 
-function deserializeMessageForConvex(message: SerializedMessage): Message {
-  const content =
-    message.content ??
-    message.parts
-      ?.filter((part): part is { type: 'text'; text: string } => part.type === 'text')
-      .map((part) => part.text)
-      .join('') ??
-    '';
-
+function deserializeMessageForConvex(message: SerializedMessage): UIMessage {
   return {
-    ...message,
-    createdAt: message.createdAt ? new Date(message.createdAt) : undefined,
-    content,
+    id: message.id,
+    role: message.role as UIMessage['role'],
+    parts: (message.parts ?? []) as UIMessage['parts'],
+    metadata: (message as any).metadata ?? (message as any).annotations ? { annotations: (message as any).annotations } : undefined,
   };
 }
 

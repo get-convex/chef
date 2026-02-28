@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { Markdown } from './Markdown';
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import { ToolCall } from './ToolCall';
 import { makePartId, type PartId } from 'chef-agent/partId.js';
 import { ExclamationTriangleIcon, DotFilledIcon } from '@radix-ui/react-icons';
@@ -10,20 +10,12 @@ import { calculateChefTokens, usageFromGeneration, type ChefTokenBreakdown } fro
 import { captureMessage } from '@sentry/remix';
 
 interface AssistantMessageProps {
-  message: Message;
+  message: UIMessage;
 }
 
 export const AssistantMessage = memo(function AssistantMessage({ message }: AssistantMessageProps) {
   const { showUsageAnnotations } = useLaunchDarkly();
-  const parsedAnnotations = useMemo(() => parseAnnotations(message.annotations), [message.annotations]);
-  if (!message.parts) {
-    return (
-      <div className="w-full overflow-hidden">
-        <Markdown html>{message.content}</Markdown>
-      </div>
-    );
-  }
-
+  const parsedAnnotations = useMemo(() => parseAnnotations(message.metadata), [message.metadata]);
   return (
     <div className="w-full overflow-hidden text-sm">
       <div className="flex flex-col gap-2">
@@ -64,22 +56,22 @@ function AssistantMessagePart({
   partId,
   parsedAnnotations,
 }: {
-  part: NonNullable<Message['parts']>[number];
+  part: UIMessage['parts'][number];
   showUsageAnnotations: boolean;
   partId: PartId;
   parsedAnnotations: ReturnType<typeof parseAnnotations>;
 }) {
-  if (part.type === 'tool-invocation') {
+  if ('toolCallId' in part) {
     return (
       <>
         {showUsageAnnotations &&
           displayModelAndUsage({
-            model: parsedAnnotations.modelForToolCall[part.toolInvocation.toolCallId],
-            usageAnnotation: parsedAnnotations.usageForToolCall[part.toolInvocation.toolCallId] ?? undefined,
+            model: parsedAnnotations.modelForToolCall[part.toolCallId],
+            usageAnnotation: parsedAnnotations.usageForToolCall[part.toolCallId] ?? undefined,
             showUsageAnnotations,
           })}
 
-        <ToolCall partId={partId} toolCallId={part.toolInvocation.toolCallId} />
+        <ToolCall partId={partId} toolCallId={part.toolCallId} />
       </>
     );
   }
@@ -137,8 +129,8 @@ function displayChefTokenNumber(num: number) {
 
 function displayUsage(usageAnnotation: UsageAnnotation, provider: ProviderType, showUsageAnnotations: boolean) {
   const usage: Usage = usageFromGeneration({
-    usage: usageAnnotation,
-    providerMetadata: usageAnnotation.providerMetadata,
+    usage: usageAnnotation as any,
+    providerMetadata: usageAnnotation.providerMetadata as any,
   });
   const { chefTokens, breakdown } = calculateChefTokens(usage, provider);
   return (

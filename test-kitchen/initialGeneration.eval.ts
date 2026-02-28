@@ -47,13 +47,13 @@ if (process.env.ANTHROPIC_API_KEY) {
     name: 'claude-4-sonnet',
     model_slug: 'claude-sonnet-4-20250514',
     ai: anthropic('claude-sonnet-4-20250514'),
-    maxTokens: 16384,
+    maxOutputTokens: 16384,
   });
   chefEval({
     name: 'claude-4.5-sonnet',
     model_slug: 'claude-sonnet-4-5',
     ai: anthropic('claude-sonnet-4-5'),
-    maxTokens: 16384,
+    maxOutputTokens: 16384,
   });
 }
 
@@ -64,13 +64,13 @@ if (process.env.OPENAI_API_KEY && process.env.USE_OPENAI === 'true') {
     name: 'gpt-4.1',
     model_slug: 'gpt-4.1',
     ai: openai('gpt-4.1'),
-    maxTokens: 8192,
+    maxOutputTokens: 8192,
   });
   chefEval({
     name: 'gpt-5',
     model_slug: 'gpt-5',
     ai: openai('gpt-5'),
-    maxTokens: 8192,
+    maxOutputTokens: 8192,
   });
 }
 
@@ -79,7 +79,7 @@ if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     name: 'gemini-2.5-pro',
     model_slug: 'gemini-2.5-pro',
     ai: google('gemini-2.5-pro'),
-    maxTokens: 20000,
+    maxOutputTokens: 20000,
   });
 }
 
@@ -88,6 +88,6 @@ if (process.env.XAI_API_KEY) {
     name: 'grok-3-mini',
     model_slug: 'grok-3-mini',
     ai: xai('grok-3-mini'),
-    maxTokens: 8192,
+    maxOutputTokens: 8192,
   });
 }

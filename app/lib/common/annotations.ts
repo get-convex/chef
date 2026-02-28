@@ -1,7 +1,7 @@
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import { z } from 'zod';
 
-// This is added as a message annotation by the server when the agent has
+// This is added as message metadata by the server when the agent has
 // stopped due to repeated errors.
 //
 // The client uses this to conditionally display UI.
@@ -31,6 +31,11 @@ export const usageAnnotationValidator = z.object({
         })
         .optional(),
       google: z
+        .object({
+          cachedContentTokenCount: z.number(),
+        })
+        .optional(),
+      vertex: z
         .object({
           cachedContentTokenCount: z.number(),
         })
@@ -82,55 +87,93 @@ export const annotationValidator = z.discriminatedUnion('type', [
   }),
 ]);
 
-export const failedDueToRepeatedErrors = (annotations: Message['annotations']) => {
-  if (!annotations) {
+type MessageMetadata = UIMessage['metadata'];
+
+export const failedDueToRepeatedErrors = (metadata: MessageMetadata) => {
+  if (!metadata) {
     return false;
   }
-  return annotations.some((annotation) => {
-    const parsed = annotationValidator.safeParse(annotation);
-    return parsed.success && parsed.data.type === 'failure' && parsed.data.reason === REPEATED_ERROR_REASON;
-  });
+  const md = metadata as Record<string, unknown>;
+  // Check metadata-based format (v6)
+  if (md.failure === REPEATED_ERROR_REASON) {
+    return true;
+  }
+  // Check legacy annotations format (stored in Convex)
+  const annotations = md.annotations as unknown[] | undefined;
+  if (annotations) {
+    return annotations.some((annotation) => {
+      const parsed = annotationValidator.safeParse(annotation);
+      return parsed.success && parsed.data.type === 'failure' && parsed.data.reason === REPEATED_ERROR_REASON;
+    });
+  }
+  return false;
 };
 
 export const parseAnnotations = (
-  annotations: Message['annotations'],
+  metadata: MessageMetadata,
 ): {
   failedDueToRepeatedErrors: boolean;
   usageForToolCall: Record<string, UsageAnnotation | null>;
   modelForToolCall: Record<string, { provider: ProviderType; model: string | undefined }>;
 } => {
-  if (!annotations) {
+  if (!metadata) {
     return {
       failedDueToRepeatedErrors: false,
       usageForToolCall: {},
       modelForToolCall: {},
     };
   }
-  let failedDueToRepeatedErrors = false;
+  let failed = false;
   const usageForToolCall: Record<string, UsageAnnotation | null> = {};
   const modelForToolCall: Record<string, { provider: ProviderType; model: string | undefined }> = {};
-  for (const annotation of annotations) {
-    const parsed = annotationValidator.safeParse(annotation);
-    if (!parsed.success) {
-      continue;
-    }
-    if (parsed.data.type === 'failure' && parsed.data.reason === REPEATED_ERROR_REASON) {
-      failedDueToRepeatedErrors = true;
-    }
-    if (parsed.data.type === 'usage') {
-      const usage = usageAnnotationValidator.safeParse(JSON.parse(parsed.data.usage.payload));
+  const md = metadata as Record<string, unknown>;
+
+  // Parse v6 metadata format (keyed entries)
+  if (md.failure === REPEATED_ERROR_REASON) {
+    failed = true;
+  }
+  for (const [key, value] of Object.entries(md)) {
+    if (key.startsWith('usage:')) {
+      const usage = usageAnnotationValidator.safeParse(JSON.parse((value as { payload: string }).payload));
       if (usage.success) {
-        if (usage.data.toolCallId) {
-          usageForToolCall[usage.data.toolCallId] = usage.data;
-        }
+        const id = key.slice('usage:'.length);
+        usageForToolCall[id] = usage.data;
       }
     }
-    if (parsed.data.type === 'model') {
-      modelForToolCall[parsed.data.toolCallId] = { provider: parsed.data.provider, model: parsed.data.model };
+    if (key.startsWith('model:')) {
+      const model = value as { provider: ProviderType; model: string | undefined; toolCallId: string };
+      const id = key.slice('model:'.length);
+      modelForToolCall[id] = { provider: model.provider, model: model.model };
     }
   }
+
+  // Also parse legacy annotations format (for messages loaded from Convex)
+  const annotations = md.annotations as unknown[] | undefined;
+  if (annotations) {
+    for (const annotation of annotations) {
+      const parsed = annotationValidator.safeParse(annotation);
+      if (!parsed.success) {
+        continue;
+      }
+      if (parsed.data.type === 'failure' && parsed.data.reason === REPEATED_ERROR_REASON) {
+        failed = true;
+      }
+      if (parsed.data.type === 'usage') {
+        const usage = usageAnnotationValidator.safeParse(JSON.parse(parsed.data.usage.payload));
+        if (usage.success) {
+          if (usage.data.toolCallId) {
+            usageForToolCall[usage.data.toolCallId] = usage.data;
+          }
+        }
+      }
+      if (parsed.data.type === 'model') {
+        modelForToolCall[parsed.data.toolCallId] = { provider: parsed.data.provider, model: parsed.data.model };
+      }
+    }
+  }
+
   return {
-    failedDueToRepeatedErrors,
+    failedDueToRepeatedErrors: failed,
     usageForToolCall,
     modelForToolCall,
   };

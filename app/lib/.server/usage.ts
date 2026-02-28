@@ -1,4 +1,4 @@
-import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
+import type { LanguageModelUsage, UIMessage, ProviderMetadata } from 'ai';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { getTokenUsage } from '~/lib/convexUsage';
 import type { ProviderType, UsageAnnotation } from '~/lib/common/annotations';
@@ -33,9 +33,9 @@ export function encodeUsageAnnotation(
 ) {
   const payload: UsageAnnotation = {
     toolCallId: toolCallId.kind === 'tool-call' ? toolCallId.toolCallId : 'final',
-    completionTokens: usage.completionTokens,
-    promptTokens: usage.promptTokens,
-    totalTokens: usage.totalTokens,
+    completionTokens: usage.outputTokens ?? 0,
+    promptTokens: usage.inputTokens ?? 0,
+    totalTokens: usage.totalTokens ?? 0,
     providerMetadata,
   };
   const serialized = JSON.stringify(payload);
@@ -58,7 +58,7 @@ export function encodeModelAnnotation(
   } else if (providerMetadata?.xai) {
     provider = 'XAI';
     model = modelForProvider('XAI', modelChoice);
-  } else if (providerMetadata?.google) {
+  } else if (providerMetadata?.vertex || providerMetadata?.google) {
     provider = 'Google';
     model = modelForProvider('Google', modelChoice);
   } else if (providerMetadata?.bedrock) {
@@ -74,7 +74,7 @@ export async function recordUsage(
   modelProvider: ModelProvider,
   teamSlug: string,
   deploymentName: string | undefined,
-  lastMessage: Message | undefined,
+  lastMessage: UIMessage | undefined,
   finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
 ) {
   const totalUsageBilledFor = await calculateTotalBilledUsageForMessage(lastMessage, finalGeneration);

@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { useConvexChatHomepage } from '~/lib/stores/startup';
 import { Toaster } from '~/components/ui/Toaster';
 import { setPageLoadChatId } from '~/lib/stores/chatId';
-import type { Message } from '@ai-sdk/react';
+import type { UIMessage } from '@ai-sdk/react';
 import type { PartCache } from '~/lib/hooks/useMessageParser';
 import { UserProvider } from '~/components/UserProvider';
 
@@ -43,4 +43,4 @@ const ChatWrapper = ({ initialId }: { initialId: string }) => {
   );
 };
 
-const emptyList: Message[] = [];
+const emptyList: UIMessage[] = [];

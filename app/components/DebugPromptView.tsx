@@ -2,7 +2,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { JsonView } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
-import type { CoreMessage, FilePart, ToolCallPart, TextPart } from 'ai';
+import type { ModelMessage, FilePart, ToolCallPart, TextPart } from 'ai';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 import { ClipboardIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { useDebugPrompt } from '~/lib/hooks/useDebugPrompt';
@@ -107,17 +107,17 @@ function isToolCallPart(part: unknown): part is ToolCallPart {
   return typeof part === 'object' && part !== null && 'type' in part && part.type === 'tool-call';
 }
 
-function getMessageCharCount(message: CoreMessage): number {
+function getMessageCharCount(message: ModelMessage): number {
   if (typeof message.content === 'string') return message.content.length;
   if (Array.isArray(message.content)) {
     return message.content.reduce((sum, part) => {
       if (isTextPart(part)) return sum + part.text.length;
       if (isFilePart(part) && typeof part.data === 'string') return sum + part.data.length;
       if (isToolCallPart(part)) {
-        return sum + part.toolName.length + part.toolCallId.length + JSON.stringify(part.args).length;
+        return sum + part.toolName.length + part.toolCallId.length + JSON.stringify(part.input).length;
       }
       if (part.type === 'tool-result') {
-        return sum + part.toolName.length + part.toolCallId.length + JSON.stringify(part.result).length;
+        return sum + part.toolName.length + part.toolCallId.length + JSON.stringify(part.output).length;
       }
       return sum;
     }, 0);
@@ -145,7 +145,7 @@ function getPreviewClass(text: string) {
   return `preview-${Math.abs(text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0))}`;
 }
 
-function findLastAssistantMessage(prompt: CoreMessage[]): string {
+function findLastAssistantMessage(prompt: ModelMessage[]): string {
   // The last assistant message in a LLM  of messages is the response.
   // It should generally just be the last message, full stop.
   for (let i = prompt.length - 1; i >= 0; i--) {
@@ -186,7 +186,7 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
   const totalInputChars = (prompt || []).reduce((sum, msg) => sum + getMessageCharCount(msg), 0);
   const totalOutputChars = (completion || []).reduce((sum, msg) => sum + getMessageCharCount(msg), 0);
 
-  const getTokenEstimate = (message: CoreMessage) => {
+  const getTokenEstimate = (message: ModelMessage) => {
     const charCount = getMessageCharCount(message);
     return estimateTokenCount(charCount, totalInputChars, promptTokensTotal);
   };
@@ -262,12 +262,12 @@ function LlmPromptAndResponseView({ promptAndResponse }: { promptAndResponse: Ll
 }
 
 type CoreMessageViewProps = {
-  message: CoreMessage;
-  getTokenEstimate?: (message: CoreMessage) => number;
+  message: ModelMessage;
+  getTokenEstimate?: (message: ModelMessage) => number;
   totalCompletionTokens?: number;
 };
 
-function getMessagePreview(content: CoreMessage['content']): string {
+function getMessagePreview(content: ModelMessage['content']): string {
   if (typeof content === 'string') {
     return content;
   }
@@ -288,7 +288,7 @@ function getMessagePreview(content: CoreMessage['content']): string {
 }
 
 type MessageContentViewProps = {
-  content: CoreMessage['content'];
+  content: ModelMessage['content'];
   showRawJson?: boolean;
 };
 
@@ -320,7 +320,7 @@ function MessageContentView({ content, showRawJson = false }: MessageContentView
             const fileData = typeof part.data === 'string' ? part.data : '[Binary Data]';
             return (
               <div key={idx} className="rounded bg-purple-50 p-2 dark:bg-purple-900/10">
-                <div className="text-xs font-medium text-purple-500">file: {part.filename || part.mimeType}</div>
+                <div className="text-xs font-medium text-purple-500">file: {part.filename || part.mediaType}</div>
                 <div className="whitespace-pre-wrap font-mono text-sm">{fileData}</div>
               </div>
             );
@@ -410,7 +410,6 @@ function CoreMessageView({ message, getTokenEstimate, totalCompletionTokens }: C
           className={`flex-1 truncate text-sm text-gray-600 dark:text-gray-300 ${getPreviewClass(preview)} before:block before:truncate`}
         />
       </button>
-
       <div>
         {isExpanded && (
           <div className="mt-2">

@@ -1,4 +1,4 @@
-import { CoreMessage, generateText, LanguageModelUsage } from 'ai';
+import { ModelMessage, generateText, LanguageModelUsage, stepCountIs } from 'ai';
 import * as walkdir from 'walkdir';
 import { path } from 'chef-agent/utils/path';
 import { ChefResult, ChefModel } from './types';
@@ -390,7 +390,7 @@ const installDependencies = wrapTraced(async function installDependencies(repoDi
 async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, context: UIMessage[]) {
   return traced(
     async (span) => {
-      const messages: CoreMessage[] = [
+      const messages: ModelMessage[] = [
         {
           role: 'system',
           content: ROLE_SYSTEM_PROMPT,
@@ -412,10 +412,10 @@ async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, c
         tools.edit = editTool;
         const result = await generateText({
           model: model.ai,
-          maxTokens: model.maxTokens,
+          maxOutputTokens: model.maxOutputTokens,
           messages,
           tools,
-          maxSteps: 64,
+          stopWhen: stepCountIs(64)
         });
         span.log({
           input: messages,

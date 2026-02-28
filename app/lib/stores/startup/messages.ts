@@ -1,4 +1,4 @@
-import type { Message } from '@ai-sdk/react';
+import type { UIMessage } from '@ai-sdk/react';
 import { atom } from 'nanostores';
 import { getConvexSiteUrl } from '~/lib/convexSiteUrl';
 import { getKnownUrlId, setKnownInitialId, setKnownUrlId } from '~/lib/stores/chatId';
@@ -13,7 +13,7 @@ type CompleteMessageInfo = {
   messageIndex: number;
   partIndex: number;
   hasNextPart: boolean;
-  allMessages: Message[];
+  allMessages: UIMessage[];
 };
 
 export const lastCompleteMessageInfoStore = atom<CompleteMessageInfo | null>(null);
@@ -44,7 +44,13 @@ export async function prepareMessageHistory(args: {
   url.searchParams.set('lastMessageRank', messageIndex.toString());
   url.searchParams.set('partIndex', partIndex.toString());
   url.searchParams.set('lastSubchatIndex', args.subchatIndex.toString());
-  const firstMessage = allMessages.length > 0 ? stripMetadata(allMessages[0].content) : undefined;
+  const firstMessageText = allMessages.length > 0
+    ? allMessages[0].parts
+        .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+        .map((p) => p.text)
+        .join('')
+    : undefined;
+  const firstMessage = firstMessageText ? stripMetadata(firstMessageText) : undefined;
   if (messageIndex === persistedMessageInfo.messageIndex && partIndex === persistedMessageInfo.partIndex) {
     // No changes
     return { url, update: null };
@@ -98,7 +104,7 @@ export async function waitForNewMessages(messageIndex: number, partIndex: number
   });
 }
 
-function extractUrlHintAndDescription(messages: Message[]) {
+function extractUrlHintAndDescription(messages: UIMessage[]) {
   /*
    * This replicates the original bolt.diy behavior of client-side assigning a URL + description
    * based on the first artifact registered.
@@ -122,19 +128,16 @@ function extractUrlHintAndDescription(messages: Message[]) {
   return null;
 }
 
-export function serializeMessageForConvex(message: Message) {
-  // `content` + `toolInvocations` are legacy fields that are duplicated in `parts`.
-  // We should avoid storing them since we already store `parts`.
-  const { content: _content, toolInvocations: _toolInvocations, ...rest } = message;
-
+export function serializeMessageForConvex(message: UIMessage) {
   return {
-    ...rest,
+    id: message.id,
+    role: message.role,
     parts: message.parts,
-    createdAt: message.createdAt?.getTime() ?? undefined,
+    metadata: message.metadata,
   };
 }
 
-async function compressMessages(messages: Message[], lastMessageRank: number, partIndex: number): Promise<Uint8Array> {
+async function compressMessages(messages: UIMessage[], lastMessageRank: number, partIndex: number): Promise<Uint8Array> {
   const slicedMessages = messages.slice(0, lastMessageRank + 1);
   slicedMessages[lastMessageRank].parts = slicedMessages[lastMessageRank].parts?.slice(0, partIndex + 1);
   const serialized = slicedMessages.map(serializeMessageForConvex);

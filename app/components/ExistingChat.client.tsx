@@ -74,7 +74,7 @@ function ExistingChatWrapper({ chatId }: { chatId: string }) {
   const hadSuccessfulDeploy = initialMessages?.some(
     (message) =>
       message.role === 'assistant' &&
-      message.parts?.some((part) => part.type === 'tool-invocation' && part.toolInvocation.toolName === 'deploy'),
+      message.parts?.some((part) => 'toolCallId' in part && (part as any).toolName === 'deploy'),
   );
 
   if (initialMessages === null) {

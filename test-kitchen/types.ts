@@ -1,10 +1,12 @@
-import { LanguageModelUsage, LanguageModelV1 } from 'ai';
+import { LanguageModelV2 } from '@ai-sdk/provider';
+
+import { LanguageModelUsage } from 'ai';
 
 export type ChefModel = {
   name: string;
   model_slug: string;
   ai: LanguageModelV1;
-  maxTokens: number;
+  maxOutputTokens: number;
 };
 
 export type ChefResult = {
