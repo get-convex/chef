@@ -276,9 +276,6 @@ importers:
       nanostores:
         specifier: ^0.10.3
         version: 0.10.3
-      oidc:
-        specifier: link:@vercel/functions/oidc
-        version: link:@vercel/functions/oidc
       openai:
         specifier: ^4.93.0
         version: 4.93.0(ws@8.18.0)(zod@3.24.1)
