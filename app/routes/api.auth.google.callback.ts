@@ -10,7 +10,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const GOOGLE_CLIENT_ID = '561957498361-0f9mtcp25437nifbss26eei9a1b8rm6o.apps.googleusercontent.com';
-  const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const GOOGLE_CLIENT_SECRET = globalThis.process.env.GOOGLE_CLIENT_SECRET;
   const redirectUri = url.origin + '/api/auth/google/callback';
 
   if (!GOOGLE_CLIENT_SECRET) {
