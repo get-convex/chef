@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { convexTeamsStore, type ConvexTeam } from '~/lib/stores/convexTeams';
-import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { getStoredTeamSlug, setSelectedTeamSlug } from '~/lib/stores/convexTeams';
+import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 import { toast } from 'sonner';
 import type { ConvexReactClient } from 'convex/react';
 import { useConvex } from 'convex/react';
@@ -18,9 +19,12 @@ async function fetchTeams(convex: ConvexReactClient) {
   let teams: ConvexTeam[];
   await waitForConvexSessionId('fetchTeams');
   try {
-    const token = getConvexAuthToken(convex);
+    // Use Convex dashboard token instead of Google auth token
+    const token = getConvexDashboardToken();
     if (!token) {
-      throw new Error('Missing auth token');
+      console.warn('No Convex dashboard token found. User needs to connect Convex account.');
+      toast.error('Please connect your Convex account in Settings to access teams.');
+      return;
     }
     const response = await fetch(`${VITE_PROVISION_HOST}/api/dashboard/teams`, {
       headers: {
@@ -29,12 +33,18 @@ async function fetchTeams(convex: ConvexReactClient) {
     });
     if (!response.ok) {
       const body = await response.text();
+      // If token is invalid, clear it
+      if (response.status === 401) {
+        console.error('Convex dashboard token is invalid or expired');
+        toast.error('Your Convex connection expired. Please reconnect in Settings.');
+        return;
+      }
       throw new Error(`Failed to fetch teams: ${response.statusText}: ${body}`);
     }
     teams = await response.json();
   } catch (error) {
     console.error('Error fetching teams:', error);
-    toast.error('Failed to load user. Try logging in at https://dashboard.convex.dev.');
+    toast.error('Failed to load teams. Try reconnecting your Convex account in Settings.');
     return;
   }
   convexTeamsStore.set(teams);

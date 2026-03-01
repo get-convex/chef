@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import { initConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 
 interface GoogleAuthContextType {
   isAuthenticated: boolean;
@@ -40,6 +41,9 @@ export function GoogleAuthProvider({ children, client }: GoogleAuthProviderProps
   // Handle OAuth state
   useEffect(() => {
     const initializeAuth = async () => {
+      // Initialize Convex dashboard token from localStorage
+      initConvexDashboardToken();
+
       // Check for existing tokens
       const storedIdToken = localStorage.getItem('google_id_token');
       const storedUserInfo = localStorage.getItem('user_info');
