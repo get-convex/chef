@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react';
 import { convexDashboardTokenStore } from '~/lib/stores/convexDashboardAuth';
-import { Button } from '@ui/button';
+import { Button } from '@ui/Button';
 import { CheckCircledIcon, Link2Icon } from '@radix-ui/react-icons';
 
 /**
