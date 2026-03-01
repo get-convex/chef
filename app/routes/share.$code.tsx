@@ -1,6 +1,6 @@
-import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
-import { redirect } from '@vercel/remix';
-import { json } from '@vercel/remix';
+import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
+import { redirect } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { Show } from '~/components/Show';
 import { api } from '@convex/_generated/api';

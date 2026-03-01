@@ -1,5 +1,5 @@
-import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
-import { json } from '@vercel/remix';
+import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Header } from '~/components/header/Header';
 import { ExistingChat } from '~/components/ExistingChat.client';

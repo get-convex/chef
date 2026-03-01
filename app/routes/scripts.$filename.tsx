@@ -1,4 +1,4 @@
-import type { LoaderFunction } from '@vercel/remix';
+import type { LoaderFunction } from '@remix-run/node';
 
 // This is a separate codebase.
 // eslint-disable-next-line no-restricted-imports

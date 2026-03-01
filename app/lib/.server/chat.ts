@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs } from '@vercel/remix';
+import { type ActionFunctionArgs } from '@remix-run/node';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { convexAgent } from '~/lib/.server/llm/convex-agent';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';

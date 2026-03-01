@@ -1,6 +1,6 @@
 import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
-import { json } from '@vercel/remix';
-import type { LoaderFunctionArgs } from '@vercel/remix';
+import { json } from '@remix-run/node';
+import type { LoaderFunctionArgs } from '@remix-run/node';
 import { useMutation, useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useCallback } from 'react';
@@ -12,7 +12,7 @@ import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider, useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { useParams } from '@remix-run/react';
 import { Loading } from '~/components/Loading';
-import type { MetaFunction } from '@vercel/remix';
+import type { MetaFunction } from '@remix-run/node';
 import { Button } from '@ui/Button';
 import { ConvexError } from 'convex/values';
 import { Sheet } from '@ui/Sheet';

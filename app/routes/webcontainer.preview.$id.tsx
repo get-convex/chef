@@ -1,8 +1,8 @@
-import { json } from '@vercel/remix';
-import type { LoaderFunctionArgs } from '@vercel/remix';
+import { json } from '@remix-run/node';
+import type { LoaderFunctionArgs } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MetaFunction } from '@vercel/remix';
+import type { MetaFunction } from '@remix-run/node';
 
 const PREVIEW_CHANNEL = 'preview-updates';
 
