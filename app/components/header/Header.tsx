@@ -21,7 +21,7 @@ import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useUsage } from '~/lib/stores/usage';
 import { useReferralStats } from '~/lib/hooks/useReferralCode';
 import { Menu } from '~/components/sidebar/Menu.client';
-import { useAuth } from '@workos-inc/authkit-react';
+import { useAuth } from '~/lib/auth/GoogleAuthProvider';
 
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
@@ -62,8 +62,8 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
           />
         )}
         <a href="/">
-          {/* The logo is shifted up slightly, to visually align it with the hamburger icon. */}
-          <img src="/chef.svg" alt="Chef logo" width={72} height={42} className="relative -top-1" />
+          {/* AI Standard logo */}
+          <img src="/AI_Standard_Logo_Clean.png" alt="AI Standard" width={50} height={50} className="relative" />
         </a>
         <a
           href="https://github.com/get-convex/chef"
@@ -77,7 +77,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
               fill="currentColor"
             />
           </svg>
-          Star on GitHub
+          Open Source
         </a>
       </div>
       <>

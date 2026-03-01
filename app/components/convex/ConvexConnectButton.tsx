@@ -22,8 +22,8 @@ export function ConvexConnectButton() {
       console.error('No team selected');
       return;
     }
-    const workosAccessToken = getConvexAuthToken(convexClient);
-    if (!workosAccessToken) {
+    const convexAccessToken = getConvexAuthToken(convexClient);
+    if (!convexAccessToken) {
       console.error('No WorkOS access token');
       return;
     }
@@ -32,7 +32,7 @@ export function ConvexConnectButton() {
       chatId,
       projectInitParams: {
         teamSlug: selectedTeamSlug,
-        workosAccessToken,
+        convexAccessToken,
       },
     });
   };

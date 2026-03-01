@@ -8,7 +8,7 @@ import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/containerBootState';
 import { toast } from 'sonner';
 import { waitForConvexProjectConnection } from '~/lib/stores/convexProject';
-import { useAuth } from '@workos-inc/authkit-react';
+import { useAuth } from '~/lib/auth/GoogleAuthProvider';
 
 const CREATE_PROJECT_TIMEOUT = 15000;
 
@@ -29,9 +29,9 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
       return false;
     }
 
-    const workosAccessToken = getConvexAuthToken(convex);
-    if (!workosAccessToken) {
-      console.error('No WorkOS access token');
+    const convexAccessToken = getConvexAuthToken(convex);
+    if (!convexAccessToken) {
+      console.error('No Convex access token');
       toast.error('Unexpected error creating chat');
       return false;
     }
@@ -39,7 +39,7 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
 
     const projectInitParams = {
       teamSlug,
-      workosAccessToken,
+      convexAccessToken,
     };
 
     // Initialize the chat and start project creation
@@ -81,15 +81,15 @@ export function useExistingInitializeChat(chatId: string) {
   return useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const workosAccessToken = getConvexAuthToken(convex);
-    if (!workosAccessToken) {
-      console.error('No WorkOS access token');
+    const convexAccessToken = getConvexAuthToken(convex);
+    if (!convexAccessToken) {
+      console.error('No Convex access token');
       toast.error('Unexpected error creating chat');
       return false;
     }
     const projectInitParams = {
       teamSlug,
-      workosAccessToken,
+      convexAccessToken,
     };
     await convex.mutation(api.messages.initializeChat, {
       id: chatId,

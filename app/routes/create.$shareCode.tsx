@@ -16,7 +16,7 @@ import type { MetaFunction } from '@vercel/remix';
 import { Button } from '@ui/Button';
 import { ConvexError } from 'convex/values';
 import { Sheet } from '@ui/Sheet';
-import { useAuth } from '@workos-inc/authkit-react';
+import { useAuth } from '~/lib/auth/GoogleAuthProvider';
 export const meta: MetaFunction = () => {
   return [
     { title: 'Cooked with Chef' },
@@ -70,15 +70,15 @@ function ShareProjectContent() {
   const handleCloneChat = useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const workosAccessToken = getConvexAuthToken(convex);
-    if (!workosAccessToken) {
-      console.error('No WorkOS access token');
+    const convexAccessToken = getConvexAuthToken(convex);
+    if (!convexAccessToken) {
+      console.error('No Convex access token');
       toast.error('Unexpected error cloning chat');
       return;
     }
     const projectInitParams = {
       teamSlug,
-      workosAccessToken,
+      convexAccessToken,
     };
     try {
       const { id: chatId } = await cloneChat({ shareCode, sessionId, projectInitParams });

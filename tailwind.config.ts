@@ -39,6 +39,24 @@ export default {
       },
       colors: {
         ...TailwindConfig.theme?.extend?.colors,
+        purple: {
+          50: '#FAF5FF',
+          100: '#F3E8FF',
+          200: '#E9D5FF',
+          300: '#D8B4FE',
+          400: '#C4B5FD', // Brand Subtle
+          500: '#A78BFA',
+          600: '#8B5CF6', // Brand Primary
+          700: '#7C3AED',
+          800: '#6B21A8', // Accent (Deep Purple)
+          900: '#581C87',
+          950: '#3B0764',
+        },
+        brand: {
+          subtle: '#C4B5FD',
+          primary: '#8B5CF6',
+          accent: '#6B21A8',
+        },
         bolt: {
           elements: {
             background: {

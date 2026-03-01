@@ -57,7 +57,7 @@
 
   h6 {
     font-size: 0.85em;
-    color: #6a737d;
+    color: var(--content-tertiary);
   }
 
   p {

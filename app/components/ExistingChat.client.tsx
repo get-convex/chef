@@ -10,12 +10,15 @@ import { useReloadMessages } from '~/lib/stores/startup/reloadMessages';
 import { useSplines } from '~/lib/splines';
 import { UserProvider } from '~/components/UserProvider';
 import { Toaster } from '~/components/ui/Toaster';
+import { useEffect } from 'react';
 
 export function ExistingChat({ chatId }: { chatId: string }) {
   // Fill in the chatID store from props early in app initialization. If this
   // chat ID ends up being invalid, we'll abandon the page and redirect to
   // the homepage.
-  setPageLoadChatId(chatId);
+  useEffect(() => {
+    setPageLoadChatId(chatId);
+  }, [chatId]);
 
   return (
     <>

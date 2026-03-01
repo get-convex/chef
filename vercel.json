@@ -1,0 +1,5 @@
+{
+  "buildCommand": "pnpm run build",
+  "framework": "remix",
+  "installCommand": "pnpm install"
+}

@@ -10,11 +10,10 @@ import { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ClientOnly } from 'remix-utils/client-only';
-import { AuthKitProvider, useAuth } from '@workos-inc/authkit-react';
-import { ConvexProviderWithAuthKit } from '@convex-dev/workos';
 import { ConvexReactClient } from 'convex/react';
-import globalStyles from './styles/index.css?url';
+import { GoogleAuthProvider } from '~/lib/auth/GoogleAuthProvider';
 import '@convex-dev/design-system/styles/shared.css';
+import globalStyles from './styles/index.css?url';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 import posthog from 'posthog-js';
 
@@ -38,8 +37,23 @@ export async function loader() {
 export const links: LinksFunction = () => [
   {
     rel: 'icon',
-    href: '/favicon.svg',
-    type: 'image/svg+xml',
+    href: '/favicon-32x32.png',
+    type: 'image/png',
+    sizes: '32x32',
+  },
+  {
+    rel: 'icon',
+    href: '/AI_Standard_Logo_Clean.png',
+    type: 'image/png',
+  },
+  {
+    rel: 'apple-touch-icon',
+    href: '/apple-touch-icon.png',
+    sizes: '180x180',
+  },
+  {
+    rel: 'manifest',
+    href: '/site.webmanifest',
   },
   { rel: 'stylesheet', href: globalStyles },
   { rel: 'stylesheet', href: xtermStyles },
@@ -138,23 +152,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <AuthKitProvider
-        clientId={import.meta.env.VITE_WORKOS_CLIENT_ID}
-        redirectUri={globalThis.process.env.WORKOS_REDIRECT_URI}
-        apiHostname={import.meta.env.VITE_WORKOS_API_HOSTNAME}
-      >
-        <ClientOnly>
-          {() => {
-            return (
-              <DndProvider backend={HTML5Backend}>
-                <ConvexProviderWithAuthKit client={convex} useAuth={useAuth}>
-                  {children}
-                </ConvexProviderWithAuthKit>
-              </DndProvider>
-            );
-          }}
-        </ClientOnly>
-      </AuthKitProvider>
+      <ClientOnly>
+        {() => {
+          return (
+            <DndProvider backend={HTML5Backend}>
+              <GoogleAuthProvider client={convex}>
+                {children}
+              </GoogleAuthProvider>
+            </DndProvider>
+          );
+        }}
+      </ClientOnly>
 
       <ScrollRestoration />
       <Scripts />

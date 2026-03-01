@@ -1,13 +1,14 @@
-const clientId = process.env.WORKOS_CLIENT_ID;
+// Using Convex OIDC provider with Google OAuth
+const applicationId = process.env.CONVEX_APPLICATION_ID || "convex";
 
 export default {
   providers: [
     {
       type: "customJwt",
-      issuer: `https://apiauth.convex.dev/user_management/${clientId}`,
+      issuer: `https://auth.convex.dev`,
       algorithm: "RS256",
-      jwks: `https://apiauth.convex.dev/sso/jwks/${clientId}`,
-      applicationID: clientId,
+      jwks: `https://auth.convex.dev/.well-known/jwks.json`,
+      applicationID: applicationId,
     },
   ],
 };

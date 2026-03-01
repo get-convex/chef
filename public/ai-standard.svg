@@ -1,0 +1,13 @@
+<svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circular Purple Background -->
+  <circle cx="36" cy="36" r="36" fill="#6B21A8"/>
+
+  <!-- White Decorative Shape -->
+  <path d="M20 20 Q25 15, 30 20 L30 52 L20 52 Z" fill="white" opacity="0.3"/>
+
+  <!-- AI Text -->
+  <text x="36" y="32" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="black" text-anchor="middle">AI</text>
+
+  <!-- THE STANDARD Text -->
+  <text x="36" y="48" font-family="Arial, sans-serif" font-size="8" font-weight="600" fill="white" text-anchor="middle" letter-spacing="1">THE STANDARD</text>
+</svg>
