@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react';
 import { convexDashboardTokenStore } from '~/lib/stores/convexDashboardAuth';
 import { Button } from '@ui/button';
-import { CheckCircle, Link as LinkIcon } from 'lucide-react';
+import { CheckCircledIcon, Link2Icon } from '@radix-ui/react-icons';
 
 /**
  * Component to connect/reconnect Convex account for dashboard access.
@@ -49,12 +49,12 @@ export function ConvexAccountConnect() {
         <div className="flex items-center gap-2">
           {isConnected ? (
             <>
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircledIcon className="h-5 w-5 text-green-500" />
               <span className="text-sm font-medium text-green-700">Convex Account Connected</span>
             </>
           ) : (
             <>
-              <LinkIcon className="h-5 w-5 text-gray-400" />
+              <Link2Icon className="h-5 w-5 text-gray-400" />
               <span className="text-sm font-medium text-gray-600">Convex Account Not Connected</span>
             </>
           )}
