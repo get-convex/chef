@@ -1,5 +1,5 @@
 import type { ConvexReactClient } from 'convex/react';
-import { getConvexAuthToken } from './stores/sessionId';
+import { getConvexDashboardToken } from './stores/convexDashboardAuth';
 import { VITE_PROVISION_HOST } from './convexProvisionHost';
 
 type OptInToAccept = {
@@ -9,7 +9,7 @@ type OptInToAccept = {
   message: string;
 };
 
-export async function fetchOptIns(convex: ConvexReactClient): Promise<
+export async function fetchOptIns(): Promise<
   | {
       kind: 'loaded';
       optIns: OptInToAccept[];
@@ -22,7 +22,7 @@ export async function fetchOptIns(convex: ConvexReactClient): Promise<
       kind: 'missingAuth';
     }
 > {
-  const token = getConvexAuthToken(convex);
+  const token = getConvexDashboardToken();
   if (!token) {
     return {
       kind: 'missingAuth',

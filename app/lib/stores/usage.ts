@@ -1,7 +1,8 @@
 import { map, computed, onMount } from 'nanostores';
 import { useStore } from '@nanostores/react';
 import { useConvex } from 'convex/react';
-import { convexAuthTokenStore, getConvexAuthToken } from '~/lib/stores/sessionId';
+import { getConvexAuthToken } from '~/lib/stores/sessionId';
+import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import { debugOverrideStore, debugOverrideEnabledStore } from './debug';
 import { queryClientStore } from './reactQueryClient';
@@ -94,7 +95,13 @@ onMount(serverTeamUsageStore, () => {
     }
     const observer = new QueryObserver<UsageData>(queryClientStore.get(), {
       queryKey: ['teamUsage', teamSlug],
-      queryFn: async () => await getTokenUsage(VITE_PROVISION_HOST, convexAuthTokenStore.get()!, teamSlug),
+      queryFn: async () => {
+        const token = getConvexDashboardToken();
+        if (!token) {
+          throw new Error('No Convex dashboard token available. Please connect your Convex account.');
+        }
+        return await getTokenUsage(VITE_PROVISION_HOST, token, teamSlug);
+      },
       // TODO instead of fetching so much, refetch when know some tokens were just used
       refetchInterval: 10 * 60 * 1000,
     });

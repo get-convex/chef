@@ -116,7 +116,7 @@ export const ChefAuthProvider = ({
           setSessionId(null);
         }
         if (isValid) {
-          const optIns = await fetchOptIns(convex);
+          const optIns = await fetchOptIns();
           if (optIns.kind === 'loaded' && optIns.optIns.length === 0) {
             setSessionId(sessionIdFromLocalStorage as Id<'sessions'>);
           }
