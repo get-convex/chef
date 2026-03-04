@@ -10,6 +10,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const code = url.searchParams.get('code');
   const error = url.searchParams.get('error');
 
+  console.log('Convex dashboard OAuth callback received:', {
+    hasCode: !!code,
+    hasError: !!error,
+    origin: url.origin,
+  });
+
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error);
@@ -22,6 +28,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const CLIENT_ID = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID;
   const CLIENT_SECRET = globalThis.process.env.CONVEX_OAUTH_CLIENT_SECRET;
+
+  console.log('OAuth credentials check:', {
+    hasClientId: !!CLIENT_ID,
+    hasClientSecret: !!CLIENT_SECRET,
+    clientIdLength: CLIENT_ID?.length,
+  });
 
   if (!CLIENT_ID || !CLIENT_SECRET) {
     console.error('Missing CONVEX_OAUTH_CLIENT_ID or CONVEX_OAUTH_CLIENT_SECRET');
@@ -36,7 +48,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const redirectUri = `${origin}/api/convex/dashboard/callback`;
 
     // Exchange the authorization code for an access token
-    const tokenResponse = await fetch('https://dashboard.convex.dev/oauth/token', {
+    const AUTH_HOST = 'https://auth.convex.dev';
+    const tokenResponse = await fetch(`${AUTH_HOST}/oauth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -52,8 +65,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('Token exchange failed:', errorText);
-      return json({ error: 'Failed to exchange code for token' }, { status: 500 });
+      console.error('Token exchange failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        body: errorText,
+        redirectUri,
+        clientId: CLIENT_ID,
+      });
+      return json(
+        {
+          error: 'Failed to exchange code for token',
+          details: `Status: ${tokenResponse.status}`,
+        },
+        { status: 500 }
+      );
     }
 
     const tokenData = await tokenResponse.json();
@@ -92,6 +117,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     });
   } catch (error) {
     console.error('Error in Convex OAuth callback:', error);
-    return json({ error: 'Internal server error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return json(
+      {
+        error: 'Internal server error',
+        details: errorMessage,
+      },
+      { status: 500 }
+    );
   }
 }
