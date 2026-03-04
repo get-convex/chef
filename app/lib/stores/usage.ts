@@ -10,27 +10,9 @@ import { QueryObserver } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
 
 export function useTokenUsage(teamSlug: string | null): TeamUsageState {
-  // getConvexAuthToken has a side effect may need
-  const convex = useConvex();
-  void getConvexAuthToken(convex);
-
-  const usageByTeam = useStore(usageStore);
-
-  useEffect(() => {
-    if (!teamSlug) {
-      return;
-    }
-    const subscribed = !!serverTeamUsageStore.get()[teamSlug];
-    if (!subscribed) {
-      serverTeamUsageStore.setKey(teamSlug, { isLoading: true, tokenUsage: null });
-    }
-  }, [teamSlug]);
-
-  if (!teamSlug || !usageByTeam[teamSlug]) {
-    return { isLoading: true, tokenUsage: null } as const;
-  }
-  const usage: TeamUsageState = usageByTeam[teamSlug];
-  return usage;
+  // DISABLED: Third-party OAuth apps don't have access to dashboard API
+  // Return loading state to prevent UI errors
+  return { isLoading: true, tokenUsage: null };
 }
 
 export async function getTokenUsage(

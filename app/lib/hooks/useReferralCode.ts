@@ -9,29 +9,10 @@ export function useReferralCode() {
   return team?.referralCode || null;
 }
 
-export function useReferralStats() {
-  const authToken = useAuthToken();
-  const teamId = useSelectedTeam()?.id;
-  const { data } = useReactQuery(
-    {
-      queryKey: ['referral stats', teamId],
-      enabled: !!(authToken && teamId !== undefined),
-      queryFn: async () => {
-        const data = (await bbGet(`/api/dashboard/teams/${teamId}/referral_state`, authToken!)) as {
-          referrals: unknown[];
-          referredBy: unknown;
-        };
-        return data;
-      },
-    },
-    queryClientStore.get(),
-  );
-  if (!data) {
-    return null;
-  }
-  return {
-    left: 5 - data.referrals.length,
-  };
+export function useReferralStats(): { left: number } | null {
+  // DISABLED: Third-party OAuth apps don't have access to dashboard API
+  // Return null to hide referral features
+  return null;
 }
 
 export async function bbGet(path: string, authToken: string) {

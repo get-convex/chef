@@ -1,31 +1,81 @@
 #!/bin/bash
-# Script to set Vercel environment variables
-# Run this after linking your Vercel project
+# Script to set Vercel environment variables for Chef production deployment
+# Run this after linking your Vercel project with: vercel link
 
-echo "Setting Vercel environment variables for production..."
+set -e  # Exit on error
 
-# Convex Connection
-vercel env add CONVEX_URL production <<< "https://striped-dalmatian-762.convex.cloud"
-vercel env add VITE_CONVEX_URL production <<< "https://striped-dalmatian-762.convex.cloud"
+echo "🚀 Setting Vercel environment variables for production..."
+echo ""
 
-# AI Model Providers (replace with your actual keys)
-# vercel env add GOOGLE_API_KEY production <<< "your_google_api_key"
-# vercel env add GEMINI_API_KEY production <<< "your_gemini_api_key"
-# vercel env add VERTEX_AI_STUDIO_API_KEY production <<< "your_vertex_ai_key"
-# vercel env add OPENAI_API_KEY production <<< "your_openai_api_key"
+# Read values from .env.local
+if [ ! -f .env.local ]; then
+  echo "❌ Error: .env.local file not found!"
+  echo "Please create .env.local with your environment variables first."
+  exit 1
+fi
 
-# Analytics
-vercel env add VITE_POSTHOG_HOST production <<< "https://us.i.posthog.com"
-vercel env add VITE_POSTHOG_KEY production <<< "phc_NWQlkY67cr90RUzVIpgz67chtiz719ApjWj3HCoJ4nD"
+echo "📋 Reading configuration from .env.local..."
+source .env.local
 
-# Feature Flags
-vercel env add DISABLE_USAGE_REPORTING production <<< "1"
-vercel env add DISABLE_BEDROCK production <<< "1"
+# Helper function to set env var for production and preview
+set_env() {
+  local key=$1
+  local value=$2
+
+  if [ -z "$value" ]; then
+    echo "⚠️  Skipping $key (not set in .env.local)"
+    return
+  fi
+
+  echo "Setting $key..."
+  echo "$value" | vercel env add "$key" production preview > /dev/null 2>&1 || echo "  (already exists or error)"
+}
 
 echo ""
-echo "✅ Environment variables set for production!"
+echo "⚙️  Setting Convex configuration..."
+set_env "CONVEX_DEPLOYMENT" "$CONVEX_DEPLOYMENT"
+set_env "CONVEX_URL" "$CONVEX_URL"
+set_env "CONVEX_DEPLOYMENT_URL" "$CONVEX_DEPLOYMENT_URL"
+set_env "CONVEX_SITE_URL" "$CONVEX_SITE_URL"
+set_env "CONVEX_DEPLOYMENT_KEY" "$CONVEX_DEPLOYMENT_KEY"
+
 echo ""
-echo "Note: You still need to set these manually in Vercel dashboard:"
-echo "  - CONVEX_OAUTH_CLIENT_ID (if needed for OAuth callback route)"
-echo "  - CONVEX_OAUTH_CLIENT_SECRET (if needed for OAuth callback route)"
-echo "  - ANTHROPIC_API_KEY (when you get it)"
+echo "🔐 Setting Google OAuth credentials..."
+set_env "GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_ID"
+set_env "GOOGLE_CLIENT_SECRET" "$GOOGLE_CLIENT_SECRET"
+
+echo ""
+echo "🔑 Setting Convex OAuth credentials..."
+set_env "CONVEX_OAUTH_CLIENT_ID" "$CONVEX_OAUTH_CLIENT_ID"
+set_env "CONVEX_OAUTH_CLIENT_SECRET" "$CONVEX_OAUTH_CLIENT_SECRET"
+set_env "VITE_CONVEX_OAUTH_CLIENT_ID" "$VITE_CONVEX_OAUTH_CLIENT_ID"
+
+echo ""
+echo "🤖 Setting AI provider API keys (optional)..."
+set_env "ANTHROPIC_API_KEY" "$ANTHROPIC_API_KEY"
+set_env "OPENAI_API_KEY" "$OPENAI_API_KEY"
+set_env "XAI_API_KEY" "$XAI_API_KEY"
+set_env "GOOGLE_API_KEY" "$GOOGLE_API_KEY"
+set_env "GOOGLE_VERTEX_CREDENTIALS_JSON" "$GOOGLE_VERTEX_CREDENTIALS_JSON"
+
+echo ""
+echo "📊 Setting analytics and feature flags..."
+set_env "VITE_POSTHOG_HOST" "${VITE_POSTHOG_HOST:-https://us.i.posthog.com}"
+set_env "VITE_POSTHOG_KEY" "$VITE_POSTHOG_KEY"
+set_env "VITE_LD_CLIENT_SIDE_ID" "$VITE_LD_CLIENT_SIDE_ID"
+set_env "DISABLE_USAGE_REPORTING" "1"
+set_env "DISABLE_BEDROCK" "1"
+
+echo ""
+echo "✅ Environment variables setup complete!"
+echo ""
+echo "📝 Next steps:"
+echo "  1. Verify variables in Vercel dashboard: https://vercel.com/dashboard"
+echo "  2. Update OAuth redirect URIs to include your Vercel domain"
+echo "  3. Deploy: vercel --prod"
+echo ""
+echo "🔗 Don't forget to update redirect URIs:"
+echo "  - Google OAuth: https://console.cloud.google.com/apis/credentials"
+echo "  - Add: https://your-app.vercel.app/api/auth/google/callback"
+echo "  - Add: https://your-app.vercel.app/api/convex/dashboard/callback"
+echo ""
