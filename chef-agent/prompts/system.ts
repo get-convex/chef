@@ -9,6 +9,7 @@ import { openaiProxyGuidelines } from './openaiProxyGuidelines.js';
 import { openAi } from './openAi.js';
 import { google } from './google.js';
 import { resendProxyGuidelines } from './resendProxyGuidelines.js';
+import { phaseInstructions } from './phaseInstructions.js';
 
 // This is the very first part of the system prompt that tells the model what
 // role to play.
@@ -30,6 +31,7 @@ export function generalSystemPrompt(options: SystemPromptOptions) {
   const result = stripIndents`${GENERAL_SYSTEM_PROMPT_PRELUDE}
   ${openAi(options)}
   ${google(options)}
+  ${phaseInstructions()}
   ${solutionConstraints(options)}
   ${formattingInstructions(options)}
   ${exampleDataInstructions(options)}

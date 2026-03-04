@@ -7,7 +7,19 @@ export function ConvexAccountCard() {
         <div>
           <h2 className="text-xl font-semibold text-content-primary">Convex Account</h2>
           <p className="mt-1 text-sm text-content-secondary">
-            Connect your Convex account to access your teams, create projects, and view usage.
+            Connect your Convex account to access your teams and create projects.
+          </p>
+          <p className="mt-2 text-xs text-content-tertiary">
+            Note: Usage and billing are managed directly in the{' '}
+            <a
+              href="https://dashboard.convex.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-bolt-elements-textTertiary underline hover:text-bolt-elements-textPrimary"
+            >
+              Convex Dashboard
+            </a>
+            .
           </p>
         </div>
         <ConvexAccountConnect />
