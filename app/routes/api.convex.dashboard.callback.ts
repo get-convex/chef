@@ -48,8 +48,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const redirectUri = `${origin}/api/convex/dashboard/callback`;
 
     // Exchange the authorization code for an access token
-    const AUTH_HOST = 'https://auth.convex.dev';
-    const tokenResponse = await fetch(`${AUTH_HOST}/oauth/token`, {
+    const OAUTH_TOKEN_ENDPOINT = 'https://api.convex.dev/oauth/token';
+    const tokenResponse = await fetch(OAUTH_TOKEN_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
