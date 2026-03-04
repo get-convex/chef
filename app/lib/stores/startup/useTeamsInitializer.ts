@@ -9,10 +9,14 @@ import { useConvex } from 'convex/react';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 
 export function useTeamsInitializer() {
-  const convex = useConvex();
-  useEffect(() => {
-    void fetchTeams(convex);
-  }, [convex]);
+  // DISABLED: Third-party OAuth apps don't have access to dashboard APIs
+  // See: https://docs.convex.dev/platform-apis/oauth-applications
+  // The /api/dashboard/teams endpoint returns 403 for third-party OAuth apps
+
+  // const convex = useConvex();
+  // useEffect(() => {
+  //   void fetchTeams(convex);
+  // }, [convex]);
 }
 
 async function fetchTeams(convex: ConvexReactClient) {
