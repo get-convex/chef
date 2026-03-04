@@ -42,8 +42,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const tokens = await tokenResponse.json();
     const { access_token, id_token } = tokens;
 
-    // Get user info from Google
-    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    // Get user info from Google (using v3 endpoint for better reliability)
+    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: {
         Authorization: `Bearer ${access_token}`,
       },
@@ -54,6 +54,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     const userInfo = await userInfoResponse.json();
+
+    console.log('Google userInfo received:', {
+      hasEmail: !!userInfo.email,
+      hasName: !!userInfo.name,
+      hasPicture: !!userInfo.picture,
+      pictureUrl: userInfo.picture,
+    });
+
+    // Ensure picture URL has proper size parameter for reliability
+    if (userInfo.picture && userInfo.picture.includes('googleusercontent.com')) {
+      const originalPicture = userInfo.picture;
+      // Add size parameter if not present
+      if (!userInfo.picture.includes('=s')) {
+        userInfo.picture = userInfo.picture.replace(/=s\d+-c/, '=s200-c').concat(userInfo.picture.includes('?') ? '&sz=200' : '?sz=200');
+      }
+      console.log('Picture URL updated:', { from: originalPicture, to: userInfo.picture });
+    }
 
     // Return HTML that stores the token and redirects
     const html = `

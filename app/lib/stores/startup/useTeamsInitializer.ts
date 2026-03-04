@@ -2,68 +2,64 @@ import { useEffect } from 'react';
 import { convexTeamsStore, type ConvexTeam } from '~/lib/stores/convexTeams';
 import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { getStoredTeamSlug, setSelectedTeamSlug } from '~/lib/stores/convexTeams';
-import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
-import { toast } from 'sonner';
-import type { ConvexReactClient } from 'convex/react';
 import { useConvex } from 'convex/react';
-import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 
 export function useTeamsInitializer() {
   // DISABLED: Third-party OAuth apps don't have access to dashboard APIs
   // See: https://docs.convex.dev/platform-apis/oauth-applications
   // The /api/dashboard/teams endpoint returns 403 for third-party OAuth apps
 
-  // const convex = useConvex();
-  // useEffect(() => {
-  //   void fetchTeams(convex);
-  // }, [convex]);
+  // Instead, we create a personal default team for each user
+  const convex = useConvex();
+  useEffect(() => {
+    void createPersonalTeam();
+  }, [convex]);
 }
 
-async function fetchTeams(convex: ConvexReactClient) {
-  let teams: ConvexTeam[];
-  await waitForConvexSessionId('fetchTeams');
-  try {
-    // Use Convex dashboard token instead of Google auth token
-    const token = getConvexDashboardToken();
-    if (!token) {
-      console.warn('No Convex dashboard token found. User needs to connect Convex account.');
-      toast.error('Please connect your Convex account in Settings to access teams.');
-      return;
-    }
-    const response = await fetch(`${VITE_PROVISION_HOST}/api/dashboard/teams`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      const body = await response.text();
-      // If token is invalid, clear it
-      if (response.status === 401) {
-        console.error('Convex dashboard token is invalid or expired');
-        toast.error('Your Convex connection expired. Please reconnect in Settings.');
-        return;
-      }
-      throw new Error(`Failed to fetch teams: ${response.statusText}: ${body}`);
-    }
-    teams = await response.json();
-  } catch (error) {
-    console.error('Error fetching teams:', error);
-    toast.error('Failed to load teams. Try reconnecting your Convex account in Settings.');
+async function createPersonalTeam() {
+  await waitForConvexSessionId('createPersonalTeam');
+
+  // Check if team already selected
+  const currentTeam = getStoredTeamSlug();
+  if (currentTeam) {
+    convexTeamsStore.set([{
+      id: 'personal',
+      name: 'Personal',
+      slug: currentTeam,
+      referralCode: '',
+    }]);
+    setSelectedTeamSlug(currentTeam);
     return;
   }
-  convexTeamsStore.set(teams);
-  const teamSlugFromLocalStorage = getStoredTeamSlug();
-  if (teamSlugFromLocalStorage) {
-    const team = teams.find((team) => team.slug === teamSlugFromLocalStorage);
-    if (team) {
-      setSelectedTeamSlug(teamSlugFromLocalStorage);
-      return;
+
+  // Get user info to create a personal team
+  const userInfo = localStorage.getItem('user_info');
+  let teamSlug = 'personal';
+  let teamName = 'Personal';
+
+  if (userInfo) {
+    try {
+      const parsed = JSON.parse(userInfo);
+      const email = parsed.email || '';
+      // Create team slug from email (e.g., user@example.com -> user-personal)
+      const emailPrefix = email.split('@')[0].replace(/[^a-z0-9]/gi, '-').toLowerCase();
+      teamSlug = emailPrefix ? `${emailPrefix}-personal` : 'personal';
+      teamName = parsed.given_name ? `${parsed.given_name}'s Team` : 'Personal Team';
+    } catch (e) {
+      console.warn('Failed to parse user info for team creation:', e);
     }
   }
-  if (teams.length === 1) {
-    setSelectedTeamSlug(teams[0].slug);
-    return;
-  }
-  // Force the user to select a team.
-  setSelectedTeamSlug(null);
+
+  // Create and select the personal team
+  const personalTeam: ConvexTeam = {
+    id: 'personal',
+    name: teamName,
+    slug: teamSlug,
+    referralCode: '',
+  };
+
+  convexTeamsStore.set([personalTeam]);
+  setSelectedTeamSlug(teamSlug);
+
+  console.log('Created personal team:', personalTeam);
 }

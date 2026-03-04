@@ -61,7 +61,7 @@ export function ConvexAccountConnect() {
         </div>
         <Button
           onClick={handleConnect}
-          variant={isConnected ? 'outline' : 'default'}
+          variant={isConnected ? 'neutral' : 'primary'}
           size="sm"
         >
           {isConnected ? 'Reconnect' : 'Connect Convex Account'}

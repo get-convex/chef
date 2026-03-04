@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { chatStore } from '~/lib/stores/chatId';
 import { HeaderActionButtons } from './HeaderActionButtons.client';
@@ -26,6 +26,7 @@ import { useAuth } from '~/lib/auth/GoogleAuthProvider';
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
 
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const isLoggedIn = sessionId !== null;
@@ -47,6 +48,15 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
   const handleSettingsClick = () => {
     window.location.pathname = '/settings';
   };
+
+  const handleImageError = () => {
+    setImageLoadError(true);
+  };
+
+  // Reset image error state when profile changes
+  useEffect(() => {
+    setImageLoadError(false);
+  }, [profile?.avatar]);
 
   return (
     <header className={'flex h-[var(--header-height)] items-center overflow-x-auto overflow-y-hidden border-b p-5'}>
@@ -111,12 +121,14 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                     title: 'User menu',
                     inline: true,
                     className: 'rounded-full',
-                    icon: profile.avatar ? (
+                    icon: profile.avatar && !imageLoadError ? (
                       <img
                         src={profile.avatar}
                         className="size-8 min-w-8 rounded-full object-cover"
                         loading="eager"
                         decoding="sync"
+                        onError={handleImageError}
+                        alt="Profile"
                       />
                     ) : (
                       <PersonIcon className="size-8 min-w-8 rounded-full border text-content-secondary" />

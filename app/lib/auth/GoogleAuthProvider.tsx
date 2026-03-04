@@ -53,6 +53,7 @@ export function GoogleAuthProvider({ children, client }: GoogleAuthProviderProps
         setIsAuthenticated(true);
         try {
           const parsedUserInfo = JSON.parse(storedUserInfo);
+          console.log('Google profile picture URL:', parsedUserInfo.picture);
           setUser({
             id: parsedUserInfo.id,
             email: parsedUserInfo.email,
