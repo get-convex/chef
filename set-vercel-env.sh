@@ -51,6 +51,10 @@ set_env "CONVEX_OAUTH_CLIENT_SECRET" "$CONVEX_OAUTH_CLIENT_SECRET"
 set_env "VITE_CONVEX_OAUTH_CLIENT_ID" "$VITE_CONVEX_OAUTH_CLIENT_ID"
 
 echo ""
+echo "👥 Setting Convex team configuration..."
+set_env "VITE_DEFAULT_TEAM_SLUG" "$VITE_DEFAULT_TEAM_SLUG"
+
+echo ""
 echo "🤖 Setting AI provider API keys (optional)..."
 set_env "ANTHROPIC_API_KEY" "$ANTHROPIC_API_KEY"
 set_env "OPENAI_API_KEY" "$OPENAI_API_KEY"

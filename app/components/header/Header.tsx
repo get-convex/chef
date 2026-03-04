@@ -129,6 +129,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                         decoding="sync"
                         onError={handleImageError}
                         alt="Profile"
+                        crossOrigin="anonymous"
                       />
                     ) : (
                       <PersonIcon className="size-8 min-w-8 rounded-full border text-content-secondary" />

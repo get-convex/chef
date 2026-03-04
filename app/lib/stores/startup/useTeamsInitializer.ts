@@ -32,12 +32,15 @@ async function createPersonalTeam() {
     return;
   }
 
+  // Use environment variable if provided (for production team)
+  const envTeamSlug = import.meta.env.VITE_DEFAULT_TEAM_SLUG;
+
   // Get user info to create a personal team
   const userInfo = localStorage.getItem('user_info');
-  let teamSlug = 'personal';
+  let teamSlug = envTeamSlug || 'personal';
   let teamName = 'Personal';
 
-  if (userInfo) {
+  if (!envTeamSlug && userInfo) {
     try {
       const parsed = JSON.parse(userInfo);
       const email = parsed.email || '';
@@ -47,6 +50,13 @@ async function createPersonalTeam() {
       teamName = parsed.given_name ? `${parsed.given_name}'s Team` : 'Personal Team';
     } catch (e) {
       console.warn('Failed to parse user info for team creation:', e);
+    }
+  } else if (envTeamSlug && userInfo) {
+    try {
+      const parsed = JSON.parse(userInfo);
+      teamName = parsed.given_name ? `${parsed.given_name}'s Team` : 'Personal Team';
+    } catch (e) {
+      console.warn('Failed to parse user info for team name:', e);
     }
   }
 
