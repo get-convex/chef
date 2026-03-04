@@ -10,15 +10,27 @@ import { useLDClient, withLDProvider, basicLogger } from 'launchdarkly-react-cli
 import { api } from '@convex/_generated/api';
 import { useAuth } from '~/lib/auth/GoogleAuthProvider';
 
+// LaunchDarkly is optional - only initialize if client ID is provided
+const LD_CLIENT_ID = import.meta.env.VITE_LD_CLIENT_SIDE_ID || '';
+
 export const UserProvider = withLDProvider<any>({
-  clientSideID: import.meta.env.VITE_LD_CLIENT_SIDE_ID,
+  clientSideID: LD_CLIENT_ID,
   options: {
     logger: basicLogger({ level: 'error' }),
+    // Bootstrap with anonymous user if no client ID to prevent errors
+    bootstrap: LD_CLIENT_ID ? undefined : 'localStorage',
   },
+  deferInitialization: !LD_CLIENT_ID, // Don't initialize if no client ID
 })(UserProviderInner);
 
 function UserProviderInner({ children }: { children: React.ReactNode }) {
-  const launchdarkly = useLDClient();
+  let launchdarkly;
+  try {
+    launchdarkly = useLDClient();
+  } catch (e) {
+    // LaunchDarkly not initialized, which is fine
+    launchdarkly = undefined;
+  }
   const { user } = useAuth();
   const convexMemberId = useQuery(api.sessions.convexMemberId);
   const sessionId = useConvexSessionIdOrNullOrLoading();
