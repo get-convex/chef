@@ -463,7 +463,7 @@ function getPartInfos({
       partInfos.push({
         partIdx: idx,
         partType: 'tool-invocation',
-        partText: `Tool invocation: ${toolName} (${toolCallId})\n\n${state === 'result' || state === 'output-available' ? (part as any).output ?? (part as any).result : '(incomplete call)'}`,
+        partText: `Tool invocation: ${toolName} (${toolCallId})\n\n${state === 'result' || state === 'output-available' ? ((part as any).output ?? (part as any).result) : '(incomplete call)'}`,
         usageInfo: {
           rawUsage: rawUsageForPart,
           billedUsage: billedUsageForPart,

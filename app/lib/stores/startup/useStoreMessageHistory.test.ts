@@ -22,7 +22,10 @@ function createMessage(overrides: Partial<UIMessage> = {}): UIMessage {
 }
 
 function createToolInvocationPart(
-  invocation: { state: 'output-available'; output: string } | { state: 'input-streaming' } | { state: 'input-available' },
+  invocation:
+    | { state: 'output-available'; output: string }
+    | { state: 'input-streaming' }
+    | { state: 'input-available' },
 ) {
   const toolCallId = `test-${Math.random()}`;
   return {
@@ -82,7 +85,10 @@ describe('getLastCompletePart', () => {
     });
     const assistantMessage = createMessage({
       role: 'assistant',
-      parts: [createToolInvocationPart({ state: 'output-available', output: 'something' }), { type: 'text', text: 'test' }],
+      parts: [
+        createToolInvocationPart({ state: 'output-available', output: 'something' }),
+        { type: 'text', text: 'test' },
+      ],
     });
     const lastCompletePart = getLastCompletePart([userMessage, assistantMessage], 'streaming');
 
@@ -110,7 +116,10 @@ describe('getLastCompletePart', () => {
   test('returns previous part if there are empty messages', () => {
     const message1 = createMessage({
       role: 'assistant',
-      parts: [{ type: 'text', text: 'test' }, createToolInvocationPart({ state: 'output-available', output: 'something' })],
+      parts: [
+        { type: 'text', text: 'test' },
+        createToolInvocationPart({ state: 'output-available', output: 'something' }),
+      ],
     });
     const message2 = createMessage({
       role: 'assistant',

@@ -5,7 +5,6 @@ import type { ActionAlert, FileHistory } from '~/types/actions';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { unreachable } from 'chef-agent/utils/unreachable';
 import type { ActionCallbackData } from 'chef-agent/message-parser';
-import type { ConvexToolInvocation } from '~/lib/common/types';
 import { viewParameters } from 'chef-agent/tools/view';
 import { renderDirectory } from 'chef-agent/utils/renderDirectory';
 import { renderFile } from 'chef-agent/utils/renderFile';

@@ -95,7 +95,9 @@ export function getLastCompletePart(
   }
 
   const isLastPartComplete =
-    'toolCallId' in lastPart ? (lastPart as any).state === 'output-available' || (lastPart as any).state === 'output-error' : streamStatus !== 'streaming';
+    'toolCallId' in lastPart
+      ? (lastPart as any).state === 'output-available' || (lastPart as any).state === 'output-error'
+      : streamStatus !== 'streaming';
   if (isLastPartComplete) {
     return {
       messageIndex: lastPartIndices.messageIndex,

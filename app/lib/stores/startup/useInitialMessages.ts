@@ -92,7 +92,12 @@ export function useInitialMessages(chatId: string | undefined):
             if (part.type === 'tool-invocation') {
               const inv = part.toolInvocation;
               const toolType = `tool-${inv.toolName}` as const;
-              if (inv.state === 'partial-call' || inv.state === 'call' || inv.state === 'input-streaming' || inv.state === 'input-available') {
+              if (
+                inv.state === 'partial-call' ||
+                inv.state === 'call' ||
+                inv.state === 'input-streaming' ||
+                inv.state === 'input-available'
+              ) {
                 // Interrupted tool calls become output-available with error
                 return {
                   type: toolType,
@@ -166,7 +171,10 @@ function deserializeMessageForConvex(message: SerializedMessage): UIMessage {
     id: message.id,
     role: message.role as UIMessage['role'],
     parts: (message.parts ?? []) as UIMessage['parts'],
-    metadata: (message as any).metadata ?? (message as any).annotations ? { annotations: (message as any).annotations } : undefined,
+    metadata:
+      ((message as any).metadata ?? (message as any).annotations)
+        ? { annotations: (message as any).annotations }
+        : undefined,
   };
 }
 

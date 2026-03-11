@@ -121,7 +121,16 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                   )}
                 </div>
               )}
-              {isUserMessage ? <UserMessage content={parts.filter(p => p.type === 'text').map(p => p.text).join('')} /> : <AssistantMessage message={message} />}
+              {isUserMessage ? (
+                <UserMessage
+                  content={parts
+                    .filter((p) => p.type === 'text')
+                    .map((p) => p.text)
+                    .join('')}
+                />
+              ) : (
+                <AssistantMessage message={message} />
+              )}
               <div>
                 {earliestRewindableMessageRank !== undefined &&
                   earliestRewindableMessageRank !== null &&

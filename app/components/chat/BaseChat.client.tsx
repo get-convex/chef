@@ -134,7 +134,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const lastUserMessage = messages.findLast((message) => message.role === 'user');
     const resendMessage = useCallback(async () => {
       if (lastUserMessage) {
-        await onSend?.(lastUserMessage.parts.filter(p => p.type === 'text').map(p => p.text).join(''));
+        await onSend?.(
+          lastUserMessage.parts
+            .filter((p) => p.type === 'text')
+            .map((p) => p.text)
+            .join(''),
+        );
       }
     }, [lastUserMessage, onSend]);
     const baseChat = (

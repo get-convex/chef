@@ -261,7 +261,10 @@ function NpmInstallTool({ artifact, invocation }: { artifact: ArtifactState; inv
     throw new Error('Terminal can only be used for the npmInstall tool');
   }
 
-  if (invocation.state === 'input-available' || (invocation.state === 'output-available' && invocation.output.startsWith('Error:'))) {
+  if (
+    invocation.state === 'input-available' ||
+    (invocation.state === 'output-available' && invocation.output.startsWith('Error:'))
+  ) {
     return <Terminal artifact={artifact} invocation={invocation} />;
   }
 
@@ -283,7 +286,11 @@ function parseToolInvocation(
   } catch {
     return {} as ConvexToolInvocation;
   }
-  if (status === 'complete' && parsedContent.state === 'output-available' && !parsedContent.output?.startsWith('Error:')) {
+  if (
+    status === 'complete' &&
+    parsedContent.state === 'output-available' &&
+    !parsedContent.output?.startsWith('Error:')
+  ) {
     let zodError: ZodError | null = null;
     switch (parsedContent.toolName) {
       case 'deploy': {

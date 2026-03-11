@@ -281,7 +281,16 @@ export const Chat = memo(
 
     const addToolOutputRef = useRef<typeof addToolOutput>(null!);
 
-    const { messages, status, stop, sendMessage: chatSendMessage, setMessages, regenerate, addToolOutput, error } = useChat({
+    const {
+      messages,
+      status,
+      stop,
+      sendMessage: chatSendMessage,
+      setMessages,
+      regenerate,
+      addToolOutput,
+      error,
+    } = useChat({
       messages: initialMessages,
 
       transport: new DefaultChatTransport({
