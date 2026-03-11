@@ -15,7 +15,6 @@ if (typeof globalThis.crypto === "undefined") {
   globalThis.crypto = webcrypto as unknown as Crypto;
 }
 
-// @ts-expect-error Vite's import.meta.glob is not in Convex's tsconfig
 export const modules = import.meta.glob("../convex/**/*.*s");
 
 export function setupTest() {
