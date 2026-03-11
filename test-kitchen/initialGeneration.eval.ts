@@ -44,9 +44,9 @@ net.setDefaultAutoSelectFamily(true);
 
 if (process.env.ANTHROPIC_API_KEY) {
   chefEval({
-    name: 'claude-4-sonnet',
-    model_slug: 'claude-sonnet-4-20250514',
-    ai: anthropic('claude-sonnet-4-20250514'),
+    name: 'claude-4.6-sonnet',
+    model_slug: 'claude-sonnet-4-6',
+    ai: anthropic('claude-sonnet-4-6'),
     maxTokens: 16384,
   });
   chefEval({

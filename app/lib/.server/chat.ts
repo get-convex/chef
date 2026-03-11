@@ -89,7 +89,8 @@ export async function chatAction({ request }: ActionFunctionArgs) {
     (body.modelChoice &&
       body.modelChoice !== 'claude-sonnet-4-0' &&
       body.modelChoice !== 'gpt-5' &&
-      body.modelChoice !== 'claude-sonnet-4-5')
+      body.modelChoice !== 'claude-sonnet-4-5' &&
+      body.modelChoice !== 'claude-sonnet-4-6')
   ) {
     useUserApiKey = true;
   }
@@ -178,9 +179,9 @@ export async function chatAction({ request }: ActionFunctionArgs) {
       // Only set the requested model choice if we're using a user API key or Claude 4 Sonnet/GPT-5
       modelChoice:
         userApiKey ||
-        body.modelChoice === 'claude-sonnet-4-0' ||
         body.modelChoice === 'gpt-5' ||
-        body.modelChoice === 'claude-sonnet-4-5'
+        body.modelChoice === 'claude-sonnet-4-5' ||
+        body.modelChoice === 'claude-sonnet-4-6'
           ? body.modelChoice
           : undefined,
       userApiKey,
