@@ -36,6 +36,14 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
       return 'us.anthropic.claude-sonnet-4-20250514-v1:0';
     }
 
+    if (modelChoice === 'claude-sonnet-4-6' && provider === 'Bedrock') {
+      return 'anthropic.claude-sonnet-4-6';
+    }
+
+    if (modelChoice === 'claude-sonnet-4-5' && provider === 'Bedrock') {
+      return 'anthropic.claude-sonnet-4-5-20250929-v1:0';
+    }
+
     if (modelChoice === 'gpt-5') {
       return 'gpt-5';
     }
@@ -44,9 +52,9 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
   }
   switch (provider) {
     case 'Anthropic':
-      return getEnv('ANTHROPIC_MODEL') || 'claude-3-5-sonnet-20241022';
+      return getEnv('ANTHROPIC_MODEL') || 'claude-sonnet-4-6';
     case 'Bedrock':
-      return getEnv('AMAZON_BEDROCK_MODEL') || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0';
+      return getEnv('AMAZON_BEDROCK_MODEL') || 'anthropic.claude-sonnet-4-6';
     case 'OpenAI':
       return getEnv('OPENAI_MODEL') || 'gpt-4.1';
     case 'XAI':
@@ -61,7 +69,7 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
 }
 
 function anthropicMaxTokens(modelChoice: string | undefined) {
-  return modelChoice === 'claude-sonnet-4-0' || modelChoice === 'claude-sonnet-4-5' ? 24576 : 8192;
+  return modelChoice === 'claude-sonnet-4-5' || modelChoice === 'claude-sonnet-4-6' ? 24576 : 8192;
 }
 
 export function getProvider(
