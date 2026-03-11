@@ -415,7 +415,7 @@ async function invokeGenerateText(model: ChefModel, opts: SystemPromptOptions, c
           maxOutputTokens: model.maxOutputTokens,
           messages,
           tools,
-          stopWhen: stepCountIs(64)
+          stopWhen: stepCountIs(64),
         });
         span.log({
           input: messages,
