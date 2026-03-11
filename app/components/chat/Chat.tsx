@@ -199,7 +199,7 @@ export const Chat = memo(
           [K in ModelSelection]: { providerName: ModelProvider; apiKeyField: 'value' | 'openai' | 'xai' | 'google' };
         } = {
           auto: { providerName: 'anthropic', apiKeyField: 'value' },
-          'claude-4-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
+          'claude-4.6-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
           'claude-4.5-sonnet': { providerName: 'anthropic', apiKeyField: 'value' },
           'gpt-4.1': { providerName: 'openai', apiKeyField: 'openai' },
           'gpt-5': { providerName: 'openai', apiKeyField: 'openai' },
@@ -312,16 +312,17 @@ export const Chat = memo(
           if (modelSelection === 'auto') {
             const providers: ProviderType[] = anthropicProviders;
             modelProvider = providers[retries.numFailures % providers.length];
-            modelChoice = 'claude-sonnet-4-0';
+            modelChoice = 'claude-sonnet-4-6';
           } else if (modelSelection === 'claude-3-5-haiku') {
             modelProvider = 'Anthropic';
             modelChoice = 'claude-3-5-haiku-latest';
-          } else if (modelSelection === 'claude-4-sonnet') {
+          } else if (modelSelection === 'claude-4.6-sonnet') {
             const providers: ProviderType[] = anthropicProviders;
             modelProvider = providers[retries.numFailures % providers.length];
-            modelChoice = 'claude-sonnet-4-0';
+            modelChoice = 'claude-sonnet-4-6';
           } else if (modelSelection === 'claude-4.5-sonnet') {
-            modelProvider = 'Anthropic';
+            const providers: ProviderType[] = anthropicProviders;
+            modelProvider = providers[retries.numFailures % providers.length];
             modelChoice = 'claude-sonnet-4-5';
           } else if (modelSelection === 'grok-3-mini') {
             modelProvider = 'XAI';

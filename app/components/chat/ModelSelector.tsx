@@ -76,8 +76,8 @@ export const models: Partial<
     recommended: true,
     provider: 'auto',
   },
-  'claude-4-sonnet': {
-    name: 'Claude 4 Sonnet',
+  'claude-4.6-sonnet': {
+    name: 'Claude Sonnet 4.6',
     provider: 'anthropic',
     recommended: true,
     requireKey: false,
