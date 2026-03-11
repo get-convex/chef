@@ -27,7 +27,7 @@ export function backoffTime(numFailures: number) {
 export type ModelSelection =
   | 'auto'
   | 'claude-3-5-haiku'
-  | 'claude-4-sonnet'
+  | 'claude-4.6-sonnet'
   | 'claude-4.5-sonnet'
   | 'gpt-4.1'
   | 'gpt-4.1-mini'

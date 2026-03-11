@@ -36,6 +36,14 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
       return 'us.anthropic.claude-sonnet-4-20250514-v1:0';
     }
 
+    if (modelChoice === 'claude-sonnet-4-6' && provider === 'Bedrock') {
+      return 'anthropic.claude-sonnet-4-6';
+    }
+
+    if (modelChoice === 'claude-sonnet-4-5' && provider === 'Bedrock') {
+      return 'anthropic.claude-sonnet-4-5-20250929-v1:0';
+    }
+
     if (modelChoice === 'gpt-5') {
       return 'gpt-5';
     }
@@ -61,7 +69,7 @@ export function modelForProvider(provider: ModelProvider, modelChoice: string | 
 }
 
 function anthropicMaxTokens(modelChoice: string | undefined) {
-  return modelChoice === 'claude-sonnet-4-0' || modelChoice === 'claude-sonnet-4-5' ? 24576 : 8192;
+  return modelChoice === 'claude-sonnet-4-5' || modelChoice === 'claude-sonnet-4-6' ? 24576 : 8192;
 }
 
 export function getProvider(
