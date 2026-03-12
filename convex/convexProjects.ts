@@ -272,10 +272,16 @@ async function _connectConvexProjectForMember(
   });
   if (!response.ok) {
     const text = await response.text();
+    const isUnauthorized = response.status === 401;
+    const isForbidden = response.status === 403;
     const defaultProvisioningError = new ConvexError({
       code: "ProvisioningError",
       message: text.includes("SSORequired")
         ? "You must log in with Single Sign-on to access this team."
+        : isUnauthorized
+          ? `Failed to create project: 401 Unauthorized. Reconnect your Convex account and verify team "${args.teamSlug}".`
+          : isForbidden
+            ? `Failed to create project: 403 Forbidden for team "${args.teamSlug}".`
         : `Failed to create project: ${response.status}`,
       details: text,
     });

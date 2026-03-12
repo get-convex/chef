@@ -1,7 +1,7 @@
 import { selectedTeamSlugStore, waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
 
 import { useConvex } from 'convex/react';
-import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { useCallback } from 'react';
 import { api } from '@convex/_generated/api';
 import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
@@ -9,6 +9,7 @@ import { ContainerBootState, waitForBootStepCompleted } from '~/lib/stores/conta
 import { toast } from 'sonner';
 import { waitForConvexProjectConnection } from '~/lib/stores/convexProject';
 import { useAuth } from '~/lib/auth/GoogleAuthProvider';
+import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 
 const CREATE_PROJECT_TIMEOUT = 15000;
 
@@ -29,10 +30,10 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
       return false;
     }
 
-    const convexAccessToken = getConvexAuthToken(convex);
+    const convexAccessToken = getConvexDashboardToken();
     if (!convexAccessToken) {
-      console.error('No Convex access token');
-      toast.error('Unexpected error creating chat');
+      console.error('No Convex dashboard token');
+      toast.error('Please connect your Convex account in Settings before creating a project.');
       return false;
     }
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
@@ -81,10 +82,10 @@ export function useExistingInitializeChat(chatId: string) {
   return useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const convexAccessToken = getConvexAuthToken(convex);
+    const convexAccessToken = getConvexDashboardToken();
     if (!convexAccessToken) {
-      console.error('No Convex access token');
-      toast.error('Unexpected error creating chat');
+      console.error('No Convex dashboard token');
+      toast.error('Please connect your Convex account in Settings before creating a project.');
       return false;
     }
     const projectInitParams = {

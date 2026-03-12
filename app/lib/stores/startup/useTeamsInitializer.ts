@@ -19,45 +19,55 @@ export function useTeamsInitializer() {
 async function createPersonalTeam() {
   await waitForConvexSessionId('createPersonalTeam');
 
-  // Check if team already selected
   const currentTeam = getStoredTeamSlug();
-  if (currentTeam) {
-    convexTeamsStore.set([{
+  const envTeamSlug = import.meta.env.VITE_DEFAULT_TEAM_SLUG?.trim() || null;
+  const userInfo = localStorage.getItem('user_info');
+  let parsedUserInfo: { email?: string; given_name?: string } | null = null;
+  if (userInfo) {
+    try {
+      parsedUserInfo = JSON.parse(userInfo);
+    } catch (e) {
+      console.warn('Failed to parse user info for team creation:', e);
+    }
+  }
+
+  const teamName = parsedUserInfo?.given_name ? `${parsedUserInfo.given_name}'s Team` : 'Personal Team';
+
+  // Prefer configured team slug over any stale local storage value.
+  if (envTeamSlug) {
+    if (currentTeam && currentTeam !== envTeamSlug) {
+      console.info(`Overriding stored team slug "${currentTeam}" with configured team slug "${envTeamSlug}"`);
+    }
+    const configuredTeam: ConvexTeam = {
       id: 'personal',
-      name: 'Personal',
-      slug: currentTeam,
+      name: teamName,
+      slug: envTeamSlug,
       referralCode: '',
-    }]);
+    };
+    convexTeamsStore.set([configuredTeam]);
+    setSelectedTeamSlug(envTeamSlug);
+    return;
+  }
+
+  // Use the stored team only when no default is configured.
+  if (currentTeam) {
+    convexTeamsStore.set([
+      {
+        id: 'personal',
+        name: teamName,
+        slug: currentTeam,
+        referralCode: '',
+      },
+    ]);
     setSelectedTeamSlug(currentTeam);
     return;
   }
 
-  // Use environment variable if provided (for production team)
-  const envTeamSlug = import.meta.env.VITE_DEFAULT_TEAM_SLUG;
-
-  // Get user info to create a personal team
-  const userInfo = localStorage.getItem('user_info');
-  let teamSlug = envTeamSlug || 'personal';
-  let teamName = 'Personal';
-
-  if (!envTeamSlug && userInfo) {
-    try {
-      const parsed = JSON.parse(userInfo);
-      const email = parsed.email || '';
-      // Create team slug from email (e.g., user@example.com -> user-personal)
-      const emailPrefix = email.split('@')[0].replace(/[^a-z0-9]/gi, '-').toLowerCase();
-      teamSlug = emailPrefix ? `${emailPrefix}-personal` : 'personal';
-      teamName = parsed.given_name ? `${parsed.given_name}'s Team` : 'Personal Team';
-    } catch (e) {
-      console.warn('Failed to parse user info for team creation:', e);
-    }
-  } else if (envTeamSlug && userInfo) {
-    try {
-      const parsed = JSON.parse(userInfo);
-      teamName = parsed.given_name ? `${parsed.given_name}'s Team` : 'Personal Team';
-    } catch (e) {
-      console.warn('Failed to parse user info for team name:', e);
-    }
+  let teamSlug = 'personal';
+  if (parsedUserInfo?.email) {
+    // Create team slug from email (e.g., user@example.com -> user-personal)
+    const emailPrefix = parsedUserInfo.email.split('@')[0].replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    teamSlug = emailPrefix ? `${emailPrefix}-personal` : 'personal';
   }
 
   // Create and select the personal team

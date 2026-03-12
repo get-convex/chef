@@ -12,12 +12,13 @@ import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { classNames } from '~/utils/classNames';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
-import { getConvexAuthToken, useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { getKnownInitialId } from '~/lib/stores/chatId';
 import { Button } from '@ui/Button';
 import { TextInput } from '@ui/TextInput';
 import { Checkbox } from '@ui/Checkbox';
 import { PlusIcon } from '@radix-ui/react-icons';
+import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 
 const menuVariants = {
   closed: {
@@ -71,7 +72,7 @@ export const Menu = memo(({ isOpen, onClose }: MenuProps) => {
 
   const deleteItem = useCallback(
     (item: ChatHistoryItem) => {
-      const accessToken = getConvexAuthToken(convex);
+      const accessToken = getConvexDashboardToken();
       if (!sessionId || !accessToken) {
         return;
       }

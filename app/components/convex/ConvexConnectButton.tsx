@@ -1,4 +1,4 @@
-import { getConvexAuthToken, useConvexSessionId } from '~/lib/stores/sessionId';
+import { useConvexSessionId } from '~/lib/stores/sessionId';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
@@ -6,6 +6,8 @@ import { useChatId } from '~/lib/stores/chatId';
 import { TeamSelector } from './TeamSelector';
 import { Link1Icon } from '@radix-ui/react-icons';
 import { Button } from '@ui/Button';
+import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
+import { toast } from 'sonner';
 
 export function ConvexConnectButton() {
   const convexClient = useConvex();
@@ -22,9 +24,10 @@ export function ConvexConnectButton() {
       console.error('No team selected');
       return;
     }
-    const convexAccessToken = getConvexAuthToken(convexClient);
+    const convexAccessToken = getConvexDashboardToken();
     if (!convexAccessToken) {
-      console.error('No WorkOS access token');
+      console.error('No Convex dashboard token');
+      toast.error('Please connect your Convex account in Settings before connecting a project.');
       return;
     }
     await convexClient.mutation(api.convexProjects.startProvisionConvexProject, {

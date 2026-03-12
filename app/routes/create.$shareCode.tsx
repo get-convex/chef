@@ -1,7 +1,7 @@
-import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { json } from '@remix-run/node';
 import type { LoaderFunctionArgs } from '@remix-run/node';
-import { useMutation, useConvex, useQuery } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ import { Button } from '@ui/Button';
 import { ConvexError } from 'convex/values';
 import { Sheet } from '@ui/Sheet';
 import { useAuth } from '~/lib/auth/GoogleAuthProvider';
+import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 export const meta: MetaFunction = () => {
   return [
     { title: 'Cooked with Chef' },
@@ -64,16 +65,15 @@ function ShareProjectContent() {
   const chefAuthState = useChefAuth();
 
   const cloneChat = useMutation(api.share.clone);
-  const convex = useConvex();
   const getShareDescription = useQuery(api.share.getShareDescription, { code: shareCode });
 
   const handleCloneChat = useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const convexAccessToken = getConvexAuthToken(convex);
+    const convexAccessToken = getConvexDashboardToken();
     if (!convexAccessToken) {
-      console.error('No Convex access token');
-      toast.error('Unexpected error cloning chat');
+      console.error('No Convex dashboard token');
+      toast.error('Please connect your Convex account in Settings before cloning a project.');
       return;
     }
     const projectInitParams = {
@@ -90,7 +90,7 @@ function ShareProjectContent() {
         toast.error('Unexpected error cloning chat');
       }
     }
-  }, [convex, cloneChat, shareCode]);
+  }, [cloneChat, shareCode]);
 
   const selectedTeamSlug = useSelectedTeamSlug();
 
