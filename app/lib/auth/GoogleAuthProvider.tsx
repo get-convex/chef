@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
-import { initConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
+import { clearConvexDashboardToken, initConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 
 interface GoogleAuthContextType {
   isAuthenticated: boolean;
@@ -95,6 +95,7 @@ export function GoogleAuthProvider({ children, client }: GoogleAuthProviderProps
     setIsAuthenticated(false);
     setUser(null);
     setAccessToken(null);
+    clearConvexDashboardToken();
     localStorage.removeItem('convex_access_token');
     localStorage.removeItem('google_id_token');
     localStorage.removeItem('google_access_token');

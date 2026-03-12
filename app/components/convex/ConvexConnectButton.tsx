@@ -1,4 +1,4 @@
-import { getConvexAuthToken, useConvexSessionId } from '~/lib/stores/sessionId';
+import { useConvexSessionId } from '~/lib/stores/sessionId';
 import { setSelectedTeamSlug, useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useConvex, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
@@ -24,14 +24,10 @@ export function ConvexConnectButton() {
       console.error('No team selected');
       return;
     }
-    const dashboardToken = getConvexDashboardToken();
-    const convexAuthToken = getConvexAuthToken(convexClient);
-    const convexAccessToken = dashboardToken ?? convexAuthToken;
-    const fallbackConvexAccessToken =
-      dashboardToken && convexAuthToken && dashboardToken !== convexAuthToken ? convexAuthToken : undefined;
+    const convexAccessToken = getConvexDashboardToken();
     if (!convexAccessToken) {
-      console.error('No Convex provisioning token available');
-      toast.error('Unable to authenticate with Convex. Please sign in again and retry.');
+      console.error('No Convex dashboard token');
+      toast.error('Connect your Convex account in Settings, then try again.');
       return;
     }
     await convexClient.mutation(api.convexProjects.startProvisionConvexProject, {
@@ -40,7 +36,6 @@ export function ConvexConnectButton() {
       projectInitParams: {
         teamSlug: selectedTeamSlug,
         convexAccessToken,
-        fallbackConvexAccessToken,
       },
     });
   };

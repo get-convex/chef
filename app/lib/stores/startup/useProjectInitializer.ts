@@ -1,5 +1,6 @@
 import { setSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { convexProjectStore } from '~/lib/stores/convexProject';
+import { clearConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 
 import { useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
@@ -30,6 +31,9 @@ export function useProjectInitializer(chatId: string) {
       setSelectedTeamSlug(projectInfo.teamSlug);
     }
     if (projectInfo?.kind === 'failed') {
+      if (projectInfo.errorMessage.includes('Failed to create project: 401')) {
+        clearConvexDashboardToken();
+      }
       toast.error(projectInfo.errorMessage);
     }
   }, [projectInfo]);

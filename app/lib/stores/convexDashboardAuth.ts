@@ -34,7 +34,19 @@ export function setConvexDashboardToken(token: string) {
  * Get the current Convex dashboard access token
  */
 export function getConvexDashboardToken(): string | null {
-  return convexDashboardTokenStore.get();
+  const token = convexDashboardTokenStore.get();
+  if (token) {
+    return token;
+  }
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    convexDashboardTokenStore.set(stored);
+    return stored;
+  }
+  return null;
 }
 
 /**

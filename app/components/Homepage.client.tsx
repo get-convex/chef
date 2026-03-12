@@ -14,6 +14,9 @@ export function Homepage() {
   // artifact from the model if the user submits a prompt.
   const initialId = useRef(crypto.randomUUID());
 
+  // This must happen synchronously before child components render.
+  setPageLoadChatId(initialId.current);
+
   useEffect(() => {
     setPageLoadChatId(initialId.current);
   }, []);
