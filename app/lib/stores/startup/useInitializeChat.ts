@@ -1,7 +1,7 @@
 import { selectedTeamSlugStore, waitForSelectedTeamSlug } from '~/lib/stores/convexTeams';
 
 import { useConvex } from 'convex/react';
-import { waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { useCallback } from 'react';
 import { api } from '@convex/_generated/api';
 import { useChefAuth } from '~/components/chat/ChefAuthWrapper';
@@ -30,10 +30,14 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
       return false;
     }
 
-    const convexAccessToken = getConvexDashboardToken();
+    const dashboardToken = getConvexDashboardToken();
+    const convexAuthToken = getConvexAuthToken(convex);
+    const convexAccessToken = dashboardToken ?? convexAuthToken;
+    const fallbackConvexAccessToken =
+      dashboardToken && convexAuthToken && dashboardToken !== convexAuthToken ? convexAuthToken : undefined;
     if (!convexAccessToken) {
-      console.error('No Convex dashboard token');
-      toast.error('Please connect your Convex account in Settings before creating a project.');
+      console.error('No Convex provisioning token available');
+      toast.error('Unable to authenticate with Convex. Please sign in again and retry.');
       return false;
     }
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
@@ -41,6 +45,7 @@ export function useHomepageInitializeChat(chatId: string, setChatInitialized: (c
     const projectInitParams = {
       teamSlug,
       convexAccessToken,
+      fallbackConvexAccessToken,
     };
 
     // Initialize the chat and start project creation
@@ -82,15 +87,20 @@ export function useExistingInitializeChat(chatId: string) {
   return useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const convexAccessToken = getConvexDashboardToken();
+    const dashboardToken = getConvexDashboardToken();
+    const convexAuthToken = getConvexAuthToken(convex);
+    const convexAccessToken = dashboardToken ?? convexAuthToken;
+    const fallbackConvexAccessToken =
+      dashboardToken && convexAuthToken && dashboardToken !== convexAuthToken ? convexAuthToken : undefined;
     if (!convexAccessToken) {
-      console.error('No Convex dashboard token');
-      toast.error('Please connect your Convex account in Settings before creating a project.');
+      console.error('No Convex provisioning token available');
+      toast.error('Unable to authenticate with Convex. Please sign in again and retry.');
       return false;
     }
     const projectInitParams = {
       teamSlug,
       convexAccessToken,
+      fallbackConvexAccessToken,
     };
     await convex.mutation(api.messages.initializeChat, {
       id: chatId,

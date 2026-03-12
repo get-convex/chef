@@ -128,7 +128,7 @@ export async function cloneShow(
   }: {
     showCode: string;
     sessionId: Id<"sessions">;
-    projectInitParams: { teamSlug: string; convexAccessToken: string };
+    projectInitParams: { teamSlug: string; convexAccessToken: string; fallbackConvexAccessToken?: string };
   },
 ): Promise<{ id: string; description?: string }> {
   const show = await ctx.db
@@ -214,6 +214,7 @@ export const clone = mutation({
     projectInitParams: v.object({
       teamSlug: v.string(),
       convexAccessToken: v.string(),
+      fallbackConvexAccessToken: v.optional(v.string()),
     }),
   },
   returns: v.object({

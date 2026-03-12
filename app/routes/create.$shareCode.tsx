@@ -1,7 +1,7 @@
-import { waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
 import { json } from '@remix-run/node';
 import type { LoaderFunctionArgs } from '@remix-run/node';
-import { useMutation, useQuery } from 'convex/react';
+import { useConvex, useMutation, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
@@ -64,21 +64,27 @@ function ShareProjectContent() {
   useTeamsInitializer();
   const chefAuthState = useChefAuth();
 
+  const convex = useConvex();
   const cloneChat = useMutation(api.share.clone);
   const getShareDescription = useQuery(api.share.getShareDescription, { code: shareCode });
 
   const handleCloneChat = useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const convexAccessToken = getConvexDashboardToken();
+    const dashboardToken = getConvexDashboardToken();
+    const convexAuthToken = getConvexAuthToken(convex);
+    const convexAccessToken = dashboardToken ?? convexAuthToken;
+    const fallbackConvexAccessToken =
+      dashboardToken && convexAuthToken && dashboardToken !== convexAuthToken ? convexAuthToken : undefined;
     if (!convexAccessToken) {
-      console.error('No Convex dashboard token');
-      toast.error('Please connect your Convex account in Settings before cloning a project.');
+      console.error('No Convex provisioning token available');
+      toast.error('Unable to authenticate with Convex. Please sign in again and retry.');
       return;
     }
     const projectInitParams = {
       teamSlug,
       convexAccessToken,
+      fallbackConvexAccessToken,
     };
     try {
       const { id: chatId } = await cloneChat({ shareCode, sessionId, projectInitParams });
@@ -90,7 +96,7 @@ function ShareProjectContent() {
         toast.error('Unexpected error cloning chat');
       }
     }
-  }, [cloneChat, shareCode]);
+  }, [convex, cloneChat, shareCode]);
 
   const selectedTeamSlug = useSelectedTeamSlug();
 
