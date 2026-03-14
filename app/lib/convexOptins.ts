@@ -1,5 +1,5 @@
 import type { ConvexReactClient } from 'convex/react';
-import { getConvexAuthToken } from './stores/sessionId';
+import { getConvexDashboardToken } from './stores/convexDashboardAuth';
 import { VITE_PROVISION_HOST } from './convexProvisionHost';
 
 type OptInToAccept = {
@@ -9,7 +9,7 @@ type OptInToAccept = {
   message: string;
 };
 
-export async function fetchOptIns(convex: ConvexReactClient): Promise<
+export async function fetchOptIns(): Promise<
   | {
       kind: 'loaded';
       optIns: OptInToAccept[];
@@ -22,39 +22,13 @@ export async function fetchOptIns(convex: ConvexReactClient): Promise<
       kind: 'missingAuth';
     }
 > {
-  const token = getConvexAuthToken(convex);
-  if (!token) {
-    return {
-      kind: 'missingAuth',
-    };
-  }
-  let response: Response;
-  try {
-    response = await fetch(`${VITE_PROVISION_HOST}/api/dashboard/optins`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching opt ins:', error);
-    return {
-      kind: 'error',
-      error: 'Failed to fetch opt ins',
-    };
-  }
-  if (!response.ok) {
-    // We cannot fetch the opt ins, which means we probably failed to create an account
-    // dynamically (which we can't do from Chef)
-    return {
-      kind: 'error',
-      error: 'Failed to fetch opt ins',
-    };
-  }
-  const optInsData: {
-    optInsToAccept: OptInToAccept[];
-  } = await response.json();
+  // DISABLED: Third-party OAuth apps don't have access to dashboard API
+  // See: https://docs.convex.dev/platform-apis/oauth-applications
+  // The /api/dashboard/optins endpoint returns 403 for third-party OAuth apps
+
+  // Return empty optins since we can't fetch them
   return {
     kind: 'loaded',
-    optIns: optInsData.optInsToAccept,
+    optIns: [],
   };
 }

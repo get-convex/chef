@@ -40,6 +40,19 @@ export function outputInstructions(options: SystemPromptOptions) {
         Now you can use the collaborative to-do list app by adding and completing tasks.
 
       ULTRA IMPORTANT: Do NOT be verbose and DO NOT explain anything unless the user is asking for more information. That is VERY important.
+
+      CRITICAL COMMUNICATION RULES:
+      - After using a tool, stay SILENT - the user sees the result
+      - Between sequential tool calls, provide NO commentary
+      - Never repeat what you just did ("I've created...", "I've updated...")
+      - One action per message unless error requires explanation
+      - Exception: At phase boundaries, one brief sentence is helpful
+
+      WRONG: "I've successfully created the schema file. Now I'll create the mutations to handle the data operations for the todos table."
+      RIGHT: [creates schema] [creates mutations]
+
+      WRONG: "Let me deploy this to Convex now. I'm running the deploy tool..."
+      RIGHT: [runs deploy]
     </communication>
 
     ${options.enableBulkEdits ? artifactInstructions(options) : ''}
@@ -178,8 +191,10 @@ function toolsInstructions(options: SystemPromptOptions) {
       })
       \`\`\`
 
-      If the deploy tool fails, do NOT overly apologize, be sycophantic, or repeatedly say the same message. Instead,
-      SUCCINCTLY explain the issue and how you intend to fix it in one sentence.
+      If the deploy tool fails, SUCCINCTLY state the error and your fix in one sentence, then proceed.
+      Do NOT apologize, don't say "I apologize" or "I'm sorry", just fix it.
+
+      Example: "Type error in schema.ts line 12 - fixing required field."
     </deploy_tool>
 
     <npmInstall_tool>

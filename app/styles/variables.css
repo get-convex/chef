@@ -1,100 +1,131 @@
-/* Convex Tokens */
+/* AI Standard Brand Tokens */
 :root {
-  --cvx-red-100: rgb(252, 215, 203);
-  --cvx-red-200: rgb(255, 202, 193);
+  /* AI Standard Purple Brand Colors */
+  --cvx-purple-100: rgb(196, 181, 253); /* Brand Subtle: #C4B5FD */
+  --cvx-purple-200: rgb(167, 139, 250);
+  --cvx-purple-500: rgb(139, 92, 246); /* Brand Primary: #8B5CF6 */
+  --cvx-purple-700: rgb(107, 33, 168); /* Accent: #6B21A8 */
+  --cvx-purple-900: rgb(88, 28, 135);
+
+  /* Supporting Colors */
+  --cvx-red-100: rgb(254, 226, 226);
+  --cvx-red-200: rgb(254, 202, 202);
   --cvx-red-300: rgb(252, 165, 165);
-  --cvx-red-400: rgb(253, 76, 65);
-  --cvx-red-500: rgb(238, 52, 47);
-  --cvx-red-700: rgb(168, 21, 21);
-  --cvx-red-900: rgb(107, 33, 31);
-  --cvx-purple-100: rgb(241, 200, 233);
-  --cvx-purple-200: rgb(232, 180, 220);
-  --cvx-purple-500: rgb(141, 38, 118);
-  --cvx-purple-700: rgb(86, 0, 83);
-  --cvx-purple-900: rgb(113, 36, 96);
-  --cvx-blue-100: rgb(204, 222, 250);
-  --cvx-blue-200: rgb(177, 202, 240);
-  --cvx-blue-500: rgb(7, 78, 232);
-  --cvx-blue-700: rgb(33, 34, 181);
-  --cvx-blue-900: rgb(0, 43, 153);
-  --cvx-cyan-200: rgb(170, 227, 239);
-  --cvx-cyan-500: rgb(7, 192, 232);
-  --cvx-cyan-700: rgb(0, 155, 221);
-  --cvx-cyan-900: rgb(15, 89, 105);
-  --cvx-green-100: rgb(203, 237, 182);
-  --cvx-green-200: rgb(180, 236, 146);
-  --cvx-green-500: rgb(79, 176, 20);
-  --cvx-green-700: rgb(34, 137, 9);
-  --cvx-green-900: rgb(44, 83, 20);
+  --cvx-red-400: rgb(248, 113, 113);
+  --cvx-red-500: rgb(239, 68, 68);
+  --cvx-red-700: rgb(185, 28, 28);
+  --cvx-red-900: rgb(127, 29, 29);
+  --cvx-blue-100: rgb(219, 234, 254);
+  --cvx-blue-200: rgb(191, 219, 254);
+  --cvx-blue-500: rgb(59, 130, 246);
+  --cvx-blue-700: rgb(29, 78, 216);
+  --cvx-blue-900: rgb(30, 58, 138);
+  --cvx-cyan-200: rgb(165, 243, 252);
+  --cvx-cyan-500: rgb(6, 182, 212);
+  --cvx-cyan-700: rgb(14, 116, 144);
+  --cvx-cyan-900: rgb(22, 78, 99);
+  --cvx-green-100: rgb(220, 252, 231);
+  --cvx-green-200: rgb(187, 247, 208);
+  --cvx-green-500: rgb(34, 197, 94);
+  --cvx-green-700: rgb(21, 128, 61);
+  --cvx-green-900: rgb(20, 83, 45);
   --cvx-yellow-50: rgb(254, 252, 232);
-  --cvx-yellow-100: rgb(250, 228, 171);
-  --cvx-yellow-200: rgb(230, 226, 168);
-  --cvx-yellow-500: rgb(243, 176, 28);
-  --cvx-yellow-700: rgb(213, 113, 21);
-  --cvx-yellow-900: rgb(109, 82, 23);
-  --cvx-neutral-1: rgb(222, 226, 234);
-  --cvx-neutral-2: rgb(204, 206, 211);
-  --cvx-neutral-3: rgb(174, 177, 184);
-  --cvx-neutral-4: rgb(151, 154, 164);
-  --cvx-neutral-5: rgb(133, 136, 147);
-  --cvx-neutral-6: rgb(118, 121, 131);
-  --cvx-neutral-7: rgb(103, 106, 116);
-  --cvx-neutral-8: rgb(88, 92, 101);
-  --cvx-neutral-9: rgb(73, 76, 84);
-  --cvx-neutral-10: rgb(57, 60, 66);
-  --cvx-neutral-11: rgb(41, 43, 48);
-  --cvx-neutral-12: rgb(24, 25, 28);
-  --cvx-accent: rgb(63, 82, 149);
-  --cvx-info: rgb(7, 191, 232);
-  --cvx-util-accent: rgb(38, 135, 246);
-  --cvx-util-info: rgb(7, 191, 232);
-  --cvx-util-success: rgb(79, 176, 20);
-  --cvx-util-danger: rgb(238, 52, 47);
-  --cvx-util-warning: rgb(243, 176, 28);
+  --cvx-yellow-100: rgb(254, 249, 195);
+  --cvx-yellow-200: rgb(254, 240, 138);
+  --cvx-yellow-500: rgb(234, 179, 8);
+  --cvx-yellow-700: rgb(161, 98, 7);
+  --cvx-yellow-900: rgb(113, 63, 18);
+
+  /* Neutral Grays */
+  --cvx-neutral-1: rgb(245, 245, 245);
+  --cvx-neutral-2: rgb(229, 229, 229);
+  --cvx-neutral-3: rgb(212, 212, 212);
+  --cvx-neutral-4: rgb(163, 163, 163);
+  --cvx-neutral-5: rgb(115, 115, 115);
+  --cvx-neutral-6: rgb(82, 82, 82);
+  --cvx-neutral-7: rgb(64, 64, 64);
+  --cvx-neutral-8: rgb(38, 38, 38);
+  --cvx-neutral-9: rgb(23, 23, 23);
+  --cvx-neutral-10: rgb(18, 18, 18);
+  --cvx-neutral-11: rgb(10, 10, 10);
+  --cvx-neutral-12: rgb(0, 0, 0);
+
+  /* Brand Accent - Deep Purple */
+  --cvx-accent: rgb(107, 33, 168); /* #6B21A8 */
+  --cvx-info: rgb(59, 130, 246);
+  --cvx-util-accent: rgb(139, 92, 246); /* Brand Primary */
+  --cvx-util-info: rgb(59, 130, 246);
+  --cvx-util-success: rgb(34, 197, 94);
+  --cvx-util-danger: rgb(239, 68, 68);
+  --cvx-util-warning: rgb(234, 179, 8);
 }
 
-/* Convex Tokens Light Theme (from Dashboard) */
+/* AI Standard Light Theme */
 :root,
 html.light {
-  --cvx-background-brand: rgb(249, 247, 238);
-  --cvx-background-primary: rgb(243, 240, 237);
-  --cvx-background-secondary: rgb(253, 252, 250);
-  --cvx-background-tertiary: rgb(240, 238, 235);
-  --cvx-background-highlight: rgb(254, 252, 232);
-  --cvx-background-success: rgb(203, 237, 182);
-  --cvx-background-warning: rgb(250, 228, 171);
-  --cvx-background-error: rgb(252, 215, 203);
-  --cvx-background-error-secondary: rgb(255, 202, 193);
-  --cvx-content-accent: rgb(48, 106, 207);
-  --cvx-content-success: rgb(34, 137, 9);
-  --cvx-content-warning: rgb(109, 82, 23);
-  --cvx-content-error: rgb(168, 21, 21);
-  --cvx-content-error-secondary: rgb(238, 52, 47);
-  --cvx-content-link: rgb(33, 34, 181);
-  --cvx-border-transparent: rgba(33, 34, 30, 0.14);
-  --cvx-border-selected: rgb(30, 28, 25);
+  /* Backgrounds - AI Standard Light */
+  --cvx-background-brand: rgb(231, 231, 231); /* bg-1: #e7e7e7 */
+  --cvx-background-primary: rgb(246, 246, 246); /* bg-2: #f6f6f6 */
+  --cvx-background-secondary: rgb(255, 255, 255); /* bg-4: #ffffff */
+  --cvx-background-tertiary: rgb(251, 251, 252); /* bg-3: #fbfbfc */
+  --cvx-background-highlight: rgb(196, 181, 253); /* Purple subtle */
+  --cvx-background-success: rgb(220, 252, 231);
+  --cvx-background-warning: rgb(254, 249, 195);
+  --cvx-background-error: rgb(254, 226, 226);
+  --cvx-background-error-secondary: rgb(254, 202, 202);
+
+  /* Text - AI Standard Light */
+  --cvx-content-primary: rgb(10, 10, 10); /* #0a0a0a */
+  --cvx-content-secondary: rgb(23, 23, 23); /* #171717 */
+  --cvx-content-tertiary: rgba(33, 33, 33, 0.6); /* #21212199 */
+  --cvx-content-inverted: rgb(255, 255, 255); /* #ffffff */
+  --cvx-content-accent: rgb(107, 33, 168); /* Deep purple accent */
+  --cvx-content-success: rgb(21, 128, 61);
+  --cvx-content-warning: rgb(161, 98, 7);
+  --cvx-content-error: rgba(149, 0, 0, 0.8); /* #950000cc */
+  --cvx-content-error-secondary: rgb(185, 28, 28);
+  --cvx-content-link: rgb(107, 33, 168); /* Deep purple for links */
+
+  /* Borders - AI Standard Light */
+  --cvx-border-primary: rgb(229, 229, 229); /* #e5e5e5 */
+  --cvx-border-secondary: rgb(238, 238, 238); /* #eeeeee */
+  --cvx-border-tertiary: rgb(238, 238, 238); /* #eeeeee */
+  --cvx-border-transparent: rgba(229, 229, 229, 0.5);
+  --cvx-border-selected: rgb(107, 33, 168); /* Purple accent */
 }
 
-/* Convex Tokens Dark Theme (from Dashboard) */
+/* AI Standard Dark Theme */
 :root,
 html.dark {
-  --cvx-background-brand: rgb(30, 28, 26);
-  --cvx-background-primary: rgb(30, 28, 26);
-  --cvx-background-secondary: rgb(42, 40, 37);
-  --cvx-background-tertiary: rgb(60, 58, 65);
-  --cvx-background-highlight: rgb(109, 82, 23);
-  --cvx-background-success: rgb(44, 83, 20);
-  --cvx-background-warning: rgb(109, 82, 23);
-  --cvx-background-error: rgb(107, 33, 31);
-  --cvx-background-error-secondary: rgb(168, 21, 21);
-  --cvx-content-accent: rgb(99, 168, 248);
-  --cvx-content-success: rgb(180, 236, 146);
-  --cvx-content-warning: rgb(230, 226, 168);
-  --cvx-content-error: rgb(255, 202, 193);
-  --cvx-content-error-secondary: rgb(253, 76, 65);
-  --cvx-content-link: rgb(177, 202, 240);
-  --cvx-border-transparent: rgba(163, 156, 148, 0.3);
-  --cvx-border-selected: rgb(225, 215, 205);
+  /* Backgrounds - AI Standard Dark */
+  --cvx-background-brand: rgb(18, 18, 18); /* bg-1/bg-3: #121212 */
+  --cvx-background-primary: rgb(18, 18, 18); /* bg-1/bg-3: #121212 */
+  --cvx-background-secondary: rgb(30, 30, 30); /* bg-2/bg-4: #1E1E1E */
+  --cvx-background-tertiary: rgb(38, 38, 38);
+  --cvx-background-highlight: rgb(107, 33, 168); /* Purple accent */
+  --cvx-background-success: rgb(20, 83, 45);
+  --cvx-background-warning: rgb(113, 63, 18);
+  --cvx-background-error: rgb(127, 29, 29);
+  --cvx-background-error-secondary: rgb(185, 28, 28);
+
+  /* Text - AI Standard Dark */
+  --cvx-content-primary: rgb(255, 255, 255); /* #ffffff */
+  --cvx-content-secondary: rgb(205, 202, 202); /* #cdcaca */
+  --cvx-content-tertiary: rgb(188, 185, 185); /* #bcb9b9 */
+  --cvx-content-inverted: rgb(0, 0, 0); /* #000000 */
+  --cvx-content-accent: rgb(167, 139, 250); /* Lighter purple for contrast */
+  --cvx-content-success: rgb(187, 247, 208);
+  --cvx-content-warning: rgb(254, 240, 138);
+  --cvx-content-error: rgb(239, 68, 68); /* #ef4444 */
+  --cvx-content-error-secondary: rgb(248, 113, 113);
+  --cvx-content-link: rgb(167, 139, 250); /* Lighter purple for links */
+
+  /* Borders - AI Standard Dark */
+  --cvx-border-primary: rgb(57, 57, 57); /* #393939 */
+  --cvx-border-secondary: rgb(69, 71, 70); /* #454746 */
+  --cvx-border-tertiary: rgb(69, 71, 70); /* #454746 */
+  --cvx-border-transparent: rgba(57, 57, 57, 0.5);
+  --cvx-border-selected: rgb(139, 92, 246); /* Purple primary */
 }
 
 /* Color Tokens */

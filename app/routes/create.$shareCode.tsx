@@ -1,7 +1,7 @@
-import { getConvexAuthToken, waitForConvexSessionId } from '~/lib/stores/sessionId';
-import { json } from '@vercel/remix';
-import type { LoaderFunctionArgs } from '@vercel/remix';
-import { useMutation, useConvex, useQuery } from 'convex/react';
+import { waitForConvexSessionId } from '~/lib/stores/sessionId';
+import { json } from '@remix-run/node';
+import type { LoaderFunctionArgs } from '@remix-run/node';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@convex/_generated/api';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
@@ -12,11 +12,12 @@ import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider, useChefAuth } from '~/components/chat/ChefAuthWrapper';
 import { useParams } from '@remix-run/react';
 import { Loading } from '~/components/Loading';
-import type { MetaFunction } from '@vercel/remix';
+import type { MetaFunction } from '@remix-run/node';
 import { Button } from '@ui/Button';
 import { ConvexError } from 'convex/values';
 import { Sheet } from '@ui/Sheet';
-import { useAuth } from '@workos-inc/authkit-react';
+import { useAuth } from '~/lib/auth/GoogleAuthProvider';
+import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 export const meta: MetaFunction = () => {
   return [
     { title: 'Cooked with Chef' },
@@ -64,21 +65,20 @@ function ShareProjectContent() {
   const chefAuthState = useChefAuth();
 
   const cloneChat = useMutation(api.share.clone);
-  const convex = useConvex();
   const getShareDescription = useQuery(api.share.getShareDescription, { code: shareCode });
 
   const handleCloneChat = useCallback(async () => {
     const sessionId = await waitForConvexSessionId('useInitializeChat');
     const teamSlug = await waitForSelectedTeamSlug('useInitializeChat');
-    const workosAccessToken = getConvexAuthToken(convex);
-    if (!workosAccessToken) {
-      console.error('No WorkOS access token');
-      toast.error('Unexpected error cloning chat');
+    const convexAccessToken = getConvexDashboardToken();
+    if (!convexAccessToken) {
+      console.error('No Convex dashboard token');
+      toast.error('Connect your Convex account in Settings, then try again.');
       return;
     }
     const projectInitParams = {
       teamSlug,
-      workosAccessToken,
+      convexAccessToken,
     };
     try {
       const { id: chatId } = await cloneChat({ shareCode, sessionId, projectInitParams });
@@ -90,7 +90,7 @@ function ShareProjectContent() {
         toast.error('Unexpected error cloning chat');
       }
     }
-  }, [convex, cloneChat, shareCode]);
+  }, [cloneChat, shareCode]);
 
   const selectedTeamSlug = useSelectedTeamSlug();
 

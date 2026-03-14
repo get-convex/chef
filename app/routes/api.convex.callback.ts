@@ -1,10 +1,11 @@
-import { json, type LoaderFunctionArgs } from '@vercel/remix';
+import { json, type LoaderFunctionArgs } from '@remix-run/node';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const CLIENT_ID = globalThis.process.env.CONVEX_OAUTH_CLIENT_ID;
   const CLIENT_SECRET = globalThis.process.env.CONVEX_OAUTH_CLIENT_SECRET;
+  const AUTH_HOST = 'https://auth.convex.dev';
   const PROVISION_HOST = globalThis.process.env.PROVISION_HOST || 'https://api.convex.dev';
 
   async function fetchDeploymentCredentials(
@@ -53,7 +54,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const origin = url.origin;
 
     // Exchange the code for a token
-    const tokenResponse = await fetch(`${PROVISION_HOST}/oauth/token`, {
+    const tokenResponse = await fetch(`${AUTH_HOST}/oauth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -63,7 +64,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         code,
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
-        redirect_uri: origin + '/convex/callback',
+        redirect_uri: origin + '/api/convex/callback',
       }),
     });
 

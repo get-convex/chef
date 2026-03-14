@@ -1,0 +1,121 @@
+/* AI Standard Theme Overrides */
+
+/* Force override Convex Design System colors with AI Standard purple theme */
+:root,
+html.light {
+  /* Convex util colors - MUST override */
+  --cvx-util-accent: rgb(139, 92, 246) !important; /* Brand Primary #8B5CF6 */
+  --cvx-accent: rgb(107, 33, 168) !important; /* Deep Purple #6B21A8 */
+
+  /* Primary buttons - Purple */
+  --button-primary-bg: #8B5CF6 !important;
+  --button-primary-bg-hover: #7C3AED !important;
+  --button-primary-text: #ffffff !important;
+
+  /* Accent colors */
+  --accent-primary: #6B21A8 !important;
+  --accent-hover: #581C87 !important;
+
+  /* Link colors */
+  --link-color: #6B21A8 !important;
+  --link-hover: #581C87 !important;
+
+  /* Content colors */
+  --cvx-content-link: rgb(107, 33, 168) !important;
+}
+
+html.dark {
+  /* Convex util colors - MUST override */
+  --cvx-util-accent: rgb(139, 92, 246) !important; /* Brand Primary #8B5CF6 */
+  --cvx-accent: rgb(139, 92, 246) !important;
+
+  /* Primary buttons - Purple (lighter for dark mode) */
+  --button-primary-bg: #8B5CF6 !important;
+  --button-primary-bg-hover: #A78BFA !important;
+  --button-primary-text: #ffffff !important;
+
+  /* Accent colors */
+  --accent-primary: #8B5CF6 !important;
+  --accent-hover: #A78BFA !important;
+
+  /* Link colors */
+  --link-color: #A78BFA !important;
+  --link-hover: #C4B5FD !important;
+
+  /* Content colors */
+  --cvx-content-link: rgb(167, 139, 250) !important;
+}
+
+/* Override Button component styles directly */
+[data-button-variant="primary"],
+button[data-variant="primary"],
+.button-primary {
+  background-color: #8B5CF6 !important;
+  border-color: #8B5CF6 !important;
+  color: white !important;
+}
+
+[data-button-variant="primary"]:hover,
+button[data-variant="primary"]:hover,
+.button-primary:hover {
+  background-color: #7C3AED !important;
+  border-color: #7C3AED !important;
+}
+
+/* Target specific Tailwind/Convex classes for purple */
+.bg-util-accent,
+[class*="bg-util-accent"] {
+  background-color: #8B5CF6 !important;
+}
+
+.bg-util-accent:hover,
+[class*="bg-util-accent"]:hover {
+  background-color: #7C3AED !important;
+}
+
+/* Override any blue colors from Convex design system */
+[class*="bg-blue"],
+[class*="bg-accent"]:not([class*="bg-accent-"]) {
+  background-color: #8B5CF6 !important;
+}
+
+/* Convex design system button overrides */
+button[class*="bg-accent"],
+button[class*="bg-util-accent"] {
+  background-color: #8B5CF6 !important;
+}
+
+button[class*="bg-accent"]:hover,
+button[class*="bg-util-accent"]:hover {
+  background-color: #7C3AED !important;
+}
+
+button[class*="text-accent"] {
+  color: #6B21A8 !important;
+}
+
+/* Text colors */
+.text-util-accent,
+[class*="text-util-accent"] {
+  color: #6B21A8 !important;
+}
+
+html.dark .text-util-accent,
+html.dark [class*="text-util-accent"] {
+  color: #A78BFA !important;
+}
+
+/* Override focus rings to purple */
+*:focus-visible {
+  outline-color: #8B5CF6 !important;
+  ring-color: #8B5CF6 !important;
+}
+
+/* Progress bars and loaders */
+[role="progressbar"] {
+  background-color: rgba(139, 92, 246, 0.2) !important;
+}
+
+[role="progressbar"] > * {
+  background-color: #8B5CF6 !important;
+}

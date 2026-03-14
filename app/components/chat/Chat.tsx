@@ -33,6 +33,7 @@ import { Button } from '@ui/Button';
 import { TeamSelector } from '~/components/convex/TeamSelector';
 import { ClipboardIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
+import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 import type { Id } from 'convex/_generated/dataModel';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import type { ProviderType } from '~/lib/common/annotations';
@@ -251,9 +252,9 @@ export const Chat = memo(
           console.error('No team slug');
           return; // Just return instead of throwing
         }
-        const token = getConvexAuthToken(convex);
+        const token = getConvexDashboardToken();
         if (!token) {
-          console.error('No token');
+          console.error('No Convex dashboard token. User needs to connect Convex account.');
           return; // Just return instead of throwing
         }
 
@@ -286,9 +287,9 @@ export const Chat = memo(
         const chatInitialId = initialIdStore.get();
         const deploymentName = convexProjectStore.get()?.deploymentName;
         const teamSlug = selectedTeamSlugStore.get();
-        const token = getConvexAuthToken(convex);
+        const token = getConvexDashboardToken();
         if (!token) {
-          throw new Error('No token');
+          throw new Error('No Convex dashboard token. Please connect your Convex account.');
         }
         if (!teamSlug) {
           throw new Error('No team slug');
@@ -752,11 +753,11 @@ export function NoTokensText({ resetDisableChatMessage }: { resetDisableChatMess
         >
           Upgrade to a paid plan
         </Button>
-        {referralCode && referralStats?.left !== 0 && (
+        {referralCode && referralStats && referralStats.left !== 0 && (
           <div className="w-full space-y-2">
             <p className="text-sm text-content-secondary">
               Refer a friend and Get 85,000 free Chef tokens for each
-              {referralStats?.left === 5 || !referralStats ? ' (limit 5)' : ` (${referralStats.left} / 5)`}
+              {referralStats.left === 5 ? ' (limit 5)' : ` (${referralStats.left} / 5)`}
             </p>
             <div className="flex items-center gap-2">
               <input

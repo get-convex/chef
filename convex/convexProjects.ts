@@ -90,7 +90,8 @@ export const startProvisionConvexProject = mutation({
     projectInitParams: v.optional(
       v.object({
         teamSlug: v.string(),
-        workosAccessToken: v.string(),
+        convexAccessToken: v.string(),
+        fallbackConvexAccessToken: v.optional(v.string()),
       }),
     ),
   },
@@ -106,7 +107,8 @@ export async function startProvisionConvexProjectHelper(
     chatId: string;
     projectInitParams?: {
       teamSlug: string;
-      workosAccessToken: string;
+      convexAccessToken: string;
+      fallbackConvexAccessToken?: string;
     };
   },
 ): Promise<void> {
@@ -131,7 +133,8 @@ export async function startProvisionConvexProjectHelper(
   await ctx.scheduler.runAfter(0, internal.convexProjects.connectConvexProjectForOauth, {
     sessionId: args.sessionId,
     chatId: args.chatId,
-    accessToken: args.projectInitParams.workosAccessToken,
+    accessToken: args.projectInitParams.convexAccessToken,
+    fallbackAccessToken: args.projectInitParams.fallbackConvexAccessToken,
     teamSlug: args.projectInitParams.teamSlug,
   });
   const jobId = await ctx.scheduler.runAfter(CHECK_CONNECTION_DEADLINE_MS, internal.convexProjects.checkConnection, {
@@ -192,36 +195,57 @@ export const connectConvexProjectForOauth = internalAction({
     sessionId: v.id("sessions"),
     chatId: v.string(),
     accessToken: v.string(),
+    fallbackAccessToken: v.optional(v.string()),
     teamSlug: v.string(),
   },
   handler: async (ctx, args) => {
-    await _connectConvexProjectForMember(ctx, {
-      sessionId: args.sessionId,
-      chatId: args.chatId,
-      accessToken: args.accessToken,
-      teamSlug: args.teamSlug,
-    })
-      .then(async (data) => {
-        await ctx.runMutation(internal.convexProjects.recordProvisionedConvexProjectCredentials, {
-          sessionId: args.sessionId,
-          chatId: args.chatId,
-          projectSlug: data.projectSlug,
-          teamSlug: args.teamSlug,
-          projectDeployKey: data.projectDeployKey,
-          deploymentUrl: data.deploymentUrl,
-          deploymentName: data.deploymentName,
-          warningMessage: data.warningMessage,
-        });
-      })
-      .catch(async (error) => {
-        console.error(`Error connecting convex project: ${error.message}`);
-        const errorMessage = error instanceof ConvexError ? error.data.message : "Unexpected error";
-        await ctx.runMutation(internal.convexProjects.recordFailedConvexProjectConnection, {
-          sessionId: args.sessionId,
-          chatId: args.chatId,
-          errorMessage,
-        });
+    const connectWithToken = (accessToken: string) =>
+      _connectConvexProjectForMember(ctx, {
+        sessionId: args.sessionId,
+        chatId: args.chatId,
+        accessToken,
+        teamSlug: args.teamSlug,
       });
+    try {
+      let data;
+      try {
+        data = await connectWithToken(args.accessToken);
+      } catch (error) {
+        const shouldRetryWithFallback =
+          args.fallbackAccessToken !== undefined &&
+          args.fallbackAccessToken !== args.accessToken &&
+          error instanceof ConvexError &&
+          typeof error.data?.message === "string" &&
+          error.data.message.includes("Failed to create project: 401");
+        if (!shouldRetryWithFallback) {
+          throw error;
+        }
+        data = await connectWithToken(args.fallbackAccessToken);
+      }
+      await ctx.runMutation(internal.convexProjects.recordProvisionedConvexProjectCredentials, {
+        sessionId: args.sessionId,
+        chatId: args.chatId,
+        projectSlug: data.projectSlug,
+        teamSlug: args.teamSlug,
+        projectDeployKey: data.projectDeployKey,
+        deploymentUrl: data.deploymentUrl,
+        deploymentName: data.deploymentName,
+        warningMessage: data.warningMessage,
+      });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof ConvexError
+          ? error.data.message
+          : error instanceof Error
+            ? error.message
+            : "Unexpected error";
+      console.error(`Error connecting convex project: ${errorMessage}`);
+      await ctx.runMutation(internal.convexProjects.recordFailedConvexProjectConnection, {
+        sessionId: args.sessionId,
+        chatId: args.chatId,
+        errorMessage,
+      });
+    }
   },
 });
 
@@ -272,10 +296,17 @@ async function _connectConvexProjectForMember(
   });
   if (!response.ok) {
     const text = await response.text();
+    const isUnauthorized = response.status === 401;
+    const isForbidden = response.status === 403;
+    const detailSnippet = text.trim().replace(/\s+/g, " ").slice(0, 180);
     const defaultProvisioningError = new ConvexError({
       code: "ProvisioningError",
       message: text.includes("SSORequired")
         ? "You must log in with Single Sign-on to access this team."
+        : isUnauthorized
+          ? `Failed to create project: 401 Unauthorized for team "${args.teamSlug}". ${detailSnippet || "Reconnect your Convex account and try again."}`
+          : isForbidden
+            ? `Failed to create project: 403 Forbidden for team "${args.teamSlug}".`
         : `Failed to create project: ${response.status}`,
       details: text,
     });

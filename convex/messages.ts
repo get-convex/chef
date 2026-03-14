@@ -30,7 +30,8 @@ export const initializeChat = mutation({
     projectInitParams: v.optional(
       v.object({
         teamSlug: v.string(),
-        workosAccessToken: v.string(),
+        convexAccessToken: v.string(),
+        fallbackConvexAccessToken: v.optional(v.string()),
       }),
     ),
   },
@@ -736,7 +737,8 @@ export async function createNewChat(
     sessionId: Id<"sessions">;
     projectInitParams?: {
       teamSlug: string;
-      workosAccessToken: string;
+      convexAccessToken: string;
+      fallbackConvexAccessToken?: string;
     };
   },
 ): Promise<Id<"chats">> {

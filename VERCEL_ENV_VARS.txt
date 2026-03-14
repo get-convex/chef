@@ -1,0 +1,41 @@
+# Copy these environment variables to Vercel
+# Set them for Production, Preview, and Development environments
+
+# ============================================
+# CONVEX CONNECTION
+# ============================================
+CONVEX_URL=https://striped-dalmatian-762.convex.cloud
+VITE_CONVEX_URL=https://striped-dalmatian-762.convex.cloud
+VITE_CONVEX_SITE_URL=https://striped-dalmatian-762.convex.site
+
+# ============================================
+# CONVEX OAUTH (for backend routes)
+# ============================================
+CONVEX_OAUTH_CLIENT_ID=1414b799becd4195
+CONVEX_OAUTH_CLIENT_SECRET=94cda5d59c5b495c88aa9f0138823206
+VITE_CONVEX_OAUTH_CLIENT_ID=1414b799becd4195
+
+# ============================================
+# AI MODEL PROVIDERS (Primary: Google)
+# ============================================
+GOOGLE_API_KEY=<your_google_api_key>
+GEMINI_API_KEY=<your_gemini_api_key>
+VERTEX_AI_STUDIO_API_KEY=<your_vertex_ai_key>
+
+# ============================================
+# SECONDARY AI PROVIDERS
+# ============================================
+OPENAI_API_KEY=<your_openai_api_key>
+ANTHROPIC_API_KEY=<your_anthropic_api_key>
+
+# ============================================
+# ANALYTICS (Optional)
+# ============================================
+VITE_POSTHOG_HOST=https://us.i.posthog.com
+VITE_POSTHOG_KEY=phc_NWQlkY67cr90RUzVIpgz67chtiz719ApjWj3HCoJ4nD
+
+# ============================================
+# FEATURE FLAGS
+# ============================================
+DISABLE_USAGE_REPORTING=1
+DISABLE_BEDROCK=1

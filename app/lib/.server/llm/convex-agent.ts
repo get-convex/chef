@@ -36,6 +36,7 @@ import { lookupDocsTool } from 'chef-agent/tools/lookupDocs';
 import { addEnvironmentVariablesTool } from 'chef-agent/tools/addEnvironmentVariables';
 import { getConvexDeploymentNameTool } from 'chef-agent/tools/getConvexDeploymentName';
 import type { PromptCharacterCounts } from 'chef-agent/ChatContextManager';
+import { detectPhase, shouldUpdatePhase } from '~/lib/.server/llm/phaseDetector';
 
 type Messages = Message[];
 
@@ -263,6 +264,38 @@ async function onFinishHandler({
     providerMetadata,
   });
   console.log('Prompt character counts', promptCharacterCounts);
+
+  // Phase detection
+  const lastMessage = messages[messages.length - 1];
+  const toolCalls =
+    lastMessage?.role === 'assistant'
+      ? (lastMessage.toolInvocations || []).map((t) => ({
+          toolName: t.toolName,
+          result: t.state === 'result' ? (t.result as string) : undefined,
+          state: t.state,
+        }))
+      : [];
+
+  // Detect phase based on recent activity
+  const currentPhase = null; // TODO: Fetch from Convex for accurate tracking
+  const phaseDetection = detectPhase(currentPhase, messages, toolCalls);
+
+  // Write phase annotation if detected with sufficient confidence
+  if (shouldUpdatePhase(currentPhase, phaseDetection)) {
+    console.log(`Phase transition detected: ${currentPhase} -> ${phaseDetection.phase} (${phaseDetection.confidence} confidence)`);
+
+    dataStream.writeMessageAnnotation({
+      type: 'phase',
+      phase: phaseDetection.phase,
+      status: 'started',
+      timestamp: Date.now(),
+    });
+
+    // Update Convex phase tracking (async, non-blocking)
+    // Note: This requires creating an HTTP endpoint or using Convex client
+    // For now, we'll log it and implement the endpoint separately
+    console.log(`TODO: Update Convex phase for chat ${chatInitialId} to ${phaseDetection.phase}`);
+  }
   if (tracer) {
     const span = tracer.startSpan('on-finish-handler');
     span.setAttribute('chatInitialId', chatInitialId);
@@ -319,6 +352,31 @@ async function onFinishHandler({
 
   if (toolsDisabledFromRepeatedErrors) {
     dataStream.writeMessageAnnotation({ type: 'failure', reason: REPEATED_ERROR_REASON });
+  }
+
+  // Review cycle activation on deployment failures
+  if (result.finishReason === 'stop' && !toolsDisabledFromRepeatedErrors) {
+    const lastMessage = messages[messages.length - 1];
+
+    // Check for deploy failures
+    if (lastMessage?.role === 'assistant') {
+      const deployFailures =
+        lastMessage.toolInvocations?.filter(
+          (t) => t.toolName === 'deploy' && t.state === 'result' && (t.result as string)?.startsWith('Error:'),
+        ) || [];
+
+      // If deploy failed (but not too many times), activate review phase
+      if (deployFailures.length > 0 && deployFailures.length < 3) {
+        console.log(`Deploy failure detected, activating review phase`);
+
+        dataStream.writeMessageAnnotation({
+          type: 'phase',
+          phase: 'review',
+          status: 'started',
+          timestamp: Date.now(),
+        });
+      }
+    }
   }
 
   let toolCallId: { kind: 'tool-call'; toolCallId: string } | { kind: 'final' } | undefined;

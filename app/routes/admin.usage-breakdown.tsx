@@ -1,6 +1,6 @@
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider } from '~/components/chat/ChefAuthWrapper';
-import type { MetaFunction } from '@vercel/remix';
+import type { MetaFunction } from '@remix-run/node';
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import { useState, useEffect } from 'react';
 import { useIsAdmin } from '~/lib/hooks/useDebugPrompt';

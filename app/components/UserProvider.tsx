@@ -1,23 +1,36 @@
 import { useEffect } from 'react';
 import { setExtra, setUser } from '@sentry/remix';
 import { useConvex, useQuery } from 'convex/react';
-import { useConvexSessionIdOrNullOrLoading, getConvexAuthToken } from '~/lib/stores/sessionId';
+import { useConvexSessionIdOrNullOrLoading } from '~/lib/stores/sessionId';
 import { useChatId } from '~/lib/stores/chatId';
 import { setProfile } from '~/lib/stores/profile';
 import { getConvexProfile } from '~/lib/convexProfile';
+import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 import { useLDClient, withLDProvider, basicLogger } from 'launchdarkly-react-client-sdk';
 import { api } from '@convex/_generated/api';
-import { useAuth } from '@workos-inc/authkit-react';
+import { useAuth } from '~/lib/auth/GoogleAuthProvider';
+
+// LaunchDarkly is optional - only initialize if client ID is provided
+const LD_CLIENT_ID = import.meta.env.VITE_LD_CLIENT_SIDE_ID || '';
 
 export const UserProvider = withLDProvider<any>({
-  clientSideID: import.meta.env.VITE_LD_CLIENT_SIDE_ID,
+  clientSideID: LD_CLIENT_ID,
   options: {
     logger: basicLogger({ level: 'error' }),
+    // Bootstrap with anonymous user if no client ID to prevent errors
+    bootstrap: LD_CLIENT_ID ? undefined : 'localStorage',
   },
+  deferInitialization: !LD_CLIENT_ID, // Don't initialize if no client ID
 })(UserProviderInner);
 
 function UserProviderInner({ children }: { children: React.ReactNode }) {
-  const launchdarkly = useLDClient();
+  let launchdarkly;
+  try {
+    launchdarkly = useLDClient();
+  } catch (e) {
+    // LaunchDarkly not initialized, which is fine
+    launchdarkly = undefined;
+  }
   const { user } = useAuth();
   const convexMemberId = useQuery(api.sessions.convexMemberId);
   const sessionId = useConvexSessionIdOrNullOrLoading();
@@ -49,12 +62,11 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
           email: user.email ?? undefined,
         });
 
-        // Get additional profile info from Convex
-        try {
-          const token = getConvexAuthToken(convex);
-          if (token) {
-            void convex.action(api.sessions.updateCachedProfile, { convexAuthToken: token });
-            const convexProfile = await getConvexProfile(token);
+        // Get additional profile info from Convex (only if dashboard token is available)
+        const dashboardToken = getConvexDashboardToken();
+        if (dashboardToken) {
+          try {
+            const convexProfile = await getConvexProfile(dashboardToken);
             setProfile({
               username:
                 convexProfile.name ??
@@ -63,10 +75,18 @@ function UserProviderInner({ children }: { children: React.ReactNode }) {
               avatar: user.profilePictureUrl || '',
               id: convexProfile.id || user.id || '',
             });
+          } catch (error) {
+            console.warn('Failed to fetch Convex profile (not connected yet):', error);
+            // Fallback to Google profile if Convex profile fetch fails
+            setProfile({
+              username: user.firstName ? (user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName) : '',
+              email: user.email ?? '',
+              avatar: user.profilePictureUrl ?? '',
+              id: user.id ?? '',
+            });
           }
-        } catch (error) {
-          console.error('Failed to fetch Convex profile:', error);
-          // Fallback to WorkOS profile if Convex profile fetch fails
+        } else {
+          // No Convex dashboard token - use Google profile
           setProfile({
             username: user.firstName ? (user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName) : '',
             email: user.email ?? '',

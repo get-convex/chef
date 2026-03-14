@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { chatStore } from '~/lib/stores/chatId';
 import { HeaderActionButtons } from './HeaderActionButtons.client';
@@ -21,11 +21,12 @@ import { useSelectedTeamSlug } from '~/lib/stores/convexTeams';
 import { useUsage } from '~/lib/stores/usage';
 import { useReferralStats } from '~/lib/hooks/useReferralCode';
 import { Menu } from '~/components/sidebar/Menu.client';
-import { useAuth } from '@workos-inc/authkit-react';
+import { useAuth } from '~/lib/auth/GoogleAuthProvider';
 
 export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean }) {
   const chat = useStore(chatStore);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
 
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const isLoggedIn = sessionId !== null;
@@ -48,6 +49,15 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
     window.location.pathname = '/settings';
   };
 
+  const handleImageError = () => {
+    setImageLoadError(true);
+  };
+
+  // Reset image error state when profile changes
+  useEffect(() => {
+    setImageLoadError(false);
+  }, [profile?.avatar]);
+
   return (
     <header className={'flex h-[var(--header-height)] items-center overflow-x-auto overflow-y-hidden border-b p-5'}>
       <div className="z-40 flex cursor-pointer items-center gap-4 text-content-primary">
@@ -62,8 +72,8 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
           />
         )}
         <a href="/">
-          {/* The logo is shifted up slightly, to visually align it with the hamburger icon. */}
-          <img src="/chef.svg" alt="Chef logo" width={72} height={42} className="relative -top-1" />
+          {/* AI Standard logo */}
+          <img src="/AI_Standard_Logo_Clean.png" alt="AI Standard" width={50} height={50} className="relative" />
         </a>
         <a
           href="https://github.com/get-convex/chef"
@@ -77,7 +87,7 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
               fill="currentColor"
             />
           </svg>
-          Star on GitHub
+          Open Source
         </a>
       </div>
       <>
@@ -111,12 +121,15 @@ export function Header({ hideSidebarIcon = false }: { hideSidebarIcon?: boolean 
                     title: 'User menu',
                     inline: true,
                     className: 'rounded-full',
-                    icon: profile.avatar ? (
+                    icon: profile.avatar && !imageLoadError ? (
                       <img
                         src={profile.avatar}
                         className="size-8 min-w-8 rounded-full object-cover"
                         loading="eager"
                         decoding="sync"
+                        onError={handleImageError}
+                        alt="Profile"
+                        crossOrigin="anonymous"
                       />
                     ) : (
                       <PersonIcon className="size-8 min-w-8 rounded-full border text-content-secondary" />

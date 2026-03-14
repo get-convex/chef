@@ -1,6 +1,6 @@
 import { captureMessage, captureRemixErrorBoundaryError } from '@sentry/remix';
 import { useStore } from '@nanostores/react';
-import type { LinksFunction } from '@vercel/remix';
+import type { LinksFunction } from '@remix-run/node';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteError } from '@remix-run/react';
 import { themeStore } from '~/lib/stores/theme';
 import { stripIndents } from 'chef-agent/utils/stripIndent';

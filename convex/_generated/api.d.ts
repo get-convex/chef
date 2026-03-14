@@ -23,6 +23,7 @@ import type * as lz4Wasm from "../lz4Wasm.js";
 import type * as messages from "../messages.js";
 import type * as migrations from "../migrations.js";
 import type * as openaiProxy from "../openaiProxy.js";
+import type * as phases from "../phases.js";
 import type * as rateLimiter from "../rateLimiter.js";
 import type * as resendProxy from "../resendProxy.js";
 import type * as sessions from "../sessions.js";
@@ -38,14 +39,6 @@ import type {
   FunctionReference,
 } from "convex/server";
 
-/**
- * A utility for referencing Convex functions in your app's API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
- * ```
- */
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   apiKeys: typeof apiKeys;
@@ -62,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   migrations: typeof migrations;
   openaiProxy: typeof openaiProxy;
+  phases: typeof phases;
   rateLimiter: typeof rateLimiter;
   resendProxy: typeof resendProxy;
   sessions: typeof sessions;
@@ -71,14 +65,30 @@ declare const fullApi: ApiFromModules<{
   subchats: typeof subchats;
   summarize: typeof summarize;
 }>;
-declare const fullApiWithMounts: typeof fullApi;
 
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
 export declare const api: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "public">
 >;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
 export declare const internal: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "internal">
 >;
 

@@ -38,7 +38,7 @@ export const SuggestionButtons = ({ chatStarted, onSuggestionClick, disabled }: 
           className="items-center rounded-full border-[#EE352F] bg-[#FEF4E2] fill-[#EE342F] px-3 text-[#EE352F] shadow-sm hover:bg-[#FDEFD2] dark:border-[#FFD700] dark:bg-[#2F2917] dark:fill-[#FFD700] dark:text-[#FFD700] dark:hover:bg-[#3F3920]"
           icon={<VideoIcon />}
         >
-          <span>Tips for building with Chef</span>
+          <span>Builder's Guide</span>
         </Button>
       </div>
     </div>

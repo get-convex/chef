@@ -1,7 +1,7 @@
 import { useTeamsInitializer } from '~/lib/stores/startup/useTeamsInitializer';
 import { ChefAuthProvider } from '~/components/chat/ChefAuthWrapper';
-import { json } from '@vercel/remix';
-import type { LoaderFunctionArgs, MetaFunction } from '@vercel/remix';
+import { json } from '@remix-run/node';
+import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { SettingsContent } from '~/components/SettingsContent.client';
 import { ClientOnly } from 'remix-utils/client-only';
 

@@ -104,6 +104,16 @@ export default defineSchema({
         }),
       ),
     ),
+    currentPhase: v.optional(v.string()),
+    phaseHistory: v.optional(
+      v.array(
+        v.object({
+          phase: v.string(),
+          startedAt: v.number(),
+          completedAt: v.optional(v.number()),
+        }),
+      ),
+    ),
   })
     .index("byCreatorAndId", ["creatorId", "initialId", "isDeleted"])
     .index("byCreatorAndUrlId", ["creatorId", "urlId", "isDeleted"])
@@ -240,4 +250,72 @@ export default defineSchema({
   })
     .index("name", ["name"])
     .index("isDone", ["isDone"]),
+
+  // User authentication table - tracks sign-in information
+  users: defineTable({
+    email: v.string(),
+    // Auth method: "google" for Google OAuth, "password" for email/password
+    authMethod: v.union(v.literal("google"), v.literal("password")),
+    // For password auth - hashed password
+    passwordHash: v.optional(v.string()),
+    // For OAuth - provider user ID
+    oauthProviderId: v.optional(v.string()),
+    // OAuth provider details
+    oauthProvider: v.optional(v.string()),
+    emailVerified: v.optional(v.boolean()),
+    createdAt: v.number(),
+    lastLoginAt: v.optional(v.number()),
+  })
+    .index("byEmail", ["email"])
+    .index("byOAuthProviderId", ["oauthProvider", "oauthProviderId"]),
+
+  // User profile table - stores in-app user details
+  profiles: defineTable({
+    userId: v.id("users"),
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    avatarUrl: v.optional(v.string()),
+    // Additional profile fields as needed
+    preferences: v.optional(v.any()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("byUserId", ["userId"]),
+
+  // Payments table - tracks subscription and payment information
+  payments: defineTable({
+    userId: v.id("users"),
+    // Subscription status
+    status: v.union(
+      v.literal("active"),
+      v.literal("cancelled"),
+      v.literal("expired"),
+      v.literal("trial"),
+      v.literal("past_due"),
+    ),
+    // Payment provider (e.g., "stripe", "paypal")
+    provider: v.string(),
+    // Provider-specific customer ID
+    customerId: v.optional(v.string()),
+    // Provider-specific subscription ID
+    subscriptionId: v.optional(v.string()),
+    // Subscription plan/tier
+    plan: v.optional(v.string()),
+    // Amount in cents
+    amount: v.optional(v.number()),
+    currency: v.optional(v.string()),
+    // Billing period
+    billingPeriod: v.optional(v.union(v.literal("monthly"), v.literal("yearly"))),
+    // Timestamps
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+    nextBillingDate: v.optional(v.number()),
+    cancelledAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("byUserId", ["userId"])
+    .index("byCustomerId", ["provider", "customerId"])
+    .index("bySubscriptionId", ["provider", "subscriptionId"])
+    .index("byStatus", ["status"]),
 });

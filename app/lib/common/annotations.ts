@@ -80,6 +80,20 @@ export const annotationValidator = z.discriminatedUnion('type', [
     provider: providerValidator,
     model: z.optional(z.string()),
   }),
+  z.object({
+    type: z.literal('phase'),
+    phase: z.enum([
+      'planning',
+      'foundation',
+      'backend-schema',
+      'backend-functions',
+      'frontend-components',
+      'integration',
+      'review',
+    ]),
+    status: z.enum(['started', 'completed']),
+    timestamp: z.number(),
+  }),
 ]);
 
 export const failedDueToRepeatedErrors = (annotations: Message['annotations']) => {
@@ -98,17 +112,20 @@ export const parseAnnotations = (
   failedDueToRepeatedErrors: boolean;
   usageForToolCall: Record<string, UsageAnnotation | null>;
   modelForToolCall: Record<string, { provider: ProviderType; model: string | undefined }>;
+  phaseUpdates: Array<{ phase: string; status: string; timestamp: number }>;
 } => {
   if (!annotations) {
     return {
       failedDueToRepeatedErrors: false,
       usageForToolCall: {},
       modelForToolCall: {},
+      phaseUpdates: [],
     };
   }
   let failedDueToRepeatedErrors = false;
   const usageForToolCall: Record<string, UsageAnnotation | null> = {};
   const modelForToolCall: Record<string, { provider: ProviderType; model: string | undefined }> = {};
+  const phaseUpdates: Array<{ phase: string; status: string; timestamp: number }> = [];
   for (const annotation of annotations) {
     const parsed = annotationValidator.safeParse(annotation);
     if (!parsed.success) {
@@ -128,10 +145,18 @@ export const parseAnnotations = (
     if (parsed.data.type === 'model') {
       modelForToolCall[parsed.data.toolCallId] = { provider: parsed.data.provider, model: parsed.data.model };
     }
+    if (parsed.data.type === 'phase') {
+      phaseUpdates.push({
+        phase: parsed.data.phase,
+        status: parsed.data.status,
+        timestamp: parsed.data.timestamp,
+      });
+    }
   }
   return {
     failedDueToRepeatedErrors,
     usageForToolCall,
     modelForToolCall,
+    phaseUpdates,
   };
 };

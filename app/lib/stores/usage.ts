@@ -1,7 +1,8 @@
 import { map, computed, onMount } from 'nanostores';
 import { useStore } from '@nanostores/react';
 import { useConvex } from 'convex/react';
-import { convexAuthTokenStore, getConvexAuthToken } from '~/lib/stores/sessionId';
+import { getConvexAuthToken } from '~/lib/stores/sessionId';
+import { getConvexDashboardToken } from '~/lib/stores/convexDashboardAuth';
 import { VITE_PROVISION_HOST } from '~/lib/convexProvisionHost';
 import { debugOverrideStore, debugOverrideEnabledStore } from './debug';
 import { queryClientStore } from './reactQueryClient';
@@ -9,27 +10,9 @@ import { QueryObserver } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
 
 export function useTokenUsage(teamSlug: string | null): TeamUsageState {
-  // getConvexAuthToken has a side effect may need
-  const convex = useConvex();
-  void getConvexAuthToken(convex);
-
-  const usageByTeam = useStore(usageStore);
-
-  useEffect(() => {
-    if (!teamSlug) {
-      return;
-    }
-    const subscribed = !!serverTeamUsageStore.get()[teamSlug];
-    if (!subscribed) {
-      serverTeamUsageStore.setKey(teamSlug, { isLoading: true, tokenUsage: null });
-    }
-  }, [teamSlug]);
-
-  if (!teamSlug || !usageByTeam[teamSlug]) {
-    return { isLoading: true, tokenUsage: null } as const;
-  }
-  const usage: TeamUsageState = usageByTeam[teamSlug];
-  return usage;
+  // DISABLED: Third-party OAuth apps don't have access to dashboard API
+  // Return loading state to prevent UI errors
+  return { isLoading: true, tokenUsage: null };
 }
 
 export async function getTokenUsage(
@@ -94,7 +77,13 @@ onMount(serverTeamUsageStore, () => {
     }
     const observer = new QueryObserver<UsageData>(queryClientStore.get(), {
       queryKey: ['teamUsage', teamSlug],
-      queryFn: async () => await getTokenUsage(VITE_PROVISION_HOST, convexAuthTokenStore.get()!, teamSlug),
+      queryFn: async () => {
+        const token = getConvexDashboardToken();
+        if (!token) {
+          throw new Error('No Convex dashboard token available. Please connect your Convex account.');
+        }
+        return await getTokenUsage(VITE_PROVISION_HOST, token, teamSlug);
+      },
       // TODO instead of fetching so much, refetch when know some tokens were just used
       refetchInterval: 10 * 60 * 1000,
     });

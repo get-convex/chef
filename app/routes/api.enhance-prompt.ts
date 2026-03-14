@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs } from '@vercel/remix';
+import type { ActionFunctionArgs } from '@remix-run/node';
 import OpenAI from 'openai';
 import { getEnv } from '~/lib/.server/env';
 import { checkTokenUsage } from '~/lib/.server/usage';

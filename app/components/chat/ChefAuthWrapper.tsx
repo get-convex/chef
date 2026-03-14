@@ -1,6 +1,4 @@
 import { useConvex } from 'convex/react';
-
-import { useConvexAuth } from 'convex/react';
 import { createContext, useContext, useEffect, useRef } from 'react';
 
 import { sessionIdStore } from '~/lib/stores/sessionId';
@@ -12,7 +10,7 @@ import { api } from '@convex/_generated/api';
 import { toast } from 'sonner';
 import { fetchOptIns } from '~/lib/convexOptins';
 import { setChefDebugProperty } from 'chef-agent/utils/chefDebug';
-import { useAuth } from '@workos-inc/authkit-react';
+import { useAuth } from '~/lib/auth/GoogleAuthProvider';
 type ChefAuthState =
   | {
       kind: 'loading';
@@ -56,14 +54,13 @@ export const ChefAuthProvider = ({
 }) => {
   const sessionId = useConvexSessionIdOrNullOrLoading();
   const convex = useConvex();
-  const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
+  const { isAuthenticated, isLoading: isConvexAuthLoading, getAccessToken } = useAuth();
   const [sessionIdFromLocalStorage, setSessionIdFromLocalStorage] = useLocalStorage<Id<'sessions'> | null>(
     SESSION_ID_KEY,
     null,
   );
   const hasAlertedAboutOptIns = useRef(false);
   const authRetries = useRef(0);
-  const { getAccessToken } = useAuth();
 
   useEffect(() => {
     function setSessionId(sessionId: Id<'sessions'> | null) {
@@ -91,11 +88,11 @@ export const ChefAuthProvider = ({
       if (sessionIdFromLocalStorage) {
         // Seems like auth might not automatically refresh its state, so call this to kick it
         try {
-          // Call this to prove that WorkOS is set up
-          await getAccessToken({});
+          // Call this to verify auth is set up
+          await getAccessToken();
           authRetries.current = 0;
         } catch (_e) {
-          console.error('Unable to fetch access token from WorkOS');
+          console.error('Unable to fetch access token');
           if (authRetries.current < 3 && verifySessionTimeout === null) {
             authRetries.current++;
             verifySessionTimeout = setTimeout(() => {
@@ -119,7 +116,7 @@ export const ChefAuthProvider = ({
           setSessionId(null);
         }
         if (isValid) {
-          const optIns = await fetchOptIns(convex);
+          const optIns = await fetchOptIns();
           if (optIns.kind === 'loaded' && optIns.optIns.length === 0) {
             setSessionId(sessionIdFromLocalStorage as Id<'sessions'>);
           }

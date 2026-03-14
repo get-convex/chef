@@ -12,7 +12,6 @@ import { query } from "./_generated/server";
 import { v } from "convex/values";
 export const f = query({
     args: {},
-    returns: v.null(),
     handler: async (ctx, args) => {
     // Function body
     },
@@ -71,20 +70,6 @@ export default defineSchema({
     )
 });
 ```
-- Always use the `v.null()` validator when returning a null value. Below is an example query that returns a null value:
-```typescript
-import { query } from "./_generated/server";
-import { v } from "convex/values";
-
-export const exampleQuery = query({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx, args) => {
-      console.log("This query returns a null value");
-      return null;
-  },
-});
-```
 - Here are the valid Convex types along with their respective validators:
 Convex Type  | TS/JS type  |  Example Usage         | Validator for argument validation and schemas  | Notes                                                                                                                                                                                                 |
 | ----------- | ------------| -----------------------| -----------------------------------------------| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -103,7 +88,7 @@ Convex Type  | TS/JS type  |  Example Usage         | Validator for argument val
 - Use `internalQuery`, `internalMutation`, and `internalAction` to register internal functions. These functions are private and aren't part of an app's API. They can only be called by other Convex functions. These functions are always imported from `./_generated/server`.
 - Use `query`, `mutation`, and `action` to register public functions. These functions are part of the public API and are exposed to the public Internet. Do NOT use `query`, `mutation`, or `action` to register sensitive internal functions that should be kept private.
 - You CANNOT register a function through the `api` or `internal` objects.
-- ALWAYS include argument and return validators for all Convex functions. This includes all of `query`, `internalQuery`, `mutation`, `internalMutation`, `action`, and `internalAction`. If a function doesn't return anything, include `returns: v.null()` as its output validator.
+- ALWAYS include argument validators for all Convex functions. This includes all of `query`, `internalQuery`, `mutation`, `internalMutation`, `action`, and `internalAction`.
 - If the JavaScript implementation of a Convex function doesn't have a return value, it implicitly returns `null`.
 
 ### Function calling
@@ -117,7 +102,6 @@ Convex Type  | TS/JS type  |  Example Usage         | Validator for argument val
 ```
 export const f = query({
   args: { name: v.string() },
-  returns: v.string(),
   handler: async (ctx, args) => {
     return "Hello " + args.name;
   },
@@ -125,7 +109,6 @@ export const f = query({
 
 export const g = query({
   args: {},
-  returns: v.null(),
   handler: async (ctx, args) => {
     const result: string = await ctx.runQuery(api.example.f, { name: "Bob" });
     return null;
@@ -159,7 +142,7 @@ export const listWithExtraArg = query({
     handler: async (ctx, args) => {
         return await ctx.db
         .query("messages")
-        .filter((q) => q.eq(q.field("author"), args.author))
+        .withIndex("by_author", (q) => q.eq("author", args.author))
         .order("desc")
         .paginate(args.paginationOpts);
     },
@@ -169,9 +152,9 @@ Note: `paginationOpts` is an object with the following properties:
 - `numItems`: the maximum number of documents to return (the validator is `v.number()`)
 - `cursor`: the cursor to use to fetch the next page of documents (the validator is `v.union(v.string(), v.null())`)
 - A query that ends in `.paginate()` returns an object that has the following properties:
-                            - page (contains an array of documents that you fetches)
-                            - isDone (a boolean that represents whether or not this is the last page of documents)
-                            - continueCursor (a string that represents the cursor to use to fetch the next page of documents)
+- page (contains an array of documents that you fetches)
+- isDone (a boolean that represents whether or not this is the last page of documents)
+- continueCursor (a string that represents the cursor to use to fetch the next page of documents)
 
 
 ## Validator guidelines
@@ -194,11 +177,10 @@ import { Doc, Id } from "./_generated/dataModel";
 
 export const exampleQuery = query({
     args: { userIds: v.array(v.id("users")) },
-    returns: v.record(v.id("users"), v.string()),
     handler: async (ctx, args) => {
         const idToUsername: Record<Id<"users">, string> = {};
         for (const userId of args.userIds) {
-            const user = await ctx.db.get(userId);
+            const user = await ctx.db.get("users", userId);
             if (user) {
                 idToUsername[user._id] = user.username;
             }
@@ -212,7 +194,6 @@ export const exampleQuery = query({
 - Always use `as const` for string literals in discriminated union types.
 - When using the `Array` type, make sure to always define your arrays as `const array: Array<T> = [...];`
 - When using the `Record` type, make sure to always define your records as `const record: Record<KeyType, ValueType> = {...};`
-- Always add `@types/node` to your `package.json` when using any Node.js built-in modules.
 
 ## Full text search guidelines
 - A query for "10 messages in channel '#general' that best match the query 'hello hi' in their body" would look like:
@@ -236,11 +217,13 @@ const messages = await ctx.db
 
 
 ## Mutation guidelines
-- Use `ctx.db.replace` to fully replace an existing document. This method will throw an error if the document does not exist.
-- Use `ctx.db.patch` to shallow merge updates into an existing document. This method will throw an error if the document does not exist.
+- Use `ctx.db.replace` to fully replace an existing document. This method will throw an error if the document does not exist. Syntax: `await ctx.db.replace('tasks', taskId, { name: 'Buy milk', completed: false })`
+- Use `ctx.db.patch` to shallow merge updates into an existing document. This method will throw an error if the document does not exist. Syntax: `await ctx.db.patch('tasks', taskId, { completed: true })`
 
 ## Action guidelines
 - Always add `"use node";` to the top of files containing actions that use Node.js built-in modules.
+- Never add `"use node";` to a file that also exports queries or mutations. Only actions can run in the Node.js runtime; queries and mutations must stay in the default Convex runtime. If you need Node.js built-ins alongside queries or mutations, put the action in a separate file.
+- `fetch()` is available in the default Convex runtime. You do NOT need `"use node";` just to use `fetch()`.
 - Never use `ctx.db` inside of an action. Actions don't have access to the database.
 - Below is an example of the syntax for an action:
 ```ts
@@ -248,7 +231,6 @@ import { action } from "./_generated/server";
 
 export const exampleAction = action({
     args: {},
-    returns: v.null(),
     handler: async (ctx, args) => {
         console.log("This action does not return anything");
         return null;
@@ -268,7 +250,6 @@ import { internalAction } from "./_generated/server";
 
 const empty = internalAction({
   args: {},
-  returns: v.null(),
   handler: async (ctx, args) => {
     console.log("empty");
   },
@@ -290,7 +271,7 @@ export default crons;
 - The `ctx.storage.getUrl()` method returns a signed URL for a given file. It returns `null` if the file doesn't exist.
 - Do NOT use the deprecated `ctx.storage.getMetadata` call for loading a file's metadata.
 
-                    Instead, query the `_storage` system table. For example, you can use `ctx.db.system.get` to get an `Id<"_storage">`.
+Instead, query the `_storage` system table. For example, you can use `ctx.db.system.get` to get an `Id<"_storage">`.
 ```
 import { query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
@@ -305,9 +286,8 @@ type FileMetadata = {
 
 export const exampleQuery = query({
     args: { fileId: v.id("_storage") },
-    returns: v.null(),
     handler: async (ctx, args) => {
-        const metadata: FileMetadata | null = await ctx.db.system.get(args.fileId);
+        const metadata: FileMetadata | null = await ctx.db.system.get("_storage", args.fileId);
         console.log(metadata);
         return null;
     },
@@ -434,8 +414,8 @@ Internal Functions:
   "description": "This example shows how to build a chat app without authentication.",
   "version": "1.0.0",
   "dependencies": {
-    "convex": "^1.17.4",
-    "openai": "^4.79.0"
+    "convex": "^1.31.2",
+    "openai": "^6.0.0"
   },
   "devDependencies": {
     "typescript": "^5.7.3"
@@ -480,47 +460,36 @@ import OpenAI from "openai";
 import { internal } from "./_generated/api";
 
 /**
-  * Create a user with a given name.
-  */
+ * Create a user with a given name.
+ */
 export const createUser = mutation({
   args: {
     name: v.string(),
   },
-  returns: v.id("users"),
   handler: async (ctx, args) => {
     return await ctx.db.insert("users", { name: args.name });
   },
 });
 
 /**
-  * Create a channel with a given name.
-  */
+ * Create a channel with a given name.
+ */
 export const createChannel = mutation({
   args: {
     name: v.string(),
   },
-  returns: v.id("channels"),
   handler: async (ctx, args) => {
     return await ctx.db.insert("channels", { name: args.name });
   },
 });
 
 /**
-  * List the 10 most recent messages from a channel in descending creation order.
-  */
+ * List the 10 most recent messages from a channel in descending creation order.
+ */
 export const listMessages = query({
   args: {
     channelId: v.id("channels"),
   },
-  returns: v.array(
-    v.object({
-      _id: v.id("messages"),
-      _creationTime: v.number(),
-      channelId: v.id("channels"),
-      authorId: v.optional(v.id("users")),
-      content: v.string(),
-    }),
-  ),
   handler: async (ctx, args) => {
     const messages = await ctx.db
       .query("messages")
@@ -532,15 +501,14 @@ export const listMessages = query({
 });
 
 /**
-  * Send a message to a channel and schedule a response from the AI.
-  */
+ * Send a message to a channel and schedule a response from the AI.
+ */
 export const sendMessage = mutation({
   args: {
     channelId: v.id("channels"),
     authorId: v.id("users"),
     content: v.string(),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
     const channel = await ctx.db.get(args.channelId);
     if (!channel) {
@@ -568,7 +536,6 @@ export const generateResponse = internalAction({
   args: {
     channelId: v.id("channels"),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
     const context = await ctx.runQuery(internal.index.loadContext, {
       channelId: args.channelId,
@@ -593,12 +560,6 @@ export const loadContext = internalQuery({
   args: {
     channelId: v.id("channels"),
   },
-  returns: v.array(
-    v.object({
-      role: v.union(v.literal("user"), v.literal("assistant")),
-      content: v.string(),
-    }),
-  ),
   handler: async (ctx, args) => {
     const channel = await ctx.db.get(args.channelId);
     if (!channel) {
@@ -634,7 +595,6 @@ export const writeAgentResponse = internalMutation({
     channelId: v.id("channels"),
     content: v.string(),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.insert("messages", {
       channelId: args.channelId,
@@ -665,6 +625,35 @@ export default defineSchema({
     content: v.string(),
   }).index("by_channel", ["channelId"]),
 });
+```
+
+#### convex/tsconfig.json
+```typescript
+{
+  /* This TypeScript project config describes the environment that
+   * Convex functions run in and is used to typecheck them.
+   * You can modify it, but some settings required to use Convex.
+   */
+  "compilerOptions": {
+    /* These settings are not required by Convex and can be modified. */
+    "allowJs": true,
+    "strict": true,
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+
+    /* These compiler options are required by Convex */
+    "target": "ESNext",
+    "lib": ["ES2021", "dom"],
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": ["./**/*"],
+  "exclude": ["./_generated"]
+}
 ```
 
 #### src/App.tsx

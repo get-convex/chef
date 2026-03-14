@@ -27,6 +27,21 @@ export const AssistantMessage = memo(function AssistantMessage({ message }: Assi
   return (
     <div className="w-full overflow-hidden text-sm">
       <div className="flex flex-col gap-2">
+        {parsedAnnotations.phaseUpdates.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-1">
+            {parsedAnnotations.phaseUpdates.map((phase, i) => (
+              <div
+                key={i}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full bg-bolt-elements-background-depth-3 text-bolt-elements-textSecondary border border-bolt-elements-borderColor"
+              >
+                <DotFilledIcon className="size-3 text-bolt-elements-loader-progress" />
+                <span className="font-medium capitalize">{phase.phase.replace(/-/g, ' ')}</span>
+                {phase.status === 'completed' && <span className="text-bolt-elements-icon-success">✓</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
         {message.parts.map((part, index) => (
           <AssistantMessagePart
             key={index}
