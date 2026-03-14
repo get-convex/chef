@@ -20,8 +20,17 @@ This project is a fork of the `stable` branch of [bolt.diy](https://github.com/s
 
 Visit our [documentation](https://docs.convex.dev/chef) to learn more about Chef and check out our prompting [guide](https://stack.convex.dev/chef-cookbook-tips-working-with-ai-app-builders).
 
-The easiest way to build with Chef is through our hosted [webapp](https://chef.convex.dev), which includes a generous free tier. If you want to
-run Chef locally, you can follow the guide below.
+The easiest way to build with Chef is through our hosted [webapp](https://chef.convex.dev), which includes a generous free tier.
+
+### One-Click Deploy
+
+You can deploy your own instance of Chef to Vercel with one click:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fget-convex%2Fchef&env=VITE_CONVEX_URL,VITE_WORKOS_CLIENT_ID,VITE_WORKOS_API_HOSTNAME,VITE_WORKOS_REDIRECT_URI,ANTHROPIC_API_KEY,OPENAI_API_KEY,GOOGLE_API_KEY,XAI_API_KEY&project-name=chef&repository-name=chef)
+
+**Note:** You will need to set up a [Convex](https://convex.dev) project and a [WorkOS](https://workos.com) project to get the required environment variables (`VITE_CONVEX_URL`, `VITE_WORKOS_CLIENT_ID`, etc.).
+
+If you want to run Chef locally, you can follow the guide below.
 
 > [!IMPORTANT]
 > Chef is provided as-is, using an authentication configuration specific to Convex's internal control plane that manages user accounts.
