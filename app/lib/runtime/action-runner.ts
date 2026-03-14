@@ -5,7 +5,6 @@ import type { ActionAlert, FileHistory } from '~/types/actions';
 import { createScopedLogger } from 'chef-agent/utils/logger';
 import { unreachable } from 'chef-agent/utils/unreachable';
 import type { ActionCallbackData } from 'chef-agent/message-parser';
-import type { ToolInvocation } from 'ai';
 import { viewParameters } from 'chef-agent/tools/view';
 import { renderDirectory } from 'chef-agent/utils/renderDirectory';
 import { renderFile } from 'chef-agent/utils/renderFile';
@@ -176,8 +175,8 @@ export class ActionRunner {
     // Check for duplicate tool calls
     if (action.type === 'toolUse') {
       const parsed = action.parsedContent;
-      if (parsed.state === 'call') {
-        const key = `${parsed.toolName}:${JSON.stringify(parsed.args)}`;
+      if (parsed.state === 'input-available') {
+        const key = `${parsed.toolName}:${JSON.stringify(parsed.input)}`;
         const previousCall = this.#previousToolCalls.get(key);
         if (previousCall) {
           this.onToolCallComplete({
@@ -188,7 +187,7 @@ export class ActionRunner {
           });
           return;
         }
-        this.#previousToolCalls.set(key, { toolName: parsed.toolName, args: parsed.args });
+        this.#previousToolCalls.set(key, { toolName: parsed.toolName, args: parsed.input });
       }
     }
 
@@ -324,12 +323,12 @@ export class ActionRunner {
       unreachable('Expected tool use action');
     }
 
-    const parsed: ToolInvocation = action.parsedContent;
+    const parsed = action.parsedContent;
 
-    if (parsed.state === 'result') {
+    if (parsed.state === 'output-available') {
       return;
     }
-    if (parsed.state === 'partial-call') {
+    if (parsed.state === 'input-streaming') {
       throw new Error('Tool call is still in progress');
     }
 
@@ -337,7 +336,7 @@ export class ActionRunner {
     try {
       switch (parsed.toolName) {
         case 'view': {
-          const args = viewParameters.parse(parsed.args);
+          const args = viewParameters.parse(parsed.input);
           const container = await this.#webcontainer;
           const relPath = workDirRelative(args.path);
           const file = await readPath(container, relPath);
@@ -352,7 +351,7 @@ export class ActionRunner {
           break;
         }
         case 'edit': {
-          const args = editToolParameters.parse(parsed.args);
+          const args = editToolParameters.parse(parsed.input);
           const container = await this.#webcontainer;
           const relPath = workDirRelative(args.path);
           const file = await readPath(container, relPath);
@@ -381,7 +380,7 @@ export class ActionRunner {
         }
         case 'npmInstall': {
           try {
-            const args = npmInstallToolParameters.parse(parsed.args);
+            const args = npmInstallToolParameters.parse(parsed.input);
             const container = await this.#webcontainer;
             await waitForContainerBootState(ContainerBootState.READY);
             const npmInstallProc = await container.spawn('npm', ['install', ...args.packages.split(' ')]);
@@ -411,7 +410,7 @@ export class ActionRunner {
           break;
         }
         case 'lookupDocs': {
-          const args = lookupDocsParameters.parse(parsed.args);
+          const args = lookupDocsParameters.parse(parsed.input);
           const docsToLookup = args.docs;
           const results: string[] = [];
 
@@ -507,7 +506,7 @@ export class ActionRunner {
           break;
         }
         case 'addEnvironmentVariables': {
-          const args = addEnvironmentVariablesParameters.parse(parsed.args);
+          const args = addEnvironmentVariablesParameters.parse(parsed.input);
           const envVarNames = args.envVarNames;
           if (envVarNames.length === 0) {
             result = 'Error: No environment variables to add. Please provide a list of environment variable names.';

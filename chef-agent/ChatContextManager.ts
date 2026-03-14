@@ -1,4 +1,4 @@
-import { type ToolInvocation, type UIMessage } from 'ai';
+import type { UIMessage } from 'ai';
 import { type AbsolutePath, getAbsolutePath } from './utils/workDir.js';
 import { type Dirent, type EditorDocument, type FileMap } from './types.js';
 import { PREWARM_PATHS, WORK_DIR } from './constants.js';
@@ -131,7 +131,7 @@ export class ChatContextManager {
       return cached;
     }
 
-    let size = message.content.length;
+    let size = 0;
     for (const part of message.parts) {
       size += this.partSize(part);
     }
@@ -157,7 +157,6 @@ export class ChatContextManager {
 
     let partCounter = 0;
     for (const message of messages) {
-      const createdAt = message.createdAt?.getTime();
       const parsed = this.parsedAssistantMessage(message);
       if (!parsed) {
         continue;
@@ -167,7 +166,7 @@ export class ChatContextManager {
         if (!entry || entry.type !== 'file') {
           continue;
         }
-        const lastUsedTime = (createdAt ?? partCounter) + partIndex;
+        const lastUsedTime = partCounter + partIndex;
         lastUsed.set(absPath, lastUsedTime);
       }
       partCounter += message.parts.length;
@@ -219,7 +218,6 @@ export class ChatContextManager {
     if (fileActions.length === 0) {
       return {
         id,
-        content: '',
         role: 'user',
         parts: [],
       };
@@ -235,15 +233,21 @@ export class ChatContextManager {
         continue;
       } else if (i === this.messageIndex) {
         const filteredParts = message.parts.filter((p, j) => {
-          if (p.type !== 'tool-invocation' || p.toolInvocation.state !== 'result') {
+          if (!('toolCallId' in p) || (p as any).state !== 'output-available') {
             return true;
           }
           return j > this.partIndex;
         });
+        // Strip artifacts from any text parts in the collapsed message
+        const strippedParts = filteredParts.map((p) => {
+          if (p.type === 'text') {
+            return { ...p, text: StreamingMessageParser.stripArtifacts(p.text) };
+          }
+          return p;
+        });
         const remainingMessage = {
           ...message,
-          content: StreamingMessageParser.stripArtifacts(message.content),
-          parts: filteredParts,
+          parts: strippedParts,
         };
         fullMessages.push(remainingMessage);
       } else {
@@ -293,7 +297,7 @@ export class ChatContextManager {
       const message = messages[messageIndex];
       for (let partIndex = message.parts.length - 1; partIndex >= 0; partIndex--) {
         const part = message.parts[partIndex];
-        if (part.type === 'tool-invocation' && part.toolInvocation.state !== 'result') {
+        if ('toolCallId' in part && (part as any).state !== 'output-available') {
           continue;
         }
         const size = this.partSize(part);
@@ -316,9 +320,6 @@ export class ChatContextManager {
     }
 
     const filesTouched = new Map<AbsolutePath, number>();
-    for (const file of extractFileArtifacts(makePartId(message.id, 0), message.content)) {
-      filesTouched.set(getAbsolutePath(file), 0);
-    }
     for (let j = 0; j < message.parts.length; j++) {
       const part = message.parts[j];
       if (part.type === 'text') {
@@ -327,24 +328,19 @@ export class ChatContextManager {
           filesTouched.set(getAbsolutePath(file), j);
         }
       }
-      if (
-        part.type == 'tool-invocation' &&
-        part.toolInvocation.toolName == 'view' &&
-        part.toolInvocation.state !== 'partial-call'
-      ) {
-        const args = loggingSafeParse(viewParameters, part.toolInvocation.args);
-        if (args.success) {
-          filesTouched.set(getAbsolutePath(args.data.path), j);
+      if ('toolCallId' in part) {
+        const toolPart = part as any;
+        if (toolPart.toolName == 'view' && toolPart.state !== 'input-streaming') {
+          const args = loggingSafeParse(viewParameters, toolPart.input);
+          if (args.success) {
+            filesTouched.set(getAbsolutePath(args.data.path), j);
+          }
         }
-      }
-      if (
-        part.type == 'tool-invocation' &&
-        part.toolInvocation.toolName == 'edit' &&
-        part.toolInvocation.state !== 'partial-call'
-      ) {
-        const args = loggingSafeParse(editToolParameters, part.toolInvocation.args);
-        if (args.success) {
-          filesTouched.set(getAbsolutePath(args.data.path), j);
+        if (toolPart.toolName == 'edit' && toolPart.state !== 'input-streaming') {
+          const args = loggingSafeParse(editToolParameters, toolPart.input);
+          if (args.success) {
+            filesTouched.set(getAbsolutePath(args.data.path), j);
+          }
         }
       }
     }
@@ -366,26 +362,29 @@ export class ChatContextManager {
         result = part.text.length;
         break;
       case 'file':
-        result += part.data.length;
-        result += part.mimeType.length;
+        result += part.url.length;
+        result += part.mediaType.length;
         break;
       case 'reasoning':
-        result += part.reasoning.length;
-        break;
-      case 'tool-invocation':
-        result += JSON.stringify(part.toolInvocation.args).length;
-        if (part.toolInvocation.state === 'result') {
-          result += JSON.stringify(part.toolInvocation.result).length;
-        }
-        break;
-      case 'source':
-        result += (part.source.title ?? '').length;
-        result += part.source.url.length;
+        result += part.text.length;
         break;
       case 'step-start':
         break;
       default:
-        throw new Error(`Unknown part type: ${JSON.stringify(part)}`);
+        // Handle tool parts (type starts with 'tool-' or has toolCallId)
+        if ('toolCallId' in part) {
+          const toolPart = part as any;
+          result += JSON.stringify(toolPart.input ?? {}).length;
+          if (toolPart.state === 'output-available') {
+            result += JSON.stringify(toolPart.output ?? '').length;
+          }
+        } else if (part.type === 'source-url') {
+          result += ((part as any).title ?? '').length;
+          result += ((part as any).url ?? '').length;
+        } else {
+          // Unknown part type, estimate with JSON serialization
+          result += JSON.stringify(part).length;
+        }
     }
     this.partSizeCache.set(part, result);
     return result;
@@ -402,7 +401,6 @@ ${c}
   }));
   return {
     id,
-    content: '',
     role: 'user',
     parts,
   };
@@ -416,17 +414,18 @@ function estimateSize(entry: Dirent): number {
   }
 }
 
-function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
-  if (toolInvocation.state !== 'result') {
-    throw new Error(`Invalid tool invocation state: ${toolInvocation.state}`);
+function abbreviateToolInvocation(toolPart: { toolName: string; state: string; input?: any; output?: any }): string {
+  if (toolPart.state !== 'output-available') {
+    throw new Error(`Invalid tool invocation state: ${toolPart.state}`);
   }
-  const wasError = toolInvocation.result.startsWith('Error:');
+  const output = typeof toolPart.output === 'string' ? toolPart.output : '';
+  const wasError = output.startsWith('Error:');
   let toolCall: string;
-  switch (toolInvocation.toolName) {
+  switch (toolPart.toolName) {
     case 'view': {
-      const args = loggingSafeParse(viewParameters, toolInvocation.args);
+      const args = loggingSafeParse(viewParameters, toolPart.input);
       let verb = 'viewed';
-      if (toolInvocation.result.startsWith('Directory:')) {
+      if (output.startsWith('Directory:')) {
         verb = 'listed';
       }
       toolCall = `${verb} ${args?.data?.path || 'unknown file'}`;
@@ -437,7 +436,7 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       break;
     }
     case 'npmInstall': {
-      const args = loggingSafeParse(npmInstallToolParameters, toolInvocation.args);
+      const args = loggingSafeParse(npmInstallToolParameters, toolPart.input);
       if (args.success) {
         toolCall = `installed the dependencies ${args.data.packages}`;
       } else {
@@ -446,7 +445,7 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       break;
     }
     case 'edit': {
-      const args = loggingSafeParse(editToolParameters, toolInvocation.args);
+      const args = loggingSafeParse(editToolParameters, toolPart.input);
       if (args.success) {
         toolCall = `edited the file ${args.data.path}`;
       } else {
@@ -459,7 +458,7 @@ function abbreviateToolInvocation(toolInvocation: ToolInvocation): string {
       break;
     }
     default:
-      throw new Error(`Unknown tool name: ${toolInvocation.toolName}`);
+      throw new Error(`Unknown tool name: ${toolPart.toolName}`);
   }
   return `The assistant ${toolCall} ${wasError ? 'and got an error' : 'successfully'}.`;
 }

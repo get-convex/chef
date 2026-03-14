@@ -1,4 +1,4 @@
-import type { ToolCallUnion } from 'ai';
+import type { TypedToolCall } from 'ai';
 import type { npmInstallToolParameters } from 'chef-agent/tools/npmInstall';
 import type { editToolParameters } from 'chef-agent/tools/edit';
 import type { addEnvironmentVariablesParameters } from 'chef-agent/tools/addEnvironmentVariables';
@@ -8,58 +8,58 @@ import type { lookupDocsParameters } from 'chef-agent/tools/lookupDocs';
 import type { ConvexToolSet, EmptyArgs } from 'chef-agent/types';
 import type { getConvexDeploymentNameParameters } from 'chef-agent/tools/getConvexDeploymentName';
 
-type ConvexToolCall = ToolCallUnion<ConvexToolSet>;
+type ConvexToolCall = TypedToolCall<ConvexToolSet>;
 
 export type ConvexToolName = keyof ConvexToolSet;
 
 type ConvexToolResult =
   | {
       toolName: 'deploy';
-      args?: EmptyArgs;
-      result?: string;
+      input?: EmptyArgs;
+      output?: string;
     }
   | {
       toolName: 'view';
-      args: typeof viewParameters;
-      result: string;
+      input: typeof viewParameters;
+      output: string;
     }
   | {
       toolName: 'npmInstall';
-      args: typeof npmInstallToolParameters;
-      result: string;
+      input: typeof npmInstallToolParameters;
+      output: string;
     }
   | {
       toolName: 'edit';
-      args: typeof editToolParameters;
-      result: string;
+      input: typeof editToolParameters;
+      output: string;
     }
   | {
       toolName: 'lookupDocs';
-      args: typeof lookupDocsParameters;
-      result: string;
+      input: typeof lookupDocsParameters;
+      output: string;
     }
   | {
       toolName: 'addEnvironmentVariables';
-      args: typeof addEnvironmentVariablesParameters;
-      result: string;
+      input: typeof addEnvironmentVariablesParameters;
+      output: string;
     }
   | {
       toolName: 'getConvexDeploymentName';
-      args: typeof getConvexDeploymentNameParameters;
-      result: string;
+      input: typeof getConvexDeploymentNameParameters;
+      output: string;
     };
 
 export type ConvexToolInvocation =
   | ({
-      state: 'partial-call';
+      state: 'input-streaming';
       step?: number;
     } & ConvexToolCall)
   | ({
-      state: 'call';
+      state: 'input-available';
       step?: number;
     } & ConvexToolCall)
   | ({
-      state: 'result';
+      state: 'output-available';
       step?: number;
     } & ConvexToolResult);
 

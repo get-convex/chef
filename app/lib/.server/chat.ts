@@ -3,14 +3,14 @@ import { createScopedLogger } from 'chef-agent/utils/logger';
 import { convexAgent } from '~/lib/.server/llm/convex-agent';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
-import type { LanguageModelUsage, Message, ProviderMetadata } from 'ai';
+import type { LanguageModelUsage, UIMessage, ProviderMetadata } from 'ai';
 import { checkTokenUsage, recordUsage } from '~/lib/.server/usage';
 import { disabledText, noTokensText } from '~/lib/convexUsage';
 import type { ModelProvider } from '~/lib/.server/llm/provider';
 import { getEnv } from '~/lib/.server/env';
 import type { PromptCharacterCounts } from 'chef-agent/ChatContextManager';
 
-type Messages = Message[];
+type Messages = UIMessage[];
 
 const logger = createScopedLogger('api.chat');
 
@@ -151,7 +151,7 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   logger.info(`Using model provider: ${body.modelProvider} (user API key: ${useUserApiKey})`);
 
   const recordUsageCb = async (
-    lastMessage: Message | undefined,
+    lastMessage: UIMessage | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => {
     if (!userApiKey && getEnv('DISABLE_USAGE_REPORTING') !== '1') {
@@ -168,7 +168,15 @@ export async function chatAction({ request }: ActionFunctionArgs) {
   };
 
   try {
-    const totalMessageContent = messages.reduce((acc, message) => acc + message.content, '');
+    const totalMessageContent = messages.reduce(
+      (acc, message) =>
+        acc +
+        message.parts
+          .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+          .map((p) => p.text)
+          .join(''),
+      '',
+    );
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
     const dataStream = await convexAgent({
       chatInitialId,

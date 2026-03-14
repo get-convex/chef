@@ -1,5 +1,5 @@
 import { expect, test, describe, vi } from 'vitest';
-import type { Message } from '@ai-sdk/react';
+import type { UIMessage } from '@ai-sdk/react';
 import { serializeMessageForConvex } from './messages';
 
 vi.mock('lz4-wasm', () => ({
@@ -9,17 +9,15 @@ vi.mock('lz4-wasm', () => ({
 
 describe('serializeMessageForConvex', () => {
   test('preserves non-text parts', () => {
-    const message: Message = {
+    const message: UIMessage = {
       id: 'test',
       role: 'user',
-      content: '',
       parts: [
         {
           type: 'text',
           text: 'some content',
         },
       ],
-      createdAt: new Date(),
     };
 
     const serialized = serializeMessageForConvex(message);

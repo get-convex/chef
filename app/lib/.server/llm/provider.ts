@@ -1,4 +1,4 @@
-import type { LanguageModelV1 } from 'ai';
+import type { LanguageModel } from 'ai';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createXai } from '@ai-sdk/xai';
@@ -19,7 +19,7 @@ const ALLOWED_AWS_REGIONS = ['us-east-1', 'us-west-2'];
 export type ModelProvider = Exclude<ProviderType, 'Unknown'>;
 type Provider = {
   maxTokens: number;
-  model: LanguageModelV1;
+  model: LanguageModel;
   options?: {
     xai?: {
       stream_options: { include_usage: true };
@@ -134,7 +134,6 @@ export function getProvider(
       const openai = createOpenAI({
         apiKey: userApiKey || getEnv('OPENAI_API_KEY'),
         fetch: userApiKey ? userKeyApiFetch('OpenAI') : fetch,
-        compatibility: 'strict',
       });
       provider = {
         model: openai(model),

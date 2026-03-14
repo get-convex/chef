@@ -7,7 +7,7 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
-import type { Message as AIMessage } from "ai";
+
 import { ConvexError, v } from "convex/values";
 import type { Infer } from "convex/values";
 import { isValidSession } from "./sessions";
@@ -16,9 +16,16 @@ import { ensureEnvVar, startProvisionConvexProjectHelper } from "./convexProject
 import { internal } from "./_generated/api";
 import { assertIsConvexAdmin } from "./admin";
 
-export type SerializedMessage = Omit<AIMessage, "createdAt" | "content"> & {
-  createdAt: number | undefined;
+export type SerializedMessage = {
+  id: string;
+  role: string;
+  parts?: any[];
+  createdAt?: number;
   content?: string;
+  metadata?: Record<string, unknown>;
+  // Legacy v4 fields that may exist in stored messages
+  annotations?: unknown[];
+  toolInvocations?: unknown[];
 };
 
 export const CHAT_NOT_FOUND_ERROR = new ConvexError({ code: "NotFound", message: "Chat not found" });

@@ -52,3 +52,4 @@ template/pnpm-lock.yaml
 .env*.local
 
 temp_envars
+.hive-tmp

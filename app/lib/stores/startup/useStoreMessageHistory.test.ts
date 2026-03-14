@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import type { Message } from '@ai-sdk/react';
+import type { UIMessage } from '@ai-sdk/react';
 import { getLastCompletePart } from './useStoreMessageHistory';
 
 vi.mock('lz4-wasm', () => ({
@@ -7,34 +7,34 @@ vi.mock('lz4-wasm', () => ({
   decompress: (data: Uint8Array) => data,
 }));
 
-function createMessage(overrides: Partial<Message> = {}): Message {
+function createMessage(overrides: Partial<UIMessage> = {}): UIMessage {
   return {
     id: `test-${Math.random()}`,
     role: 'user',
-    content: 'test',
     parts: [
       {
         type: 'text',
         text: 'test',
       },
     ],
-    createdAt: new Date(),
     ...overrides,
   };
 }
 
 function createToolInvocationPart(
-  invocation: { state: 'result'; result: string } | { state: 'partial-call' } | { state: 'call' },
+  invocation:
+    | { state: 'output-available'; output: string }
+    | { state: 'input-streaming' }
+    | { state: 'input-available' },
 ) {
+  const toolCallId = `test-${Math.random()}`;
   return {
-    type: 'tool-invocation' as const,
-    toolInvocation: {
-      ...invocation,
-      toolCallId: `test-${Math.random()}`,
-      args: null,
-      toolName: 'test',
-    },
-  };
+    type: `tool-test` as const,
+    toolCallId,
+    toolName: 'test',
+    input: null,
+    ...invocation,
+  } as any;
 }
 
 describe('getLastCompletePart', () => {
@@ -85,7 +85,10 @@ describe('getLastCompletePart', () => {
     });
     const assistantMessage = createMessage({
       role: 'assistant',
-      parts: [createToolInvocationPart({ state: 'result', result: 'something' }), { type: 'text', text: 'test' }],
+      parts: [
+        createToolInvocationPart({ state: 'output-available', output: 'something' }),
+        { type: 'text', text: 'test' },
+      ],
     });
     const lastCompletePart = getLastCompletePart([userMessage, assistantMessage], 'streaming');
 
@@ -99,7 +102,7 @@ describe('getLastCompletePart', () => {
   test('returns previous part if the last part is incomplete tool invocation part', () => {
     const messageA = createMessage({
       role: 'assistant',
-      parts: [{ type: 'text', text: 'test' }, createToolInvocationPart({ state: 'partial-call' })],
+      parts: [{ type: 'text', text: 'test' }, createToolInvocationPart({ state: 'input-streaming' })],
     });
     const lastCompletePart = getLastCompletePart([messageA], 'streaming');
 
@@ -113,7 +116,10 @@ describe('getLastCompletePart', () => {
   test('returns previous part if there are empty messages', () => {
     const message1 = createMessage({
       role: 'assistant',
-      parts: [{ type: 'text', text: 'test' }, createToolInvocationPart({ state: 'result', result: 'something' })],
+      parts: [
+        { type: 'text', text: 'test' },
+        createToolInvocationPart({ state: 'output-available', output: 'something' }),
+      ],
     });
     const message2 = createMessage({
       role: 'assistant',

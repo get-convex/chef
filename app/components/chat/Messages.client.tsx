@@ -1,4 +1,4 @@
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import { Fragment, useCallback, useState } from 'react';
 import { classNames } from '~/utils/classNames';
 import { AssistantMessage } from './AssistantMessage';
@@ -20,7 +20,7 @@ interface MessagesProps {
   id?: string;
   className?: string;
   isStreaming?: boolean;
-  messages?: Message[];
+  messages?: UIMessage[];
   subchatsLength?: number;
   onRewindToMessage?: (subchatIndex?: number, messageIndex?: number) => void;
 }
@@ -88,9 +88,9 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
       )}
       {messages.length > 0 ? (
         messages.map((message, index) => {
-          const { role, content, annotations } = message;
+          const { role, parts, metadata } = message;
           const isUserMessage = role === 'user';
-          const isHidden = annotations?.includes('hidden');
+          const isHidden = (metadata as any)?.hidden;
 
           if (isHidden) {
             return <Fragment key={index} />;
@@ -121,7 +121,16 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(function Messa
                   )}
                 </div>
               )}
-              {isUserMessage ? <UserMessage content={content} /> : <AssistantMessage message={message} />}
+              {isUserMessage ? (
+                <UserMessage
+                  content={parts
+                    .filter((p) => p.type === 'text')
+                    .map((p) => p.text)
+                    .join('')}
+                />
+              ) : (
+                <AssistantMessage message={message} />
+              )}
               <div>
                 {earliestRewindableMessageRank !== undefined &&
                   earliestRewindableMessageRank !== null &&

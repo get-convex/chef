@@ -4,10 +4,12 @@ import { annotationValidator, usageAnnotationValidator } from '~/lib/common/anno
 
 test('encodeUsageAnnotationAnthropic', async () => {
   const usage = {
-    completionTokens: 100,
-    promptTokens: 200,
+    inputTokens: 200,
+    inputTokenDetails: { noCacheTokens: undefined, cacheReadTokens: undefined, cacheWriteTokens: undefined },
+    outputTokens: 100,
+    outputTokenDetails: { textTokens: undefined, reasoningTokens: undefined },
     totalTokens: 300,
-  };
+  } as const;
   const providerMetadata = {
     anthropic: {
       cacheCreationInputTokens: 10,
@@ -37,10 +39,12 @@ test('encodeUsageAnnotationAnthropic', async () => {
 
 test('encodeUsageAnnotationOpenAI', async () => {
   const usage = {
-    completionTokens: 100,
-    promptTokens: 200,
+    inputTokens: 200,
+    inputTokenDetails: { noCacheTokens: undefined, cacheReadTokens: undefined, cacheWriteTokens: undefined },
+    outputTokens: 100,
+    outputTokenDetails: { textTokens: undefined, reasoningTokens: undefined },
     totalTokens: 300,
-  };
+  } as const;
   const providerMetadata = {
     openai: {
       cachedPromptTokens: 10,
@@ -67,10 +71,12 @@ test('encodeUsageAnnotationOpenAI', async () => {
 
 test('encodeUsageAnnotationXAI', async () => {
   const usage = {
-    completionTokens: 100,
-    promptTokens: 200,
+    inputTokens: 200,
+    inputTokenDetails: { noCacheTokens: undefined, cacheReadTokens: undefined, cacheWriteTokens: undefined },
+    outputTokens: 100,
+    outputTokenDetails: { textTokens: undefined, reasoningTokens: undefined },
     totalTokens: 300,
-  };
+  } as const;
   const providerMetadata = {
     xai: {
       cachedPromptTokens: 10,
@@ -97,10 +103,12 @@ test('encodeUsageAnnotationXAI', async () => {
 
 test('encodeUsageAnnotationGoogle', async () => {
   const usage = {
-    completionTokens: 100,
-    promptTokens: 200,
+    inputTokens: 200,
+    inputTokenDetails: { noCacheTokens: undefined, cacheReadTokens: undefined, cacheWriteTokens: undefined },
+    outputTokens: 100,
+    outputTokenDetails: { textTokens: undefined, reasoningTokens: undefined },
     totalTokens: 300,
-  };
+  } as const;
   const providerMetadata = {
     google: {
       cachedContentTokenCount: 10,
@@ -127,10 +135,12 @@ test('encodeUsageAnnotationGoogle', async () => {
 
 test('encodeUsageAnnotationBedrock', async () => {
   const usage = {
-    completionTokens: 100,
-    promptTokens: 200,
+    inputTokens: 200,
+    inputTokenDetails: { noCacheTokens: undefined, cacheReadTokens: undefined, cacheWriteTokens: undefined },
+    outputTokens: 100,
+    outputTokenDetails: { textTokens: undefined, reasoningTokens: undefined },
     totalTokens: 300,
-  };
+  } as const;
   const providerMetadata = {
     bedrock: {
       usage: {

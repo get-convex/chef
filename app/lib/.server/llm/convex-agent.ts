@@ -1,12 +1,12 @@
 import {
-  createDataStream,
+  createUIMessageStream,
   streamText,
-  type CoreAssistantMessage,
-  type CoreMessage,
-  type CoreToolMessage,
-  type DataStreamWriter,
+  type AssistantModelMessage,
+  type ModelMessage,
+  type ToolModelMessage,
+  type UIMessageStreamWriter,
   type LanguageModelUsage,
-  type Message,
+  type UIMessage,
   type ProviderMetadata,
   type StepResult,
 } from 'ai';
@@ -37,7 +37,7 @@ import { addEnvironmentVariablesTool } from 'chef-agent/tools/addEnvironmentVari
 import { getConvexDeploymentNameTool } from 'chef-agent/tools/getConvexDeploymentName';
 import type { PromptCharacterCounts } from 'chef-agent/ChatContextManager';
 
-type Messages = Message[];
+type Messages = UIMessage[];
 
 export async function convexAgent(args: {
   chatInitialId: string;
@@ -49,7 +49,7 @@ export async function convexAgent(args: {
   userApiKey: string | undefined;
   shouldDisableTools: boolean;
   recordUsageCb: (
-    lastMessage: Message | undefined,
+    lastMessage: UIMessage | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => Promise<void>;
   recordRawPromptsForDebugging: boolean;
@@ -97,12 +97,12 @@ export async function convexAgent(args: {
     npmInstall: npmInstallTool,
     lookupDocs: lookupDocsTool(),
     getConvexDeploymentName: getConvexDeploymentNameTool,
-  };
-  tools.addEnvironmentVariables = addEnvironmentVariablesTool();
-  tools.view = viewTool;
-  tools.edit = editTool;
+    addEnvironmentVariables: addEnvironmentVariablesTool(),
+    view: viewTool,
+    edit: editTool,
+  } as any;
 
-  const messagesForDataStream: CoreMessage[] = [
+  const messagesForStream: ModelMessage[] = [
     {
       role: 'system' as const,
       content: ROLE_SYSTEM_PROMPT,
@@ -111,11 +111,11 @@ export async function convexAgent(args: {
       role: 'system' as const,
       content: generalSystemPrompt(opts),
     },
-    ...cleanupAssistantMessages(messages),
+    ...(await cleanupAssistantMessages(messages)),
   ];
 
   if (modelProvider === 'Bedrock') {
-    messagesForDataStream[messagesForDataStream.length - 1].providerOptions = {
+    messagesForStream[messagesForStream.length - 1].providerOptions = {
       bedrock: {
         cachePoint: {
           type: 'default',
@@ -125,7 +125,7 @@ export async function convexAgent(args: {
   }
 
   if (modelProvider === 'Anthropic') {
-    messagesForDataStream[messagesForDataStream.length - 1].providerOptions = {
+    messagesForStream[messagesForStream.length - 1].providerOptions = {
       anthropic: {
         cacheControl: {
           type: 'ephemeral',
@@ -134,18 +134,18 @@ export async function convexAgent(args: {
     };
   }
 
-  const dataStream = createDataStream({
-    execute(dataStream) {
+  const stream = createUIMessageStream({
+    execute: async ({ writer }) => {
       const result = streamText({
         model: provider.model,
-        maxTokens: provider.maxTokens,
+        maxOutputTokens: provider.maxTokens,
         providerOptions: provider.options,
-        messages: messagesForDataStream,
+        messages: messagesForStream,
         tools,
         toolChoice: shouldDisableTools ? 'none' : 'auto',
         onFinish: (result) => {
           onFinishHandler({
-            dataStream,
+            writer,
             messages,
             result,
             tracer,
@@ -153,14 +153,14 @@ export async function convexAgent(args: {
             recordUsageCb,
             toolsDisabledFromRepeatedErrors: shouldDisableTools,
             recordRawPromptsForDebugging,
-            coreMessages: messagesForDataStream,
+            modelMessages: messagesForStream,
             modelProvider,
             modelChoice,
             collapsedMessages,
             promptCharacterCounts,
             _startTime: startTime,
             _firstResponseTime: firstResponseTime,
-            providerModel: provider.model.modelId,
+            providerModel: typeof provider.model === 'string' ? provider.model : provider.model.modelId,
           });
         },
         onError({ error }) {
@@ -203,17 +203,17 @@ export async function convexAgent(args: {
         }
       })();
 
-      result.mergeIntoDataStream(dataStream);
+      writer.merge(result.toUIMessageStream());
     },
-    onError(error: any) {
-      return error.message;
+    onError(error: unknown) {
+      return error instanceof Error ? error.message : String(error);
     },
   });
-  return dataStream;
+  return stream;
 }
 
 async function onFinishHandler({
-  dataStream,
+  writer,
   messages,
   result,
   tracer,
@@ -221,7 +221,7 @@ async function onFinishHandler({
   recordUsageCb,
   toolsDisabledFromRepeatedErrors,
   recordRawPromptsForDebugging,
-  coreMessages,
+  modelMessages,
   modelProvider,
   modelChoice,
   collapsedMessages,
@@ -230,18 +230,18 @@ async function onFinishHandler({
   _firstResponseTime,
   providerModel,
 }: {
-  dataStream: DataStreamWriter;
+  writer: UIMessageStreamWriter;
   messages: Messages;
-  result: Omit<StepResult<any>, 'stepType' | 'isContinued'>;
+  result: StepResult<any>;
   tracer: Tracer | null;
   chatInitialId: string;
   recordUsageCb: (
-    lastMessage: Message | undefined,
+    lastMessage: UIMessage | undefined,
     finalGeneration: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   ) => Promise<void>;
   recordRawPromptsForDebugging: boolean;
   toolsDisabledFromRepeatedErrors: boolean;
-  coreMessages: CoreMessage[];
+  modelMessages: ModelMessage[];
   modelProvider: ModelProvider;
   modelChoice: string | undefined;
   collapsedMessages: boolean;
@@ -252,9 +252,11 @@ async function onFinishHandler({
 }) {
   const { providerMetadata } = result;
   // This usage accumulates accross multiple /api/chat calls until finishReason of 'stop'.
-  const usage = {
-    completionTokens: normalizeUsage(result.usage.completionTokens),
-    promptTokens: normalizeUsage(result.usage.promptTokens),
+  const usage: LanguageModelUsage = {
+    inputTokens: normalizeUsage(result.usage.inputTokens),
+    inputTokenDetails: result.usage.inputTokenDetails,
+    outputTokens: normalizeUsage(result.usage.outputTokens),
+    outputTokenDetails: result.usage.outputTokenDetails,
     totalTokens: normalizeUsage(result.usage.totalTokens),
   };
   console.log('Finished streaming', {
@@ -267,9 +269,9 @@ async function onFinishHandler({
     const span = tracer.startSpan('on-finish-handler');
     span.setAttribute('chatInitialId', chatInitialId);
     span.setAttribute('finishReason', result.finishReason);
-    span.setAttribute('usage.completionTokens', usage.completionTokens);
-    span.setAttribute('usage.promptTokens', usage.promptTokens);
-    span.setAttribute('usage.totalTokens', usage.totalTokens);
+    span.setAttribute('usage.outputTokens', usage.outputTokens ?? 0);
+    span.setAttribute('usage.inputTokens', usage.inputTokens ?? 0);
+    span.setAttribute('usage.totalTokens', usage.totalTokens ?? 0);
     span.setAttribute('collapsedMessages', collapsedMessages);
     span.setAttribute('model', providerModel);
 
@@ -284,8 +286,9 @@ async function onFinishHandler({
         span.setAttribute('providerMetadata.anthropic.cacheCreationInputTokens', anthropic.cacheCreationInputTokens);
         span.setAttribute('providerMetadata.anthropic.cacheReadInputTokens', anthropic.cacheReadInputTokens);
       }
-      if (providerMetadata.google) {
-        const google: any = providerMetadata.google;
+      const vertexOrGoogle = providerMetadata.vertex ?? providerMetadata.google;
+      if (vertexOrGoogle) {
+        const google: any = vertexOrGoogle;
         span.setAttribute('providerMetadata.google.cachedContentTokenCount', google.cachedContentTokenCount ?? 0);
       }
       if (providerMetadata.openai) {
@@ -301,28 +304,34 @@ async function onFinishHandler({
         span.setAttribute('providerMetadata.bedrock.cacheReadInputTokens', bedrock.usage?.cacheReadInputTokens ?? 0);
       }
     }
-    if (result.finishReason === 'stop' || result.finishReason === 'unknown') {
+    if (result.finishReason === 'stop' || result.finishReason === 'other') {
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.role === 'assistant') {
-        // This field is deprecated, but for some reason, the new field "parts", does not contain all of the tool calls. This is likely a
-        // vercel bug. We do this at the end end the request because it's when we have the results from all of the tool calls.
-        const toolCalls = lastMessage.toolInvocations?.filter((t) => t.toolName === 'deploy' && t.state === 'result');
-        const successfulDeploys =
-          toolCalls?.filter((t) => t.state === 'result' && !t.result.startsWith('Error:')).length ?? 0;
+        // Count deploy tool calls from parts
+        const toolCalls = lastMessage.parts.filter(
+          (p: any) =>
+            'toolCallId' in p &&
+            (p.type === 'tool-deploy' || ('toolName' in p && p.toolName === 'deploy')) &&
+            p.state === 'output-available',
+        );
+        const successfulDeploys = toolCalls.filter(
+          (t: any) => t.state === 'output-available' && typeof t.output === 'string' && !t.output.startsWith('Error:'),
+        ).length;
         span.setAttribute('tools.successfulDeploys', successfulDeploys);
-        span.setAttribute('tools.failedDeploys', toolCalls ? toolCalls.length - successfulDeploys : 0);
+        span.setAttribute('tools.failedDeploys', toolCalls.length - successfulDeploys);
       }
       span.setAttribute('tools.disabledFromRepeatedErrors', toolsDisabledFromRepeatedErrors ? 'true' : 'false');
     }
     span.end();
   }
 
+  // Write metadata instead of annotations
   if (toolsDisabledFromRepeatedErrors) {
-    dataStream.writeMessageAnnotation({ type: 'failure', reason: REPEATED_ERROR_REASON });
+    writer.write({ type: 'message-metadata', metadata: { failure: REPEATED_ERROR_REASON } } as any);
   }
 
   let toolCallId: { kind: 'tool-call'; toolCallId: string } | { kind: 'final' } | undefined;
-  // Always stash this part's usage as an annotation -- these are used for
+  // Always stash this part's usage as metadata -- these are used for
   // displaying usage info in the UI as well as calculating usage when the message
   // finishes.
   if (result.finishReason === 'tool-calls') {
@@ -337,10 +346,11 @@ async function onFinishHandler({
     toolCallId = { kind: 'final' };
   }
   if (toolCallId) {
+    const id = toolCallId.kind === 'tool-call' ? toolCallId.toolCallId : 'final';
     const annotation = encodeUsageAnnotation(toolCallId, usage, providerMetadata);
-    dataStream.writeMessageAnnotation({ type: 'usage', usage: annotation });
+    writer.write({ type: 'message-metadata', metadata: { [`usage:${id}`]: annotation } } as any);
     const modelAnnotation = encodeModelAnnotation(toolCallId, providerMetadata, modelChoice);
-    dataStream.writeMessageAnnotation({ type: 'model', ...modelAnnotation });
+    writer.write({ type: 'message-metadata', metadata: { [`model:${id}`]: modelAnnotation } } as any);
   }
 
   // Record usage once we've generated the final part.
@@ -348,13 +358,13 @@ async function onFinishHandler({
     await recordUsageCb(messages[messages.length - 1], { usage, providerMetadata });
   }
   if (recordRawPromptsForDebugging) {
-    const responseCoreMessages = result.response.messages as (CoreAssistantMessage | CoreToolMessage)[];
+    const responseModelMessages = result.response.messages as (AssistantModelMessage | ToolModelMessage)[];
     // don't block the request but keep the request alive in Vercel Lambdas
     waitUntil(
       storeDebugPrompt(
-        coreMessages,
+        modelMessages,
         chatInitialId,
-        responseCoreMessages,
+        responseModelMessages,
         result,
         {
           usage,
@@ -436,10 +446,10 @@ function buildUsageRecord(usage: Usage): UsageRecord {
 }
 
 async function storeDebugPrompt(
-  promptCoreMessages: CoreMessage[],
+  promptModelMessages: ModelMessage[],
   chatInitialId: string,
-  responseCoreMessages: CoreMessage[],
-  result: Omit<StepResult<any>, 'stepType' | 'isContinued'>,
+  responseModelMessages: ModelMessage[],
+  result: StepResult<any>,
   generation: { usage: LanguageModelUsage; providerMetadata?: ProviderMetadata },
   modelProvider: ModelProvider,
 ) {
@@ -448,7 +458,7 @@ async function storeDebugPrompt(
     const modelId = result.response.modelId || '';
     const usage = usageFromGeneration(generation);
 
-    const promptMessageData = new TextEncoder().encode(JSON.stringify(promptCoreMessages));
+    const promptMessageData = new TextEncoder().encode(JSON.stringify(promptModelMessages));
     const compressedData = compressWithLz4Server(promptMessageData);
 
     type Metadata = Omit<(typeof internal.debugPrompt.storeDebugPrompt)['_args'], 'promptCoreMessagesStorageId'>;
@@ -456,7 +466,7 @@ async function storeDebugPrompt(
 
     const metadata = {
       chatInitialId,
-      responseCoreMessages,
+      responseCoreMessages: responseModelMessages,
       finishReason,
       modelId,
       usage: buildUsageRecord(usage),
@@ -484,6 +494,6 @@ async function storeDebugPrompt(
   }
 }
 
-function normalizeUsage(usage: number) {
-  return Number.isNaN(usage) ? 0 : usage;
+function normalizeUsage(usage: number | undefined) {
+  return usage == null || Number.isNaN(usage) ? 0 : usage;
 }

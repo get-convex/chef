@@ -1,13 +1,13 @@
 import { useConvex, useMutation, useQuery } from 'convex/react';
 import { useQueries as useReactQueries } from '@tanstack/react-query';
 import { api } from '@convex/_generated/api';
-import type { CoreMessage } from 'ai';
+import type { ModelMessage } from 'ai';
 import { decompressWithLz4 } from '~/lib/compression.client';
 import { queryClientStore } from '~/lib/stores/reactQueryClient';
 import { useEffect, useState } from 'react';
 import { getConvexAuthToken } from '~/lib/stores/sessionId';
 
-async function fetchPromptData(url: string): Promise<CoreMessage[]> {
+async function fetchPromptData(url: string): Promise<ModelMessage[]> {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch prompt data: ${response.statusText}`);
@@ -17,7 +17,7 @@ async function fetchPromptData(url: string): Promise<CoreMessage[]> {
   const decompressedData = decompressWithLz4(new Uint8Array(compressedData));
   const textDecoder = new TextDecoder();
   const jsonString = textDecoder.decode(decompressedData);
-  return JSON.parse(jsonString) as CoreMessage[];
+  return JSON.parse(jsonString) as ModelMessage[];
 }
 
 export function useAuthToken() {
