@@ -1,6 +1,6 @@
 {
   "name": "@convex-dev/chef-deploy",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.0",
   "description": "Build and deploy a Chef project from the command line to its *.convex.app host.",
   "type": "module",
   "bin": {

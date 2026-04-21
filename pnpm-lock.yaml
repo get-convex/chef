@@ -519,6 +519,18 @@ importers:
         specifier: ^2.1.9
         version: 2.1.9(@edge-runtime/vm@5.0.0)(@types/node@20.17.30)(jsdom@26.0.0)(sass-embedded@1.83.4)(sugarss@4.0.1(postcss@8.5.3))
 
+  chef-deploy:
+    dependencies:
+      commander:
+        specifier: ^13.1.0
+        version: 13.1.0
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.7
+      jszip:
+        specifier: ^3.10.1
+        version: 3.10.1
+
   chefshot:
     dependencies:
       '@playwright/test':
