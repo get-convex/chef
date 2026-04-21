@@ -1,0 +1,24 @@
+{
+  "name": "@convex-dev/chef-deploy",
+  "version": "0.1.0",
+  "description": "Build and deploy a Chef project from the command line to its *.convex.app host.",
+  "type": "module",
+  "bin": {
+    "chef-deploy": "./cli.js"
+  },
+  "files": [
+    "cli.js"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "deploy": "node cli.js"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.5",
+    "jszip": "^3.10.1"
+  },
+  "packageManager": "pnpm@9.5.0"
+}

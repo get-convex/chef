@@ -1,5 +1,6 @@
 packages:
   - 'chefshot'
+  - 'chef-deploy'
   - 'test-kitchen'
   - 'chef-agent'
   # You can add more workspace packages here later if needed

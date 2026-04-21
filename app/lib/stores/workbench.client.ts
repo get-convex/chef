@@ -31,6 +31,33 @@ import type { ConvexToolName } from '~/lib/common/types';
 
 const { saveAs } = fileSaver;
 
+const DEPLOY_SCRIPT_NAME = 'chef-deploy';
+const DEPLOY_SCRIPT_COMMAND = 'npx --yes @convex-dev/chef-deploy';
+
+async function injectDeployScript(zip: JSZip) {
+  const entry = zip.file('package.json');
+  if (!entry) {
+    return;
+  }
+  let raw: string;
+  try {
+    raw = await entry.async('string');
+  } catch {
+    return;
+  }
+  let pkg: any;
+  try {
+    pkg = JSON.parse(raw);
+  } catch {
+    return;
+  }
+  pkg.scripts = pkg.scripts ?? {};
+  if (!pkg.scripts[DEPLOY_SCRIPT_NAME]) {
+    pkg.scripts[DEPLOY_SCRIPT_NAME] = DEPLOY_SCRIPT_COMMAND;
+    zip.file('package.json', JSON.stringify(pkg, null, 2) + '\n');
+  }
+}
+
 export interface ArtifactState {
   id: string;
   title: string;
@@ -602,6 +629,7 @@ export class WorkbenchStore {
     if (!hasCursorRules) {
       zip.file('.cursor/rules/convex_rules.mdc', cursorRulesContent);
     }
+    await injectDeployScript(zip);
     // Generate the zip file and save it
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `${projectName}.zip`);

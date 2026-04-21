@@ -25,6 +25,30 @@ Check out the [Convex docs](https://docs.convex.dev/) for more information on ho
 * Check out the [Hosting and Deployment](https://docs.convex.dev/production/) docs for how to deploy your app
 * Read the [Best Practices](https://docs.convex.dev/understanding/best-practices/) guide for tips on how to improve you app further
 
+## Deploying via the CLI (recommended)
+
+You can rebuild and redeploy your Chef-hosted site from your machine. \`.env.local\` in this zip already contains both \`CONVEX_DEPLOYMENT\` and \`CONVEX_DEPLOY_KEY\`, so no extra setup is needed:
+
+\`\`\`bash
+npm install
+npm run chef-deploy
+\`\`\`
+
+This runs \`npm run build\`, zips the \`dist/\` directory, and uploads it to your existing ${convexDeploymentName ? `\`${convexDeploymentName}.convex.app\`` : '`*.convex.app`'} site.
+
+If you need to pass flags, invoke the CLI directly:
+
+\`\`\`bash
+npx --yes @convex-dev/chef-deploy --help
+\`\`\`
+
+Useful flags:
+
+- \`--build-command "pnpm build"\` if you prefer pnpm
+- \`--build-dir build\` if your framework writes somewhere other than \`dist/\`
+- \`--skip-build\` to upload an already-built \`dist/\` as-is
+- \`--chef-url https://...\` to target a non-default Chef host
+
 ## HTTP API
 
 User-defined http routes are defined in the \`convex/router.ts\` file. We split these routes into a separate file from \`convex/http.ts\` to allow us to prevent the LLM from modifying the authentication routes.
