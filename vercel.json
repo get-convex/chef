@@ -2,7 +2,7 @@
   "redirects": [
     {
       "source": "/:path*",
-      "destination": "https://convex.dev/ai?utm_source=chef",
+      "destination": "https://www.convex.dev/ai?utm_source=chef",
       "permanent": true
     }
   ]
