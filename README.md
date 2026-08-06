@@ -1,9 +1,4 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://chef.convex.dev/github-header-dark.svg">
-    <img alt="Chef by Convex'" src="https://chef.convex.dev/github-header-light.svg" width="600">
-  </picture>
-</p>
+
 
 [Chef](https://chef.convex.dev) is the only AI app builder that knows backend. It builds full-stack web apps with a built-in database, zero config auth, file uploads,
 real-time UIs, and background workflows. If you want to check out the secret sauce that powers Chef, you can view or download the system prompt [here](https://github.com/get-convex/chef/releases/latest).
